@@ -1187,6 +1187,20 @@ function initSkillForge() {
     const page = document.getElementById(`forgePage${step}`);
     if (page) page.classList.add('active');
 
+    // When entering Stage 1 (forgePage1), show binding mode based on selectedMode
+    if (step === 1 && selectedMode) {
+      const bindingA = document.getElementById('bindingMode-a');
+      const bindingB = document.getElementById('bindingMode-b');
+
+      if (selectedMode === 'a') {
+        if (bindingA) bindingA.style.display = 'block';
+        if (bindingB) bindingB.style.display = 'none';
+      } else if (selectedMode === 'b') {
+        if (bindingA) bindingA.style.display = 'none';
+        if (bindingB) bindingB.style.display = 'block';
+      }
+    }
+
     // Scroll to top of form
     const forgeModal = document.querySelector('.forge-modal');
     if (forgeModal) forgeModal.scrollTop = 0;
