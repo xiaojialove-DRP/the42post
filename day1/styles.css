@@ -1395,6 +1395,16 @@ body {
   color: var(--ink-light);
   line-height: 1.7;
   font-style: italic;
+  margin-bottom: 12px;
+}
+
+.forge-flow-text {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 1px;
+  color: var(--teal);
+  text-transform: uppercase;
+  margin-top: 8px;
 }
 
 .chat-bubble-input {

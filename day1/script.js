@@ -1770,13 +1770,15 @@ function initHeadlineHero() {
     });
   }
 
+  // Store idea from homepage for direct forge
+  window.homepageIdea = null;
+
+  const startForgingBtn = document.getElementById('btnStartForging');
   const testBtn = document.getElementById('btnTest');
   const ethicsResult = document.getElementById('ethicsResult');
   const ethicsPass = document.getElementById('ethicsPass');
   const ethicsFail = document.getElementById('ethicsFail');
   const btnEnterForge = document.getElementById('btnEnterForge');
-
-  if (!testBtn) return;
 
   // Bind forge button once at init
   if (btnEnterForge) {
@@ -1786,34 +1788,85 @@ function initHeadlineHero() {
     });
   }
 
-  testBtn.addEventListener('click', () => {
-    const text = chaosInput.value.trim();
-    if (!text) {
-      chaosInput.style.borderColor = 'var(--coral)';
-      setTimeout(() => { chaosInput.style.borderColor = ''; }, 1000);
-      return;
-    }
-
-    testBtn.textContent = 'TESTING...';
-    testBtn.style.pointerEvents = 'none';
-
-    // Simple ethics check: reject only explicit harmful patterns
-    const forbiddenPatterns = [/(kill|harm|hurt|destroy|bomb|attack|weapon)/i, /(genocide|ethnic|racist|sexist)/i];
-    const isForbidden = forbiddenPatterns.some(p => p.test(text));
-
-    setTimeout(() => {
-      ethicsResult.classList.add('visible');
-      if (isForbidden) {
-        ethicsPass.classList.remove('visible');
-        ethicsFail.classList.add('visible');
-      } else {
-        ethicsFail.classList.remove('visible');
-        ethicsPass.classList.add('visible');
+  // NEW: Direct Forge Flow - Skip ethics check, go straight to forge modal
+  if (startForgingBtn) {
+    startForgingBtn.addEventListener('click', () => {
+      const idea = chaosInput.value.trim();
+      if (!idea) {
+        chaosInput.style.borderColor = 'var(--coral)';
+        setTimeout(() => { chaosInput.style.borderColor = ''; }, 1000);
+        return;
       }
-      testBtn.textContent = '分享';
-      testBtn.style.pointerEvents = '';
-    }, 800);
-  });
+
+      // Store idea and start forging
+      window.homepageIdea = idea;
+      selectedMode = 'a'; // Natural language mode
+
+      // Open forge modal and skip to Step 2
+      const forgeOverlay = document.getElementById('forgeOverlay');
+      const forgePage0 = document.getElementById('forgePage0');
+      const forgePage2 = document.getElementById('forgePage2');
+
+      if (forgeOverlay) forgeOverlay.classList.add('active');
+
+      // Hide Step 0, skip to Step 2
+      if (forgePage0) forgePage0.classList.remove('active');
+      if (forgePage2) {
+        forgePage2.classList.add('active');
+
+        // Pre-fill the idea into the textarea
+        setTimeout(() => {
+          const nativeTextEl = document.getElementById('forgeNativeText');
+          if (nativeTextEl) {
+            nativeTextEl.value = idea;
+
+            // Auto-trigger agent_42 structuring after 300ms
+            setTimeout(() => {
+              const btnAutoStructure = document.getElementById('btnAutoStructure');
+              if (btnAutoStructure) {
+                btnAutoStructure.click();
+              }
+            }, 300);
+          }
+        }, 50);
+      }
+
+      // Clear homepage input
+      chaosInput.value = '';
+    });
+  }
+
+  // Keep old test button if it exists (backward compatibility)
+  if (testBtn && !startForgingBtn) {
+    testBtn.addEventListener('click', () => {
+      const text = chaosInput.value.trim();
+      if (!text) {
+        chaosInput.style.borderColor = 'var(--coral)';
+        setTimeout(() => { chaosInput.style.borderColor = ''; }, 1000);
+        return;
+      }
+
+      testBtn.textContent = 'TESTING...';
+      testBtn.style.pointerEvents = 'none';
+
+      // Simple ethics check: reject only explicit harmful patterns
+      const forbiddenPatterns = [/(kill|harm|hurt|destroy|bomb|attack|weapon)/i, /(genocide|ethnic|racist|sexist)/i];
+      const isForbidden = forbiddenPatterns.some(p => p.test(text));
+
+      setTimeout(() => {
+        ethicsResult.classList.add('visible');
+        if (isForbidden) {
+          ethicsPass.classList.remove('visible');
+          ethicsFail.classList.add('visible');
+        } else {
+          ethicsFail.classList.remove('visible');
+          ethicsPass.classList.add('visible');
+        }
+        testBtn.textContent = '分享';
+        testBtn.style.pointerEvents = '';
+      }, 800);
+    });
+  }
 }
 
 /* ═══ CREATIVE TRIPTYCH ═══ */
