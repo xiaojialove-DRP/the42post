@@ -1896,8 +1896,9 @@ function updateWisdomFable() {
   const fableContent = document.getElementById('fableContent');
   if (!fableContent) return;
 
-  const currentLang = document.body.getAttribute('data-lang') || 'en';
-  const fable = wisdomFables[currentLang] || wisdomFables.en;
+  // Use global currentLang variable (initialized to 'en')
+  const lang = currentLang || 'en';
+  const fable = wisdomFables[lang] || wisdomFables.en;
   fableContent.textContent = fable;
 }
 
