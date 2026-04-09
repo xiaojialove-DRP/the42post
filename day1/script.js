@@ -1051,7 +1051,7 @@ function initSkillForge() {
   });
 
   // Oath checkboxes
-  const oathChecks = document.querySelectorAll('#forgeOath1, #forgeOath2');
+  const oathChecks = document.querySelectorAll('.oath-check input[type="checkbox"]');
   const publishBtn = document.getElementById('btnPublish');
   oathChecks.forEach(cb => {
     cb.addEventListener('change', () => {
