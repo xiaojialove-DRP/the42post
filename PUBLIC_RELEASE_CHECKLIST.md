@@ -64,14 +64,14 @@
 
 ## ❌ 隐藏的文件（仅供内部使用）
 
-以下文件是THE 42 POST系统的内部实现，不包含在公开发布中：
+以下文件是系统实现的内部细节，不包含在开源发布中：
 
 ```
-❌ BACKEND_ARCHITECTURE.md - 42 POST系统的后端架构
+❌ BACKEND_ARCHITECTURE.md - 系统后端架构
 ❌ API_QUICK_REFERENCE.md - API端点文档
 ❌ BACKEND_IMPLEMENTATION_SUMMARY.md - 实现总结
 ❌ FRONTEND_BACKEND_INTEGRATION.md - 前后端集成指南
-❌ RESEARCH_FOUNDATION_COMPLETE.md - 完整研究版本
+❌ RESEARCH_FOUNDATION_COMPLETE.md - 扩展研究版本
 
 ❌ backend/ - Node.js/PostgreSQL后端代码
 ❌ day1/ - 前端代码
@@ -182,7 +182,7 @@ git push -u origin main
 - [ ] 添加其他语言版本
 
 ### Phase 3 (远期)
-- [ ] 发布THE 42 POST完整系统
+- [ ] 发布完整的系统实现
 - [ ] Web平台实现
 - [ ] 社区协作工具
 - [ ] 学术发表

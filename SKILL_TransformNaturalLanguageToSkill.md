@@ -383,8 +383,8 @@ SKILL: "代码应该为人类而写"
   },
 
   "author": {
-    "name": "THE 42 POST Contributors",
-    "email": "contributors@42post.dev",
+    "name": "Skill Forging Contributors",
+    "email": "contributors@skillforging.dev",
     "role": "Skill Forging Methodology Team"
   },
 
@@ -445,6 +445,6 @@ SKILL: "代码应该为人类而写"
 
 ---
 
-**这就是THE 42 POST最核心的Skill自己证明自己的存在。**
+**这就是Skill Forging Methodology最核心的Skill——用这个方法论来定义这个方法论本身。**
 
-🛠️ **用这个方法论来定义这个方法论本身。**
+🛠️ **Self-describing methodology through a practical, complete skill example.**

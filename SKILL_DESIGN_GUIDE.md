@@ -483,11 +483,14 @@ ja-JP: 沉默与'间'（ma）的美学完全吻合
 一旦你创建了一个高语义资本的skill：
 
 ```
-1. 发布到42 POST Skill Registry
-   
+1. 发布你的Skill
+   - 获取Soul-Hash身份
+   - 生成Manifest Covenant签名
+   - 分享给社区和利益相关者
+
 2. 邀请社区反馈
    - 哪个文化的perspective我遗漏了？
-   - 你如何在你的AI中使用这个skill？
+   - 你如何使用这个skill在你的系统中？
    - 有没有我没想到的edge case？
 
 3. 基于反馈迭代改进
@@ -496,8 +499,8 @@ ja-JP: 沉默与'间'（ma）的美学完全吻合
    - VALIDATING层添加新的test case
 
 4. 可选：邀请其他文化背景的人联合签名
-   - 增加skill的covenant_signatures
-   - 这样skill就代表多个声音，不仅是你一个人的观点
+   - 增加skill的Manifest Covenant signatures
+   - 这样skill就代表多个声音和视角，不仅是你一个人的观点
 ```
 
 ---
