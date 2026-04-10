@@ -1,0 +1,137 @@
+/* ═══════════════════════════════════════════════════════
+   Forge Routes (Intuition Probe + Five-Layer Generation)
+   ═══════════════════════════════════════════════════════ */
+
+import express from 'express';
+import { db } from '../server.js';
+import { requireAuth } from '../utils/auth.js';
+import {
+  generateProbeWithClaude,
+  generateFiveLayerWithClaude,
+  generateSoulHash
+} from '../utils/skillGeneration.js';
+
+const router = express.Router();
+
+// ═══ GENERATE INTUITION PROBE ═══
+router.post('/probe', requireAuth, async (req, res, next) => {
+  try {
+    const { idea_text, language } = req.body;
+    const userId = req.user.userId;
+
+    if (!idea_text || !idea_text.trim()) {
+      return res.status(400).json({
+        error: 'Missing input',
+        message: 'idea_text is required'
+      });
+    }
+
+    // Generate probe using Claude API
+    const probeResult = await generateProbeWithClaude(
+      idea_text.trim(),
+      language || 'en'
+    );
+
+    if (!probeResult.success) {
+      return res.status(500).json({
+        error: 'Probe generation failed',
+        message: probeResult.message
+      });
+    }
+
+    // Log probe generation
+    await db.query(
+      `INSERT INTO probe_logs (user_id, idea_text, generated_probe, model_version)
+       VALUES ($1, $2, $3, $4)`,
+      [userId, idea_text.trim(), JSON.stringify(probeResult.data), probeResult.model]
+    );
+
+    res.json({
+      success: true,
+      probe: probeResult.data,
+      model: probeResult.model,
+      usage: probeResult.usage
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// ═══ GENERATE FIVE-LAYER SKILL ═══
+router.post('/generate', requireAuth, async (req, res, next) => {
+  try {
+    const { skill_name, idea_text, probe_data, selected_response, domain, language } = req.body;
+    const userId = req.user.userId;
+
+    // Validation
+    if (!skill_name || !skill_name.trim()) {
+      return res.status(400).json({
+        error: 'Missing input',
+        message: 'skill_name is required'
+      });
+    }
+
+    if (!idea_text || !idea_text.trim()) {
+      return res.status(400).json({
+        error: 'Missing input',
+        message: 'idea_text is required'
+      });
+    }
+
+    if (!probe_data || !probe_data.scenario) {
+      return res.status(400).json({
+        error: 'Missing input',
+        message: 'probe_data with scenario, thesis, antithesis, extreme is required'
+      });
+    }
+
+    if (!['thesis', 'antithesis', 'extreme'].includes(selected_response)) {
+      return res.status(400).json({
+        error: 'Invalid selection',
+        message: 'selected_response must be "thesis", "antithesis", or "extreme"'
+      });
+    }
+
+    // Generate five-layer skill using Claude API
+    const generationResult = await generateFiveLayerWithClaude(
+      skill_name.trim(),
+      idea_text.trim(),
+      selected_response,
+      probe_data,
+      language || 'en'
+    );
+
+    if (!generationResult.success) {
+      return res.status(500).json({
+        error: 'Generation failed',
+        message: generationResult.message
+      });
+    }
+
+    // Prepare skill data (not yet saved to DB — that happens during publishing)
+    const skillDraft = {
+      title: skill_name.trim(),
+      idea_text: idea_text.trim(),
+      domain: domain || 'ideas',
+      five_layer: generationResult.data,
+      probe_data: {
+        scenario: probe_data.scenario,
+        thesis: probe_data.thesis,
+        antithesis: probe_data.antithesis,
+        extreme: probe_data.extreme,
+        selected_response: selected_response
+      }
+    };
+
+    res.json({
+      success: true,
+      skill_draft: skillDraft,
+      model: generationResult.model,
+      usage: generationResult.usage
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+export default router;
