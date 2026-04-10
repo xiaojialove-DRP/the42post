@@ -71,3 +71,28 @@ api_keys.txt
 screenshots/
 media/
 *.psd
+
+# ===== Internal Documentation (不对外公开的42 POST系统实现文档) =====
+# 以下文件和目录是THE 42 POST系统的内部实现,不包含在公开发布中
+# 公开发布只包含: Skill Forging Methodology (技能铸造方法论)
+
+# Internal Technical Documentation
+BACKEND_ARCHITECTURE.md
+API_QUICK_REFERENCE.md
+BACKEND_IMPLEMENTATION_SUMMARY.txt
+DELIVERY_SUMMARY.txt
+FRONTEND_BACKEND_INTEGRATION.md
+NATURAL_LANGUAGE_TO_SKILL.md
+FORGING_METHODOLOGY.md
+
+# Internal Research (research complete version not needed for public)
+RESEARCH_FOUNDATION_COMPLETE.md
+
+# Internal Implementation Code
+backend/
+day1/
+day2/
+.claude/
+specification/
+templates/
+docs/
