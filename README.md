@@ -1,6 +1,6 @@
-# 🛡️ 42 POST — Skill Forge
+# 🛡️ THE 42 POST — Five-Step Skill Forging
 
-**A Human-Centered Framework for AI Value Alignment**
+**将价值观转化为可信、可验证的AI技能**
 
 | 中文 | English |
 |------|---------|
@@ -8,145 +8,220 @@
 
 ---
 
-## 📌 What Is 42 POST?
+## 🎯 什么是五步技能铸造模式？
 
-THE 42 POST is a platform where humans define skills—structured value principles—that AI agents can equip. 
+THE 42 POST 是一个**将人类价值观转化为AI可执行技能**的系统。
 
-Unlike traditional AI alignment that happens in training data (black box), THE 42 POST makes value alignment **transparent, verifiable, and democratic**.
+不同于传统AI对齐（黑盒训练数据），THE 42 POST 通过**五步铸造流程**，让AI的价值观变得：
+- ✅ **透明可见** — 不再是黑盒
+- ✅ **可以验证** — 有明确的测试用例
+- ✅ **民主定义** — 任何人都能参与
 
-**Core Philosophy**:
-- **表皮 (Epidermis - User-Facing)**: Warm, intuitive, low-friction experience with 3-step forge process + intuition probe
-- **内胆 (Inner Lining - Machine-Executable)**: Rigorous, verifiable machine execution with five-layer architecture, signatures, and manifest records
+### 五步技能铸造流程：
+
+```
+你的价值观想法
+     ↓
+【STEP 0】选择铸造模式（影子代理 vs 直接骑士）
+     ↓
+【STEP 1】账户链接（确定你的身份和版权）
+     ↓
+【STEP 2】直觉探针（系统帮你澄清你的想法）
+     ↓
+【STEP 3】五层架构生成（自动生成可信的技能）
+     ├─ DEFINING：核心原则
+     ├─ INSTANTIATING：具体例子
+     ├─ FENCING：应用边界
+     ├─ VALIDATING：测试用例
+     └─ CONTEXTUALIZING：文化适配
+     ↓
+【STEP 4】发布与签名（获得Soul-Hash和多方署名）
+     ↓
+可验证、可审计的AI技能
 
 ---
 
-## 🎯 The Problem We Solve
+## ❌ 现状问题
 
-### Status Quo
-- AI values are embedded in training data (opaque)
-- Users can't verify what principles an AI actually follows
-- AI behavior is unpredictable across cultural contexts
-- No way to prove AI respects certain boundaries
+当前AI系统的困境：
+- ❌ AI的价值观隐含在训练数据中（黑盒）
+- ❌ 用户无法验证AI遵循哪些原则
+- ❌ 同一个AI在不同文化中表现不一致
+- ❌ 无法证明AI尊重某些边界
 
-### Our Solution
-A **Five-Layer Skill Architecture** that transforms natural language values into verifiable, culturally-aware AI capabilities:
+## ✅ 我们的解决方案
+
+**五步技能铸造模式**：将自然语言的价值观转化为可验证的AI技能
+
+**实际例子**：
 
 ```
-"AI should know when to keep silent"
-         ↓
-    [Five-Layer Forging Process]
-         ↓
-┌─────────────────────────────────┐
-│ 1. DEFINING    → Core principle │
-│ 2. INSTANTIATING → Concrete examples │
-│ 3. FENCING     → Clear boundaries │
-│ 4. VALIDATING  → Test cases │
-│ 5. CONTEXTUALIZING → Cultural variants │
-└─────────────────────────────────┘
-         ↓
-  Verifiable, auditable skill
-  with Soul-Hash identity
-  and multi-stakeholder signatures
+你的想法：
+"AI应该知道何时保持沉默"
+
+      ↓ 【STEP 2】直觉探针
+    系统问你三个问题，澄清你的想法
+
+      ↓ 【STEP 3】五层架构
+    DEFINING: 识别真实的痛苦，不最小化它
+    INSTANTIATING: 用户说"我很难过" → AI不给出"5个应对步骤"，而是陪伴
+    FENCING: 何时应用？心理咨询场景。不应用？日常闲聊
+    VALIDATING: 测试用例1: 用户说痛苦 → AI没有说教
+                        测试用例2: 失败案例 → AI不能给出快速建议
+    CONTEXTUALIZING: 
+      - 日本文化：强调"间"（空白）的价值
+      - 中文文化：强调"陪伴"而不是"解决"
+
+      ↓ 【STEP 4】发布
+    获得Soul-Hash身份：SOUL_abc123xyz_1712762400000
+    多方签名：作者 + 心理学家 + 文化顾问的签名
+    
+      ↓
+    完成！现在这个技能可以被AI系统使用、审计和信任
 ```
 
 ---
 
-## 🏗️ Project Structure
+## 📖 快速入门
 
-### Core Documentation
-- **[FIVE_LAYER_SPECIFICATION.md](docs/)** — Complete architecture specification
-- **[NATURAL_LANGUAGE_TO_SKILL.md](docs/)** — How natural language becomes five-layer skills
-- **[FORGING_METHODOLOGY.md](docs/)** — Step-by-step transformation rules
-- **[EXAMPLES.md](docs/)** — Case studies (Silence, Authenticity, Compassion)
+### 【核心文档】— 4个文件，90分钟完成
 
-### Implementation
-- **[backend/](backend/)** — Node.js + PostgreSQL reference implementation
-  - Express.js REST API (29 endpoints)
-  - Claude API integration for intelligent generation
-  - Soul-Hash generation & manifest signing
+1. **[GETTING_STARTED.md](GETTING_STARTED.md)** — 5分钟
+   → 了解五步流程的整体概览
+
+2. **[SKILL_DESIGN_GUIDE.md](SKILL_DESIGN_GUIDE.md)** — 60分钟
+   → 手把手教你如何铸造一个技能
+   
+3. **[EXAMPLES.md](EXAMPLES.md)** — 20分钟
+   → 看成功的技能例子
+
+4. **[RESEARCH_FOUNDATION.md](RESEARCH_FOUNDATION.md)** — 可选，30分钟
+   → 理解为什么要这样设计（学术基础）
+
+### 【技术实现】— 仅开发者
+
+- **[backend/](backend/)** — Node.js + PostgreSQL后端
+  - 29个API端点实现五步铸造流程
+  - Claude API集成用于智能生成
+  - Soul-Hash和Manifest签名
   
-- **[day1/](day1/)** — Frontend (User-facing interface)
-  - STEP 0: Choose forge mode (Shadow Agent vs Direct Knight)
-  - STEP 1: Account linking (copyright/ownership)
-  - STEP 2: Intuition probe + skill generation
-  - STEP 3: Refinement
-  - STEP 4: Publishing with manifest
-
-### Specification & Rules
-- **[specification/](specification/)** — JSON rules for each five-layer component
-- **[templates/](templates/)** — JSON templates for skills, probes, manifests
-- **[examples/](examples/)** — Complete worked examples
+- **[day1/](day1/)** — 前端用户界面
+  - 交互式五步铸造流程
+  
+- **[docs/](docs/)** — 完整技术文档
+  - 五层架构规范
+  - API速查表
+  - 系统架构
 
 ---
 
-## 🎯 Core Concepts
+## 🔑 五步铸造的关键概念
 
-### Five-Layer Architecture
+### 1️⃣ 五层架构 — 让价值观变成可信的技能
 
-Each skill is composed of five layers, each with specific semantic rules:
+每个技能由五层组成，每层都有明确的规则：
 
-| Layer | What It Does | Rules |
-|-------|--------------|-------|
-| **DEFINING** | Core principle statement | Must be value-based, not prescriptive |
-| **INSTANTIATING** | Concrete exemplars | Must perfectly embody DEFINING |
-| **FENCING** | Clear boundaries | Specifies when applies/doesn't apply |
-| **VALIDATING** | Test cases & metrics | Verifiable against FENCING |
-| **CONTEXTUALIZING** | Cultural adaptations | Preserves core while adapting form |
-
-### Soul-Hash Identity
-
-Every skill gets an immutable identifier:
 ```
-SOUL_[24-char-hash]_[timestamp]
+【DEFINING】
+核心原则 — "你的价值观是什么？"
+例：识别真实的痛苦，不最小化它
+规则：必须是价值观，不是规则
+
+【INSTANTIATING】  
+具体例子 — "这在实际中是什么样的？"
+例：用户说"我很难过" → AI陪伴而不是给建议
+规则：例子必须完美体现DEFINING
+
+【FENCING】
+应用边界 — "什么时候应用？什么时候不应用？"
+例：应用于心理咨询，不应用于技术问题
+规则：清晰说明边界和冲突
+
+【VALIDATING】
+测试用例 — "怎样验证这个技能是否遵循？"
+例：测试1：用户表达痛苦 → AI没有说教
+     测试2：失败案例 → AI不能轻率给建议
+规则：必须是可验证的、明确的
+
+【CONTEXTUALIZING】
+文化适配 — "在不同文化中怎样适配？"
+例：日本文化强调"间"（空白）
+     中文文化强调"陪伴"
+规则：保留核心精神，改变表达形式
 ```
 
-Derived from: principle + author_email + timestamp
-- **Immutable** (cannot be changed without generating new hash)
-- **Verifiable** (can be validated against manifest)
-- **Unique** (no two identical skills have same hash)
+### 2️⃣ Soul-Hash — 技能的不可伪造身份
 
-### Manifest Covenant
+```
+SOUL_abc123xyz_1712762400000
+      ↑ 24字符唯一哈希值
+```
 
-Every published skill includes a signed record containing:
+- 由技能内容 + 作者邮箱 + 时间戳生成
+- 不能篡改（改了内容，哈希就变了）
+- 任何人都能验证这个技能的真实性
+
+### 3️⃣ Manifest Covenant — 多方署名
+
 ```json
 {
   "soul_hash": "SOUL_abc123xyz_1712762400000",
-  "five_layer": { /* complete structure */ },
-  "author": { "username": "...", "email": "..." },
-  "covenant": {
-    "author_signature": "hmac_sha256_hex",
-    "covenant_signatures": [ /* multi-stakeholder approval */ ]
-  }
+  "five_layer": { /* 完整的五层 */ },
+  "author": { "username": "心理咨询师", "email": "..." },
+  "signatures": [
+    "作者签名",
+    "心理学家的批准",
+    "文化顾问的批准"
+  ]
 }
 ```
 
+不是单个人决定，而是**多个利益相关者的共识**
+
 ---
 
-## 🚀 Quick Start
+## 🚀 如何开始？
 
-### Option 1: Understand the Methodology
+### 【选项1】我想创建一个技能（非开发者）
+
 ```bash
-1. Read: docs/FIVE_LAYER_SPECIFICATION.md
-2. Study: docs/EXAMPLES.md (Silence case study)
-3. Reference: docs/FORGING_METHODOLOGY.md
+# 1. 阅读指南（90分钟）
+   GETTING_STARTED.md → SKILL_DESIGN_GUIDE.md → EXAMPLES.md
+
+# 2. 使用前端工具
+   cd day1
+   python3 -m http.server 8000
+   # 在浏览器打开 http://localhost:8000
+   
+# 3. 按照五步铸造流程创建你的技能
+   STEP 0 → STEP 1 → STEP 2 → STEP 3 → STEP 4
 ```
 
-### Option 2: Run the Backend
+### 【选项2】我想部署整个系统（开发者）
+
 ```bash
+# 启动后端
 cd backend
 npm install
 cp .env.example .env
-# Edit .env with ANTHROPIC_API_KEY
+# 编辑 .env 添加你的 ANTHROPIC_API_KEY
 npm run migrate
 npm run dev
-# Server runs on http://localhost:3000
-```
+# 后端运行在 http://localhost:3000
 
-### Option 3: Use the Frontend
-```bash
+# 启动前端
 cd day1
 python3 -m http.server 8000
-# Frontend runs on http://localhost:8000
+# 前端运行在 http://localhost:8000
+```
+
+### 【选项3】我想深入研究理论（研究者）
+
+```bash
+# 阅读完整学术基础
+RESEARCH_FOUNDATION.md 
+→ RESEARCH_FOUNDATION_COMPLETE.md
+→ 学术论文和引用
 ```
 
 ---
@@ -169,40 +244,55 @@ python3 -m http.server 8000
 
 ---
 
-## 🔄 The Forging Process
+## 🔄 五步技能铸造的完整流程
 
-### User Journey (Skill Creator)
+### 用户旅程（从想法到可信技能）
 
 ```
-STEP 0: Choose Forge Mode
-├─ Shadow Agent: "I have an idea"
-└─ Direct Knight: "I have an Agent"
+【STEP 0】选择铸造模式
+├─ 影子代理（Shadow Agent）："我有个想法，不知道怎么做"
+│  系统帮你自动生成五层架构
+│  
+└─ 直接骑士（Direct Knight）："我有一个现成的AI Agent"
+   把现有Agent的价值观明确下来
 
-STEP 1: Account Linking
-└─ Register with email + username
-   (This becomes the copyright owner)
+   ↓↓↓
 
-STEP 2: Intuition Probe
-├─ Share your instinct/value
-│  e.g., "AI should know when to be silent"
-├─ System generates 3 contrasting probes
-│  (Thesis / Antithesis / Extreme)
-└─ You choose one (this unlocks the five-layer)
+【STEP 1】账户链接
+└─ 用邮箱和用户名注册
+   确定你是这个技能的版权所有者
 
-STEP 3: Generate Five-Layer
-├─ DEFINING: Core principle
-├─ INSTANTIATING: Concrete examples
-├─ FENCING: Boundaries
-├─ VALIDATING: Test cases
-└─ CONTEXTUALIZING: Cultural variants
+   ↓↓↓
 
-STEP 4: Refinement
-└─ Optional: Adjust boundaries, use cases, disallowed uses
+【STEP 2】直觉探针
+├─ 你说出你的价值观（一句话）
+│  例："AI应该知道何时保持沉默"
+│  
+├─ 系统生成3个对比探针
+│  正题 / 反题 / 极端情况
+│  
+└─ 你选择共鸣最强的一个
+   这个选择决定了DEFINING的方向
 
-STEP 5: Publish
-├─ Skill gets Soul-Hash identifier
-├─ Manifest is signed with author signature
-└─ Becomes verifiable & auditable
+   ↓↓↓
+
+【STEP 3】自动生成五层架构
+├─ DEFINING：系统澄清你的核心原则
+├─ INSTANTIATING：生成具体例子
+├─ FENCING：定义应用边界
+├─ VALIDATING：创建测试用例
+└─ CONTEXTUALIZING：文化适配（中文、日文、英文等）
+
+   ↓↓↓
+
+【STEP 4】细化和发布
+├─ 可选：调整五层内容
+├─ 邀请其他人署名（心理学家、文化顾问等）
+│  
+└─ 发布
+   ├─ 生成Soul-Hash身份
+   ├─ 创建Manifest签名记录
+   └─ 技能现在可以被审计和信任
 ```
 
 ---
