@@ -17,7 +17,7 @@
 
 ## 🏛️ 理论基础
 
-THE 42 POST建立在五个关键的研究领域上：
+THE 42 POST建立在七个关键的研究领域上：
 
 ### 1️⃣ Value-Sensitive Design (VSD)
 
@@ -101,7 +101,119 @@ THE 42 POST采用：
 
 ---
 
-### 3️⃣ 语义资本设计（Semantic Capital Design）
+### 3️⃣ 批判性设计与算法伦理
+
+**What is Critical Design?**
+
+批判性设计不是要"解决问题"，而是要**质疑设计假设本身**，揭示隐藏的权力关系和价值观。
+
+#### A. **Anthony Dunne & Fiona Raby** — 推测性设计（Speculative Design）
+
+英国设计师和设计理论家，Dunne & Raby工作室和Royal College of Art教授
+
+**关键作品**：
+- *Speculative Everything: Design, Fiction, and Social Dreaming* (2013)
+- *Design Noir: The Secret Life of Electronic Objects* (2001)
+- "Design for Debate" and "Design for Social Commentary"
+
+**核心思想**：
+```
+设计不仅用来解决现有问题，更重要的是想象替代未来
+✓ 通过虚构和推测来激发人们对现状的批判性思考
+✓ 设计应该提出问题和开启辩论，而不仅仅提供答案
+✓ "如果...会怎样？"比"这是什么？"更重要
+
+推测性设计的四个特征：
+1. 未来导向 - 关于"可能是"而不是"已经是"
+2. 批判性 - 质疑现状的假设
+3. 多元想象 - 提供多个可能的未来，而不是单一答案
+4. 社会参与 - 通过设计启动公众对话
+```
+
+**如何应用到THE 42 POST**：
+
+```
+Dunne & Raby的"推测性设想"与THE 42 POST的完美契合：
+
+【问题的定义相同】
+✓ 现状：AI的价值观是隐含的、单一的、不可选择的
+   → Dunne & Raby关注：现有技术的限制和隐含假设
+
+【提供替代方案】
+✓ THE 42 POST：不是"AI应该怎样"，而是"AI可以怎样"
+   → Dunne & Raby：通过推测设计提供多个可能的未来
+
+【激发批判性思考】
+✓ 每个Skill定义 = 一个关于"AI可以怎样"的推测设计
+   → 用户通过创作Skill来想象替代的AI未来
+
+【多元的想象空间】
+✓ Shadow Agent vs Direct Knight = 两种不同的AI未来
+✓ CONTEXTUALIZING层 = 文化间的多元想象
+   → Dunne & Raby："设计为了提出问题，而不是给出答案"
+
+【社会参与与辩论】
+✓ Covenant signatures = 社区围绕Skill的辩论和共识
+✓ Skill创作过程 = 集体想象AI未来的过程
+```
+
+#### B. **Luna Maurer (Moniker)** — 算法可视化与设计政治
+
+荷兰设计师/研究者，Moniker工作室
+
+**关键思想**：
+```
+✓ 算法应该是可理解的、可审计的、可批判的
+✓ 设计可以使不可见的算法权力变得可见
+✓ 数据设计和算法设计是政治行为，不是中立的
+```
+
+**如何应用到THE 42 POST**：
+
+```
+Luna Maurer的"算法可见化"思想：
+✓ THE 42 POST将隐含的AI价值观变成显式的Skill
+✓ Soul-Hash和Manifest使算法身份可验证
+✓ Test case使算法行为可预测和可审计
+
+THE 42 POST中的"设计政治"：
+✓ Skill定义本身就是政治行为
+  → 选择什么价值观 = 做出什么政治选择
+✓ FENCING层明确标识价值观的冲突和权衡
+✓ CONTEXTUALIZING层承认不同文化的政治差异
+```
+
+#### C. **Rodrigo Ochigame** — 算法伦理与替代计算模型
+
+巴西研究者，MIT Media Lab和Berkeley研究
+
+**关键思想**：
+```
+✓ 需要替代的AI模型，而不仅仅是改进现有模型
+✓ 算法民主化意味着去中心化和权力转移
+✓ 批判性研究应该服务于社会正义
+```
+
+**如何应用到THE 42 POST**：
+
+```
+Ochigame的"替代计算模型"思想：
+✓ THE 42 POST提供了AI价值对齐的替代方法
+  → 不是通过训练数据（黑盒）
+  → 而是通过显式定义的Skill（透明）
+
+✓ Shadow Agent vs Direct Knight
+  → 提供两种不同的计算模型
+  → 用户可选择最符合他们价值观的模型
+
+✓ 去中心化的价值观定义
+  → 不是OpenAI/Google定义所有AI价值观
+  → 而是社区成员共同定义
+```
+
+---
+
+### 4️⃣ 语义资本设计（Semantic Capital Design）
 
 **What is Semantic Capital?**
 
@@ -176,7 +288,7 @@ CONTEXTUALIZING→ 跨越性：多文化适配增加普遍理解
 
 ---
 
-### 4️⃣ DSPy方法（Data-driven Semantic Programming for Python）
+### 5️⃣ DSPy方法（Data-driven Semantic Programming for Python）
 
 **What is DSPy?**
 
@@ -254,7 +366,7 @@ class Skill:
 
 ---
 
-### 5️⃣ 人机交互与用户心理研究
+### 6️⃣ 人机交互与用户心理研究
 
 **Related HCI Research**：
 
@@ -374,21 +486,68 @@ THE 42 POST的设计：
 
 ---
 
+### 7️⃣ 文化研究与语言不可翻译性
+
+**关键思想**：
+```
+✓ 有些概念不能被翻译，只能被理解
+✓ 维特根斯坦："Whereof one cannot speak, thereof one must be silent"
+✓ 这不是失败，而是对文化多样性的尊重
+```
+
+**应用到THE 42 POST**：
+
+```
+维特根斯坦的"沉默"不是一个Skill失败的证明。
+相反，它是对人类存在的深刻理解。
+
+THE 42 POST在CONTEXTUALIZING层做的：
+✓ 承认某些价值观在不同文化中"不可翻译"
+✓ 而是需要被"转化"或"再创造"
+✓ 这种尊重是"守护文化"的核心
+
+例子：
+- 日本的"间"（ma - 空白）≠ 英文的"space"
+- 中文的"面子"（mianzi）≠ 英文的"face"
+- 这些不是翻译问题，而是存在论问题
+
+THE 42 POST的承诺：
+✓ 不强行翻译，而是邀请再创造
+✓ CONTEXTUALIZING层不是"翻译"，而是"转化精神"
+✓ 保留核心原则，改变表达形式
+```
+
+---
+
 ## 🔗 这些理论如何在THE 42 POST中整合
 
 ```
-Value-Sensitive Design
-    ↓ (明确价值观)
-Participatory Design
-    ↓ (邀请多方参与)
-Semantic Capital Design
-    ↓ (提高理解和验证性)
-五层架构
-    ↓ (DEFINING → INSTANTIATING → FENCING → VALIDATING → CONTEXTUALIZING)
-DSPy方法论
-    ↓ (将Skill变成可执行的规范)
-HCI & Psychology
-    ↓ (用户研究验证设计有效性)
+批判性设计（Bey, Maurer, Ochigame）
+    ↓ 质疑现有AI对齐方式，提供替代想象
+
+Value-Sensitive Design（Friedman）
+    ↓ 显式体现人类价值观
+
+Participatory Design（Sanders, Ehn）
+    ↓ 邀请所有人参与定义价值观
+
+Semantic Capital Design（Bourdieu, Floridi）
+    ↓ 提高理解清晰度和跨越性
+
+五层架构（THE 42 POST）
+    ↓ DEFINING(VSD) → INSTANTIATING(参与式)
+      → FENCING(伦理、跨文化) → VALIDATING(DSPy)
+      → CONTEXTUALIZING(语义资本、文化研究)
+
+DSPy方法论（Khattab）
+    ↓ 将Skill变成可执行的规范和断言
+
+HCI & Psychology（Winnicott, Rogers, Siegel, Fogg）
+    ↓ 用户研究验证设计有效性
+
+文化研究与语言不可翻译性（Whorf, Hofstede, Wittgenstein）
+    ↓ 尊重文化多样性，守护语言精神
+
 可验证、民主、透明的AI价值对齐系统
 ```
 
@@ -544,32 +703,44 @@ THE 42 POST采用的研究方法：
 
 4. Ehn, P. (1988). "Work-oriented design of computer artifacts." Arbetslivscentrum.
 
-### Semantic Capital & Information Ethics
-5. Bourdieu, P. (1986). "The forms of capital." In Handbook of theory and research for the sociology of education (pp. 241-258). Greenwood.
+### Critical Design & Design Politics
+5. Dunne, A., & Raby, F. (2013). "Speculative Everything: Design, Fiction, and Social Dreaming." MIT Press.
 
-6. Floridi, L. (2013). "The ethics of information." Oxford University Press.
+6. Dunne, A., & Raby, F. (2001). "Design Noir: The Secret Life of Electronic Objects." Birkhauser Verlag.
+
+7. Dunne, A. (2005). "Hertzian Tales: Electronic Products, Aesthetic Experience, and Critical Design." MIT Press.
+
+8. Maurer, L., & Moniker Studio. (Works on algorithmic visualization and design politics).
+
+9. Ochigame, R. (2024). "Shaping Our Futures: AI and the Goal of Human-Centered Change" (MIT Media Lab).
+
+10. Morelli, N. (2007). "Design Services for the World: Social Innovation and Public Administration".
+
+### Semantic Capital & Information Ethics
+11. Bourdieu, P. (1986). "The forms of capital." In Handbook of theory and research for the sociology of education (pp. 241-258). Greenwood.
+
+12. Floridi, L. (2013). "The ethics of information." Oxford University Press.
 
 ### DSPy & Structured Programming
-7. Khattab, O., et al. (2023). "DSPy: Structured Language Model Programming."
+13. Khattab, O., et al. (2023). "DSPy: Structured Language Model Programming."
 
 ### HCI & Psychology
-8. Winnicott, D. W. (1960). "Ego distortion in terms of true and false self." The International journal of psycho-analysis, 41, 571.
+14. Winnicott, D. W. (1960). "Ego distortion in terms of true and false self." The International journal of psycho-analysis, 41, 571.
 
-9. Rogers, C. R. (1957). "The necessary and sufficient conditions of therapeutic personality change." Journal of consulting psychology, 21(2), 95.
+15. Rogers, C. R. (1957). "The necessary and sufficient conditions of therapeutic personality change." Journal of consulting psychology, 21(2), 95.
 
-10. Siegel, D. J. (2012). "The developing mind: How relationships and the brain interact to shape who we become." Bantam.
+16. Siegel, D. J. (2012). "The developing mind: How relationships and the brain interact to shape who we become." Bantam.
 
-11. Fogg, B. J., & Tseng, H. (1999). "The elements of computer credibility." In Proceedings of the SIGCHI conference on human factors in computing systems (pp. 80-87).
+17. Fogg, B. J., & Tseng, H. (1999). "The elements of computer credibility." In Proceedings of the SIGCHI conference on human factors in computing systems (pp. 80-87).
 
-### Cross-cultural Communication
-12. Hofstede, G. (2011). "Dimensionalizing cultures: The Hofstede model in context." Online readings in psychology and culture, 2(1), 8.
+### Cross-cultural Communication & Philosophy
+18. Hofstede, G. (2011). "Dimensionalizing cultures: The Hofstede model in context." Online readings in psychology and culture, 2(1), 8.
 
-13. Trompenaars, F., & Hampden-Turner, C. (1997). "Riding the waves of culture: Understanding diversity in global business." McGraw-Hill Education.
+19. Trompenaars, F., & Hampden-Turner, C. (1997). "Riding the waves of culture: Understanding diversity in global business." McGraw-Hill Education.
 
-14. Whorf, B. L. (1956). "Language, thought, and reality: Selected writings." MIT Press.
+20. Whorf, B. L. (1956). "Language, thought, and reality: Selected writings." MIT Press.
 
-### Philosophy & AI Ethics
-15. Wittgenstein, L. (1922). "Tractatus logico-philosophicus." Harcourt, Brace.
+21. Wittgenstein, L. (1922). "Tractatus logico-philosophicus." Harcourt, Brace.
 
 ---
 
