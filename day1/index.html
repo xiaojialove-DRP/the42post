@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Noto+Serif+SC:wght@400;700;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=110">
+  <link rel="stylesheet" href="styles.css?v=112">
 </head>
 <body data-lang="en">
   <!-- ═══════════════ GLOBAL HEADER ═══════════════ -->
@@ -276,6 +276,72 @@
       <div class="av-footer-text">THE 42 POST · AGENT VIEW · Soul.MD Protocol Active</div>
     </div>
   </section>
+
+  <!-- ═══════════════ SKILL DETAIL MODAL — Left/Right Two-Column Layout ═══════════════ -->
+  <div class="skill-detail-overlay" id="skillDetailOverlay" style="display:none;">
+    <div class="skill-detail-modal">
+      <button class="skill-detail-close" id="btnCloseSkillDetail">✕</button>
+
+      <div class="skill-detail-header">
+        <div class="skill-detail-number" id="skillDetailNumber">#01</div>
+        <div class="skill-detail-title" id="skillDetailTitle">Skill Title</div>
+      </div>
+
+      <div class="skill-detail-body">
+        <!-- Left side (60%) -->
+        <div class="skill-detail-left">
+          <div class="detail-section">
+            <div class="detail-description" id="skillDetailDesc"></div>
+          </div>
+
+          <div class="detail-section">
+            <h4 class="detail-heading">APPLICABLE WHEN / 适用场景</h4>
+            <ul class="detail-list" id="skillDetailApplies"></ul>
+          </div>
+
+          <div class="detail-section">
+            <h4 class="detail-heading">DO THIS / 这样做</h4>
+            <ul class="detail-list" id="skillDetailDo"></ul>
+          </div>
+
+          <div class="detail-section">
+            <h4 class="detail-heading">NEVER DO THIS / 禁忌</h4>
+            <ul class="detail-list" id="skillDetailDont"></ul>
+          </div>
+        </div>
+
+        <!-- Right side (40%) -->
+        <div class="skill-detail-right">
+          <div class="detail-visual">
+            <div class="visual-placeholder" id="skillDetailVisual">
+              <div style="font-size: 48px; margin-bottom: 12px;">🎨</div>
+              <div style="font-size: 12px; color: #b8a89a; font-style: italic;">Visual representation</div>
+            </div>
+          </div>
+
+          <div class="detail-meta">
+            <div class="meta-item">
+              <span class="meta-label">AUTHOR / 作者</span>
+              <span class="meta-value" id="skillDetailAuthor"></span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-label">LICENSE / 许可</span>
+              <span class="meta-value" id="skillDetailLicense"></span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-label">STARLIGHT / 星数</span>
+              <span class="meta-value" id="skillDetailStarlight"></span>
+            </div>
+          </div>
+
+          <div class="detail-actions">
+            <button class="btn-apply-skill" id="btnApplySkill">APPLY SKILL / 应用技能</button>
+            <button class="btn-learn-more" id="btnLearnMore">LEARN MORE / 了解更多</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- ═══════════════ FOOTER — About + How It Works + Logo ═══════════════ -->
   <footer class="global-footer" id="globalFooter">
@@ -652,23 +718,23 @@
           <div class="generation-progress">
             <div class="progress-item" data-layer="1">
               <span class="progress-icon">✓</span>
-              <span class="progress-label">Principle / 原则</span>
+              <span class="progress-label">Defining / 定义</span>
             </div>
             <div class="progress-item" data-layer="2">
               <span class="progress-icon">✓</span>
-              <span class="progress-label">Exemplars / 范例</span>
+              <span class="progress-label">Instantiating / 实例化</span>
             </div>
             <div class="progress-item" data-layer="3">
               <span class="progress-icon">✓</span>
-              <span class="progress-label">Boundaries / 边界</span>
+              <span class="progress-label">Fencing / 围界</span>
             </div>
             <div class="progress-item" data-layer="4">
               <span class="progress-icon">✓</span>
-              <span class="progress-label">Evaluation / 评估</span>
+              <span class="progress-label">Validating / 验证</span>
             </div>
             <div class="progress-item" data-layer="5">
               <span class="progress-icon">✓</span>
-              <span class="progress-label">Cultural Variants / 文化适配</span>
+              <span class="progress-label">Contextualizing / 情境化</span>
             </div>
           </div>
 
@@ -786,7 +852,7 @@
 
   <!-- About/HowTo overlays removed — content moved to footer -->
 
-  <script src="skills.js?v=110"></script>
-  <script src="script.js?v=110"></script>
+  <script src="skills.js?v=112"></script>
+  <script src="script.js?v=112"></script>
 </body>
 </html>

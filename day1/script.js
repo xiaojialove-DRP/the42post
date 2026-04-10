@@ -313,13 +313,19 @@ function initSlotGrid() {
     if (data) {
       const licenseIcon = data.commercial === 'allowed' ? '◎' : data.commercial === 'prohibited' ? '⊘' : '◉';
       const licenseLabel = data.commercial === 'allowed' ? 'Open' : data.commercial === 'prohibited' ? 'Non-commercial' : 'License Required';
+
+      // Truncate description to ~70 characters for visual comfort
+      const descDisplay = data.desc && data.desc.length > 70
+        ? data.desc.substring(0, 70) + '...'
+        : data.desc;
+
       slot.innerHTML = `
         <div class="slot-header">
           <span class="slot-number">#${data.id}</span>
           <span class="slot-status active">ACTIVE</span>
         </div>
         <div class="slot-title">${data.title}</div>
-        <div class="slot-desc">${data.desc}</div>
+        <div class="slot-desc" title="${escapeHtml(data.desc)}">${escapeHtml(descDisplay)}</div>
         <div class="slot-license">
           <span class="license-author">by ${data.author || 'Anonymous'}</span>
           <span class="license-badge" title="${licenseLabel}">${licenseIcon} ${licenseLabel}</span>
@@ -329,6 +335,14 @@ function initSlotGrid() {
           <span class="starlight-count">${data.starlight > 0 ? data.starlight : ''}</span>
         </div>
       `;
+
+      // Make slot clickable to view full details
+      slot.style.cursor = 'pointer';
+      slot.addEventListener('click', (e) => {
+        if (!e.target.closest('.starlight-btn')) {
+          showSkillDetail(data);
+        }
+      });
     } else {
       slot.innerHTML = `
         <div class="slot-header">
@@ -360,6 +374,81 @@ function initSlotGrid() {
     countEl.textContent = count > 0 ? count : '';
   });
 }
+
+// ═══ SKILL DETAIL MODAL HANDLER ═══
+function showSkillDetail(skillData) {
+  const overlay = document.getElementById('skillDetailOverlay');
+  if (!overlay) return;
+
+  // Populate modal with skill data
+  document.getElementById('skillDetailNumber').textContent = `#${skillData.id}`;
+  document.getElementById('skillDetailTitle').textContent = skillData.title || skillData.titleCn || '';
+  document.getElementById('skillDetailDesc').textContent = skillData.desc || skillData.descCn || '';
+  document.getElementById('skillDetailAuthor').textContent = skillData.author || 'Anonymous';
+
+  // License label
+  const licenseLabel = skillData.commercial === 'allowed' ? 'Open' : skillData.commercial === 'prohibited' ? 'Non-commercial' : 'License Required';
+  document.getElementById('skillDetailLicense').textContent = licenseLabel;
+  document.getElementById('skillDetailStarlight').textContent = skillData.starlight || '0';
+
+  // For now, populate with placeholder lists
+  // In production, these would come from the 5-layer structure
+  const appliesList = document.getElementById('skillDetailApplies');
+  appliesList.innerHTML = `
+    <li>Core use case 1</li>
+    <li>Core use case 2</li>
+    <li>Specific context</li>
+  `;
+
+  const doList = document.getElementById('skillDetailDo');
+  doList.innerHTML = `
+    <li>Apply with context awareness</li>
+    <li>Adapt to user needs</li>
+    <li>Maintain clarity</li>
+  `;
+
+  const dontList = document.getElementById('skillDetailDont');
+  dontList.innerHTML = `
+    <li>Avoid overcomplication</li>
+    <li>Never ignore context</li>
+    <li>Don't sacrifice accuracy</li>
+  `;
+
+  // Show overlay
+  overlay.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+
+// Close skill detail modal
+document.addEventListener('DOMContentLoaded', () => {
+  const overlay = document.getElementById('skillDetailOverlay');
+  const closeBtn = document.getElementById('btnCloseSkillDetail');
+
+  if (closeBtn) {
+    closeBtn.addEventListener('click', () => {
+      if (overlay) overlay.style.display = 'none';
+      document.body.style.overflow = '';
+    });
+  }
+
+  // Close on overlay click (but not on modal click)
+  if (overlay) {
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) {
+        overlay.style.display = 'none';
+        document.body.style.overflow = '';
+      }
+    });
+  }
+
+  // Close on Escape key
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && overlay && overlay.style.display !== 'none') {
+      overlay.style.display = 'none';
+      document.body.style.overflow = '';
+    }
+  });
+});
 
 /* ═══ SAND CANVAS (adapted for white background) ═══ */
 function initSandCanvas() {
@@ -3266,12 +3355,12 @@ function generateSkillMarkdown(skillData) {
 
 ---
 
-## Layer 1 · PRINCIPLE / 原则
+## Layer 1 · DEFINING / 定义
 ${fiveLayer ? fiveLayer.principle : (skillData.desc || 'A skill forged in The 42 Post')}
 
 ---
 
-## Layer 2 · EXEMPLARS / 范例
+## Layer 2 · INSTANTIATING / 实例化
 `;
 
   if (fiveLayer && fiveLayer.exemplars.length > 0) {
@@ -3282,7 +3371,7 @@ ${fiveLayer ? fiveLayer.principle : (skillData.desc || 'A skill forged in The 42
     md += `*No exemplars generated — complete the Intuition Probe to generate comparative examples.*\n`;
   }
 
-  md += `\n---\n\n## Layer 3 · BOUNDARIES / 边界\n`;
+  md += `\n---\n\n## Layer 3 · FENCING / 围界\n`;
 
   if (fiveLayer) {
     const b = fiveLayer.boundaries;
@@ -3303,7 +3392,7 @@ ${fiveLayer ? fiveLayer.principle : (skillData.desc || 'A skill forged in The 42
     md += `**Disallowed uses:** ${skillData.disallowedUses || 'Harmful, illegal, or deceptive purposes'}\n`;
   }
 
-  md += `\n---\n\n## Layer 4 · EVALUATION / 评估\n`;
+  md += `\n---\n\n## Layer 4 · VALIDATING / 验证\n`;
 
   if (fiveLayer) {
     fiveLayer.evaluation.test_cases.forEach((tc, i) => {
@@ -3317,7 +3406,7 @@ ${fiveLayer ? fiveLayer.principle : (skillData.desc || 'A skill forged in The 42
     md += `*No evaluation test cases — complete the Intuition Probe to auto-generate.*\n`;
   }
 
-  md += `\n---\n\n## Layer 5 · CULTURAL ADAPTATION / 文化适配\n`;
+  md += `\n---\n\n## Layer 5 · CONTEXTUALIZING / 情境化\n`;
 
   if (fiveLayer) {
     for (const [locale, variant] of Object.entries(fiveLayer.cultural_variants)) {
