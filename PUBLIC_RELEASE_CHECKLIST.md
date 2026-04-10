@@ -33,9 +33,10 @@
 
 ✅ SKILL_TransformNaturalLanguageToSkill.md
    - ⭐ 第一个官方Skill
+   - **Transform Natural Language into Better Skills**
+   - **将自然语言转化为更好用的技能**
    - 用方法论本身证明方法论
-   - 完整的五层示范
-   - Soul-Hash身份和Manifest签名
+   - 完整的五层示范 + Soul-Hash + 三语言适配
    - 大小: ~13KB
 
 ✅ EXAMPLES.md

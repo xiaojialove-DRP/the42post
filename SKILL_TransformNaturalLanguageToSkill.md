@@ -1,9 +1,13 @@
-# 🛠️ SKILL: 将自然语言转化为更好用的技能
+# 🛠️ SKILL: Transform Natural Language into Better Skills
+## 技能：将自然语言转化为更好用的技能
+
+**Skill Name (中文)**: 将自然语言转化为更好用的技能  
+**Skill Name (English)**: Transform Natural Language into Better Skills  
 
 **Soul-Hash**: `SOUL_7f4a2e9c8b1d5a3e2c9f4b_1712950800000`  
-**作者**: THE 42 POST Contributors  
-**发布日期**: 2026-04-10  
-**版本**: 1.0
+**Author**: Skill Forging Methodology Contributors  
+**Release Date**: 2026-04-10  
+**Version**: 1.0
 
 ---
 
