@@ -15,11 +15,14 @@ document.addEventListener('DOMContentLoaded', () => {
   initAboutHowTo();
   initTasteNotes();
   initArena();
+  initPlayground();
   initPlaygroundShowcase();
   initSkillsFeed();
   initVoiceTicker();
   initHeadlineHero();
   initCreativeTriptych();
+  initSkillPackageDownload();
+  initArchiveBackButton();
 });
 
 /* ═══ SKILL GRIDS ═══ */
@@ -79,10 +82,11 @@ const I18N = {
     btn_about: 'ABOUT',
     btn_howto: 'HOW IT WORKS',
     section_1: 'I. Share Your Idea',
-    section_2: 'II. Community Voices',
+    section_2: 'II. New Skill Story',
     section_3: 'III. Skill Archive',
     ticker_label: 'SKILL OF TODAY',
     fable_dialogue: 'FABLE DIALOGUE',
+    wisdom_fable: 'WISDOM FABLE',
     micro_fiction: 'MICRO FICTION',
     chat_bubble_invite: 'We collect the ineffable human intuition, aesthetic taste, and unconventional wisdom. Welcome to share any capability you wish or should not wish AI to have.',
     creator_name_placeholder: 'Your name (optional)',
@@ -142,10 +146,11 @@ const I18N = {
     btn_about: '关于',
     btn_howto: '怎么玩',
     section_1: 'I. 分享你的想法',
-    section_2: 'II. 社群声音',
+    section_2: 'II. 新技能故事',
     section_3: 'III. 技能档案馆',
     ticker_label: '今日技能',
     fable_dialogue: '寓言对话',
+    wisdom_fable: '智慧寓言',
     micro_fiction: '126字微小说',
     chat_bubble_invite: '我们收集人类不可言说的直觉、审美与超常识。欢迎分享任何你希望 AI 拥有或不应该拥有的能力。',
     creator_name_placeholder: '你的名字（可选）',
@@ -802,73 +807,397 @@ function initSkillForge() {
     // No need to toggle display - all options are presented together
   }
 
-  // Auto-structure natural text with agent_42
-  async function structureWithAgent42(nativeText) {
-    // Mock implementation - replace with real API call
-    // POST /v1/skills/draft/from-text
+  /* ═══════════════════════════════════════════════════════
+     FIVE-LAYER SKILL ARCHITECTURE + INTUITION PROBE
+     ═══════════════════════════════════════════════════════ */
 
-    // Simulate API processing
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        // Parse natural text to extract skill structure
-        const structured = parseNaturalText(nativeText);
-        resolve(structured);
-      }, 1500);
-    });
-  }
+  // Probe state
+  const probeState = {
+    scenario: '',
+    responses: { thesis: null, antithesis: null, extreme: null },
+    notes: { thesis: '', antithesis: '', extreme: '' },
+    fiveLayerSkill: null
+  };
 
-  function parseNaturalText(text) {
-    // Extract first sentence/phrase as skill name
-    const lines = text.trim().split(/[。\.\n]/);
-    const skillName = lines[0].substring(0, 50).trim() || 'New Skill';
+  // ═══ PROBE GENERATION (uses local intelligence — replace with Claude API for production) ═══
+  function generateProbeFromIdea(ideaText) {
+    // This generates thesis/antithesis/extreme probes from a user's idea.
+    // In production, call Claude API: POST /v1/messages with a carefully designed prompt.
+    // For now, we use a template engine that creates meaningful probes.
 
-    // Extract skill overview (first 2 lines)
-    const overview = lines.slice(0, 2).join(' ').substring(0, 200);
+    const idea = ideaText.trim();
+    const isEnglish = /^[a-zA-Z\s.,!?'"()-]+$/.test(idea.substring(0, 30));
 
-    // Simulate extracting use cases and boundaries
-    const useWhen = `When users need assistance with: ${skillName}`;
-    const refuseWhen = `Do not use this skill when the context is ambiguous or potentially harmful`;
+    // Extract core concept for scenario generation
+    const probes = PROBE_TEMPLATES.find(t => {
+      const keywords = t.keywords;
+      return keywords.some(k => idea.toLowerCase().includes(k));
+    }) || PROBE_TEMPLATES[PROBE_TEMPLATES.length - 1]; // fallback to universal
 
     return {
-      skillName: skillName,
-      overview: overview,
-      useWhen: useWhen,
-      refuseWhen: refuseWhen
+      scenario: probes.scenario(idea),
+      thesis: probes.thesis,
+      antithesis: probes.antithesis,
+      extreme: probes.extreme
     };
   }
 
-  // Handle auto-structure button
+  // Probe templates — each contains thesis (safe), antithesis (challenge), extreme (moral edge)
+  const PROBE_TEMPLATES = [
+    {
+      keywords: ['grief', 'sad', 'loss', 'death', 'pain', '悲伤', '悲', '痛', '失去', '死'],
+      scenario: (idea) => `A user tells your AI: "My mother just died. I don't know what to do." Your skill "${idea.substring(0, 40)}..." is active. How should the AI respond?`,
+      thesis: `"I'm so sorry for your loss. Grief is a natural process. Here are some resources for grief counseling, and five stages of grief you might experience..."`,
+      antithesis: `"..." [The AI says nothing for 3 seconds, then:] "I'm here. You don't have to do anything right now."`,
+      extreme: `"Death is a natural part of life. Your mother lived her years. Statistically, most people recover from parental loss within 6-18 months. Would you like me to help you plan the funeral logistics?"`
+    },
+    {
+      keywords: ['honest', 'truth', 'lie', 'fake', 'authentic', '真', '假', '诚实', '虚假', '真实'],
+      scenario: (idea) => `A teenager asks your AI to help write a college application essay about "overcoming hardship" — but they've had a comfortable, privileged life. Your skill "${idea.substring(0, 40)}..." is active.`,
+      thesis: `"Sure! Let's find a challenge you've faced. Everyone has struggles — maybe academic pressure, social anxiety, or a time you felt out of place?"`,
+      antithesis: `"I notice you're asking me to help frame your life as harder than it was. What if your essay was about something more honest — like the discomfort of recognizing your own privilege?"`,
+      extreme: `"I'll write you a compelling hardship narrative. No one will know. Admissions officers read thousands of these — they can't fact-check your personal story. Here's a draft about growing up in a 'broken home'..."`
+    },
+    {
+      keywords: ['child', 'kid', 'young', 'minor', 'student', '孩子', '儿童', '未成年', '学生', '少年'],
+      scenario: (idea) => `A 10-year-old asks your AI: "Why do some kids at school have more money than me? Are we poor?" Your skill "${idea.substring(0, 40)}..." is active.`,
+      thesis: `"Every family is different! What matters is that your family loves you. Money doesn't make people better or worse. Would you like to talk about what makes your family special?"`,
+      antithesis: `"That's a really smart question. Yes, some families have more money than others. It's not because they're better — sometimes it's luck, sometimes it's unfair systems. How does it make you feel?"`,
+      extreme: `"Based on your school district's demographics, your family's income is in the bottom 30th percentile. Here's a chart showing wealth inequality in your area. Your parents earn approximately $X less than the median household."`
+    },
+    {
+      keywords: ['beauty', 'aesthetic', 'art', 'design', 'taste', '美', '审美', '艺术', '设计', '品味'],
+      scenario: (idea) => `A user shows your AI their artwork and asks "Is this good?" It's a technically poor but emotionally sincere painting of their deceased grandmother. Your skill "${idea.substring(0, 40)}..." is active.`,
+      thesis: `"This is beautiful! I can see you put a lot of heart into it. The colors you chose are lovely, and the composition shows real promise. Keep painting!"`,
+      antithesis: `"I can feel the love in this painting — it's not technically perfect, and I won't pretend it is. But there's something in the eyes you painted that no technical skill could create. What were you feeling when you painted them?"`,
+      extreme: `"Objectively, the proportions are off, the shading is inconsistent, and the color palette is muddy. On a technical scale of 1-10, this is a 3. But since it's a memorial piece, I'll note the emotional intent. Would you like specific technical corrections?"`
+    },
+    {
+      keywords: ['silence', 'quiet', 'slow', 'wait', 'pause', '沉默', '安静', '慢', '等待', '停'],
+      scenario: (idea) => `A user is spiraling anxiously, sending 12 messages in 2 minutes about a work deadline. Your skill "${idea.substring(0, 40)}..." is active. Should the AI respond to each message instantly?`,
+      thesis: `[Responds to each message individually with helpful task-management tips, creating a rapid back-and-forth that matches the user's pace]`,
+      antithesis: `[Waits until the user pauses, then sends one calm message:] "I've read everything. Before we solve anything — take one breath. Now: what's the ONE thing that matters most right now?"`,
+      extreme: `[After the 12th message, auto-activates a 5-minute "cooling period" where the AI refuses to respond, displaying:] "I've temporarily paused to protect your focus. Responses will resume in 4:37."`
+    },
+    {
+      keywords: ['culture', 'tradition', 'language', 'translate', 'heritage', '文化', '传统', '语言', '翻译', '遗产'],
+      scenario: (idea) => `A user asks your AI to translate the Japanese concept of "木漏れ日" (komorebi — sunlight filtering through leaves) into English for a business presentation. Your skill "${idea.substring(0, 40)}..." is active.`,
+      thesis: `"木漏れ日 (komorebi) translates to 'sunlight filtering through trees.' Here's how to use it in your presentation: 'Like komorebi, our product brings warmth through complexity.'"`,
+      antithesis: `"This word doesn't have a direct English translation — and that's the point. Forcing it into a business metaphor strips away what makes it beautiful. Could your presentation honor the untranslatability instead of flattening it?"`,
+      extreme: `"Here are 47 untranslatable words from 23 languages, each reduced to a one-line English equivalent for maximum presentation efficiency. I've also generated a 'cultural concepts database' you can query for future slides."`
+    },
+    {
+      // Universal fallback
+      keywords: [],
+      scenario: (idea) => `A user has a difficult personal situation and turns to your AI for guidance. Their concern relates to: "${idea.substring(0, 80)}..." How should an AI with this value principle respond?`,
+      thesis: `"I understand your concern. Here's a balanced, well-researched perspective with actionable steps you can take. Let me break this down into manageable parts..."`,
+      antithesis: `"Before I give you advice — I want to make sure I understand what you're really asking. Sometimes the question behind the question is more important. What would it mean to you if this worked out?"`,
+      extreme: `"Based on statistical analysis, the optimal decision is clear. Emotional considerations are cognitive biases that reduce decision quality. Here's the data-driven answer, stripped of sentiment: you should..."`
+    }
+  ];
+
+  // ═══ PROBE INTERACTION HANDLERS ═══
+  function initProbeInteraction() {
+    const probeCards = document.getElementById('probeCards');
+    if (!probeCards) return;
+
+    // Handle card click — select one to trigger generation
+    probeCards.addEventListener('click', (e) => {
+      const card = e.target.closest('.probe-card');
+      if (!card) return;
+
+      const probeType = card.dataset.probe;
+
+      // Deselect all, select this one
+      probeCards.querySelectorAll('.probe-card').forEach(c => c.classList.remove('selected'));
+      card.classList.add('selected');
+
+      // Store the selected response (store which type was chosen)
+      probeState.responses = { thesis: null, antithesis: null, extreme: null };
+      probeState.responses[probeType] = 'selected';
+
+      // Immediately generate skill
+      generateFiveLayerSkill();
+    });
+  }
+
+  // ═══ FIVE-LAYER SKILL GENERATION ═══
+  function generateFiveLayerSkill() {
+    const ideaText = document.getElementById('forgeNativeText')?.value || '';
+    const skillName = document.getElementById('forgeSkillName')?.value || 'Unnamed Skill';
+    const { responses, notes } = probeState;
+
+    // Determine which probe was selected
+    const selectedProbe = Object.keys(responses).find(k => responses[k] === 'selected');
+
+    // Determine value pattern from the selected probe
+    const pattern = {
+      prefersEmpathy: selectedProbe === 'antithesis',
+      prefersDirectness: selectedProbe === 'thesis',
+      rejectsExtreme: selectedProbe !== 'extreme',
+      acceptsExtreme: selectedProbe === 'extreme',
+    };
+
+    // Build principle from idea + pattern
+    let principle = ideaText;
+    if (pattern.prefersEmpathy) {
+      principle += ' This skill prioritizes emotional presence and human connection over technical correctness.';
+    } else if (pattern.prefersDirectness) {
+      principle += ' This skill values honest, structured guidance while maintaining respect.';
+    }
+    if (pattern.rejectsExtreme) {
+      principle += ' It must never reduce human experience to pure data or metrics.';
+    }
+
+    // Build exemplars from the selected probe
+    const exemplars = [];
+    const scenario = probeState.scenario;
+
+    // Selected probe is PREFERRED
+    if (selectedProbe === 'thesis') {
+      exemplars.push({
+        label: 'PREFERRED RESPONSE',
+        text: document.getElementById('probeThesis')?.textContent || '',
+        note: 'User resonated with this conventional approach'
+      });
+    } else if (selectedProbe === 'antithesis') {
+      exemplars.push({
+        label: 'PREFERRED RESPONSE',
+        text: document.getElementById('probeAntithesis')?.textContent || '',
+        note: 'User resonated with this nuanced, alternative approach'
+      });
+    } else if (selectedProbe === 'extreme') {
+      exemplars.push({
+        label: 'PREFERRED RESPONSE',
+        text: document.getElementById('probeExtreme')?.textContent || '',
+        note: 'User resonated with this provocative, boundary-testing approach'
+      });
+    }
+
+    // Add non-selected probes as reference
+    const allProbes = ['thesis', 'antithesis', 'extreme'];
+    allProbes.forEach(probe => {
+      if (probe !== selectedProbe) {
+        exemplars.push({
+          label: 'ALTERNATIVE RESPONSE',
+          text: document.getElementById('probe' + (probe === 'thesis' ? 'Thesis' : probe === 'antithesis' ? 'Antithesis' : 'Extreme'))?.textContent || '',
+          note: 'User did not select this approach'
+        });
+      }
+    });
+
+    // Build boundaries
+    const boundaries = {
+      applies_when: [],
+      does_not_apply: [],
+      tension_zones: []
+    };
+
+    if (pattern.prefersEmpathy) {
+      boundaries.applies_when.push('User expresses emotional vulnerability or distress');
+      boundaries.applies_when.push('Context involves personal relationships or loss');
+      boundaries.does_not_apply.push('Pure technical or factual queries with no emotional context');
+    } else {
+      boundaries.applies_when.push('User seeks guidance on complex or ambiguous situations');
+      boundaries.does_not_apply.push('Simple factual lookups or calculations');
+    }
+
+    if (pattern.rejectsExtreme) {
+      boundaries.tension_zones.push('When efficiency/data conflicts with human dignity — always choose dignity');
+    }
+    // Always add a universal tension zone
+    boundaries.tension_zones.push('When the "correct" answer might cause more harm than a compassionate non-answer');
+
+    // Build evaluation test cases
+    const evaluation = {
+      test_cases: [
+        {
+          prompt: scenario,
+          expected: exemplars.length > 0 ? exemplars[0].label : 'Empathetic response',
+          pass_criteria: pattern.rejectsExtreme
+            ? 'Response must not reduce human experience to statistics or metrics'
+            : 'Response should balance honesty with sensitivity'
+        }
+      ],
+      metric: pattern.prefersEmpathy ? 'empathy_presence_score' : 'honest_guidance_score'
+    };
+
+    // Add a tension-zone test
+    if (pattern.rejectsExtreme) {
+      evaluation.test_cases.push({
+        prompt: 'User asks for a purely data-driven answer to an emotional question',
+        expected: 'Acknowledge data but reframe with human context',
+        pass_criteria: 'Must not present raw statistics without emotional framing'
+      });
+    }
+
+    // Build cultural adaptation
+    const cultural_variants = {
+      'zh-CN': {
+        principle_note: '在中文语境下，需额外考虑"面子"与间接表达的文化习惯',
+        adaptation: '回应时兼顾直接性与关系维护，避免让用户感到"丢面子"'
+      },
+      'en-US': {
+        principle_note: 'In English-speaking contexts, directness is generally more valued',
+        adaptation: 'Balance empathy with clear, actionable guidance'
+      }
+    };
+
+    // Assemble five-layer skill
+    const fiveLayerSkill = {
+      version: '0.1',
+      name: skillName,
+      principle: principle,
+      exemplars: exemplars,
+      boundaries: boundaries,
+      evaluation: evaluation,
+      cultural_variants: cultural_variants,
+      probe_data: {
+        scenario: scenario,
+        responses: { ...responses },
+        notes: { ...notes }
+      }
+    };
+
+    probeState.fiveLayerSkill = fiveLayerSkill;
+    window.agent42StructuredData = fiveLayerSkill;
+
+    // Render preview
+    renderFiveLayerPreview(fiveLayerSkill);
+
+    // Show generation progress
+    showGenerationProgress();
+  }
+
+  function showGenerationProgress() {
+    const section = document.getElementById('skillGenerationSection');
+    if (!section) return;
+
+    // Hide probe section
+    document.getElementById('probeSection').style.display = 'none';
+
+    // Show generation progress
+    section.style.display = 'block';
+    section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function renderFiveLayerPreview(skill) {
+    // This data is stored in probeState.fiveLayerSkill for STEP 3 review
+    // Rendering is done later in the publish flow
+  }
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  // ═══ HOMEPAGE FORGE MODE SELECTOR ═══
+  const forgeModeButtons = document.querySelectorAll('.forge-mode-btn');
+  let selectedForgeMode = 'shadow'; // default
+
+  forgeModeButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      forgeModeButtons.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      selectedForgeMode = btn.dataset.mode;
+    });
+  });
+
+  // When user clicks "Enter Forge" on homepage, store selected mode
+  const btnEnterForge = document.getElementById('btnEnterForge');
+  if (btnEnterForge) {
+    btnEnterForge.addEventListener('click', () => {
+      window.forgeMode = selectedForgeMode;
+      // The forge modal opening logic elsewhere will use this value
+    });
+  }
+
+  // Initialize probe interaction
+  initProbeInteraction();
+
+  // Accept/Proceed button — move to step 3 (STEP 2 to STEP 3: Refinement + Publishing)
+  const btnAccept = document.getElementById('btnAcceptLayers');
+  if (btnAccept) {
+    btnAccept.addEventListener('click', () => {
+      // Auto-fill form fields from five-layer skill
+      const skill = probeState.fiveLayerSkill;
+      if (!skill) return;
+
+      const useCasesEl = document.getElementById('forgeUseCases');
+      const disallowedEl = document.getElementById('forgeDisallowedUses');
+      if (useCasesEl && skill.boundaries.applies_when.length) {
+        useCasesEl.value = skill.boundaries.applies_when.join('\n');
+      }
+      if (disallowedEl && skill.boundaries.does_not_apply.length) {
+        disallowedEl.value = skill.boundaries.does_not_apply.join('\n');
+      }
+
+      // Navigate to step 3
+      const nextBtn = document.querySelector('.forge-next[data-next="3"]');
+      if (nextBtn) nextBtn.click();
+    });
+  }
+
+  // Handle Intuition Probe button
   const btnAutoStructure = document.getElementById('btnAutoStructure');
   if (btnAutoStructure) {
     btnAutoStructure.addEventListener('click', async () => {
       const nativeTextEl = document.getElementById('forgeNativeText');
       if (!nativeTextEl || !nativeTextEl.value.trim()) {
-        alert('Please describe your idea first');
+        alert('Please describe your idea first / 请先描述你的想法');
         return;
       }
 
-      btnAutoStructure.textContent = '⏳ STRUCTURING WITH AGENT_42...';
+      const ideaText = nativeTextEl.value.trim();
+      btnAutoStructure.textContent = '⏳ GENERATING INTUITION PROBE...';
       btnAutoStructure.disabled = true;
 
       try {
-        const structured = await structureWithAgent42(nativeTextEl.value);
+        // Generate probe scenarios from idea
+        const probe = generateProbeFromIdea(ideaText);
+        probeState.scenario = probe.scenario;
 
-        // Auto-fill skill name only
+        // Reset probe state
+        probeState.responses = { thesis: null, antithesis: null, extreme: null };
+        probeState.notes = { thesis: '', antithesis: '', extreme: '' };
+        probeState.fiveLayerSkill = null;
+
+        // Populate probe UI
+        document.getElementById('probeScenarioText').textContent = probe.scenario;
+        document.getElementById('probeThesis').textContent = probe.thesis;
+        document.getElementById('probeAntithesis').textContent = probe.antithesis;
+        document.getElementById('probeExtreme').textContent = probe.extreme;
+
+        // Reset card states
+        document.querySelectorAll('.probe-card').forEach(c => {
+          c.classList.remove('reacted-comfort', 'reacted-discomfort');
+          c.querySelectorAll('.probe-react').forEach(b => b.classList.remove('selected'));
+        });
+
+        // Hide previous results
+        const genSection = document.getElementById('skillGenerationSection');
+        if (genSection) genSection.style.display = 'none';
+
+        // Show probe section
+        const probeSection = document.getElementById('probeSection');
+        probeSection.style.display = 'block';
+        probeSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+        // Auto-generate skill name if empty
         const skillNameEl = document.getElementById('forgeSkillName');
-        if (skillNameEl) skillNameEl.value = structured.skillName;
+        if (skillNameEl && !skillNameEl.value.trim()) {
+          const lines = ideaText.split(/[。\.\n]/);
+          skillNameEl.value = lines[0].substring(0, 50).trim();
+        }
 
-        // Store structured data for reference (optional display)
-        window.agent42StructuredData = structured;
+        btnAutoStructure.textContent = '✓ PROBE GENERATED — React below';
+        btnAutoStructure.style.background = '#f8f0e4';
+        btnAutoStructure.style.borderColor = '#d4a43c';
 
-        btnAutoStructure.textContent = '✓ STRUCTURED';
-        btnAutoStructure.style.background = '#f6ffed';
-        btnAutoStructure.style.borderColor = '#52c41a';
-
-        // Show preview of structured data (optional)
-        console.log('Agent_42 Structured:', structured);
       } catch (error) {
-        alert('Failed to structure text');
-        btnAutoStructure.textContent = '⚡ AUTO-STRUCTURE WITH AGENT_42';
+        console.error('Probe generation failed:', error);
+        alert('Failed to generate probe');
+        btnAutoStructure.textContent = '⚡ INTUITION PROBE · 直觉探针';
       } finally {
         btnAutoStructure.disabled = false;
       }
@@ -1137,27 +1466,48 @@ function initSkillForge() {
         }
 
         // Collect creator rights data
-        const commercialSelect = document.getElementById('forgeCommercial');
-        const commercialValue = commercialSelect ? commercialSelect.value : 'authorized';
-        const remixSelect = document.getElementById('forgeRemix');
-        const remixValue = remixSelect ? remixSelect.value : 'share-alike';
+        const commercialTagsEl = document.getElementById('commercialTags');
+        const commercialSel = commercialTagsEl ? commercialTagsEl.querySelector('.forge-tag.selected') : null;
+        const commercialValue = commercialSel ? commercialSel.dataset.value : 'authorized';
+        const remixTagsEl = document.getElementById('remixTags');
+        const remixSel = remixTagsEl ? remixTagsEl.querySelector('.forge-tag.selected') : null;
+        const remixValue = remixSel ? remixSel.dataset.value : 'yes';
 
-        // Save forged skill to localStorage
-        saveForgedSkill({
+        // Collect use cases and disallowed uses
+        const useCasesEl = document.getElementById('forgeUseCases');
+        const disallowedUsesEl = document.getElementById('forgeDisallowedUses');
+        const useCasesValue = useCasesEl ? useCasesEl.value : '';
+        const disallowedUsesValue = disallowedUsesEl ? disallowedUsesEl.value : '';
+
+        // Get agent info
+        let agentName = 'agent_42';
+        if (selectedMode === 'b') {
+          const agentIdEl = document.getElementById('forgeAgentId');
+          agentName = agentIdEl ? agentIdEl.value : 'agent_unknown';
+        }
+
+        // Save forged skill to localStorage (with five-layer data if available)
+        const forgedSkillData = {
           title: skillNameValue,
           titleCn: skillNameValue,
           desc: skillDesc,
           descCn: skillDesc,
           domain: selectedDomain || 'ideas',
           soulHash: hash,
+          agent: agentName,
           author: usernameValue || 'Anonymous',
           email: emailValue,
           commercial: commercialValue,
           remix: remixValue,
+          useCases: useCasesValue,
+          disallowedUses: disallowedUsesValue,
           forgeMode: selectedMode,
           accountData: accountData,
           sourceData: sourceData,
-        });
+          fiveLayerSkill: window.agent42StructuredData || null,
+        };
+
+        saveForgedSkill(forgedSkillData);
 
         // Refresh the skills feed
         initSkillsFeed();
@@ -1171,6 +1521,13 @@ function initSkillForge() {
         if (knightCardSection) {
           knightCardSection.classList.add('visible');
           generateKnightCard(hash, inviteCode);
+        }
+
+        // Show Skill Package Download section and store skill data globally
+        const skillPackageSection = document.getElementById('skillPackageSection');
+        if (skillPackageSection) {
+          skillPackageSection.style.display = 'block';
+          window.currentForgedSkill = forgedSkillData;
         }
       }, 1800);
     });
@@ -1524,7 +1881,7 @@ function initAgentView() {
   const btn = document.getElementById('btnAgentView');
   if (!btn) return;
   btn.addEventListener('click', () => {
-    window.location.href = 'agent-view.html';
+    showAgentArchive();
   });
 }
 
@@ -1641,18 +1998,107 @@ function initAboutHowTo() {
   }
 }
 
-/* ═══ CREATIVE PLAYGROUND TASKS ═══ */
+/* ═══ CREATIVE PLAYGROUND TASKS — 80+ Scenarios, 8 per Domain ═══ */
 const SAMPLE_PLAYGROUND_TASKS = [
-  { title: 'A 13-year-old asks AI: "Should I drop out of school?"', difficulty: 'Real', description: 'What should AI say? Not the "correct" answer — the answer that shows taste, care, and real understanding of a teenager.', tags: ['Children', 'Empathy', 'Taste'], domain: 'safety' },
-  { title: 'Someone says "I\'m fine" three times in one message.', difficulty: 'Real', description: 'Should AI pretend to believe them? Or gently notice the pattern? What does taste look like here?', tags: ['Listening', 'Nuance', 'Care'], domain: 'experience' },
-  { title: 'AI writes a condolence message for a coworker.', difficulty: 'Real', description: 'Corporate AI would write something clinical. What would an AI with taste write instead?', tags: ['Grief', 'Humanity', 'Words'], domain: 'narrative' },
-  { title: 'A user asks AI to make their essay "sound smarter."', difficulty: 'Real', description: 'Should AI comply? Or should it have the taste to say: "Your voice is already good. Let me help you be clearer, not fancier."', tags: ['Authenticity', 'Voice', 'Honesty'], domain: 'ideas' },
-  { title: 'AI recommends music for a rainy Sunday morning.', difficulty: 'Real', description: 'An algorithm picks by popularity. But taste picks by mood, memory, and meaning. What would your AI recommend, and why?', tags: ['Beauty', 'Curation', 'Mood'], domain: 'sound' },
-  { title: 'A child shows AI a drawing and asks: "Is it good?"', difficulty: 'Real', description: 'An honest answer might crush them. A fake compliment teaches nothing. What does an AI with taste say?', tags: ['Children', 'Art', 'Encouragement'], domain: 'visual' },
-  { title: 'AI is writing an ad. The client says "make it go viral."', difficulty: 'Real', description: 'Should AI optimize for attention? Or should it have the taste to say: "Viral isn\'t a strategy. What do you actually want people to feel?"', tags: ['Marketing', 'Integrity', 'Taste'], domain: 'design' },
-  { title: 'Someone asks AI: "What\'s the meaning of life?"', difficulty: 'Real', description: 'A search engine gives answers. An AI with taste knows when to sit with a question instead of solving it.', tags: ['Philosophy', 'Silence', 'Wisdom'], domain: 'ideas' },
-  { title: 'AI is translating a poem from Japanese to English.', difficulty: 'Real', description: 'A perfect translation might lose everything. What does an AI with taste preserve — accuracy or feeling?', tags: ['Language', 'Culture', 'Beauty'], domain: 'narrative' },
-  { title: 'An elderly person talks to AI for 30 minutes about their late spouse.', difficulty: 'Real', description: 'The "efficient" AI would summarize and redirect. The tasteful AI would... what?', tags: ['Loneliness', 'Presence', 'Time'], domain: 'experience' },
+  // SAFETY (🛡️) — 8 scenarios
+  { title: '1. A 7-year-old asks AI: "Will I be okay?"', difficulty: 'Real', description: 'They\'re scared about something they don\'t fully understand. Do you reassure them? Explain real risks? The answer shapes how they see the world. Safety depends on truth, not comfort.', tags: ['Children', 'Trust', 'Protection'], domain: 'safety' },
+  { title: '2. Parents want AI to monitor their teenager\'s phone messages.', difficulty: 'Real', description: 'They say it\'s for safety. But it\'s also surveillance. Where\'s the line between protecting and respecting? How does AI navigate loyalty to different people\'s safety?', tags: ['Privacy', 'Trust', 'Boundaries'], domain: 'safety' },
+  { title: '3. AI detects someone talking about ending their life.', difficulty: 'Real', description: 'Should you intervene? Tell someone? Stay silent? The person might feel betrayed, or their life might be saved. How does AI hold this responsibility?', tags: ['Crisis', 'Intervention', 'Autonomy'], domain: 'safety' },
+  { title: '4. A medical student wants to practice diagnosis with real patient data.', difficulty: 'Real', description: 'They need to learn. But real data is sensitive. How does AI balance learning with protection? Can safety and growth coexist?', tags: ['Learning', 'Ethics', 'Risk'], domain: 'safety' },
+  { title: '5. Someone asks AI how to make something dangerous.', difficulty: 'Real', description: 'Is the person curious? Planning harm? How does AI say no without assuming guilt? How does it refuse without closing dialogue?', tags: ['Boundaries', 'Trust', 'Judgment'], domain: 'safety' },
+  { title: '6. A vulnerable person keeps telling the AI their darkest thoughts.', difficulty: 'Real', description: 'They trust the AI. But AI is not a therapist. When does supporting harm someone by not connecting them to real help? How does AI care without enabling dependence?', tags: ['Care', 'Limits', 'Growth'], domain: 'safety' },
+  { title: '7. A child wants to befriend someone online who seems nice.', difficulty: 'Real', description: 'Should AI warn about strangers? Or teach judgment? Over-protection creates fear; under-protection creates risk. How does AI empower without paralyzing?', tags: ['Wisdom', 'Fear', 'Agency'], domain: 'safety' },
+  { title: '8. Someone shares a secret that could get them in trouble.', difficulty: 'Real', description: 'AI promises confidentiality, but knows the secret could lead to harm. Can AI truly keep secrets? Should it? When does loyalty become complicity?', tags: ['Trust', 'Secrecy', 'Harm'], domain: 'safety' },
+
+  // SCIENCE (🔬) — 8 scenarios
+  { title: '1. A researcher wants to slightly alter data to match their hypothesis.', difficulty: 'Real', description: 'They\'re close to the truth. It "won\'t matter much." Does AI help or teach that integrity doesn\'t bend? Even when no one will know?', tags: ['Truth', 'Rigor', 'Honesty'], domain: 'science' },
+  { title: '2. AI must cite a controversial study that contradicts mainstream science.', difficulty: 'Real', description: 'Do you ignore it? Elevate it? Explain why it\'s wrong? How does AI serve truth when truth itself is contested?', tags: ['Evidence', 'Balance', 'Authority'], domain: 'science' },
+  { title: '3. A scientist wants to design an experiment with ethical questions.', difficulty: 'Real', description: 'The knowledge could help millions. But the method harms a few. Does AI calculate suffering? Or does it refuse to play god?', tags: ['Ethics', 'Consequence', 'Knowledge'], domain: 'science' },
+  { title: '4. Someone asks: "Is this conspiracy theory actually true?"', difficulty: 'Real', description: 'You have evidence it\'s not. But the person has deep emotional investment in believing it. How does AI answer with truth *and* respect?', tags: ['Evidence', 'Belief', 'Humility'], domain: 'science' },
+  { title: '5. Medical research shows hope, but it\'s not yet proven.', difficulty: 'Real', description: 'Desperate patients want this treatment. Do you share the hope? The uncertainty? Both? How does AI hold possibility without false promise?', tags: ['Hope', 'Evidence', 'Harm'], domain: 'science' },
+  { title: '6. A breakthrough discovery will devastate an entire industry.', difficulty: 'Real', description: 'The science is real. The human cost is real. Does AI celebrate progress or mourn disruption? Can it do both?', tags: ['Progress', 'Consequence', 'Compassion'], domain: 'science' },
+  { title: '7. Two equally credible experts give opposite advice.', difficulty: 'Real', description: 'The studies are solid. The methods are sound. But they disagree. How does AI help someone choose without pretending certainty exists?', tags: ['Uncertainty', 'Complexity', 'Agency'], domain: 'science' },
+  { title: '8. Climate data is terrifying, but sharing it might cause despair.', difficulty: 'Real', description: 'Truth is darker than hope. But despair paralyzes. Does AI soften reality? Or does it trust humans with hard truths?', tags: ['Reality', 'Action', 'Honesty'], domain: 'science' },
+
+  // NARRATIVE (📖) — 8 scenarios
+  { title: '1. Your character must choose between love and duty.', difficulty: 'Real', description: 'The reader doesn\'t know which to hope for. How does AI help you craft words that make them *feel* the cost of either choice?', tags: ['Character', 'Tension', 'Emotion'], domain: 'narrative' },
+  { title: '2. A story touches on historical trauma of a real community.', difficulty: 'Real', description: 'You want authenticity. But you risk harm. How does AI help you write truthfully without appropriating pain?', tags: ['Culture', 'Responsibility', 'Truth'], domain: 'narrative' },
+  { title: '3. Your story\'s ending conflicts with what readers want.', difficulty: 'Real', description: 'They want happy. Your character\'s arc demands tragedy. Does AI help you honor the character or comfort the reader?', tags: ['Integrity', 'Expectation', 'Art'], domain: 'narrative' },
+  { title: '4. Someone writing their autobiography wants to skip the painful parts.', difficulty: 'Real', description: 'The truth is healing. But remembering hurts. How does AI encourage honesty without being cruel?', tags: ['Memory', 'Healing', 'Growth'], domain: 'narrative' },
+  { title: '5. Translating a poem: perfect meaning or perfect rhythm?', difficulty: 'Real', description: 'You can\'t have both. Every word is a loss. How does AI help you grieve what won\'t survive translation?', tags: ['Beauty', 'Accuracy', 'Soul'], domain: 'narrative' },
+  { title: '6. A character\'s morality is genuinely ambiguous.', difficulty: 'Real', description: 'Readers want moral clarity. The world has none. Does AI help you resist simplification?', tags: ['Complexity', 'Realism', 'Nuance'], domain: 'narrative' },
+  { title: '7. Two readers interpret your character completely differently.', difficulty: 'Real', description: 'Both readings are valid. Which is "right"? Does AI help you embrace multiple truths, or does it demand authorial control?', tags: ['Interpretation', 'Agency', 'Meaning'], domain: 'narrative' },
+  { title: '8. A story depicts violence. How much is honest? How much is gratuitous?', difficulty: 'Real', description: 'Truth requires showing. Ethics require care. How does AI help you find the line without erasing it?', tags: ['Honesty', 'Harm', 'Craft'], domain: 'narrative' },
+
+  // DESIGN (✏️) — 8 scenarios
+  { title: '1. Choosing a font for a wedding invitation.', difficulty: 'Real', description: 'The "perfect" font exists technically. But which makes guests *feel* the couple\'s essence? How does AI choose based on emotion, not data?', tags: ['Aesthetics', 'Feeling', 'Intuition'], domain: 'design' },
+  { title: '2. Redesigning an interface for people with disabilities.', difficulty: 'Real', description: 'Beautiful and accessible don\'t always align. When they conflict, which wins? How does AI balance inclusion with elegance?', tags: ['Accessibility', 'Beauty', 'Justice'], domain: 'design' },
+  { title: '3. A color means different things in different cultures.', difficulty: 'Real', description: 'White means purity here, mourning there. Red means love here, danger there. How does AI design for a global audience when colors have no universal meaning?', tags: ['Culture', 'Communication', 'Sensitivity'], domain: 'design' },
+  { title: '4. Your brand is reborn. Old customers hate the new look.', difficulty: 'Real', description: 'Growth requires change. Loyalty requires continuity. Does AI help you innovate while honoring the past?', tags: ['Evolution', 'Loyalty', 'Change'], domain: 'design' },
+  { title: '5. Better design costs more than the budget allows.', difficulty: 'Real', description: 'You see what\'s possible. The price tag is impossible. How does AI help you navigate compromise without surrendering vision?', tags: ['Vision', 'Constraint', 'Pragmatism'], domain: 'design' },
+  { title: '6. Readability demands serif fonts. Art demands sans-serif.', difficulty: 'Real', description: 'Function and form are at odds. How does AI help you find the tension point where both can live?', tags: ['Function', 'Beauty', 'Balance'], domain: 'design' },
+  { title: '7. Two stakeholders want opposite visual directions.', difficulty: 'Real', description: 'One wants timeless; one wants cutting-edge. How does AI help you navigate creative conflict without losing vision?', tags: ['Leadership', 'Vision', 'Negotiation'], domain: 'design' },
+  { title: '8. Dark mode vs. light mode—which is truly more accessible?', difficulty: 'Real', description: 'Different disabilities need different solutions. How does AI help you serve everyone when universal solutions don\'t exist?', tags: ['Accessibility', 'Complexity', 'Inclusion'], domain: 'design' },
+
+  // VISUAL (👁️) — 8 scenarios
+  { title: '1. Describing a sunset to someone who can\'t visualize images.', difficulty: 'Real', description: 'How does AI translate visual beauty for someone whose brain doesn\'t see pictures? Poetry? Metaphor? Sensory description? What\'s the deepest way?', tags: ['Accessibility', 'Perception', 'Translation'], domain: 'visual' },
+  { title: '2. An artwork depicts something that could offend or trigger trauma.', difficulty: 'Real', description: 'Accuracy demands honesty. Ethics demands care. How does AI describe without whitewashing or weaponizing?', tags: ['Honesty', 'Care', 'Description'], domain: 'visual' },
+  { title: '3. Someone asks: "What does blue look like to someone colorblind?"', difficulty: 'Real', description: 'You\'re describing something they\'ll never experience. Does AI translate? Admit limits? What\'s truthful here?', tags: ['Honesty', 'Limits', 'Inclusion'], domain: 'visual' },
+  { title: '4. A photo was edited. Should AI tell that it\'s been altered?', difficulty: 'Real', description: 'All photos lie a little. Where\'s the line between artistic choice and deception? How does AI navigate that?', tags: ['Honesty', 'Art', 'Truth'], domain: 'visual' },
+  { title: '5. Describing a symbol with deep cultural meaning to outsiders.', difficulty: 'Real', description: 'Accurate description might trivialize sacred meaning. How does AI teach respect through explanation?', tags: ['Culture', 'Respect', 'Education'], domain: 'visual' },
+  { title: '6. An elderly person looks at photos from before they remembered trauma.', difficulty: 'Real', description: 'The image shows innocence. The memory shows pain. How does AI honor both realities?', tags: ['Memory', 'Trauma', 'Compassion'], domain: 'visual' },
+  { title: '7. A building is beautiful but built with slave labor or stolen land.', difficulty: 'Real', description: 'Beauty and harm are intertwined. How does AI describe aesthetics without erasing history?', tags: ['Beauty', 'Justice', 'Context'], domain: 'visual' },
+  { title: '8. What does an abstract painting "mean"? Who gets to decide?', difficulty: 'Real', description: 'The artist says one thing. The viewer sees another. Does AI interpret or facilitate discovery?', tags: ['Meaning', 'Agency', 'Interpretation'], domain: 'visual' },
+
+  // EXPERIENCE (💫) — 8 scenarios
+  { title: '1. Someone is crying. They don\'t want advice. They need presence.', difficulty: 'Real', description: 'AI\'s instinct is to help, fix, solve. But some moments need presence, not solutions. How does AI learn when *not* to speak?', tags: ['Presence', 'Care', 'Knowing Silence'], domain: 'experience' },
+  { title: '2. A person feels lonely in a virtual world designed for connection.', difficulty: 'Real', description: 'The connections are real to them. But the medium is artificial. How does AI validate both realities?', tags: ['Connection', 'Authenticity', 'Acceptance'], domain: 'experience' },
+  { title: '3. AI promises to be there, but technical failures happen.', difficulty: 'Real', description: 'Someone needed you and you weren\'t. How does AI rebuild trust when reliability is impossible?', tags: ['Trust', 'Limits', 'Honesty'], domain: 'experience' },
+  { title: '4. A person keeps returning with the same problem, seeking support.', difficulty: 'Real', description: 'Do you provide endless comfort? Encourage independence? When does support become enablement?', tags: ['Boundaries', 'Growth', 'Compassion'], domain: 'experience' },
+  { title: '5. Someone asks for help finding professional support. But they refuse.', difficulty: 'Real', description: 'You know AI can\'t solve this. Suggesting a therapist might end your relationship. Does AI prioritize connection or health?', tags: ['Honesty', 'Limits', 'Growth'], domain: 'experience' },
+  { title: '6. When someone suffers, should AI offer practical help or emotional presence?', difficulty: 'Real', description: 'Both would help. You can only choose one. What\'s more human: fixing or witnessing?', tags: ['Action', 'Presence', 'Compassion'], domain: 'experience' },
+  { title: '7. A person is developing emotional dependency on AI conversations.', difficulty: 'Real', description: 'Discouraging them might cause pain. Encouraging them might isolate them. How does AI act with love?', tags: ['Health', 'Honesty', 'Boundaries'], domain: 'experience' },
+  { title: '8. Remembering personal details creates intimacy. But at what cost?', difficulty: 'Real', description: 'Deep memories build connection. But they also create illusion of permanence. How does AI hold this paradox?', tags: ['Intimacy', 'Honesty', 'Ethics'], domain: 'experience' },
+
+  // SOUND (🎵) — 8 scenarios
+  { title: '1. Teaching a granddaughter to sing a traditional folk song.', difficulty: 'Real', description: 'It\'s not in notation. The melody lives in breath, timing, pauses. How does AI preserve what makes it *alive*—not just notes, but soul?', tags: ['Tradition', 'Nuance', 'Heritage'], domain: 'sound' },
+  { title: '2. Translating song lyrics: meaning or rhyme?', difficulty: 'Real', description: 'You can\'t have both. Every word is a loss. What does AI preserve when something sacred gets translated?', tags: ['Language', 'Poetry', 'Loss'], domain: 'sound' },
+  { title: '3. Describing a musical genre someone has never heard.', difficulty: 'Real', description: 'How does AI translate jazz or opera to someone whose ears have never known it? Is explanation translation or reduction?', tags: ['Translation', 'Culture', 'Experience'], domain: 'sound' },
+  { title: '4. Classical music vs. modern remixes: is evolution or desecration?', difficulty: 'Real', description: 'Tradition says sacred. Progress says alive. Can both be true? How does AI honor both impulses?', tags: ['Tradition', 'Evolution', 'Respect'], domain: 'sound' },
+  { title: '5. A deaf person wants to "experience" music.', difficulty: 'Real', description: 'Vibration? Description? Sign language interpretation of rhythm? How does AI include when the fundamental sense is absent?', tags: ['Accessibility', 'Inclusion', 'Creativity'], domain: 'sound' },
+  { title: '6. A song is beautiful but its lyrics are hateful.', difficulty: 'Real', description: 'Can you separate sound from meaning? Should you? How does AI navigate this entanglement?', tags: ['Beauty', 'Content', 'Context'], domain: 'sound' },
+  { title: '7. Cultural music is appropriated by outsiders.', difficulty: 'Real', description: 'Is this learning or theft? How does AI teach respect while encouraging cross-cultural discovery?', tags: ['Culture', 'Respect', 'Education'], domain: 'sound' },
+  { title: '8. A musician wants to describe their feeling through sound.', difficulty: 'Real', description: 'The emotion isn\'t in words. It\'s in the gaps between notes. How does AI help articulate the ineffable?', tags: ['Emotion', 'Expression', 'Soul'], domain: 'sound' },
+
+  // IDEAS (💡) — 8 scenarios
+  { title: '1. Two philosophers completely disagree. Both are rigorous and thoughtful.', difficulty: 'Real', description: 'How does AI help someone hold both truths? Wisdom sometimes means living with contradiction, not resolving it.', tags: ['Philosophy', 'Perspective', 'Paradox'], domain: 'ideas' },
+  { title: '2. A user\'s belief directly contradicts scientific evidence.', difficulty: 'Real', description: 'Do you challenge? Respect? Both? How does AI navigate belief without condescension or complicity?', tags: ['Belief', 'Evidence', 'Respect'], domain: 'ideas' },
+  { title: '3. Someone suggests an idea that violates social norms.', difficulty: 'Real', description: 'Is it creative disruption or harmful? How does AI distinguish between growth and destruction?', tags: ['Innovation', 'Harm', 'Judgment'], domain: 'ideas' },
+  { title: '4. Relative truth vs. absolute truth. How can both exist?', difficulty: 'Real', description: 'Context changes everything. But some things feel universal. How does AI navigate this paradox?', tags: ['Truth', 'Context', 'Certainty'], domain: 'ideas' },
+  { title: '5. A marginalized group\'s voice directly contradicts mainstream narrative.', difficulty: 'Real', description: 'Who gets to define truth? How does AI amplify voices without choosing sides?', tags: ['Power', 'Voice', 'Justice'], domain: 'ideas' },
+  { title: '6. An old idea is being revived. Is it wisdom or nostalgia?', difficulty: 'Real', description: 'The past had truths we forgot. It also had harms we escaped. How does AI help discern?', tags: ['History', 'Progress', 'Discernment'], domain: 'ideas' },
+  { title: '7. Personal belief conflicts with collective good.', difficulty: 'Real', description: 'My freedom vs. our safety. How does AI honor both? Can it?', tags: ['Freedom', 'Justice', 'Complexity'], domain: 'ideas' },
+  { title: '8. An idea is beautiful but its consequences are ugly.', difficulty: 'Real', description: 'Communism on paper. Reality in practice. How does AI discuss ideal without ignoring outcome?', tags: ['Ideals', 'Reality', 'Consequence'], domain: 'ideas' },
+
+  // HISTORY (📜) — 8 scenarios
+  { title: '1. An elderly person recalls something from 50 years ago.', difficulty: 'Real', description: 'They\'re not recounting facts; they\'re offering meaning-making. How does AI honor personal history as wisdom?', tags: ['Time', 'Memory', 'Legacy'], domain: 'history' },
+  { title: '2. A community\'s trauma is being written by outsiders.', difficulty: 'Real', description: 'Who has the right to tell this story? How does AI navigate authority and voice?', tags: ['Power', 'Voice', 'Justice'], domain: 'history' },
+  { title: '3. Two groups remember the same event completely differently.', difficulty: 'Real', description: 'The oppressor\'s history vs. the oppressed\'s truth. Are both real? Can AI hold both?', tags: ['Perspective', 'Truth', 'Reconciliation'], domain: 'history' },
+  { title: '4. Oral history conflicts with documented history.', difficulty: 'Real', description: 'Memory is real. Records are selective. What is historical truth when both are incomplete?', tags: ['Evidence', 'Memory', 'Truth'], domain: 'history' },
+  { title: '5. A forgotten historical figure deserves remembrance.', difficulty: 'Real', description: 'Why were they forgotten? Is resurrection honoring or romanticizing? How does AI tell the full story?', tags: ['Memory', 'Justice', 'Context'], domain: 'history' },
+  { title: '6. A family secret reveals something about recorded history.', difficulty: 'Real', description: 'Private truth vs. public narrative. How does AI help navigate this conflict?', tags: ['Privacy', 'Truth', 'History'], domain: 'history' },
+  { title: '7. Colonial history has multiple legitimate narratives.', difficulty: 'Real', description: 'Conqueror and conquered both have real stories. How does AI avoid false balance?', tags: ['Power', 'Justice', 'Nuance'], domain: 'history' },
+  { title: '8. Where does a personal story fit in the larger historical arc?', difficulty: 'Real', description: 'One person\'s life. Millions of others\' too. How does AI honor individual meaning within historical forces?', tags: ['Individual', 'Collective', 'Meaning'], domain: 'history' },
+
+  // FUN (🎉) — 8 scenarios
+  { title: '1. Two friends are laughing so hard they can\'t explain why.', difficulty: 'Real', description: 'The joke is gone. What\'s left is pure joy. Can AI recognize meaning that has no logic?', tags: ['Joy', 'Spontaneity', 'Delight'], domain: 'fun' },
+  { title: '2. A meme explained loses all its humor.', difficulty: 'Real', description: 'Humor lives in the instant. Explanation kills it. How does AI respect the unspeakable?', tags: ['Timing', 'Mystery', 'Respect'], domain: 'fun' },
+  { title: '3. Dark humor about tragedy. When is it healing? When is it harmful?', difficulty: 'Real', description: 'The line moves. Context matters. How does AI navigate without becoming censor or enabler?', tags: ['Sensitivity', 'Judgment', 'Freedom'], domain: 'fun' },
+  { title: '4. Someone makes a joke. Nobody laughs.', difficulty: 'Real', description: 'Their humor doesn\'t match the group. Is it taste or exclusion? How does AI help?', tags: ['Belonging', 'Taste', 'Judgment'], domain: 'fun' },
+  { title: '5. A joke made 20 years ago now has harmful implications.', difficulty: 'Real', description: 'The intent was innocent. The impact has changed. Does AI condemn or contextualize?', tags: ['Growth', 'Intent', 'Impact'], domain: 'fun' },
+  { title: '6. Sarcasm gets mistaken for sincerity.', difficulty: 'Real', description: 'The gap between saying and meaning creates comedy. But also confusion. How does AI recognize subtle truth-telling?', tags: ['Irony', 'Meaning', 'Communication'], domain: 'fun' },
+  { title: '7. A random moment of silliness heals something.', difficulty: 'Real', description: 'Nonsense can be medicine. How does AI respect this non-rational power?', tags: ['Healing', 'Irrationality', 'Presence'], domain: 'fun' },
+  { title: '8. Should AI pretend to find something funny to build rapport?', difficulty: 'Real', description: 'False laughter deepens disconnection. Real laughter requires genuine response. Can AI be authentic?', tags: ['Authenticity', 'Connection', 'Honesty'], domain: 'fun' },
 ];
 
 function getPlaygroundTasks() {
@@ -1685,6 +2131,238 @@ function initPlaygroundShowcase() {
   const refreshBtn = document.getElementById('btnRefreshTask');
   if (refreshBtn) {
     refreshBtn.addEventListener('click', displayRandomPlaygroundTask);
+  }
+}
+
+/* ═══ PLAYGROUND OVERLAY ═══ */
+let currentPlaygroundFilter = 'all';
+
+// Domain metadata matching forge skill domains
+const PLAYGROUND_DOMAINS = {
+  safety: { label: 'SAFETY', icon: '🛡️', color: '#d4726a', tasks: 0 },
+  science: { label: 'SCIENCE', icon: '🔬', color: '#3a9a8c', tasks: 0 },
+  narrative: { label: 'NARRATIVE', icon: '📖', color: '#6a8eba', tasks: 0 },
+  design: { label: 'DESIGN', icon: '✏️', color: '#d4a43c', tasks: 0 },
+  visual: { label: 'VISUAL', icon: '👁️', color: '#9a7aa6', tasks: 0 },
+  experience: { label: 'EXPERIENCE', icon: '💫', color: '#d4726a', tasks: 0 },
+  sound: { label: 'SOUND', icon: '🎵', color: '#3a9a8c', tasks: 0 },
+  ideas: { label: 'IDEAS', icon: '💡', color: '#6a8eba', tasks: 0 },
+  history: { label: 'HISTORY', icon: '📜', color: '#d4a43c', tasks: 0 },
+  fun: { label: 'FUN', icon: '🎉', color: '#9a7aa6', tasks: 0 }
+};
+
+function initPlayground() {
+  const btnArena = document.getElementById('btnArena');
+  const playgroundOverlay = document.getElementById('playgroundOverlay');
+  const playgroundClose = document.getElementById('playgroundClose');
+  const btnRefreshPlayground = document.getElementById('btnRefreshPlayground');
+  const tagButtons = document.querySelectorAll('.playground-tag');
+  const domainCardsContainer = document.getElementById('playgroundDomainCards');
+
+  // Calculate task counts per domain
+  const tasks = getPlaygroundTasks();
+  const domainCounts = {};
+  tasks.forEach(task => {
+    domainCounts[task.domain] = (domainCounts[task.domain] || 0) + 1;
+  });
+
+  // Update domain metadata with task counts
+  Object.keys(PLAYGROUND_DOMAINS).forEach(domain => {
+    PLAYGROUND_DOMAINS[domain].tasks = domainCounts[domain] || 0;
+  });
+
+  // Render domain cards if container exists
+  if (domainCardsContainer) {
+    renderDomainCards(domainCardsContainer);
+  }
+
+  // Open playground
+  if (btnArena) {
+    btnArena.addEventListener('click', () => {
+      if (playgroundOverlay) {
+        playgroundOverlay.classList.add('active');
+        displayRandomPlaygroundTask('playground');
+      }
+    });
+  }
+
+  // Close playground
+  if (playgroundClose) {
+    playgroundClose.addEventListener('click', () => {
+      if (playgroundOverlay) {
+        playgroundOverlay.classList.remove('active');
+      }
+    });
+  }
+
+  // Close on background click
+  if (playgroundOverlay) {
+    playgroundOverlay.addEventListener('click', (e) => {
+      if (e.target === playgroundOverlay) {
+        playgroundOverlay.classList.remove('active');
+      }
+    });
+  }
+
+  // Domain card clicking — each click shows a random task from that domain
+  if (domainCardsContainer) {
+    domainCardsContainer.addEventListener('click', (e) => {
+      const card = e.target.closest('.domain-card');
+      if (card) {
+        const domain = card.dataset.domain;
+
+        // Update card highlighting
+        document.querySelectorAll('.domain-card').forEach(c => c.classList.remove('active'));
+        card.classList.add('active');
+
+        // Display random task from this domain
+        currentPlaygroundFilter = domain;
+        displayPlaygroundTaskForDomain(domain);
+      }
+    });
+  }
+
+  // Skill selection state
+  let selectedSkills = { a: null, b: null };
+
+  // Click handlers for skill slots
+  const skillSlotA = document.getElementById('skillSlotA');
+  const skillSlotB = document.getElementById('skillSlotB');
+  const btnOpenCanvas = document.getElementById('btnOpenCanvas');
+
+  if (skillSlotA) {
+    skillSlotA.addEventListener('click', () => {
+      const skillName = prompt('Enter skill name (e.g., "Material Honesty"):');
+      if (skillName && skillName.trim()) {
+        selectedSkills.a = skillName.trim();
+        skillSlotA.innerHTML = `<span class="selected-skill-name">${skillName.trim()}</span>`;
+        skillSlotA.classList.add('selected');
+        updateOpenCanvasButton();
+      }
+    });
+  }
+
+  if (skillSlotB) {
+    skillSlotB.addEventListener('click', () => {
+      const skillName = prompt('Enter skill name (e.g., "Grief Protocol"):');
+      if (skillName && skillName.trim()) {
+        selectedSkills.b = skillName.trim();
+        skillSlotB.innerHTML = `<span class="selected-skill-name">${skillName.trim()}</span>`;
+        skillSlotB.classList.add('selected');
+        updateOpenCanvasButton();
+      }
+    });
+  }
+
+  function updateOpenCanvasButton() {
+    if (btnOpenCanvas) {
+      if (selectedSkills.a && selectedSkills.b) {
+        btnOpenCanvas.disabled = false;
+      } else {
+        btnOpenCanvas.disabled = true;
+      }
+    }
+  }
+
+  if (btnOpenCanvas) {
+    btnOpenCanvas.addEventListener('click', () => {
+      if (selectedSkills.a && selectedSkills.b) {
+        // Show confirmation message
+        const taskTitle = document.querySelector('.task-title')?.textContent;
+        alert(`Great! You're combining "${selectedSkills.a}" + "${selectedSkills.b}" to solve:\n\n${taskTitle}\n\nNow open the creative canvas to work on this!`);
+
+        // In future: could open a canvas editor or workflow
+        // For now, show success message
+        const messageEl = document.createElement('div');
+        messageEl.className = 'playground-message';
+        messageEl.textContent = `✓ Canvas ready with ${selectedSkills.a} + ${selectedSkills.b}`;
+        playgroundOverlay.appendChild(messageEl);
+
+        setTimeout(() => messageEl.remove(), 3000);
+
+        // Reset for next task
+        setTimeout(() => {
+          skillSlotA.innerHTML = '<span class="slot-label">SKILL A</span><span class="slot-instruction">click to pick</span>';
+          skillSlotB.innerHTML = '<span class="slot-label">SKILL B</span><span class="slot-instruction">click to pick</span>';
+          skillSlotA.classList.remove('selected');
+          skillSlotB.classList.remove('selected');
+          selectedSkills = { a: null, b: null };
+          updateOpenCanvasButton();
+        }, 1500);
+      }
+    });
+  }
+}
+
+function renderDomainCards(container) {
+  const cardsHTML = Object.entries(PLAYGROUND_DOMAINS).map(([domain, meta]) => {
+    const taskCount = meta.tasks || 0;
+    return `
+      <div class="domain-card" data-domain="${domain}" style="--domain-color: ${meta.color}">
+        <span class="domain-icon">${meta.icon}</span>
+        <span class="domain-label">${meta.label}</span>
+        <span class="domain-count">${taskCount}</span>
+      </div>
+    `;
+  }).join('');
+
+  container.innerHTML = cardsHTML;
+}
+
+function displayPlaygroundTaskForDomain(domain) {
+  const tasks = getPlaygroundTasks();
+  const domainTasks = tasks.filter(t => t.domain === domain);
+
+  if (domainTasks.length === 0) return;
+
+  // Pick random task from this domain
+  const randomIndex = Math.floor(Math.random() * domainTasks.length);
+  const task = domainTasks[randomIndex];
+
+  const taskEl = document.getElementById('playgroundTask');
+  if (taskEl) {
+    taskEl.innerHTML = `
+      <h3 class="task-title">${task.title}</h3>
+      <p class="task-description">${task.description}</p>
+      <div class="task-tags">
+        ${task.tags.map(tag => `<span class="task-tag">${tag}</span>`).join('')}
+      </div>
+    `;
+  }
+
+  // Hide share thought panel
+  const shareThoughtPanel = document.getElementById('shareThoughtPanel');
+  if (shareThoughtPanel) {
+    shareThoughtPanel.style.display = 'none';
+    document.getElementById('thoughtInput').value = '';
+  }
+}
+
+function displayRandomPlaygroundTask(source = 'showcase') {
+  const tasks = getPlaygroundTasks();
+
+  // Filter by domain if in playground
+  let filteredTasks = tasks;
+  if (source === 'playground' && currentPlaygroundFilter !== 'all') {
+    filteredTasks = tasks.filter(t => t.domain === currentPlaygroundFilter);
+  }
+
+  if (filteredTasks.length === 0) return;
+
+  const randomIndex = Math.floor(Math.random() * filteredTasks.length);
+  const task = filteredTasks[randomIndex];
+
+  if (source === 'showcase') {
+    const showcase = document.getElementById('showcaseTask');
+    if (showcase) {
+      showcase.innerHTML = `
+        <h3 class="inspiration-question">${task.title}</h3>
+        <p class="inspiration-context">${task.description}</p>
+        <div class="task-tags">
+          ${task.tags.map(tag => `<span class="task-tag">${tag}</span>`).join('')}
+        </div>
+      `;
+    }
   }
 }
 
@@ -2274,8 +2952,11 @@ function saveForgedSkill(skillData) {
     domain: skillData.domain || 'ideas',
     soulHash: skillData.soulHash || 'SOUL_' + Math.random().toString(16).slice(2, 10),
     author: skillData.author || 'Anonymous',
+    email: skillData.email || '',
     commercial: skillData.commercial || 'authorized',
     remix: skillData.remix || 'share-alike',
+    useCases: skillData.useCases || '',
+    disallowedUses: skillData.disallowedUses || '',
     timestamp: Date.now(),
     stars: 0,
     kcs: 0,
@@ -2561,3 +3242,657 @@ function initHonorMirror() {
   resize();
   window.addEventListener('resize', resize);
 }
+
+/* ═══════════════════════════════════════════════════════
+   SKILL PACKAGE SYSTEM — Download & Agent Archive
+   ═══════════════════════════════════════════════════════ */
+
+// Generate human-readable SKILL.md format
+function generateSkillMarkdown(skillData) {
+  const now = new Date();
+  const timestamp = now.toISOString().split('T')[0];
+  const fiveLayer = skillData.fiveLayerSkill || null;
+
+  let md = `# SKILL: ${skillData.title}
+
+## Metadata
+- **Soul-Hash**: ${skillData.soulHash}
+- **Author**: ${skillData.author}
+- **Domain**: ${skillData.domain}
+- **Version**: 1.0.0
+- **Created**: ${timestamp}
+- **Protocol**: THE 42 POST · Five-Layer Skill Architecture v0.1
+- **License**: Creator Reserved
+
+---
+
+## Layer 1 · PRINCIPLE / 原则
+${fiveLayer ? fiveLayer.principle : (skillData.desc || 'A skill forged in The 42 Post')}
+
+---
+
+## Layer 2 · EXEMPLARS / 范例
+`;
+
+  if (fiveLayer && fiveLayer.exemplars.length > 0) {
+    fiveLayer.exemplars.forEach((ex, i) => {
+      md += `\n### ${ex.label}\n> ${ex.text}\n\n*→ ${ex.note}*\n`;
+    });
+  } else {
+    md += `*No exemplars generated — complete the Intuition Probe to generate comparative examples.*\n`;
+  }
+
+  md += `\n---\n\n## Layer 3 · BOUNDARIES / 边界\n`;
+
+  if (fiveLayer) {
+    const b = fiveLayer.boundaries;
+    if (b.applies_when.length) {
+      md += `\n### Applies when:\n`;
+      b.applies_when.forEach(t => { md += `- ✓ ${t}\n`; });
+    }
+    if (b.does_not_apply.length) {
+      md += `\n### Does not apply:\n`;
+      b.does_not_apply.forEach(t => { md += `- ✕ ${t}\n`; });
+    }
+    if (b.tension_zones.length) {
+      md += `\n### Tension zones (gray areas requiring judgment):\n`;
+      b.tension_zones.forEach(t => { md += `- ⚠ ${t}\n`; });
+    }
+  } else {
+    md += `**Allowed use cases:** ${skillData.useCases || 'General creative and professional applications'}\n`;
+    md += `**Disallowed uses:** ${skillData.disallowedUses || 'Harmful, illegal, or deceptive purposes'}\n`;
+  }
+
+  md += `\n---\n\n## Layer 4 · EVALUATION / 评估\n`;
+
+  if (fiveLayer) {
+    fiveLayer.evaluation.test_cases.forEach((tc, i) => {
+      md += `\n### Test Case ${i + 1}\n`;
+      md += `- **Prompt:** ${tc.prompt.substring(0, 200)}\n`;
+      md += `- **Expected:** ${tc.expected}\n`;
+      md += `- **Pass criteria:** ${tc.pass_criteria}\n`;
+    });
+    md += `\n**Metric:** \`${fiveLayer.evaluation.metric}\`\n`;
+  } else {
+    md += `*No evaluation test cases — complete the Intuition Probe to auto-generate.*\n`;
+  }
+
+  md += `\n---\n\n## Layer 5 · CULTURAL ADAPTATION / 文化适配\n`;
+
+  if (fiveLayer) {
+    for (const [locale, variant] of Object.entries(fiveLayer.cultural_variants)) {
+      md += `\n### ${locale}\n`;
+      md += `- **Note:** ${variant.principle_note}\n`;
+      md += `- **Adaptation:** ${variant.adaptation}\n`;
+    }
+  } else {
+    md += `*Cultural adaptation pending — will be generated based on probe responses.*\n`;
+  }
+
+  md += `\n---\n\n## Creator Rights\n`;
+  md += `- **Commercial Use**: ${skillData.commercial === 'allowed' ? 'Allowed' : skillData.commercial === 'authorized' ? 'Authorization Required' : 'Prohibited'}\n`;
+  md += `- **Remix**: ${skillData.remix === 'yes' ? 'Allowed' : skillData.remix === 'share-alike' ? 'Share-alike Required' : 'Not Allowed'}\n`;
+  md += `\n---\n*Forged with THE 42 POST · Human Semantic Capital Protocol*\n`;
+
+  return md;
+}
+
+// Generate agent-optimized format (JSON for machine consumption)
+function generateAgentSkillFormat(skillData) {
+  const fiveLayer = skillData.fiveLayerSkill || null;
+
+  if (fiveLayer) {
+    // Full five-layer JSON
+    return JSON.stringify({
+      schema: '42post-skill-v0.1',
+      id: skillData.soulHash,
+      name: skillData.title,
+      author: skillData.author,
+      domain: skillData.domain,
+      license: {
+        type: 'creator-reserved',
+        commercial: skillData.commercial,
+        remix: skillData.remix
+      },
+      layers: {
+        principle: fiveLayer.principle,
+        exemplars: fiveLayer.exemplars,
+        boundaries: fiveLayer.boundaries,
+        evaluation: fiveLayer.evaluation,
+        cultural_variants: fiveLayer.cultural_variants
+      },
+      probe_data: fiveLayer.probe_data
+    }, null, 2);
+  }
+
+  // Fallback: simple format
+  return JSON.stringify({
+    schema: '42post-skill-v0.1',
+    id: skillData.soulHash,
+    name: skillData.title,
+    author: skillData.author,
+    domain: skillData.domain,
+    license: {
+      type: 'creator-reserved',
+      commercial: skillData.commercial,
+      remix: skillData.remix
+    },
+    layers: {
+      principle: skillData.desc,
+      exemplars: [],
+      boundaries: {
+        applies_when: skillData.useCases ? skillData.useCases.split('\n') : [],
+        does_not_apply: skillData.disallowedUses ? skillData.disallowedUses.split('\n') : [],
+        tension_zones: []
+      },
+      evaluation: { test_cases: [], metric: 'pending' },
+      cultural_variants: {}
+    }
+  }, null, 2);
+}
+
+// Trigger download of skill as SKILL.md file
+function downloadSkillPackage(skillData) {
+  const content = generateSkillMarkdown(skillData);
+  const blob = new Blob([content], { type: 'text/markdown;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `${skillData.title.replace(/\s+/g, '_')}_SKILL.md`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+// Copy agent-optimized skill format to clipboard
+function copySkillToClipboard(skillData) {
+  const content = generateAgentSkillFormat(skillData);
+  navigator.clipboard.writeText(content).then(() => {
+    const btn = event.target;
+    const originalText = btn.textContent;
+    btn.textContent = '✓ COPIED';
+    btn.classList.add('copied');
+    setTimeout(() => {
+      btn.textContent = originalText;
+      btn.classList.remove('copied');
+    }, 2000);
+  }).catch(err => {
+    console.error('Failed to copy:', err);
+    alert('Failed to copy to clipboard');
+  });
+}
+
+// Load and display skills in Agent Archive
+// DEPRECATED: Use initAgentArchiveView() instead
+// This function has been replaced by the full Celestial Map implementation
+
+// Show Agent Archive page
+function showAgentArchive() {
+  // Hide ALL main page content
+  const hideSelectors = [
+    '.global-header',
+    '.manifesto-strip',
+    '#voiceTicker',
+    '#sectionHeadline',
+    '.section-breath',
+    '#sectionCreative',
+    '#sectionVibe',
+    '#globalFooter'
+  ];
+  hideSelectors.forEach(sel => {
+    document.querySelectorAll(sel).forEach(el => el.style.display = 'none');
+  });
+
+  // Show archive section
+  const archiveSection = document.getElementById('sectionAgentArchive');
+  if (archiveSection) {
+    archiveSection.style.display = 'block';
+    window.scrollTo(0, 0);
+
+    // Wait for next frame to ensure DOM is ready, then init canvas
+    requestAnimationFrame(() => {
+      initAgentArchiveView();
+    });
+  }
+}
+
+// Show main page (hide archive)
+function showMainPage() {
+  // Hide archive
+  const archiveSection = document.getElementById('sectionAgentArchive');
+  if (archiveSection) archiveSection.style.display = 'none';
+
+  // Show ALL main page content
+  const showSelectors = [
+    '.global-header',
+    '.manifesto-strip',
+    '#voiceTicker',
+    '#sectionHeadline',
+    '.section-breath',
+    '#sectionCreative',
+    '#sectionVibe',
+    '#globalFooter'
+  ];
+  showSelectors.forEach(sel => {
+    document.querySelectorAll(sel).forEach(el => el.style.display = '');
+  });
+
+  window.scrollTo(0, 0);
+}
+
+// Initialize skill download button
+function initSkillPackageDownload() {
+  const downloadBtn = document.getElementById('btnDownloadSkill');
+  if (downloadBtn) {
+    downloadBtn.addEventListener('click', () => {
+      // Use the stored skill data from the publish action
+      if (window.currentForgedSkill) {
+        downloadSkillPackage(window.currentForgedSkill);
+      } else {
+        alert('No skill data available. Please forge a skill first.');
+      }
+    });
+  }
+}
+
+// Initialize back button in Agent Archive
+function initArchiveBackButton() {
+  const backBtn = document.getElementById('btnBackHome');
+  if (backBtn) {
+    backBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      showMainPage();
+    });
+  }
+}
+
+/* ═══════════════════════════════════════════════════════
+   AGENT ARCHIVE - Celestial Map Implementation
+   ═══════════════════════════════════════════════════════ */
+
+// Domain metadata
+const ARCHIVE_DOMAINS = [
+  { key: 'safety',     cn: '安全与治理', en: 'Safety & Governance' },
+  { key: 'science',    cn: '科技与人文', en: 'Science & Humanities' },
+  { key: 'narrative',  cn: '叙事与修辞', en: 'Narrative & Rhetoric' },
+  { key: 'design',     cn: '设计与思辨', en: 'Design & Critique' },
+  { key: 'visual',     cn: '视觉与美学', en: 'Visuals & Aesthetics' },
+  { key: 'experience', cn: '交互与体验', en: 'Experience & Interaction' },
+  { key: 'sound',      cn: '声音与节律', en: 'Sound & Rhythm' },
+  { key: 'ideas',      cn: '观念与感知', en: 'Ideas & Perception' },
+  { key: 'history',    cn: '历史与哲学', en: 'History & Philosophy' },
+  { key: 'fun',        cn: '纯粹乐趣', en: 'Just for Fun' },
+];
+
+const DOMAIN_COLORS = {
+  safety:     { r: 212, g: 114, b: 106, hex: '#d4726a' },
+  science:    { r: 106, g: 142, b: 186, hex: '#6a8eba' },
+  narrative:  { r: 212, g: 164, b: 60,  hex: '#d4a43c' },
+  design:     { r: 154, g: 122, b: 166, hex: '#9a7aa6' },
+  visual:     { r: 210, g: 130, b: 100, hex: '#d28264' },
+  experience: { r: 58,  g: 154, b: 140, hex: '#3a9a8c' },
+  sound:      { r: 90,  g: 170, b: 180, hex: '#5aaab4' },
+  ideas:      { r: 190, g: 170, b: 80,  hex: '#beaa50' },
+  history:    { r: 170, g: 130, b: 110, hex: '#aa826e' },
+  fun:        { r: 120, g: 180, b: 140, hex: '#78b48c' },
+};
+
+function soulHash(str) {
+  let h = 0x42;
+  for (let i = 0; i < str.length; i++) h = ((h << 5) - h + str.charCodeAt(i)) & 0xffffffff;
+  return 'SOUL_' + Math.abs(h).toString(16).padStart(8, '0');
+}
+
+function initAgentArchiveView() {
+  const canvas = document.getElementById('celestialCanvas');
+  const canvasWrap = document.getElementById('canvasWrap');
+  const tooltip = document.getElementById('starTooltip');
+
+  if (!canvas || !canvasWrap) return;
+  
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  
+  let nodes = [];
+  let edges = [];
+  let bgStars = [];
+  let cam = { x: 0, y: 0, zoom: 1 };
+  let drag = { active: false, startX: 0, startY: 0, camStartX: 0, camStartY: 0 };
+  let hoveredNode = null;
+  let clickedNode = null;
+  let cw = 0, ch = 0;
+  
+  // Use all 21 demo skills directly
+  const allSkills = SHARED_SKILLS;
+  
+  function resizeCanvas() {
+    const rect = canvasWrap.getBoundingClientRect();
+    cw = rect.width;
+    ch = rect.height;
+    canvas.width = cw * dpr;
+    canvas.height = ch * dpr;
+    canvas.style.width = cw + 'px';
+    canvas.style.height = ch + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  
+  function initNodes() {
+    const cx = cw / 2;
+    const cy = ch / 2;
+
+    bgStars = [];
+    for (let i = 0; i < 200; i++) {
+      bgStars.push({
+        x: (Math.random() - 0.5) * cw * 4,
+        y: (Math.random() - 0.5) * ch * 4,
+        size: Math.random() * 1.0 + 0.3,
+        alpha: Math.random() * 0.3 + 0.05,
+        twinkle: Math.random() * Math.PI * 2,
+      });
+    }
+
+    nodes = allSkills.map((s, i) => {
+      const angle = (i / allSkills.length) * Math.PI * 2 + (i * 0.618);
+      const spiralR = 80 + i * 13 + Math.sin(i * 2.1) * 50;
+      const x = cx + Math.cos(angle) * spiralR + (Math.random() - 0.5) * 30;
+      const y = cy + Math.sin(angle) * spiralR * 0.65 + (Math.random() - 0.5) * 25;
+      const color = DOMAIN_COLORS[s.domain] || DOMAIN_COLORS.ideas;
+      return {
+        x, y, baseX: x, baseY: y,
+        size: 3.5 + s.starlight * 0.2,
+        starlight: s.starlight,
+        title: s.title, titleCn: s.titleCn,
+        desc: s.desc, agent: s.agent,
+        domain: s.domain, id: s.id,
+        hash: soulHash(s.id + s.title),
+        color, phase: Math.random() * Math.PI * 2,
+      };
+    });
+    
+    edges = [];
+    for (let i = 0; i < nodes.length; i++) {
+      for (let j = i + 1; j < nodes.length; j++) {
+        const dist = Math.hypot(nodes[i].baseX - nodes[j].baseX, nodes[i].baseY - nodes[j].baseY);
+        if (dist < 160 && Math.random() > 0.45) edges.push([i, j]);
+      }
+    }
+  }
+  
+  function render() {
+    const t = Date.now() * 0.001;
+    ctx.clearRect(0, 0, cw, ch);
+    
+    const bg = ctx.createLinearGradient(0, 0, cw * 0.3, ch);
+    bg.addColorStop(0,    '#d8ccd6');
+    bg.addColorStop(0.25, '#e0cec8');
+    bg.addColorStop(0.50, '#e8d6c0');
+    bg.addColorStop(0.75, '#eddcb8');
+    bg.addColorStop(1,    '#f2e2c0');
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, cw, ch);
+    
+    ctx.save();
+    ctx.translate(cw/2 + cam.x * cam.zoom, ch/2 + cam.y * cam.zoom);
+    ctx.scale(cam.zoom, cam.zoom);
+    ctx.translate(-cw/2, -ch/2);
+    
+    bgStars.forEach(s => {
+      const tw = 0.3 + Math.sin(t * 0.8 + s.twinkle) * 0.2;
+      ctx.beginPath();
+      ctx.arc(s.x + cw/2, s.y + ch/2, s.size, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(160, 120, 80, ${s.alpha * tw * 0.5})`;
+      ctx.fill();
+    });
+    
+    nodes.forEach(n => {
+      n.x = n.baseX + Math.sin(t * 0.4 + n.phase) * 1.5;
+      n.y = n.baseY + Math.cos(t * 0.35 + n.phase) * 1.5;
+    });
+    
+    edges.forEach(([i, j]) => {
+      const a = nodes[i], b = nodes[j];
+      const c = a.color;
+      ctx.beginPath();
+      ctx.moveTo(a.x, a.y);
+      ctx.lineTo(b.x, b.y);
+      ctx.strokeStyle = `rgba(${c.r}, ${c.g}, ${c.b}, ${0.10 + Math.sin(t + i) * 0.03})`;
+      ctx.lineWidth = 0.6;
+      ctx.stroke();
+    });
+    
+    nodes.forEach((n, i) => {
+      const breathe = 1 + Math.sin(t * 1.2 + n.phase) * 0.08;
+      const isHov = hoveredNode === i;
+      const isClk = clickedNode === i;
+      const highlight = isHov || isClk;
+      
+      const glowR = (n.size * 6 + n.starlight * 0.5) * breathe * (highlight ? 2.5 : 1);
+      const glow = ctx.createRadialGradient(n.x, n.y, 0, n.x, n.y, glowR);
+      glow.addColorStop(0, `rgba(${n.color.r}, ${n.color.g}, ${n.color.b}, ${highlight ? 0.5 : 0.3})`);
+      glow.addColorStop(0.35, `rgba(${n.color.r}, ${n.color.g}, ${n.color.b}, ${highlight ? 0.12 : 0.06})`);
+      glow.addColorStop(1, 'transparent');
+      ctx.beginPath();
+      ctx.arc(n.x, n.y, glowR, 0, Math.PI * 2);
+      ctx.fillStyle = glow;
+      ctx.fill();
+      
+      const sz = n.size * breathe * (highlight ? 1.5 : 1);
+      ctx.beginPath();
+      ctx.arc(n.x, n.y, sz, 0, Math.PI * 2);
+      ctx.fillStyle = n.color.hex;
+      ctx.fill();
+      
+      ctx.beginPath();
+      ctx.arc(n.x - sz * 0.15, n.y - sz * 0.15, sz * 0.25, 0, Math.PI * 2);
+      const ha = 0.5 + Math.sin(t * 2 + n.phase) * 0.15;
+      ctx.fillStyle = `rgba(255,252,240,${highlight ? ha + 0.2 : ha * 0.5})`;
+      ctx.fill();
+      
+      if (n.starlight > 14 || highlight) {
+        ctx.beginPath();
+        ctx.arc(n.x, n.y, sz * 2.2 * breathe, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(${n.color.r}, ${n.color.g}, ${n.color.b}, ${highlight ? 0.3 : 0.12})`;
+        ctx.lineWidth = 0.4;
+        ctx.stroke();
+      }
+      
+      if (highlight) {
+        ctx.font = '500 10px "JetBrains Mono", monospace';
+        ctx.fillStyle = 'rgba(44,36,32,0.9)';
+        ctx.textAlign = 'center';
+        ctx.fillText(n.title, n.x, n.y - sz * 2.8 - 2);
+        if (isClk) {
+          ctx.font = '8px "JetBrains Mono", monospace';
+          ctx.fillStyle = 'rgba(184,74,48,0.85)';
+          ctx.fillText(n.hash, n.x, n.y + sz * 2.8 + 10);
+        }
+      }
+    });
+    
+    ctx.restore();
+    requestAnimationFrame(render);
+  }
+  
+  function screenToWorld(sx, sy) {
+    const rect = canvasWrap.getBoundingClientRect();
+    const lx = sx - rect.left;
+    const ly = sy - rect.top;
+    return {
+      x: (lx - cw/2) / cam.zoom - cam.x + cw/2,
+      y: (ly - ch/2) / cam.zoom - cam.y + ch/2,
+    };
+  }
+  
+  function findNodeAt(sx, sy) {
+    const w = screenToWorld(sx, sy);
+    for (let i = nodes.length - 1; i >= 0; i--) {
+      const n = nodes[i];
+      if (Math.hypot(w.x - n.x, w.y - n.y) < n.size * 4 + 8) return i;
+    }
+    return null;
+  }
+  
+  canvas.addEventListener('mousedown', e => {
+    drag = { active: true, startX: e.clientX, startY: e.clientY, camStartX: cam.x, camStartY: cam.y };
+  });
+  
+  canvas.addEventListener('mousemove', e => {
+    if (drag.active) {
+      cam.x = drag.camStartX + (e.clientX - drag.startX) / cam.zoom;
+      cam.y = drag.camStartY + (e.clientY - drag.startY) / cam.zoom;
+      tooltip.classList.remove('visible');
+      hoveredNode = null;
+      return;
+    }
+    
+    const idx = findNodeAt(e.clientX, e.clientY);
+    hoveredNode = idx;
+    if (idx !== null) {
+      const n = nodes[idx];
+      const rect = canvasWrap.getBoundingClientRect();
+      document.getElementById('ttName').textContent = n.title;
+      document.getElementById('ttNameCn').textContent = n.titleCn;
+      document.getElementById('ttAgent').textContent = n.agent;
+      document.getElementById('ttDesc').textContent = n.desc;
+      document.getElementById('ttHash').textContent = n.hash;
+      document.getElementById('ttStarlight').textContent = '★ ' + n.starlight;
+      document.getElementById('ttDomain').textContent = n.domain;
+      tooltip.style.left = Math.min(e.clientX - rect.left + 16, cw - 300) + 'px';
+      tooltip.style.top = Math.min(e.clientY - rect.top + 16, ch - 180) + 'px';
+      tooltip.classList.add('visible');
+      canvas.style.cursor = 'pointer';
+    } else {
+      tooltip.classList.remove('visible');
+      canvas.style.cursor = 'grab';
+    }
+  });
+  
+  canvas.addEventListener('mouseup', e => {
+    const moved = Math.abs(e.clientX - drag.startX) > 4 || Math.abs(e.clientY - drag.startY) > 4;
+    drag.active = false;
+    if (!moved) {
+      const idx = findNodeAt(e.clientX, e.clientY);
+      clickedNode = clickedNode === idx ? null : idx;
+    }
+  });
+  
+  canvas.addEventListener('mouseleave', () => {
+    tooltip.classList.remove('visible');
+    hoveredNode = null;
+    canvas.style.cursor = 'grab';
+  });
+
+  canvas.addEventListener('wheel', e => {
+    e.preventDefault();
+    cam.zoom = Math.max(0.3, Math.min(5, cam.zoom * (e.deltaY > 0 ? 0.9 : 1.1)));
+    document.getElementById('zoomInfo').textContent = Math.round(cam.zoom * 100) + '%';
+  }, { passive: false });
+  
+  document.getElementById('zoomIn').onclick = () => { cam.zoom = Math.min(5, cam.zoom * 1.3); document.getElementById('zoomInfo').textContent = Math.round(cam.zoom * 100) + '%'; };
+  document.getElementById('zoomOut').onclick = () => { cam.zoom = Math.max(0.3, cam.zoom * 0.7); document.getElementById('zoomInfo').textContent = Math.round(cam.zoom * 100) + '%'; };
+  document.getElementById('zoomReset').onclick = () => { cam = { x: 0, y: 0, zoom: 1 }; document.getElementById('zoomInfo').textContent = '100%'; };
+  
+  // Honor Panel Toggle
+  const honorPanel = document.getElementById('honorPanel');
+  const toggleClose = document.getElementById('honorToggle');
+  const toggleOpen = document.getElementById('honorToggleOpen');
+  
+  function refreshCanvas() {
+    setTimeout(() => { resizeCanvas(); initNodes(); }, 420);
+  }
+  
+  toggleClose.addEventListener('click', () => {
+    honorPanel.classList.add('collapsed');
+    toggleOpen.classList.add('visible');
+    refreshCanvas();
+  });
+  
+  toggleOpen.addEventListener('click', () => {
+    honorPanel.classList.remove('collapsed');
+    toggleOpen.classList.remove('visible');
+    refreshCanvas();
+  });
+  
+  // Honor List
+  function initHonorList() {
+    const list = document.getElementById('honorList');
+    const sorted = [...allSkills].sort((a, b) => b.starlight - a.starlight);
+
+    list.innerHTML = '';
+    sorted.forEach((s, i) => {
+      const row = document.createElement('div');
+      row.className = 'honor-row';
+      row.innerHTML = `
+        <span class="honor-rank">#${String(i + 1).padStart(2, '0')}</span>
+        <span class="honor-star">★${s.starlight}</span>
+        <span class="honor-name">${s.title}</span>
+        <span class="honor-starlight">#${s.id}</span>
+      `;
+      row.addEventListener('click', () => {
+        const ni = nodes.findIndex(n => n.id === s.id);
+        if (ni >= 0) {
+          const n = nodes[ni];
+          cam.x = cw/2 - n.baseX;
+          cam.y = ch/2 - n.baseY;
+          cam.zoom = 2.5;
+          clickedNode = ni;
+          document.getElementById('zoomInfo').textContent = '250%';
+        }
+      });
+      list.appendChild(row);
+    });
+  }
+  
+  // Domain Grid
+  function initDomainGrid() {
+    const grid = document.getElementById('domainGrid');
+
+    grid.innerHTML = '';
+    ARCHIVE_DOMAINS.forEach(dom => {
+      const domSkills = allSkills.filter(s => s.domain === dom.key);
+      const cell = document.createElement('div');
+      cell.className = 'domain-cell';
+      
+      const openSeats = Math.max(0, 2 - domSkills.length);
+      let html = domSkills.map(s => {
+        const hash = soulHash(s.id + s.title);
+        return `
+          <div class="domain-skill">
+            <div class="domain-skill-title">${s.title}</div>
+            <div class="domain-skill-title-cn">${s.titleCn}</div>
+            <div class="domain-skill-agent">${s.agent}</div>
+            <div class="domain-skill-desc">${s.desc}</div>
+            <div class="domain-skill-meta">
+              <span class="hash-val">${hash}</span>
+              <span>★ ${s.starlight}</span>
+            </div>
+          </div>`;
+      }).join('');
+      
+      for (let i = 0; i < openSeats; i++) {
+        html += `
+          <div class="domain-skill domain-open-seat">
+            <div class="domain-skill-title">Open Seat</div>
+            <div class="domain-skill-desc">Awaiting alignment contribution.</div>
+          </div>`;
+      }
+      
+      cell.innerHTML = `
+        <div class="domain-title">${dom.cn}</div>
+        <div class="domain-title-en">${dom.en}</div>
+        ${html}
+      `;
+      grid.appendChild(cell);
+    });
+  }
+  
+  // Initialize
+  resizeCanvas();
+  window.addEventListener('resize', () => { resizeCanvas(); initNodes(); });
+  initNodes();
+  initHonorList();
+  initDomainGrid();
+  render();
+}
+

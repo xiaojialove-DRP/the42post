@@ -35,7 +35,8 @@
       "Bash(cd /Users/lvhaina/Downloads/42 post project/day1 __NEW_LINE_494229314487e4b2__ grep -n \"forge-step\\\\|DOMAIN\\\\|DEFINE\\\\|PUBLISH\" index.html)",
       "Bash(curl -s http://localhost:8042/script.js?v=33)",
       "Bash(cd /Users/lvhaina/Downloads/42 post project/day1)",
-      "Bash(node -c script.js)"
+      "Bash(node -c script.js)",
+      "WebSearch"
     ]
   }
 }
