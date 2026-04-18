@@ -4,7 +4,7 @@
   "description": "THE 42 POST - AI Value Alignment Skills Platform",
   "type": "module",
   "scripts": {
-    "start": "cd backend && npm start",
+    "start": "node backend/server.js",
     "dev": "cd backend && npm run dev"
   },
   "engines": {
