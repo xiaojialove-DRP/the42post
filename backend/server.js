@@ -89,15 +89,31 @@ app.use(requestLogger);
 const frontendPath = join(__dirname, '../day1');
 console.log('Frontend Path:', frontendPath);
 
-app.use(express.static(frontendPath, {
-  extensions: ['html', 'js', 'css', 'json'],
-  maxAge: '1h',
-  etag: false
-}));
+// Try to serve static files, but don't crash if folder doesn't exist
+try {
+  app.use(express.static(frontendPath, {
+    extensions: ['html', 'js', 'css', 'json'],
+    maxAge: '1h',
+    etag: false
+  }));
+} catch (err) {
+  console.warn('Frontend static folder not found, API-only mode');
+}
 
 // Fallback to index.html for SPA routing
 app.get('/', (req, res) => {
-  res.sendFile(join(frontendPath, 'index.html'));
+  res.sendFile(join(frontendPath, 'index.html'), (err) => {
+    if (err) {
+      console.warn('Frontend index.html not found, returning API info');
+      res.json({
+        message: 'THE 42 POST API Server',
+        status: 'running',
+        frontend: 'Frontend not yet deployed',
+        api_docs: '/api/health',
+        version: '0.1.0'
+      });
+    }
+  });
 });
 
 // Health check
