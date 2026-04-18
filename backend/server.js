@@ -32,49 +32,23 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // ═══ DATABASE SETUP ═══
-// Choose SQLite or PostgreSQL based on DATABASE_URL
+// Always use SQLite for now (ignore DATABASE_URL)
 let db;
 
-const dbUrl = process.env.DATABASE_URL || '';
-const usePostgres = dbUrl && !dbUrl.startsWith('sqlite:');
+console.log('Using SQLite database (forced)...');
+const sqliteUrl = 'sqlite:///./database.sqlite3';
 
-if (usePostgres) {
-  // Use PostgreSQL
-  console.log('Using PostgreSQL database...');
-  db = new Pool({
-    connectionString: dbUrl,
-    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
-  });
+db = new SqlitePool({
+  connectionString: sqliteUrl
+});
 
-  // Test connection
-  db.on('error', (err) => {
-    console.error('PostgreSQL Pool Error:', err);
-  });
-
-  db.query('SELECT NOW()', (err, result) => {
-    if (err) {
-      console.error('Database connection failed:', err.message);
-    } else {
-      console.log('✓ PostgreSQL database connected:', result.rows[0]);
-    }
-  });
-} else {
-  // Use SQLite (default)
-  const sqliteUrl = dbUrl || 'sqlite:///./database.sqlite3';
-  console.log('Using SQLite database...');
-  console.log('Database URL:', sqliteUrl);
-
-  db = new SqlitePool({
-    connectionString: sqliteUrl
-  });
-
-  // Test connection
-  db.query('SELECT 1 as test').then(result => {
-    console.log('✓ SQLite database connected');
-  }).catch(err => {
-    console.error('SQLite connection error:', err.message);
-  });
-}
+// Test connection
+db.query('SELECT 1 as test').then(result => {
+  console.log('✓ SQLite database connected');
+}).catch(err => {
+  console.error('SQLite connection error:', err.message);
+  process.exit(1);
+});
 
 // ═══ MIDDLEWARE ═══
 app.use(cors({
