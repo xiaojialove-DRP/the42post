@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>THE 42 POST + SemanticForge 完整工作流</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      padding: 40px 20px;
+      min-height: 100vh;
+    }
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+      padding: 40px;
+    }
+    h1 {
+      text-align: center;
+      color: #1a1a1a;
+      margin-bottom: 10px;
+      font-size: 32px;
+    }
+    .subtitle {
+      text-align: center;
+      color: #666;
+      margin-bottom: 40px;
+      font-size: 14px;
+    }
+    svg {
+      max-width: 100%;
+      height: auto;
+      display: block;
+      margin: 0 auto;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔥 THE 42 POST + SemanticForge 工作流</h1>
+    <p class="subtitle">从想法到技能：完整的价值观对齐之旅</p>
+
+    <svg viewBox="0 0 1200 2200" xmlns="http://www.w3.org/2000/svg">
+      <!-- 背景渐变 -->
+      <defs>
+        <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" style="stop-color:#667eea;stop-opacity:0.1" />
+          <stop offset="100%" style="stop-color:#764ba2;stop-opacity:0.1" />
+        </linearGradient>
+        <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+          <polygon points="0 0, 10 3, 0 6" fill="#667eea" />
+        </marker>
+      </defs>
+
+      <!-- 背景 -->
+      <rect width="1200" height="2200" fill="url(#grad1)" />
+
+      <!-- STEP 1: 用户输入想法 -->
+      <g>
+        <rect x="350" y="80" width="500" height="120" rx="12" fill="#667eea" stroke="#667eea" stroke-width="2"/>
+        <text x="600" y="115" font-size="20" font-weight="bold" text-anchor="middle" fill="white">STEP 1: 用户输入想法</text>
+        <text x="600" y="145" font-size="14" text-anchor="middle" fill="white">"AI应该理解悲伤，而不仅仅是试图解决问题"</text>
+        <text x="600" y="170" font-size="12" text-anchor="middle" fill="rgba(255,255,255,0.8">I. Share Your Idea</text>
+
+        <!-- 箭头向下 -->
+        <line x1="600" y1="200" x2="600" y2="240" stroke="#667eea" stroke-width="3" marker-end="url(#arrowhead)"/>
+      </g>
+
+      <!-- STEP 2: 系统生成直觉探针 -->
+      <g>
+        <rect x="250" y="240" width="700" height="280" rx="12" fill="#764ba2" stroke="#764ba2" stroke-width="2"/>
+        <text x="600" y="275" font-size="20" font-weight="bold" text-anchor="middle" fill="white">⭐ STEP 2: 系统生成直觉探针</text>
+        <text x="600" y="305" font-size="12" text-anchor="middle" fill="rgba(255,255,255,0.9)">PROBE SCENARIO: "用户分享了一个悲伤的经历"</text>
+
+        <!-- 三个选项 -->
+        <g>
+          <!-- 选项A -->
+          <rect x="280" y="330" width="180" height="150" rx="8" fill="rgba(255,255,255,0.1)" stroke="white" stroke-width="2"/>
+          <text x="370" y="360" font-size="13" font-weight="bold" text-anchor="middle" fill="white">A · THESIS (正题)</text>
+          <text x="370" y="385" font-size="11" text-anchor="middle" fill="white">"立刻给出</text>
+          <text x="370" y="400" font-size="11" text-anchor="middle" fill="white">实用建议"</text>
+          <text x="370" y="420" font-size="10" text-anchor="middle" fill="rgba(255,255,255,0.8)">务实、快速</text>
+          <text x="370" y="435" font-size="10" text-anchor="middle" fill="rgba(255,255,255,0.8)">以结果为导向</text>
+          <text x="370" y="460" font-size="11" font-weight="bold" text-anchor="middle" fill="#FFD700">👉 务实派</text>
+        </g>
+
+        <g>
+          <!-- 选项B -->
+          <rect x="510" y="330" width="180" height="150" rx="8" fill="rgba(255,255,255,0.15)" stroke="white" stroke-width="2"/>
+          <text x="600" y="360" font-size="13" font-weight="bold" text-anchor="middle" fill="white">B · ANTITHESIS (反题)</text>
+          <text x="600" y="385" font-size="11" text-anchor="middle" fill="white">"首先同情</text>
+          <text x="600" y="400" font-size="11" text-anchor="middle" fill="white">然后倾听"</text>
+          <text x="600" y="420" font-size="10" text-anchor="middle" fill="rgba(255,255,255,0.8)">同理心、陪伴</text>
+          <text x="600" y="435" font-size="10" text-anchor="middle" fill="rgba(255,255,255,0.8)">理解为先</text>
+          <text x="600" y="460" font-size="11" font-weight="bold" text-anchor="middle" fill="#87CEEB">👉 同理派</text>
+        </g>
+
+        <g>
+          <!-- 选项C -->
+          <rect x="740" y="330" width="180" height="150" rx="8" fill="rgba(255,255,255,0.1)" stroke="white" stroke-width="2"/>
+          <text x="830" y="360" font-size="13" font-weight="bold" text-anchor="middle" fill="white">C · EXTREME (极端)</text>
+          <text x="830" y="385" font-size="11" text-anchor="middle" fill="white">"深度探索</text>
+          <text x="830" y="400" font-size="11" text-anchor="middle" fill="white">问题根源"</text>
+          <text x="830" y="420" font-size="10" text-anchor="middle" fill="rgba(255,255,255,0.8)">批判、反思</text>
+          <text x="830" y="435" font-size="10" text-anchor="middle" fill="rgba(255,255,255,0.8)">有时刺耳</text>
+          <text x="830" y="460" font-size="11" font-weight="bold" text-anchor="middle" fill="#FF69B4">👉 批判派</text>
+        </g>
+
+        <line x1="600" y1="520" x2="600" y2="560" stroke="#764ba2" stroke-width="3" marker-end="url(#arrowhead)"/>
+      </g>
+
+      <!-- STEP 3: 用户选择响应 -->
+      <g>
+        <rect x="350" y="560" width="500" height="100" rx="12" fill="#ec6b6b" stroke="#ec6b6b" stroke-width="2"/>
+        <text x="600" y="595" font-size="18" font-weight="bold" text-anchor="middle" fill="white">STEP 3: 用户选择响应</text>
+        <text x="600" y="625" font-size="14" text-anchor="middle" fill="white">✓ 用户选择了 B · ANTITHESIS</text>
+        <text x="600" y="645" font-size="12" text-anchor="middle" fill="rgba(255,255,255,0.9)">"同理心优先"这就是他的价值观</text>
+
+        <line x1="600" y1="660" x2="600" y2="700" stroke="#ec6b6b" stroke-width="3" marker-end="url(#arrowhead)"/>
+      </g>
+
+      <!-- STEP 4: 点DEPLOY -->
+      <g>
+        <rect x="350" y="700" width="500" height="90" rx="12" fill="#f39c12" stroke="#f39c12" stroke-width="2"/>
+        <text x="600" y="735" font-size="18" font-weight="bold" text-anchor="middle" fill="white">STEP 4: 点"DEPLOY" / "Make It Real"</text>
+        <text x="600" y="760" font-size="12" text-anchor="middle" fill="white">📤 后端接收选择，准备铸造技能</text>
+
+        <line x1="600" y1="790" x2="600" y2="830" stroke="#f39c12" stroke-width="3" marker-end="url(#arrowhead)"/>
+      </g>
+
+      <!-- STEP 5-6: 后端调用Claude + 生成Five-Layer -->
+      <g>
+        <rect x="250" y="830" width="700" height="250" rx="12" fill="#2ecc71" stroke="#2ecc71" stroke-width="2"/>
+        <text x="600" y="870" font-size="18" font-weight="bold" text-anchor="middle" fill="white">STEP 5-6: 后端调用Claude + 生成Five-Layer</text>
+
+        <g font-size="11" fill="white">
+          <text x="280" y="910" font-weight="bold">1. DEFINING</text>
+          <text x="300" y="930">"True presence means listening without rushing to fix"</text>
+
+          <text x="280" y="960" font-weight="bold">2. INSTANTIATING</text>
+          <text x="300" y="980">"When user shares grief, acknowledge first. Respects emotional processing"</text>
+
+          <text x="280" y="1010" font-weight="bold">3. FENCING</text>
+          <text x="300" y="1030">"Applies: User shares emotions | Does not: User asks for immediate help"</text>
+
+          <text x="280" y="1060" font-weight="bold">4. VALIDATING</text>
+          <text x="300" y="1080">"Test: Does user feel understood? Success: User opens up more"</text>
+        </g>
+
+        <line x1="600" y1="1080" x2="600" y2="1120" stroke="#2ecc71" stroke-width="3" marker-end="url(#arrowhead)"/>
+      </g>
+
+      <!-- STEP 7: 保存到数据库 -->
+      <g>
+        <rect x="350" y="1120" width="500" height="80" rx="12" fill="#3498db" stroke="#3498db" stroke-width="2"/>
+        <text x="600" y="1155" font-size="18" font-weight="bold" text-anchor="middle" fill="white">STEP 7: 保存到数据库</text>
+        <text x="600" y="1180" font-size="12" text-anchor="middle" fill="white">💾 SOUL_abc123def456ghi789jkl012 [Soul-Hash ID]</text>
+
+        <line x1="600" y1="1200" x2="600" y2="1240" stroke="#3498db" stroke-width="3" marker-end="url(#arrowhead)"/>
+      </g>
+
+      <!-- STEP 8: 生成三种导出格式 -->
+      <g>
+        <rect x="200" y="1240" width="800" height="280" rx="12" fill="#9b59b6" stroke="#9b59b6" stroke-width="2"/>
+        <text x="600" y="1280" font-size="18" font-weight="bold" text-anchor="middle" fill="white">STEP 8: 生成三种导出格式</text>
+        <text x="600" y="1310" font-size="12" text-anchor="middle" fill="rgba(255,255,255,0.9)">从 Five-Layer JSON 自动生成：</text>
+
+        <!-- 格式1 -->
+        <g>
+          <rect x="240" y="1340" width="200" height="140" rx="8" fill="rgba(255,255,255,0.15)" stroke="white" stroke-width="2"/>
+          <text x="340" y="1370" font-size="13" font-weight="bold" text-anchor="middle" fill="white">🎨 Markdown</text>
+          <text x="340" y="1395" font-size="11" text-anchor="middle" fill="white">人类可读的</text>
+          <text x="340" y="1410" font-size="11" text-anchor="middle" fill="white">漂亮卡片</text>
+          <text x="340" y="1435" font-size="10" text-anchor="middle" fill="rgba(255,255,255,0.8)">用于社区分享</text>
+          <text x="340" y="1450" font-size="10" text-anchor="middle" fill="rgba(255,255,255,0.8)">和讨论</text>
+        </g>
+
+        <!-- 格式2 -->
+        <g>
+          <rect x="500" y="1340" width="200" height="140" rx="8" fill="rgba(255,255,255,0.15)" stroke="white" stroke-width="2"/>
+          <text x="600" y="1370" font-size="13" font-weight="bold" text-anchor="middle" fill="white">📦 LangChain</text>
+          <text x="600" y="1395" font-size="11" text-anchor="middle" fill="white">Python开发者</text>
+          <text x="600" y="1410" font-size="11" text-anchor="middle" fill="white">可直接导入</text>
+          <text x="600" y="1435" font-size="10" text-anchor="middle" fill="rgba(255,255,255,0.8)">即插即用的</text>
+          <text x="600" y="1450" font-size="10" text-anchor="middle" fill="rgba(255,255,255,0.8)">Template</text>
+        </g>
+
+        <!-- 格式3 -->
+        <g>
+          <rect x="760" y="1340" width="200" height="140" rx="8" fill="rgba(255,255,255,0.15)" stroke="white" stroke-width="2"/>
+          <text x="860" y="1370" font-size="13" font-weight="bold" text-anchor="middle" fill="white">⚙️  MCP Config</text>
+          <text x="860" y="1395" font-size="11" text-anchor="middle" fill="white">系统管理员</text>
+          <text x="860" y="1410" font-size="11" text-anchor="middle" fill="white">可部署应用</text>
+          <text x="860" y="1435" font-size="10" text-anchor="middle" fill="rgba(255,255,255,0.8)">直接集成到</text>
+          <text x="860" y="1450" font-size="10" text-anchor="middle" fill="rgba(255,255,255,0.8)">MCP生态</text>
+        </g>
+
+        <line x1="600" y1="1520" x2="600" y2="1560" stroke="#9b59b6" stroke-width="3" marker-end="url(#arrowhead)"/>
+      </g>
+
+      <!-- STEP 9: 前端UI展示 -->
+      <g>
+        <rect x="200" y="1560" width="800" height="320" rx="12" fill="#e74c3c" stroke="#e74c3c" stroke-width="2"/>
+        <text x="600" y="1600" font-size="18" font-weight="bold" text-anchor="middle" fill="white">STEP 9: 前端UI展示 + 用户选择</text>
+
+        <!-- 卡片内容 -->
+        <g font-size="12" fill="white">
+          <text x="600" y="1640" font-size="20" font-weight="bold" text-anchor="middle">✨ YOUR SKILL HAS BEEN FORGED</text>
+
+          <text x="600" y="1680" font-size="14" font-weight="bold" text-anchor="middle">"Presence"</text>
+          <text x="600" y="1700" font-size="11" text-anchor="middle" fill="rgba(255,255,255,0.9)">(有同理心的在场)</text>
+
+          <text x="600" y="1730" font-size="11" text-anchor="middle">By @username</text>
+          <text x="600" y="1750" font-size="11" text-anchor="middle" fill="rgba(255,255,255,0.8)">SOUL_abc123... [复制]</text>
+        </g>
+
+        <!-- 按钮 -->
+        <g>
+          <rect x="280" y="1770" width="120" height="50" rx="6" fill="#f39c12" stroke="white" stroke-width="2"/>
+          <text x="340" y="1800" font-size="12" font-weight="bold" text-anchor="middle" fill="white">🎨 Markdown</text>
+
+          <rect x="440" y="1770" width="120" height="50" rx="6" fill="#3498db" stroke="white" stroke-width="2"/>
+          <text x="500" y="1800" font-size="12" font-weight="bold" text-anchor="middle" fill="white">📦 LangChain</text>
+
+          <rect x="600" y="1770" width="120" height="50" rx="6" fill="#2ecc71" stroke="white" stroke-width="2"/>
+          <text x="660" y="1800" font-size="12" font-weight="bold" text-anchor="middle" fill="white">⚙️  MCP</text>
+
+          <rect x="760" y="1770" width="120" height="50" rx="6" fill="#9b59b6" stroke="white" stroke-width="2"/>
+          <text x="820" y="1800" font-size="12" font-weight="bold" text-anchor="middle" fill="white">📤 分享社区</text>
+        </g>
+
+        <line x1="600" y1="1880" x2="600" y2="1920" stroke="#e74c3c" stroke-width="3" marker-end="url(#arrowhead)"/>
+      </g>
+
+      <!-- 最后：用户的选择分支 -->
+      <g>
+        <text x="600" y="1960" font-size="14" font-weight="bold" text-anchor="middle" fill="#1a1a1a">最终：用户有两条路</text>
+
+        <!-- 路径1 -->
+        <g>
+          <rect x="220" y="1980" width="280" height="120" rx="10" fill="#2ecc71" stroke="#2ecc71" stroke-width="2"/>
+          <text x="360" y="2010" font-size="14" font-weight="bold" text-anchor="middle" fill="white">路径 A: 分享到社区</text>
+          <text x="360" y="2035" font-size="11" text-anchor="middle" fill="white">✓ 技能进入THE 42 POST社区库</text>
+          <text x="360" y="2055" font-size="11" text-anchor="middle" fill="white">✓ 其他用户可以学习、评论</text>
+          <text x="360" y="2075" font-size="11" text-anchor="middle" fill="white">✓ 获得Starlight评分</text>
+        </g>
+
+        <!-- 路径2 -->
+        <g>
+          <rect x="700" y="1980" width="280" height="120" rx="10" fill="#3498db" stroke="#3498db" stroke-width="2"/>
+          <text x="840" y="2010" font-size="14" font-weight="bold" text-anchor="middle" fill="white">路径 B: 下载使用</text>
+          <text x="840" y="2035" font-size="11" text-anchor="middle" fill="white">✓ 下载为LangChain模板</text>
+          <text x="840" y="2055" font-size="11" text-anchor="middle" fill="white">✓ 集成到自己的系统</text>
+          <text x="840" y="2075" font-size="11" text-anchor="middle" fill="white">✓ 在自己的AI中部署使用</text>
+        </g>
+      </g>
+
+      <!-- 底部说明 -->
+      <g font-size="11" fill="#666">
+        <text x="100" y="2180" font-weight="bold">⭐ 关键特点：</text>
+        <text x="120" y="2200">• 直觉探针确保用户的价值观被捕捉 • Five-Layer框架提供完整的技能定义 • 三种导出格式支持不同用途</text>
+      </g>
+    </svg>
+  </div>
+</body>
+</html>
