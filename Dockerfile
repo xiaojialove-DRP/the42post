@@ -7,8 +7,8 @@ WORKDIR /app
 COPY package.json package*.json ./
 COPY backend/package.json backend/package*.json ./backend/
 
-# Install dependencies
-RUN npm install --omit=dev
+# Install dependencies (skip postinstall script which runs during Docker build)
+RUN npm install --omit=dev --ignore-scripts
 RUN cd backend && npm install --omit=dev
 
 # Copy the rest of the application
