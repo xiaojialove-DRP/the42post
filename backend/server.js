@@ -154,4 +154,5 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
+export { db };
 export default app;
