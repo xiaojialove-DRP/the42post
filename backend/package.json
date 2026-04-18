@@ -20,7 +20,7 @@
     "uuid": "^9.0.0",
     "jsonwebtoken": "^9.1.0",
     "bcryptjs": "^2.4.3",
-    "anthropic": "^0.15.0",
+    "anthropic": "^0.21.0",
     "crypto": "^1.0.1"
   },
   "devDependencies": {
