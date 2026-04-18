@@ -6,10 +6,12 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import { Pool } from 'pg';
+import pg from 'pg';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { SqlitePool } from './db/sqlite-adapter.js';
+
+const { Pool } = pg;
 
 import authRoutes from './routes/auth.js';
 import forgeRoutes from './routes/forge.js';
