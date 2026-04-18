@@ -6,6 +6,9 @@ WORKDIR /app
 # Copy all files
 COPY . .
 
+# Make startup script executable
+RUN chmod +x start.sh
+
 # Install backend dependencies directly
 WORKDIR /app/backend
 RUN npm install --omit=dev --no-optional
@@ -19,5 +22,5 @@ EXPOSE 3000
 # Set NODE_ENV for production
 ENV NODE_ENV=production
 
-# Start backend directly
-CMD ["node", "backend/server.js"]
+# Start backend via startup script
+CMD ["/bin/bash", "start.sh"]
