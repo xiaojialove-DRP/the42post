@@ -2,7 +2,7 @@
    Skill Generation with Claude API
    ═══════════════════════════════════════════════════════ */
 
-import { Anthropic } from 'anthropic';
+import Anthropic from '@anthropic-ai/sdk';
 import crypto from 'crypto';
 
 const client = new Anthropic({
