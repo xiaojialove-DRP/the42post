@@ -3,18 +3,22 @@ FROM node:18
 
 WORKDIR /app
 
-# Copy all files
+# Copy package files first (for better layer caching)
+COPY package.json package*.json ./
+COPY backend/package.json backend/package*.json ./backend/
+
+# Install dependencies
+RUN npm install --omit=dev
+RUN cd backend && npm install --omit=dev
+
+# Copy the rest of the application
 COPY . .
-
-# Install backend dependencies first
-WORKDIR /app/backend
-RUN npm install
-
-# Go back to root and install root deps (optional, minimal)
-WORKDIR /app
 
 # Expose port
 EXPOSE 3000
+
+# Set NODE_ENV for production
+ENV NODE_ENV=production
 
 # Start backend
 CMD ["npm", "start"]
