@@ -87,6 +87,10 @@ app.use(requestLogger);
 
 // ═══ STATIC FILES (Serve frontend) ═══
 const frontendPath = join(__dirname, '../day1');
+console.log('Frontend Path:', frontendPath);
+console.log('__dirname:', __dirname);
+
+// Try to serve static files
 app.use(express.static(frontendPath, {
   extensions: ['html', 'js', 'css', 'json'],
   maxAge: '1h',
@@ -95,7 +99,14 @@ app.use(express.static(frontendPath, {
 
 // Fallback to index.html for SPA routing
 app.get('/', (req, res) => {
-  res.sendFile(join(frontendPath, 'index.html'));
+  const indexPath = join(frontendPath, 'index.html');
+  console.log('Serving index.html from:', indexPath);
+  res.sendFile(indexPath, (err) => {
+    if (err) {
+      console.error('Error serving index.html:', err.message);
+      res.status(500).json({ error: 'Frontend not found', details: err.message });
+    }
+  });
 });
 
 // Health check
