@@ -1,10 +1,11 @@
 {
   "$schema": "https://raw.githubusercontent.com/railwayapp/railway/main/railway.schema.json",
   "build": {
-    "builder": "nixpacks"
+    "builder": "nixpacks",
+    "root": "backend"
   },
   "deploy": {
-    "startCommand": "cd backend && npm start",
+    "startCommand": "npm start",
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 5
   }
