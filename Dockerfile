@@ -6,8 +6,12 @@ WORKDIR /app
 # Copy all files
 COPY . .
 
-# Install dependencies (including backend via postinstall)
+# Install backend dependencies first
+WORKDIR /app/backend
 RUN npm install
+
+# Go back to root and install root deps (optional, minimal)
+WORKDIR /app
 
 # Expose port
 EXPOSE 3000
