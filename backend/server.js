@@ -76,19 +76,15 @@ try {
   console.warn('Frontend static folder not found, API-only mode');
 }
 
-// Fallback to index.html for SPA routing
+// Root route - return API info if frontend not found
 app.get('/', (req, res) => {
-  res.sendFile(join(frontendPath, 'index.html'), (err) => {
-    if (err) {
-      console.warn('Frontend index.html not found, returning API info');
-      res.json({
-        message: 'THE 42 POST API Server',
-        status: 'running',
-        frontend: 'Frontend not yet deployed',
-        api_docs: '/api/health',
-        version: '0.1.0'
-      });
-    }
+  console.log('GET / request received');
+  res.json({
+    message: 'THE 42 POST API Server',
+    status: 'running',
+    frontend: 'Frontend not yet deployed',
+    api_docs: '/api/health',
+    version: '0.1.0'
   });
 });
 
