@@ -35,28 +35,14 @@ const PORT = process.env.PORT || 3000;
 // Choose SQLite or PostgreSQL based on DATABASE_URL
 let db;
 
-// If DATABASE_URL starts with 'sqlite:' OR is not set, use SQLite
-// Otherwise use PostgreSQL
-if (!process.env.DATABASE_URL || process.env.DATABASE_URL.startsWith('sqlite:')) {
-  // Use SQLite
-  const dbUrl = process.env.DATABASE_URL || 'sqlite:///./database.sqlite3';
-  console.log('Using SQLite database...');
-  db = new SqlitePool({
-    connectionString: dbUrl
-  });
+const dbUrl = process.env.DATABASE_URL || '';
+const usePostgres = dbUrl && !dbUrl.startsWith('sqlite:');
 
-  // Test connection
-  db.query('SELECT 1 as test').then(result => {
-    console.log('✓ SQLite database connected');
-  }).catch(err => {
-    console.error('Database connection failed:', err.message);
-  });
-} else {
+if (usePostgres) {
   // Use PostgreSQL
   console.log('Using PostgreSQL database...');
-  console.log('DATABASE_URL:', process.env.DATABASE_URL.substring(0, 50) + '...');
   db = new Pool({
-    connectionString: process.env.DATABASE_URL,
+    connectionString: dbUrl,
     ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
   });
 
@@ -71,6 +57,22 @@ if (!process.env.DATABASE_URL || process.env.DATABASE_URL.startsWith('sqlite:'))
     } else {
       console.log('✓ PostgreSQL database connected:', result.rows[0]);
     }
+  });
+} else {
+  // Use SQLite (default)
+  const sqliteUrl = dbUrl || 'sqlite:///./database.sqlite3';
+  console.log('Using SQLite database...');
+  console.log('Database URL:', sqliteUrl);
+
+  db = new SqlitePool({
+    connectionString: sqliteUrl
+  });
+
+  // Test connection
+  db.query('SELECT 1 as test').then(result => {
+    console.log('✓ SQLite database connected');
+  }).catch(err => {
+    console.error('SQLite connection error:', err.message);
   });
 }
 
