@@ -3,16 +3,15 @@ FROM node:18
 
 WORKDIR /app
 
-# Copy package files first (for better layer caching)
-COPY package.json package*.json ./
-COPY backend/package.json backend/package*.json ./backend/
-
-# Install dependencies (skip postinstall script which runs during Docker build)
-RUN npm install --omit=dev --ignore-scripts
-RUN cd backend && npm install --omit=dev
-
-# Copy the rest of the application
+# Copy all files
 COPY . .
+
+# Install backend dependencies directly
+WORKDIR /app/backend
+RUN npm install --omit=dev
+
+# Go back to root
+WORKDIR /app
 
 # Expose port
 EXPOSE 3000
@@ -21,4 +20,4 @@ EXPOSE 3000
 ENV NODE_ENV=production
 
 # Start backend
-CMD ["npm", "start"]
+CMD ["node", "backend/server.js"]
