@@ -6,16 +6,17 @@ WORKDIR /app
 # Copy all files
 COPY . .
 
-# Install backend dependencies directly
+# Install backend dependencies
 WORKDIR /app/backend
 RUN npm install --omit=dev --no-optional
 
-# Expose port
-EXPOSE 3000
+# Expose port (Railway sets PORT env var, defaults to 3000)
+EXPOSE 3000 8080
 
 # Set NODE_ENV for production
 ENV NODE_ENV=production
+ENV PORT=8080
 
-# Use ENTRYPOINT to directly execute node - no shell intermediary
-ENTRYPOINT ["node"]
-CMD ["server.js"]
+# Start the application from the project root
+WORKDIR /app
+CMD ["node", "backend/server.js"]
