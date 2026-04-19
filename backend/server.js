@@ -122,7 +122,7 @@ async function startServer() {
     await initDatabase();
     console.log('✓ Database schema initialized');
 
-    app.listen(PORT, () => {
+    const server = app.listen(PORT, () => {
       console.log(`
 ╔════════════════════════════════════════════════════════╗
 ║  THE 42 POST — Backend Server (内胆) Running          ║
@@ -135,6 +135,16 @@ async function startServer() {
   API Docs: See BACKEND_ARCHITECTURE.md
       `);
     });
+
+    // Handle server errors
+    server.on('error', (err) => {
+      console.error('Server error:', err);
+      process.exit(1);
+    });
+
+    // Keep the process alive
+    console.log('Server initialization complete');
+
   } catch (error) {
     console.error('Failed to start server:', error);
     process.exit(1);
