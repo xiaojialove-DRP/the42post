@@ -5917,7 +5917,8 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
   min-height: 100px;
   color: #333;
   transition: all 0.25s ease;
-  resize: vertical;
+  resize: none;
+  overflow: hidden;
 }
 
 .minimal-textarea::placeholder {
