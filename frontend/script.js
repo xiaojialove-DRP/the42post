@@ -2058,7 +2058,10 @@ function initSkillForge() {
         // 调用 API 重新生成
         const probeResponse = await fetch(`${ApiClient.BASE_URL}/forge/generate`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${ApiClient.getToken() || ''}`
+          },
           body: JSON.stringify({
             idea: window.forgeData.skillIdea,
             domain: window.forgeData.selectedDomain || 'ideas',
@@ -2120,7 +2123,10 @@ function initSkillForge() {
 
         const fiveLayerResponse = await fetch(`${ApiClient.BASE_URL}/forge/generate`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${ApiClient.getToken() || ''}`
+          },
           body: JSON.stringify({
             name: editedName.trim(),
             definition: editedDef.trim(),
@@ -2218,7 +2224,10 @@ function initSkillForge() {
 
         const response = await fetch(`${ApiClient.BASE_URL}/forge/generate`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${ApiClient.getToken() || ''}`
+          },
           body: JSON.stringify({
             name: document.getElementById('previewSkillName').value,
             definition: document.getElementById('previewSkillDef').value,
@@ -3135,7 +3144,7 @@ function initSkillForge() {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              'Authorization': `Bearer ${window.authToken || ''}`
+              'Authorization': `Bearer ${ApiClient.getToken() || ''}`
             },
             body: JSON.stringify(backendPayload)
           });
