@@ -44,7 +44,7 @@ Current AI systems have a critical gap:
 
 We created THE 42 POST to:
 
-1. **Democratize AI alignment** — Give designers, ethicists, and domain experts a voice in AI values
+1. **Democratize AI alignment** — Give everyone—from ordinary users to designers, ethicists, and domain experts—a voice in AI values. No special expertise required.
 2. **Make values transparent** — Replace black-box alignment with explicit, auditable principles
 3. **Enable community verification** — Use structured skills with test cases that anyone can validate
 4. **Support cultural diversity** — Let different communities adapt principles to their contexts
