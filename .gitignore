@@ -61,3 +61,13 @@ build/
 tmp/
 temp/
 .claude/
+
+# Design & Documentation (keep locally, not in git)
+*.pdf
+COMPLETION_CHECKLIST.txt
+**/*COMPLETION*.txt
+
+# Test & Demo files
+test-dashboard.html
+test-*.html
+*-test.html
