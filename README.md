@@ -82,7 +82,7 @@ THE 42 POST connects creators, the skill library, and AI systems through a clean
 
 ### For Everyone (Getting Started)
 
-1. **Visit the platform**: Open http://localhost:8080 (or your deployed instance)
+1. **Visit the platform**: Open **[https://the42post-production.up.railway.app](https://the42post-production.up.railway.app)** (live deployment)
 2. **Browse the Skill Library**: Explore 42+ example skills created by designers, ethicists, and researchers
 3. **Learn from Examples**: Read the five-layer structure of existing skills to understand the approach
 4. **Try the Shadow Agent**: Experience how skills influence AI behavior in conversations
@@ -198,71 +198,47 @@ Researchers can use THE 42 POST to study human values in AI systems and validate
 
 ---
 
-## 🛠️ Getting Started (Local Development)
+## 🛠️ Development Setup (For Contributors)
 
-### Prerequisites
-- Node.js 18+
-- SQLite or PostgreSQL
-- npm
+**Most users should just visit the [live platform](https://the42post-production.up.railway.app).**
 
-### Installation
+To develop locally:
 
 ```bash
-# Clone the repository
+# Clone and install
 git clone https://github.com/xiaojialove-DRP/the42post.git
-cd the42post
-
-# Install backend dependencies
-cd backend
+cd the42post/backend
 npm install
 
 # Configure environment
 cp .env.example .env
-# Edit .env with your settings:
-# - DATABASE_URL (local SQLite or remote PostgreSQL)
-# - CLAUDE_API_KEY (for skill generation)
-# - FRONTEND_URL (usually http://localhost:8000)
+# Edit .env with your API keys and database URL
 
-# Run the backend
-npm run dev    # Development with nodemon
-# or
-npm start      # Production
-
-# In another terminal, open the frontend
-# The frontend is served at http://localhost:3000/
+# Run development server
+npm run dev     # Starts on http://localhost:8080
 ```
 
-### Environment Setup
+**Required environment variables:**
+- `ANTHROPIC_API_KEY` — for skill generation
+- `DATABASE_URL` — PostgreSQL or SQLite connection string
+- `JWT_SECRET` — for user authentication
+- `SMTP_*` — for email notifications
 
-Create a `.env` file in the `backend/` directory:
-
-```env
-PORT=3000
-NODE_ENV=development
-DATABASE_URL=sqlite://./database.sqlite3
-CLAUDE_API_KEY=your-anthropic-api-key
-FRONTEND_URL=http://localhost:8000
-JWT_SECRET=your-jwt-secret-key
-```
+See `backend/.env.example` for all configuration options.
 
 ---
 
 ## 📦 Deployment
 
-### Deploy to Railway (Recommended)
+THE 42 POST is deployed on Railway and automatically updated when you push to GitHub.
 
-The simplest way to deploy THE 42 POST:
+**To deploy your own instance:**
+1. Fork this repository on GitHub
+2. Create a Railway account at [railway.app](https://railway.app)
+3. Connect your repo and set the required environment variables
+4. Railway automatically builds and runs using `Dockerfile` and `Procfile`
 
-1. **Fork this repository** on GitHub
-2. **Create a Railway account** at railway.app
-3. **Connect your GitHub repo** to Railway
-4. **Set environment variables** in Railway:
-   - `CLAUDE_API_KEY`
-   - `DATABASE_URL` (Railway PostgreSQL)
-   - `JWT_SECRET`
-5. **Deploy!** Railway will automatically build and run using the `Procfile` and `Dockerfile`
-
-For detailed deployment instructions, see [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)
+For detailed instructions, see [RAILWAY_DEPLOYMENT.md](RAILWAY_DEPLOYMENT.md)
 
 ---
 
@@ -390,10 +366,10 @@ This means you can freely use, modify, and distribute THE 42 POST for any purpos
 
 ## 🔗 Quick Links
 
-- **Visit the Live Platform**: [Deployed instance URL]
-- **GitHub Repository**: https://github.com/xiaojialove-DRP/the42post
-- **Report Issues**: GitHub Issues
-- **Join the Community**: [Community forum/Discord - if applicable]
+- **🌐 Visit the Live Platform**: [https://the42post-production.up.railway.app](https://the42post-production.up.railway.app)
+- **📦 GitHub Repository**: https://github.com/xiaojialove-DRP/the42post
+- **🐛 Report Issues**: [GitHub Issues](https://github.com/xiaojialove-DRP/the42post/issues)
+- **💬 Feedback**: Open an issue or email us
 
 ---
 
