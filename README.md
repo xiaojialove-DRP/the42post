@@ -11,65 +11,65 @@ Democratizing how humans define, share, and verify their values for AI systems.
 
 ## 🎯 What is THE 42 POST?
 
-A platform where anyone can create verifiable AI Skills — structured representations of human values that guide AI behavior. Instead of hidden values in training data, THE 42 POST makes them **explicit**, **shareable**, **verifiable**, and **multi-cultural**.
+THE 42 POST is a web platform where anyone can create "Skills" — structured, verifiable representations of human values that guide AI behavior. Instead of hidden values in training data, THE 42 POST makes them explicit, shareable, verifiable, and multi-cultural.
 
 ### Key Features
 
 - 🛠️ **Skill Forging Workshop** — Turn your values into verifiable AI guidance in 4 steps
-- 📚 **Skill Library** — Discover and learn from 42+ community-created skills
+- 📚 **Skill Library** — Explore 42+ community-created skills across different domains
 - 👁️ **Preview & Iterate** — Review before publishing and refine based on feedback
-- 🤖 **AI-Ready** — Integrate into agents and systems, or use the Shadow Agent to test behavior
+- 🤖 **AI-Ready** — Test behavior with Shadow Agent or integrate into your systems
 
+---
+
+## ❓ Why Did We Build This?
+
+**The Problem:** AI values are hidden in training data, inconsistent across cultures, unverifiable, and controlled by few organizations.
+
+**Our Solution:** We democratize AI alignment by making values explicit, auditable, and culturally adapted. Everyone—from users to ethicists—can shape AI behavior without needing technical expertise.
 
 ---
 
 ## 🚀 Getting Started
 
-**[👉 Visit THE 42 POST](https://the42post-production.up.railway.app)** — Browse skills, learn the five-layer framework, create your own, and share with the community.
+**[👉 Visit THE 42 POST](https://the42post-production.up.railway.app)** — Browse skills, create your own, and collaborate with the community.
 
 ---
 
-## 🛠️ Development Setup (For Contributors)
+## 📖 How to Use THE 42 POST
 
-**Most users should just visit the [live platform](https://the42post-production.up.railway.app).**
+### For Skill Discoverers
+- **Search the Library** by domain, creator, or keyword
+- **Read Skill Details** including five-layer structure, examples, and community feedback
+- **Experience Skills** using the Shadow Agent to see how they guide AI behavior
+- **Rate & Share** feedback and recommendations
 
-To develop locally:
+### For Creators
+1. **Click "Skill Forge"** and enter your core idea
+2. **AI generates** the five-layer structure (DEFINING, INSTANTIATING, FENCING, VALIDATING, CONTEXTUALIZING)
+3. **Preview & refine** before publishing
+4. **Publish** and receive your Soul-Hash identity + Creator Card
 
-```bash
-# Clone and install
-git clone https://github.com/xiaojialove-DRP/the42post.git
-cd the42post/backend
-npm install
+### For Researchers
+- **Analyze patterns** across 42+ skills in different domains
+- **Study effectiveness** using test cases and Shadow Agent
+- **Access via API** — Get skill data in JSON format (`/api/skills`, `/api/search`)
+- **Publish findings** and contribute to human-centered AI research
 
-# Configure environment
-cp .env.example .env
-# Edit .env with your API keys and database URL
-
-# Run development server
-npm run dev     # Starts on http://localhost:8080
-```
-
-**Required environment variables:**
-- `ANTHROPIC_API_KEY` — for skill generation
-- `DATABASE_URL` — PostgreSQL or SQLite connection string
-- `JWT_SECRET` — for user authentication
-- `SMTP_*` — for email notifications
-
-See `backend/.env.example` for all configuration options.
+### For Developers
+- **Integrate skills** into your AI agents using REST API
+- **Run test cases** to validate behavior alignment
+- **Collaborate** with skill creators on improvements
 
 ---
 
-## 📦 Deployment
+## 🤝 Contributing
 
-THE 42 POST is deployed on Railway and automatically updated when you push to GitHub.
+We welcome contributions from creators, developers, and researchers:
 
-**To deploy your own instance:**
-1. Fork this repository on GitHub
-2. Create a Railway account at [railway.app](https://railway.app)
-3. Connect your repo and set the required environment variables
-4. Railway automatically builds and runs using `Dockerfile` and `Procfile`
-
-For detailed instructions, see [RAILWAY_DEPLOYMENT.md](RAILWAY_DEPLOYMENT.md)
+- **Skill Creators:** Design and publish skills through the platform
+- **Developers:** Fork the repo, submit PRs, improve the platform
+- **Researchers:** Download skills, run experiments, share findings
 
 ---
 
@@ -81,10 +81,15 @@ MIT License — See [LICENSE](LICENSE) file
 
 ## 🔗 Quick Links
 
-- **🌐 Visit the Live Platform**: [https://the42post-production.up.railway.app](https://the42post-production.up.railway.app)
+- **🌐 Live Platform**: [https://the42post-production.up.railway.app](https://the42post-production.up.railway.app)
 - **📦 GitHub Repository**: https://github.com/xiaojialove-DRP/the42post
 - **🐛 Report Issues**: [GitHub Issues](https://github.com/xiaojialove-DRP/the42post/issues)
-- **💬 Feedback**: Open an issue or email us
+
+---
+
+## 🙏 Acknowledgments
+
+THE 42 POST brings together research in Value-Sensitive Design, Participatory Design, Cross-Cultural HCI, and AI Alignment to make value definition accessible to everyone. Special thanks to all creators who have contributed skills to the library.
 
 ---
 
