@@ -4447,6 +4447,11 @@ function initHeadlineHero() {
     chaosInput.addEventListener('input', () => {
       if (chaosInput.value.trim().length > 0) {
         chatBubblePlaceholder.classList.add('hidden');
+        // Visual feedback: subtle highlight when typing
+        chaosInput.parentElement.classList.add('has-content');
+      } else {
+        chatBubblePlaceholder.classList.remove('hidden');
+        chaosInput.parentElement.classList.remove('has-content');
       }
     });
 
@@ -4455,6 +4460,8 @@ function initHeadlineHero() {
       if (chaosInput.value.trim().length === 0) {
         chatBubblePlaceholder.classList.add('hidden');
       }
+      // Add focus state to wrapper
+      chaosInput.parentElement.classList.add('is-focused');
     });
 
     // Restore placeholder when blur (empty input)
@@ -4462,6 +4469,8 @@ function initHeadlineHero() {
       if (chaosInput.value.trim().length === 0) {
         chatBubblePlaceholder.classList.remove('hidden');
       }
+      // Remove focus state from wrapper
+      chaosInput.parentElement.classList.remove('is-focused');
     });
 
     // Function to restore placeholder state

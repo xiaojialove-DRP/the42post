@@ -1375,13 +1375,30 @@ body {
   flex-direction: column;
   gap: 0;
   position: relative;
-  transition: background 0.3s ease, color 0.3s ease, border-color 0.3s ease, opacity 0.3s ease, transform 0.3s ease;
+  transition: background 0.3s ease, color 0.3s ease, border-color 0.3s ease, opacity 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
   min-height: 260px;
 }
 
-.chat-bubble-wrap:focus-within {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+/* State: has content being edited */
+.chat-bubble-wrap.is-focused {
+  background: rgba(255, 255, 255, 0.99);
+}
+
+/* State: has user content */
+.chat-bubble-wrap.has-content .chat-bubble-input {
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.chat-bubble-wrap:hover {
   border-color: #d0d0d0;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
+}
+
+.chat-bubble-wrap:focus-within {
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  border-color: #b0b0b0;
+  background: rgba(255, 255, 255, 0.98);
 }
 
 .chat-bubble-placeholder {
@@ -1417,6 +1434,19 @@ body {
   user-select: none;
   /* Placeholder-like behavior */
   cursor: text;
+  transition: color 0.3s ease, opacity 0.3s ease;
+  padding: 4px -4px;  /* Add subtle padding for click target */
+}
+
+/* Hover effect for better discoverability */
+.chat-bubble-wrap:hover .chat-bubble-placeholder:not(.hidden) .chat-bubble-invite {
+  color: var(--ink);
+  opacity: 0.85;
+}
+
+/* Indicate that placeholder is clickable */
+.chat-bubble-wrap:hover .chat-bubble-placeholder:not(.hidden) {
+  filter: brightness(1.02);
 }
 
 .forge-flow-text {
@@ -1441,6 +1471,7 @@ body {
   min-height: 60px;
   max-height: 120px;
   outline: none;
+  transition: color 0.2s ease;
 }
 
 .chat-bubble-input::placeholder {
@@ -1449,6 +1480,14 @@ body {
 
 .chat-bubble-input:focus {
   outline: none;
+  color: var(--ink);
+}
+
+/* Visual feedback when user is actively typing */
+.chat-bubble-input:focus,
+.chat-bubble-input:not(:placeholder-shown) {
+  color: var(--ink);
+  font-weight: 500;
 }
 
 .chat-bubble-input:not(:empty) ~ .chat-bubble-placeholder {
