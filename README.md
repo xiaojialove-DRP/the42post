@@ -19,7 +19,7 @@ Instead of leaving AI values as implicit in training data, THE 42 POST makes the
 ### Key Features
 
 - 🛠️ **Skill Forging Workshop** — A guided 5-step process to transform your ideas into structured skills
-- 📚 **Skill Library** — Discover 20+ example skills created by designers, ethicists, and AI researchers
+- 📚 **Skill Library** — Discover 42+ example skills created by designers, ethicists, and AI researchers
 - 👥 **Creator Dashboard** — Manage your published skills and see how they're being used
 - 🤖 **AI Integration** — Skills can be integrated into AI agents and systems
 - 📊 **Usage Analytics** — Track when and how your skills are adopted
@@ -53,7 +53,7 @@ We created THE 42 POST to:
 ### For Users (Discovering Skills)
 
 1. **Visit the platform**: Open the web application at your deployed instance
-2. **Browse the library**: Explore 20+ example skills organized by creative dimension (narrative, aesthetics, culture, etc.)
+2. **Browse the library**: Explore 42+ example skills organized by creative dimension (narrative, aesthetics, culture, etc.)
 3. **Read skill details**: Each skill includes:
    - The creator's story and motivation
    - The five-layer structure (defining principle, examples, boundaries, tests, cultural context)
