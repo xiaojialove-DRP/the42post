@@ -106,9 +106,8 @@ MIT 许可证 — 详见 [LICENSE](LICENSE) 文件
 
 - **[系统架构](docs/ARCHITECTURE.md)** — 系统设计和数据流
 - **[API 参考](docs/API_REFERENCE.md)** — REST API 端点集成
-- **[贡献指南](docs/CONTRIBUTING.md)** — 如何贡献
+- **[贡献指南](docs/CONTRIBUTING.md)** — 如何参与（创建者、设计师、开发者、研究员）
 - **[更新日志](CHANGELOG.md)** — 每个版本的新功能
-- **[部署指南](RAILWAY_DEPLOYMENT.md)** — 自托管实例部署
 
 ---
 

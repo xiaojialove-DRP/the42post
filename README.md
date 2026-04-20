@@ -105,9 +105,8 @@ MIT License — See [LICENSE](LICENSE) file
 
 - **[Architecture](docs/ARCHITECTURE.md)** — System design and data flows
 - **[API Reference](docs/API_REFERENCE.md)** — REST API endpoints for integration
-- **[Contributing Guide](docs/CONTRIBUTING.md)** — How to contribute
+- **[Contributing Guide](docs/CONTRIBUTING.md)** — How to contribute (creators, designers, developers, researchers)
 - **[Changelog](CHANGELOG.md)** — What's new in each release
-- **[Deployment Guide](RAILWAY_DEPLOYMENT.md)** — For self-hosted instances
 
 ---
 
