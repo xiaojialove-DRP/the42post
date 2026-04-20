@@ -4442,14 +4442,44 @@ function initHeadlineHero() {
   const chatBubblePlaceholder = document.getElementById('chatBubblePlaceholder');
 
   if (chaosInput && chatBubblePlaceholder) {
-    // Click to dismiss placeholder
-    chaosInput.addEventListener('focus', () => {
-      chatBubblePlaceholder.classList.add('hidden');
+    // ═══ Enhanced Placeholder Management ═══
+    // Auto-hide placeholder when user starts typing
+    chaosInput.addEventListener('input', () => {
+      if (chaosInput.value.trim().length > 0) {
+        chatBubblePlaceholder.classList.add('hidden');
+      }
     });
 
+    // Show placeholder when focus (empty input)
+    chaosInput.addEventListener('focus', () => {
+      if (chaosInput.value.trim().length === 0) {
+        chatBubblePlaceholder.classList.add('hidden');
+      }
+    });
+
+    // Restore placeholder when blur (empty input)
     chaosInput.addEventListener('blur', () => {
       if (chaosInput.value.trim().length === 0) {
         chatBubblePlaceholder.classList.remove('hidden');
+      }
+    });
+
+    // Function to restore placeholder state
+    function restorePlaceholderState() {
+      if (chaosInput.value.trim().length === 0) {
+        chatBubblePlaceholder.classList.remove('hidden');
+      } else {
+        chatBubblePlaceholder.classList.add('hidden');
+      }
+    }
+
+    // Restore state after clearing input
+    chaosInput._restorePlaceholder = restorePlaceholderState;
+
+    // Click on placeholder to focus input
+    chatBubblePlaceholder.addEventListener('click', (e) => {
+      if (e.target.closest('.chat-bubble-invite')) {
+        chaosInput.focus();
       }
     });
   }
@@ -4515,8 +4545,11 @@ function initHeadlineHero() {
         }, 50);
       }
 
-      // Clear homepage input
+      // Clear homepage input and restore placeholder
       chaosInput.value = '';
+      if (chaosInput._restorePlaceholder) {
+        chaosInput._restorePlaceholder();
+      }
     });
   }
 
