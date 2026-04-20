@@ -190,51 +190,274 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /* ═══ SKILL GRIDS ═══ */
+/* ═══ SKILL GRIDS - ENHANCED WITH STAR/DOWNLOAD SYSTEM ═══ */
 function initSkillGrids() {
-  const voicesGrid = document.getElementById('voices-grid');
-  const archiveGrid = document.getElementById('archiveGrid');
+  const vibeGrid = document.getElementById('vibeGrid');
+  const voicesContainer = document.getElementById('voicesContainer');
+  const currentUser = ApiClient.getUser();
 
-  if (voicesGrid) {
-    voicesGrid.innerHTML = SHARED_SKILLS.slice(0, 6).map(skill => {
-      const lang = document.body.dataset.lang || 'en';
-      const title = lang === 'cn' ? skill.titleCn : skill.title;
-      const desc = lang === 'cn' ? skill.descCn : skill.desc;
-      return `
-        <div class="skill-card">
-          <div class="skill-card-header">
-            <span class="skill-title">${title}</span>
-            <span class="skill-starlight">✨ ${skill.starlight}</span>
-          </div>
-          <div class="skill-card-desc">${desc}</div>
-          <div class="skill-card-footer">
+  // Load starred skills from localStorage
+  const starredSkills = JSON.parse(localStorage.getItem('starred_skills') || '{}');
+
+  function renderSkillCard(skill) {
+    const lang = document.body.dataset.lang || 'en';
+    const title = lang === 'cn' ? skill.titleCn : skill.title;
+    const desc = lang === 'cn' ? skill.descCn : skill.desc;
+    const isStarred = starredSkills[skill.id] === true;
+    const userId = currentUser?.id || 'anonymous';
+    const canDownload = isStarred;
+
+    return `
+      <div class="skill-card" data-skill-id="${skill.id}">
+        <!-- Card Header -->
+        <div class="skill-card-header">
+          <span class="skill-title">${title}</span>
+          <span class="skill-starlight">✨ ${skill.starlight}</span>
+        </div>
+        
+        <!-- Soul Hash -->
+        <div class="skill-card-hash">
+          <code class="soul-hash">${skill.soul_hash || 'SH-GENERATED'}</code>
+        </div>
+        
+        <!-- Description -->
+        <div class="skill-card-desc">${desc}</div>
+        
+        <!-- Footer with interactions -->
+        <div class="skill-card-footer">
+          <div class="skill-card-meta">
             <span class="skill-author">by ${skill.author}</span>
             <span class="skill-domain">${skill.domain}</span>
           </div>
+          
+          <!-- Action Buttons -->
+          <div class="skill-card-actions">
+            <!-- Star Button -->
+            <button class="btn-star" data-skill-id="${skill.id}" title="Give a star">
+              <span class="star-icon">${isStarred ? '⭐' : '☆'}</span>
+              <span class="star-count">${skill.stars || 0}</span>
+            </button>
+            
+            <!-- Download Button -->
+            <button class="btn-download" 
+                    data-skill-id="${skill.id}" 
+                    ${!canDownload ? 'disabled' : ''} 
+                    title="${canDownload ? 'Download this skill' : 'Star first to download'}">
+              <span class="download-icon">📥</span>
+              <span class="download-count">${skill.downloads || 0}</span>
+            </button>
+            
+            <!-- View Full Skill Button -->
+            <button class="btn-view-full" data-skill-id="${skill.id}" title="View full skill details">
+              →
+            </button>
+          </div>
         </div>
-      `;
-    }).join('');
+      </div>
+    `;
   }
 
-  if (archiveGrid) {
-    archiveGrid.innerHTML = SHARED_SKILLS.map(skill => {
-      const lang = document.body.dataset.lang || 'en';
-      const title = lang === 'cn' ? skill.titleCn : skill.title;
-      const desc = lang === 'cn' ? skill.descCn : skill.desc;
-      return `
-        <div class="skill-card">
-          <div class="skill-card-header">
-            <span class="skill-title">${title}</span>
-            <span class="skill-starlight">✨ ${skill.starlight}</span>
-          </div>
-          <div class="skill-card-desc">${desc}</div>
-          <div class="skill-card-footer">
-            <span class="skill-author">by ${skill.author}</span>
-            <span class="skill-domain">${skill.domain}</span>
-          </div>
-        </div>
-      `;
-    }).join('');
+  if (voicesContainer) {
+    voicesContainer.innerHTML = SHARED_SKILLS.slice(0, 6).map(renderSkillCard).join('');
   }
+
+  // Attach event listeners
+  attachSkillCardListeners();
+}
+
+/* ═══ SKILL CARD EVENT LISTENERS ═══ */
+function attachSkillCardListeners() {
+  const starredSkills = JSON.parse(localStorage.getItem('starred_skills') || '{}');
+
+  // Star button handler
+  document.querySelectorAll('.btn-star').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const skillId = btn.dataset.skillId;
+      const skill = SHARED_SKILLS.find(s => s.id === skillId);
+      
+      if (!skill) return;
+
+      // Toggle star
+      if (starredSkills[skillId]) {
+        delete starredSkills[skillId];
+        skill.stars = Math.max(0, (skill.stars || 1) - 1);
+      } else {
+        starredSkills[skillId] = true;
+        skill.stars = (skill.stars || 0) + 1;
+      }
+
+      // Save to localStorage
+      localStorage.setItem('starred_skills', JSON.stringify(starredSkills));
+      
+      // Update button
+      btn.querySelector('.star-icon').textContent = starredSkills[skillId] ? '⭐' : '☆';
+      btn.querySelector('.star-count').textContent = skill.stars || 0;
+
+      // Enable/disable download button
+      const downloadBtn = btn.parentElement.querySelector('.btn-download');
+      if (downloadBtn) {
+        if (starredSkills[skillId]) {
+          downloadBtn.disabled = false;
+          downloadBtn.title = 'Download this skill';
+        } else {
+          downloadBtn.disabled = true;
+          downloadBtn.title = 'Star first to download';
+        }
+      }
+    });
+  });
+
+  // Download button handler
+  document.querySelectorAll('.btn-download').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const skillId = btn.dataset.skillId;
+      const skill = SHARED_SKILLS.find(s => s.id === skillId);
+      
+      if (!skill) return;
+      if (!starredSkills[skillId]) {
+        alert('Please star this skill first to download it');
+        return;
+      }
+
+      // Record download
+      skill.downloads = (skill.downloads || 0) + 1;
+      btn.querySelector('.download-count').textContent = skill.downloads;
+
+      // Generate markdown and trigger download
+      const markdown = generateSkillMarkdown(skill);
+      downloadMarkdownFile(markdown, `${skill.title.replace(/\s+/g, '-')}.md`);
+    });
+  });
+
+  // View full skill button handler
+  document.querySelectorAll('.btn-view-full').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const skillId = btn.dataset.skillId;
+      const skill = SHARED_SKILLS.find(s => s.id === skillId);
+      
+      if (!skill) return;
+      showSkillModal(skill);
+    });
+  });
+}
+
+/* ═══ GENERATE MARKDOWN ═══ */
+function generateSkillMarkdown(skill) {
+  const markdown = `# ${skill.title}
+*${skill.titleCn}*
+
+**Forger:** ${skill.author}  
+**Soul-Hash:** ${skill.soul_hash || 'SH-GENERATED'}  
+**Domain:** ${skill.domain}  
+**⭐ Stars:** ${skill.stars || 0}  
+**📥 Downloads:** ${skill.downloads || 0}
+
+---
+
+## DEFINING
+${skill.five_layer?.defining || 'No definition provided'}
+
+## INSTANTIATING
+${(skill.five_layer?.instantiating || []).map(ex => 
+  `**Before:** ${ex.before}\n\n**After:** ${ex.after}`
+).join('\n\n---\n\n')}
+
+## FENCING
+**When to Apply:** ${skill.five_layer?.fencing?.when_apply || 'N/A'}
+
+**When NOT:** ${skill.five_layer?.fencing?.when_not || 'N/A'}
+
+## VALIDATING
+${(skill.five_layer?.validating || []).map(test => `- ${test}`).join('\n')}
+
+## CONTEXTUALIZING
+${Object.entries(skill.five_layer?.contextualizing || {}).map(([context, note]) => 
+  `**${context}:** ${note}`
+).join('\n')}
+
+---
+**Commercial Use:** ${skill.commercial}  
+**Remixing:** ${skill.remix}
+
+Generated from THE 42 POST
+`;
+  return markdown;
+}
+
+/* ═══ DOWNLOAD FILE HELPER ═══ */
+function downloadMarkdownFile(content, filename) {
+  const blob = new Blob([content], { type: 'text/markdown' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+/* ═══ SKILL MODAL ═══ */
+function showSkillModal(skill) {
+  let modal = document.getElementById('skillModal');
+  
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'skillModal';
+    modal.className = 'skill-modal';
+    modal.innerHTML = `
+      <div class="skill-modal-overlay"></div>
+      <div class="skill-modal-content">
+        <button class="modal-close" data-action="close">✕</button>
+        <div class="modal-body" id="modalBody"></div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+
+    // Close on overlay click or close button
+    modal.querySelector('.skill-modal-overlay').addEventListener('click', () => {
+      modal.style.display = 'none';
+    });
+    modal.querySelector('.modal-close').addEventListener('click', () => {
+      modal.style.display = 'none';
+    });
+  }
+
+  const markdown = generateSkillMarkdown(skill);
+  const htmlContent = markdownToHtml(markdown);
+  document.getElementById('modalBody').innerHTML = htmlContent;
+  modal.style.display = 'flex';
+}
+
+/* ═══ MARKDOWN TO HTML CONVERTER ═══ */
+function markdownToHtml(markdown) {
+  let html = markdown
+    // Headers
+    .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+    .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+    .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+    // Bold
+    .replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>')
+    // Italic
+    .replace(/\*(.*?)\*/gim, '<em>$1</em>')
+    // Code
+    .replace(/`(.*?)`/gim, '<code>$1</code>')
+    // Links
+    .replace(/\[(.*?)\]\((.*?)\)/gim, '<a href="$2">$1</a>')
+    // Lists
+    .replace(/^\* (.*$)/gim, '<li>$1</li>')
+    .replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>')
+    // Line breaks
+    .replace(/\n\n/g, '</p><p>')
+    .replace(/\n/g, '<br>');
+  
+  return `<p>${html}</p>`;
 }
 
 /* ═══ i18n SYSTEM ═══ */
@@ -247,7 +470,7 @@ const I18N = {
     btn_howto: 'HOW IT WORKS',
     section_1: 'I. Share Your Idea',
     section_2: 'II. New Skill Story',
-    section_3: 'III. Skill Archive',
+    section_3: 'III. Most Starred Skills',
     ticker_label: 'SKILL OF TODAY',
     fable_dialogue: 'FABLE DIALOGUE',
     wisdom_fable: 'WISDOM FABLE',
@@ -311,7 +534,7 @@ const I18N = {
     btn_howto: '怎么玩',
     section_1: 'I. 分享你的想法',
     section_2: 'II. 新技能故事',
-    section_3: 'III. 技能档案馆',
+    section_3: 'III. 最受欢迎的技能',
     ticker_label: '今日技能',
     fable_dialogue: '寓言对话',
     wisdom_fable: '智慧寓言',
@@ -503,13 +726,26 @@ function initSlotGrid() {
   `;
   grid.appendChild(deploySlot);
 
-  for (let i = 1; i <= 42; i++) {
+  // Get top 42 most popular skills (sorted by starlight + downloads)
+  const topSkills = (typeof getTopSkills === 'function' && typeof ALL_SKILLS !== 'undefined')
+    ? getTopSkills(42)
+    : (SLOT_DATA && Array.isArray(SLOT_DATA))
+      ? SLOT_DATA.slice(0, 42)
+      : [];
+
+  // Sort by popularity (starlight + downloads)
+  const popularSkills = topSkills.sort((a, b) => {
+    const scoreA = (a.starlight || 0) + (a.downloads || 0);
+    const scoreB = (b.starlight || 0) + (b.downloads || 0);
+    return scoreB - scoreA;
+  });
+
+  for (let i = 0; i < Math.min(42, popularSkills.length); i++) {
     const slot = document.createElement('div');
     slot.className = 'slot';
-    slot.dataset.slot = String(i).padStart(2, '0');
+    slot.dataset.slot = String(i + 1).padStart(2, '0');
 
-    const slotId = String(i).padStart(2, '0');
-    const data = (SLOT_DATA && Array.isArray(SLOT_DATA)) ? SLOT_DATA.find(s => s && s.id === slotId) : null;
+    const data = popularSkills[i];
 
     if (data) {
       const licenseIcon = data.commercial === 'allowed' ? '◎' : data.commercial === 'prohibited' ? '⊘' : '◉';
@@ -520,10 +756,11 @@ function initSlotGrid() {
         ? data.desc.substring(0, 70) + '...'
         : data.desc;
 
+      const popularityScore = (data.starlight || 0) + (data.downloads || 0);
       slot.innerHTML = `
         <div class="slot-header">
-          <span class="slot-number">#${data.id}</span>
-          <span class="slot-status active">ACTIVE</span>
+          <span class="slot-number">★ #${i + 1}</span>
+          <span class="slot-status active">★${data.starlight || 0}</span>
         </div>
         <div class="slot-title">${data.title}</div>
         <div class="slot-desc" title="${escapeHtml(data.desc)}">${escapeHtml(descDisplay)}</div>
@@ -533,7 +770,7 @@ function initSlotGrid() {
         </div>
         <div class="slot-starlight">
           <button class="starlight-btn" data-slot="${data.id}" title="Light Up">&#9733;</button>
-          <span class="starlight-count">${data.starlight > 0 ? data.starlight : ''}</span>
+          <span class="starlight-count">${data.starlight > 0 ? data.starlight : ''} ⬇${data.downloads || 0}</span>
         </div>
       `;
 
@@ -2671,18 +2908,12 @@ function initSkillForge() {
         publishBtn.style.color = '#fff';
         publishBtn.style.borderColor = 'var(--accent-green)';
 
-        // Show Knight Card
-        if (knightCardSection) {
-          knightCardSection.classList.add('visible');
-          generateKnightCard(hash, inviteCode);
-        }
+        // Show completion section with commemorative card
+        showForgeCompletion(forgedSkillData, hash);
 
-        // Show Skill Package Download section and store skill data globally
-        const skillPackageSection = document.getElementById('skillPackageSection');
-        if (skillPackageSection) {
-          skillPackageSection.style.display = 'block';
-          window.currentForgedSkill = forgedSkillData;
-        }
+        // NOTE: Skill Package Download section moved to email - not shown on success page
+        // Store skill data globally for reference
+        window.currentForgedSkill = forgedSkillData;
       }, 1800);
     });
   }
@@ -2735,6 +2966,318 @@ function initSkillForge() {
     const forgeModal = document.querySelector('.forge-modal');
     if (forgeModal) forgeModal.scrollTop = 0;
   }
+}
+
+/* ═══ SHOW FORGE COMPLETION ═══ */
+function showForgeCompletion(skillData, soulHash) {
+  const completionSection = document.getElementById('forgeCompletionSection');
+  const forgeCreatorRights = document.querySelector('.forge-creator-rights');
+  const forgeOath = document.querySelector('.forge-oath');
+  const forgeNav = document.querySelector('.forge-nav');
+  const skillPackageSection = document.getElementById('skillPackageSection');
+
+  // Send forge success email (async, non-blocking)
+  if (skillData && skillData.email) {
+    sendForgeSuccessEmail({
+      recipientEmail: skillData.email,
+      recipientName: skillData.author || skillData.username,
+      skillTitle: skillData.title,
+      skillId: skillData.id,
+      soulHash: soulHash,
+      invitationCode: window.currentInvitationCode || generateInviteCode(),
+      createdDate: new Date().toISOString()
+    }).catch(err => {
+      console.warn('Email sending failed (non-blocking):', err.message);
+    });
+  }
+
+  // Hide the rights and publish form
+  if (forgeCreatorRights) forgeCreatorRights.style.display = 'none';
+  if (forgeOath) forgeOath.style.display = 'none';
+  if (forgeNav) forgeNav.style.display = 'none';
+  if (skillPackageSection) skillPackageSection.style.display = 'none';
+
+  // Show the completion section
+  if (completionSection) {
+    completionSection.style.display = 'block';
+
+    // Fill in the commemorative card
+    const cardTitle = document.getElementById('cardTitle');
+    const cardSoulHash = document.getElementById('cardSoulHash');
+    const cardCreator = document.getElementById('cardCreator');
+    const cardDate = document.getElementById('cardDate');
+    const cardInviteCode = document.getElementById('cardInviteCode');
+    const completionEmail = document.getElementById('completionEmail');
+
+    if (cardTitle) cardTitle.textContent = skillData.title || skillData.titleCn || '[Skill Title]';
+    if (cardSoulHash) cardSoulHash.textContent = 'Soul-Hash: ' + soulHash;
+    if (cardCreator) cardCreator.textContent = 'Created by: ' + (skillData.author || skillData.username || 'Creator');
+    if (cardDate) cardDate.textContent = 'Forged: ' + new Date().toLocaleDateString('en-US', {year: 'numeric', month: 'short', day: 'numeric'});
+
+    // Generate and save invitation code
+    const invitationCode = generateInviteCode();
+    window.currentInvitationCode = invitationCode;
+    if (cardInviteCode) cardInviteCode.textContent = invitationCode;
+
+    if (completionEmail) completionEmail.textContent = skillData.email || '[Your Email]';
+
+    // Setup action buttons
+    const btnViewDashboard = document.getElementById('btnViewDashboard');
+    const btnTryPlayground = document.getElementById('btnTryPlayground');
+
+    if (btnViewDashboard) {
+      btnViewDashboard.addEventListener('click', () => {
+        // Navigate to dashboard (implemented later)
+        alert('Impact Dashboard coming soon');
+      });
+    }
+
+    if (btnTryPlayground) {
+      btnTryPlayground.addEventListener('click', () => {
+        // Navigate to playground
+        window.location.href = 'arena.html';
+      });
+    }
+
+    // Setup download certificate button
+    const btnDownloadCertificate = document.getElementById('btnDownloadCertificate');
+    if (btnDownloadCertificate) {
+      btnDownloadCertificate.addEventListener('click', () => {
+        downloadCreatorCard(skillData, soulHash);
+      });
+    }
+
+    // Scroll to completion section
+    completionSection.scrollIntoView({ behavior: 'smooth' });
+  }
+}
+
+function getDomainLabel(domainKey) {
+  const domainMap = {
+    'safety': '🛡️ Safety',
+    'science': '🔬 Science',
+    'narrative': '📖 Narrative',
+    'design': '✏️ Design',
+    'visual': '👁️ Visual',
+    'experience': '💫 Experience',
+    'sound': '🎵 Sound',
+    'ideas': '💡 Ideas',
+    'history': '📜 History',
+    'fun': '🎉 Fun'
+  };
+  return domainMap[domainKey] || domainKey;
+}
+
+/* ═══ SEND FORGE SUCCESS EMAIL ═══ */
+async function sendForgeSuccessEmail(options) {
+  const {
+    recipientEmail,
+    recipientName = 'Creator',
+    skillTitle = 'Untitled Skill',
+    skillId,
+    soulHash,
+    invitationCode,
+    createdDate = new Date().toISOString()
+  } = options;
+
+  try {
+    const response = await fetch(
+      `${ApiClient.BASE_URL}/email/send-forge-success`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          recipientEmail,
+          recipientName,
+          skillTitle,
+          skillId,
+          soulHash,
+          invitationCode,
+          createdDate
+        })
+      }
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Email sending failed');
+    }
+
+    const result = await response.json();
+    console.log('✓ Forge success email sent:', result.messageId);
+    return result;
+  } catch (error) {
+    console.error('❌ Email sending error:', error.message);
+    throw error;
+  }
+}
+
+/* ═══ DOWNLOAD CREATOR CARD ═══ */
+function downloadCreatorCard(skillData, soulHash) {
+  // Get the commemorative card element
+  const cardElement = document.querySelector('.commemorative-card');
+  if (!cardElement) {
+    alert('Certificate card not found');
+    return;
+  }
+
+  // Clone the card for downloading
+  const cardClone = cardElement.cloneNode(true);
+
+  // Create a new HTML document for the certificate
+  const certificateHTML = `
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Creator Card - ${skillData.title || 'Skill'}</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Playfair Display', 'Courier New', serif;
+      background: #f5f5f5;
+      padding: 40px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+    .certificate-wrapper {
+      background: white;
+      padding: 40px;
+      border-radius: 3px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    .commemorative-card {
+      background: linear-gradient(135deg, #f5f5f0 0%, #ffffff 100%);
+      border: 2px solid #222;
+      padding: 35px 30px;
+      max-width: 500px;
+      text-align: center;
+      font-family: 'Courier New', monospace;
+      border-radius: 2px;
+    }
+    .card-border-outer {
+      border: 4px solid #222;
+      padding: 10px;
+      background: white;
+    }
+    .card-border-inner {
+      border: 1px solid #222;
+      padding: 32px 60px;
+      background: linear-gradient(135deg, #f5f5f0 0%, #ffffff 100%);
+    }
+    .card-title-main {
+      font-size: 24px;
+      font-weight: bold;
+      color: #222;
+      margin-bottom: 4px;
+      font-family: 'Playfair Display', serif;
+      letter-spacing: 2px;
+    }
+    .card-header {
+      font-size: 11px;
+      font-style: italic;
+      color: #999;
+      margin-bottom: 8px;
+      letter-spacing: 0.5px;
+    }
+    .card-divider-top, .card-divider-line, .card-divider-bottom {
+      width: 100%;
+      height: 1px;
+      background: #ddd;
+      margin: 12px 0;
+    }
+    .card-crest {
+      font-size: 40px;
+      margin: 12px 0;
+      line-height: 1;
+    }
+    .card-creator-role {
+      font-size: 14px;
+      font-weight: bold;
+      color: #222;
+      margin: 6px 0 4px 0;
+      font-family: 'Playfair Display', serif;
+    }
+    .card-skill-name {
+      font-size: 12px;
+      font-style: italic;
+      color: #666;
+      margin: 4px 0;
+      font-family: 'Playfair Display', serif;
+    }
+    .card-meta {
+      font-size: 11px;
+      color: #999;
+      margin: 4px 0;
+      line-height: 1.6;
+      font-family: 'Courier New', monospace;
+    }
+    .card-meta p {
+      margin: 2px 0;
+    }
+    .card-rights {
+      font-size: 10px;
+      color: #bbb;
+      margin: 4px 0;
+      font-family: 'Courier New', monospace;
+      letter-spacing: 0.5px;
+    }
+    .card-soul-hash {
+      font-size: 13px;
+      color: #222;
+      margin: 6px 0;
+      word-break: break-all;
+      font-family: 'Courier New', monospace;
+      font-weight: bold;
+      letter-spacing: 0.5px;
+    }
+    .card-forged-date {
+      font-size: 11px;
+      color: #666;
+      margin: 4px 0;
+      font-family: 'Courier New', monospace;
+    }
+    .card-footer {
+      font-size: 9px;
+      color: #222;
+      font-weight: bold;
+      letter-spacing: 0.5px;
+      font-family: 'Courier New', monospace;
+      margin-top: 8px;
+    }
+    @media print {
+      body { background: white; padding: 0; }
+      .certificate-wrapper { background: transparent; padding: 0; box-shadow: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="certificate-wrapper">
+    ${cardElement.outerHTML}
+  </div>
+  <script>
+    window.addEventListener('load', () => {
+      window.print();
+    });
+  </script>
+</body>
+</html>`;
+
+  // Create a blob and download
+  const blob = new Blob([certificateHTML], { type: 'text/html' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `Creator_Card_${soulHash || 'certificate'}.html`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
 /* ═══ KNIGHT CARD GENERATOR ═══ */
@@ -3054,6 +3597,14 @@ function initAgentView() {
   btn.addEventListener('click', () => {
     showAgentArchive();
   });
+
+  // Back button in Agent Archive
+  const backBtn = document.getElementById('btnBackFromArchive');
+  if (backBtn) {
+    backBtn.addEventListener('click', () => {
+      showMainPage();
+    });
+  }
 }
 
 /* ═══ FORGE TAGS ═══ */
@@ -4170,7 +4721,9 @@ function saveForgedSkill(skillData) {
     disallowedUses: skillData.disallowedUses || '',
     timestamp: Date.now(),
     stars: 0,
+    starlight: 5,  // Forged skills start with 5 starlight
     kcs: 0,
+    five_layer: skillData.fiveLayerSkill || {},  // ✅ 保存生成的五层结构
   };
   recentSkills.unshift(newSkill);
   recentSkills = recentSkills.slice(0, 21); // Keep last 21 forges
@@ -5299,18 +5852,21 @@ function initAgentArchiveView() {
   // Domain Grid
   function initDomainGrid() {
     const grid = document.getElementById('domainGrid');
+    const starredSkills = JSON.parse(localStorage.getItem('starred_skills') || '{}');
 
     grid.innerHTML = '';
     ARCHIVE_DOMAINS.forEach(dom => {
       const domSkills = allSkills.filter(s => s.domain === dom.key);
       const cell = document.createElement('div');
       cell.className = 'domain-cell';
-      
+
       const openSeats = Math.max(0, 2 - domSkills.length);
       let html = domSkills.map(s => {
         const hash = soulHash(s.id + s.title);
+        const isStarred = starredSkills[s.id] === true;
+        const canDownload = isStarred;
         return `
-          <div class="domain-skill">
+          <div class="domain-skill" data-skill-id="${s.id}">
             <div class="domain-skill-title">${s.title}</div>
             <div class="domain-skill-title-cn">${s.titleCn}</div>
             <div class="domain-skill-agent">${s.agent}</div>
@@ -5318,6 +5874,16 @@ function initAgentArchiveView() {
             <div class="domain-skill-meta">
               <span class="hash-val">${hash}</span>
               <span>★ ${s.starlight}</span>
+            </div>
+            <div class="domain-skill-actions">
+              <button class="btn-skill-star" data-skill-id="${s.id}" title="Star this skill">
+                ${isStarred ? '⭐' : '☆'} ${s.stars || 0}
+              </button>
+              <button class="btn-skill-download" data-skill-id="${s.id}"
+                      ${!canDownload ? 'disabled' : ''}
+                      title="${canDownload ? 'Download' : 'Star first'}">
+                📥 ${s.downloads || 0}
+              </button>
             </div>
           </div>`;
       }).join('');
@@ -5374,6 +5940,628 @@ function initAgentArchiveView() {
   initNodes();
   initHonorList();
   initDomainGrid();
+  initTop42Grid();
+  // Attach event listeners for skill interactions (star, download, view)
+  setTimeout(() => {
+    if (typeof attachDomainSkillListeners === 'function') {
+      attachDomainSkillListeners();
+    }
+  }, 100);
   render();
 }
 
+/* ═══════════════════════════════════════════════════════════
+   TOP 42 MOST POPULAR SKILLS INITIALIZATION
+   Populate the homepage top 42 grid with highest-starlight skills
+   ═══════════════════════════════════════════════════════════ */
+
+function initTop42Grid() {
+  const gridEl = document.getElementById('top42Grid');
+  if (!gridEl) return;
+
+  // Get top 42 skills sorted by starlight
+  const topSkills = getTopSkills(42);
+
+  gridEl.innerHTML = '';
+  topSkills.forEach((skill, index) => {
+    const rank = index + 1;
+    const cellHTML = `
+      <div class="top42-cell" data-skill-id="${skill.id}">
+        <div class="top42-skill-rank">★ #${rank}</div>
+        <div class="top42-skill-title">${skill.title}</div>
+        <div class="top42-skill-title-cn">${skill.titleCn || ''}</div>
+        <div class="top42-skill-desc">${skill.desc}</div>
+        <div class="top42-skill-meta">
+          <div class="top42-skill-meta-item">⭐ <span>${skill.starlight || 0}</span></div>
+          <div class="top42-skill-meta-item">📥 <span>${skill.downloads || 0}</span></div>
+          <div class="top42-skill-meta-item">${skill.domain}</div>
+        </div>
+        <div class="top42-skill-actions">
+          <button class="top42-action-btn star-btn" data-skill-id="${skill.id}" title="Star this skill">⭐ STAR</button>
+          <button class="top42-action-btn download-btn" data-skill-id="${skill.id}" title="Download skill">📥 DOWNLOAD</button>
+        </div>
+      </div>
+    `;
+    gridEl.innerHTML += cellHTML;
+  });
+
+  // Attach listeners to the buttons
+  setTimeout(() => {
+    attachTop42SkillListeners();
+  }, 50);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   TOP 42 SKILL INTERACTIVE SYSTEM
+   Attach event listeners to star/download buttons on top42 cards
+   ═══════════════════════════════════════════════════════════ */
+
+function attachTop42SkillListeners() {
+  console.log('🔧 Attaching top42 skill listeners...');
+  const skillCells = document.querySelectorAll('.top42-cell[data-skill-id]');
+  console.log(`Found ${skillCells.length} top42 skill cells`);
+
+  skillCells.forEach(cell => {
+    const skillId = cell.dataset.skillId;
+
+    // Find skill from ALL_SKILLS
+    let skill = typeof ALL_SKILLS !== 'undefined' ? ALL_SKILLS.find(s => s.id === skillId) : null;
+    if (!skill) {
+      skill = SHARED_SKILLS && SHARED_SKILLS.find(s => s.id === skillId);
+    }
+
+    if (!skill) {
+      console.warn(`Skill with ID ${skillId} not found`);
+      return;
+    }
+
+    // Star button
+    const starBtn = cell.querySelector('.star-btn');
+    if (starBtn) {
+      starBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const starredSkills = JSON.parse(localStorage.getItem('starred_skills') || '{}');
+        const isStarred = starredSkills[skillId] === true;
+
+        if (isStarred) {
+          delete starredSkills[skillId];
+          starBtn.classList.remove('starred');
+          skill.starlight = (skill.starlight || 0) - 1;
+        } else {
+          starredSkills[skillId] = true;
+          starBtn.classList.add('starred');
+          skill.starlight = (skill.starlight || 0) + 1;
+        }
+
+        localStorage.setItem('starred_skills', JSON.stringify(starredSkills));
+        // Update the display
+        const starDisplay = cell.querySelector('.top42-skill-meta .top42-skill-meta-item:first-child span');
+        if (starDisplay) starDisplay.textContent = skill.starlight || 0;
+      });
+
+      // Check if already starred
+      const starredSkills = JSON.parse(localStorage.getItem('starred_skills') || '{}');
+      if (starredSkills[skillId]) {
+        starBtn.classList.add('starred');
+      }
+    }
+
+    // Download button
+    const downloadBtn = cell.querySelector('.download-btn');
+    if (downloadBtn) {
+      downloadBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        // Generate markdown and download
+        const markdown = generateDomainSkillMarkdown(skill);
+        downloadMarkdownFile(markdown, skill.id, skill.title);
+
+        // Update download counter
+        skill.downloads = (skill.downloads || 0) + 1;
+        const downloadDisplay = cell.querySelector('.top42-skill-meta .top42-skill-meta-item:nth-child(2) span');
+        if (downloadDisplay) downloadDisplay.textContent = skill.downloads;
+      });
+    }
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════
+   DOMAIN SKILL INTERACTIVE SYSTEM
+   Attach event listeners to star/download/view buttons
+   ═══════════════════════════════════════════════════════════ */
+
+function attachDomainSkillListeners() {
+  console.log('🔧 Attaching domain skill listeners...');
+  const skillCards = document.querySelectorAll('.domain-skill[data-skill-id]');
+  console.log(`Found ${skillCards.length} skill cards`);
+
+  skillCards.forEach(card => {
+    const skillId = card.dataset.skillId;
+
+    // Find skill from SHARED_SKILLS (which includes both original and forged skills)
+    let skill = SHARED_SKILLS && SHARED_SKILLS.find(s => s.id === skillId);
+
+    if (!skill) {
+      console.warn(`Skill with ID ${skillId} not found in SHARED_SKILLS`);
+      return;
+    }
+
+    // Ensure skill has required properties
+    skill.stars = skill.stars || 0;
+    skill.downloads = skill.downloads || 0;
+
+    // Star button handler
+    const starBtn = card.querySelector('.btn-skill-star');
+    if (starBtn) {
+      starBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const starredSkills = JSON.parse(localStorage.getItem('starred_skills') || '{}');
+        const isCurrentlyStarred = starredSkills[skillId] === true;
+
+        if (isCurrentlyStarred) {
+          delete starredSkills[skillId];
+          skill.stars = Math.max(0, (skill.stars || 0) - 1);
+          starBtn.textContent = `☆ ${skill.stars}`;
+        } else {
+          starredSkills[skillId] = true;
+          skill.stars = (skill.stars || 0) + 1;
+          starBtn.textContent = `⭐ ${skill.stars}`;
+        }
+
+        localStorage.setItem('starred_skills', JSON.stringify(starredSkills));
+
+        // Enable/disable download button
+        const downloadBtn = card.querySelector('.btn-skill-download');
+        if (downloadBtn) {
+          const newIsStarred = starredSkills[skillId] === true;
+          if (newIsStarred) {
+            downloadBtn.removeAttribute('disabled');
+            downloadBtn.title = 'Download';
+          } else {
+            downloadBtn.setAttribute('disabled', '');
+            downloadBtn.title = 'Star first to download';
+          }
+        }
+
+        console.log(`⭐ Skill "${skill.title}" star toggled. Current stars: ${skill.stars}`);
+      });
+    }
+
+    // Download button handler
+    const downloadBtn = card.querySelector('.btn-skill-download');
+    if (downloadBtn) {
+      downloadBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+
+        const starredSkills = JSON.parse(localStorage.getItem('starred_skills') || '{}');
+        if (starredSkills[skillId] !== true) {
+          alert('⭐ Please star this skill first before downloading.');
+          return;
+        }
+
+        skill.downloads = (skill.downloads || 0) + 1;
+        downloadBtn.textContent = `📥 ${skill.downloads}`;
+
+        const markdown = generateDomainSkillMarkdown(skill);
+        const filename = `${skill.title.replace(/[^a-z0-9]/gi, '-').toLowerCase()}.md`;
+        downloadMarkdownFile(markdown, filename);
+
+        console.log(`📥 Skill "${skill.title}" downloaded (${skill.downloads} total)`);
+      });
+    }
+  });
+
+  console.log('✓ Domain skill listeners attached');
+}
+
+function generateDomainSkillMarkdown(skill) {
+  const fiveLayer = skill.five_layer || {};
+
+  let markdown = `# ${skill.title}\n`;
+  markdown += `*${skill.titleCn || skill.title}*\n\n`;
+
+  markdown += `**Forger:** ${skill.author}\n`;
+  markdown += `**Soul-Hash:** ${soulHash(skill.id + skill.title)}\n`;
+  markdown += `**Domain:** ${skill.domain}\n`;
+  markdown += `**⭐ Starlight:** ${skill.starlight || 0}\n`;
+  markdown += `**📥 Downloads:** ${skill.downloads || 0}\n\n`;
+  markdown += `---\n\n`;
+
+  // DEFINING section
+  if (fiveLayer.defining) {
+    markdown += `## DEFINING\n${fiveLayer.defining}\n\n`;
+  }
+
+  // INSTANTIATING section
+  if (fiveLayer.instantiating) {
+    markdown += `## INSTANTIATING\n`;
+    if (typeof fiveLayer.instantiating === 'object' && fiveLayer.instantiating.before) {
+      markdown += `**Before:**\n${fiveLayer.instantiating.before}\n\n`;
+      markdown += `**After:**\n${fiveLayer.instantiating.after}\n\n`;
+    } else {
+      markdown += `${fiveLayer.instantiating}\n\n`;
+    }
+  }
+
+  // FENCING section
+  if (fiveLayer.fencing) {
+    markdown += `## FENCING\n`;
+    if (typeof fiveLayer.fencing === 'object') {
+      if (fiveLayer.fencing.apply) {
+        markdown += `**When to apply:**\n${fiveLayer.fencing.apply}\n\n`;
+      }
+      if (fiveLayer.fencing.notApply) {
+        markdown += `**When NOT to apply:**\n${fiveLayer.fencing.notApply}\n\n`;
+      }
+    } else {
+      markdown += `${fiveLayer.fencing}\n\n`;
+    }
+  }
+
+  // VALIDATING section
+  if (fiveLayer.validating) {
+    markdown += `## VALIDATING\n`;
+    if (Array.isArray(fiveLayer.validating)) {
+      markdown += fiveLayer.validating.map(v => `- ${v}`).join('\n') + '\n\n';
+    } else if (typeof fiveLayer.validating === 'object') {
+      Object.entries(fiveLayer.validating).forEach(([key, value]) => {
+        markdown += `**${key}:**\n${value}\n\n`;
+      });
+    } else {
+      markdown += `${fiveLayer.validating}\n\n`;
+    }
+  }
+
+  // CONTEXTUALIZING section
+  if (fiveLayer.contextualizing) {
+    markdown += `## CONTEXTUALIZING\n${fiveLayer.contextualizing}\n\n`;
+  }
+
+  markdown += `---\n\n`;
+  markdown += `**Commercial Use:** ${skill.commercial || 'authorized'}\n`;
+  markdown += `**Remixing:** ${skill.remix || 'share-alike'}\n`;
+
+  return markdown;
+}
+
+/* ═══════════════ EMAIL TEMPLATE FUNCTIONS ═══════════════ */
+
+/**
+ * Generate email HTML content with Skill data
+ * Used for backend email sending
+ */
+function generateForgeSuccessEmail(skillData) {
+  const soulHash = skillData.id;
+  const skillTitle = skillData.title;
+  const creatorName = skillData.author || 'Creator';
+  const createdDate = new Date().toISOString().split('T')[0];
+  const domain = skillData.domain_cn || skillData.domain;
+
+  // Generate download URLs (these would be actual backend URLs)
+  const baseUrl = window.location.origin;
+  const downloadMarkdownUrl = `${baseUrl}/api/skills/${soulHash}/download?format=markdown`;
+  const downloadLangChainUrl = `${baseUrl}/api/skills/${soulHash}/download?format=langchain`;
+  const downloadMCPUrl = `${baseUrl}/api/skills/${soulHash}/download?format=mcp`;
+  const dashboardLink = `${baseUrl}?soul_hash=${soulHash}&token=${skillData.tracking_token}`;
+  const playgroundLink = `${baseUrl}?skill=${soulHash}#playground`;
+
+  // Read email template and replace variables
+  let emailHtml = `
+    <!DOCTYPE html>
+    <html lang="zh-CN">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Playfair Display', 'Courier New', serif; background: #f9f9f9; color: #333; line-height: 1.6; }
+        .email-container { max-width: 700px; margin: 0 auto; background: white; }
+        .email-header { padding: 40px 30px; border-bottom: 2px solid #222; text-align: center; }
+        .email-header h1 { font-size: 28px; font-weight: bold; margin-bottom: 10px; color: #222; }
+        .email-header p { font-size: 14px; color: #666; }
+        .email-body { padding: 40px 30px; }
+        .greeting { font-size: 14px; margin-bottom: 20px; color: #333; }
+        .congratulation { padding: 20px; background: #f0f8f0; border-left: 4px solid #22c55e; margin: 20px 0; font-size: 13px; line-height: 1.8; }
+        .card-section { margin: 40px 0; text-align: center; }
+        .card-title { font-size: 16px; font-weight: bold; margin-bottom: 15px; color: #222; }
+        .commemorative-card { background: linear-gradient(135deg, #f5f5f0 0%, #ffffff 100%); border: 2px solid #222; padding: 30px; max-width: 500px; margin: 0 auto; text-align: center; font-family: 'Courier New', monospace; }
+        .card-header { font-size: 12px; font-weight: bold; letter-spacing: 1px; color: #666; margin-bottom: 15px; }
+        .card-content { padding: 20px 0; }
+        .card-crest { font-size: 36px; margin-bottom: 10px; }
+        .card-title-main { font-size: 18px; font-weight: bold; margin-bottom: 10px; color: #222; font-family: 'Playfair Display', serif; }
+        .card-soul-hash { font-size: 11px; color: #999; background: #f0f0f0; padding: 8px; border-radius: 3px; margin: 10px 0; word-break: break-all; }
+        .card-meta { font-size: 11px; color: #888; margin: 15px 0; line-height: 1.8; }
+        .card-divider { border-top: 1px solid #ddd; margin: 15px 0; }
+        .card-footer { font-size: 12px; color: #222; font-weight: bold; }
+        .install-section { margin: 40px 0; padding: 30px; background: #fafafa; border-radius: 4px; }
+        .install-title { font-size: 18px; font-weight: bold; text-align: center; margin-bottom: 10px; color: #222; font-family: 'Playfair Display', serif; }
+        .install-subtitle { font-size: 13px; text-align: center; color: #666; margin-bottom: 30px; font-family: serif; }
+        .formats-row { display: flex; gap: 20px; justify-content: space-around; flex-wrap: wrap; }
+        .format-option { background: white; padding: 20px; border: 1px solid #ddd; border-radius: 3px; max-width: 200px; text-align: center; }
+        .format-icon { font-size: 32px; margin-bottom: 10px; }
+        .format-name { display: block; font-size: 14px; font-weight: bold; color: #222; margin-bottom: 5px; }
+        .format-type { display: block; font-size: 11px; color: #666; margin-bottom: 10px; font-style: italic; }
+        .format-desc { font-size: 11px; color: #888; margin-bottom: 12px; line-height: 1.5; }
+        .download-btn { display: inline-block; background: #222; color: white; padding: 8px 12px; text-decoration: none; border-radius: 2px; font-size: 11px; font-weight: bold; letter-spacing: 0.5px; }
+        .download-btn:hover { background: #444; }
+        .install-note { text-align: center; font-size: 12px; color: #999; margin-top: 20px; padding: 15px; border-top: 1px solid #ddd; font-style: italic; }
+        .action-section { margin: 30px 0; text-align: center; }
+        .action-btn { display: inline-block; background: #222; color: white; padding: 12px 24px; text-decoration: none; border-radius: 3px; font-size: 12px; font-weight: bold; letter-spacing: 0.5px; margin: 10px 5px; }
+        .action-btn:hover { background: #444; }
+        .action-btn-secondary { background: white; color: #222; border: 1px solid #222; }
+        .action-btn-secondary:hover { background: #f5f5f5; }
+        .email-footer { padding: 30px; border-top: 2px solid #ddd; background: #f9f9f9; font-size: 11px; color: #999; text-align: center; }
+        .footer-divider { margin: 15px 0; border-top: 1px solid #ddd; }
+        h3 { font-size: 14px; font-weight: bold; color: #222; margin: 20px 0 10px 0; }
+        .steps-list { font-size: 12px; color: #666; line-height: 1.8; margin: 10px 0; }
+        .steps-list li { margin-left: 20px; }
+      </style>
+    </head>
+    <body>
+      <div class="email-container">
+        <div class="email-header">
+          <h1>✨ 你的 Skill 已成功铸造 ✨</h1>
+          <p>Your Skill Has Been Forged Successfully</p>
+        </div>
+
+        <div class="email-body">
+          <p class="greeting">亲爱的创作者，</p>
+
+          <div class="congratulation">
+            <p>恭喜！你的 Skill 已成功创建并上线至 THE 42 POST 社区。</p>
+            <p style="margin-top: 10px;">现在你可以安装它到你的 Agent 系统中，或分享给他人。</p>
+          </div>
+
+          <div class="card-section">
+            <div class="card-title">📊 你的纪念卡片</div>
+            <div class="commemorative-card">
+              <div class="card-header">THE 42 POST · SKILL FORGED</div>
+              <div class="card-content">
+                <div class="card-crest">✨</div>
+                <div class="card-title-main">${skillTitle}</div>
+                <div class="card-soul-hash">Soul-Hash: ${soulHash}</div>
+                <div class="card-meta">
+                  <p>Created by: ${creatorName}</p>
+                  <p>Date: ${createdDate}</p>
+                  <p>Domain: ${domain}</p>
+                </div>
+                <div class="card-divider"></div>
+                <div class="card-footer">www.42post.io</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="install-section">
+            <div class="install-title">INSTALL YOUR SKILL</div>
+            <div class="install-subtitle">Choose your format and download your forged skill for integration.</div>
+
+            <div class="formats-row">
+              <div class="format-option">
+                <div class="format-icon">📖</div>
+                <div class="format-name">Markdown</div>
+                <div class="format-type">Human-Readable</div>
+                <div class="format-desc">Perfect for documentation, sharing, and reading. Standard SKILL.md format.</div>
+                <a href="${downloadMarkdownUrl}" class="download-btn">↓ DOWNLOAD</a>
+              </div>
+
+              <div class="format-option">
+                <div class="format-icon">🐍</div>
+                <div class="format-name">LangChain</div>
+                <div class="format-type">Python Developer</div>
+                <div class="format-desc">Python-friendly format for LangChain framework integration. Ready to use in your agent.</div>
+                <a href="${downloadLangChainUrl}" class="download-btn">↓ DOWNLOAD</a>
+              </div>
+
+              <div class="format-option">
+                <div class="format-icon">⚙️</div>
+                <div class="format-name">MCP Config</div>
+                <div class="format-type">System Deployment</div>
+                <div class="format-desc">JSON configuration for Model Context Protocol deployment and system integration.</div>
+                <a href="${downloadMCPUrl}" class="download-btn">↓ DOWNLOAD</a>
+              </div>
+            </div>
+
+            <div class="install-note">
+              All formats contain the complete five-layer skill architecture. Choose based on your integration needs.
+            </div>
+          </div>
+
+          <div class="action-section">
+            <a href="${dashboardLink}" class="action-btn">📊 查看 Impact Dashboard</a>
+            <a href="${playgroundLink}" class="action-btn action-btn-secondary">🎮 前往 Playground 试试</a>
+          </div>
+
+          <h3>接下来你可以：</h3>
+          <div class="steps-list">
+            <ol>
+              <li>下载并安装上述 3 种格式之一到你的系统</li>
+              <li>在 Playground 体验你的 Skill 效果</li>
+              <li>分享你的 Skill 链接到社区，让更多人发现它</li>
+              <li>定期检查 Impact Dashboard 查看数据变化</li>
+            </ol>
+          </div>
+        </div>
+
+        <div class="email-footer">
+          <p><strong>THE 42 POST</strong></p>
+          <p>A Base for Human Values Alignment in AI Agents</p>
+          <div class="footer-divider"></div>
+          <p>有任何问题？直接回复这封邮件即可。</p>
+          <p>© 2026 THE 42 POST · All rights reserved</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+
+  return emailHtml;
+}
+
+/**
+ * Send forge success email to creator
+ * Call this after Skill is successfully created
+ */
+async function sendForgeSuccessEmail(skillData, creatorEmail) {
+  try {
+    const emailHtml = generateForgeSuccessEmail(skillData);
+
+    const response = await fetch('/api/email/send-forge-success', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        recipientEmail: creatorEmail,
+        skillData: skillData,
+        emailHtml: emailHtml
+      })
+    });
+
+    if (!response.ok) {
+      console.error('Failed to send email');
+    }
+  } catch (error) {
+    console.error('Error sending email:', error);
+  }
+}
+
+/* ═══════════════ DASHBOARD CARD FUNCTIONS ═══════════════ */
+
+/**
+ * Check if user has created a Skill and display Dashboard card if exists
+ */
+function checkAndDisplayDashboard() {
+  const params = new URLSearchParams(window.location.search);
+  const soulHash = params.get('soul_hash');
+  const token = params.get('token');
+
+  // If URL has soul_hash parameter, load and display dashboard card
+  if (soulHash && token) {
+    loadAndDisplayDashboardCard(soulHash, token);
+  } else {
+    // Check localStorage for user's created Skills
+    const mySkills = JSON.parse(localStorage.getItem('my_forged_skills') || '[]');
+    if (mySkills.length > 0) {
+      // Display the most recently created Skill's Dashboard
+      loadAndDisplayDashboardCard(mySkills[0].soul_hash, mySkills[0].token);
+    } else {
+      // Hide Dashboard card if no Skill created
+      document.getElementById('dashboard-card').style.display = 'none';
+    }
+  }
+}
+
+/**
+ * Load and display Dashboard card with Skill data
+ */
+async function loadAndDisplayDashboardCard(soulHash, token) {
+  try {
+    // Fetch Skill impact data from API
+    const response = await fetch(`/api/skills/${soulHash}/impact?token=${token}`);
+
+    if (!response.ok) {
+      console.error('Failed to load dashboard data');
+      document.getElementById('dashboard-card').style.display = 'none';
+      return;
+    }
+
+    const data = await response.json();
+
+    // Populate Dashboard card with Skill data
+    document.getElementById('dash-skill-title').textContent = data.title || 'Untitled Skill';
+    document.getElementById('dash-soul-hash').textContent = `Soul-Hash: ${data.id}`;
+    document.getElementById('dash-views-grid').textContent = data.views || 0;
+
+    const totalDownloads =
+      (data.downloads?.markdown || 0) +
+      (data.downloads?.langchain || 0) +
+      (data.downloads?.mcp || 0);
+    document.getElementById('dash-downloads-grid').textContent = totalDownloads;
+
+    document.getElementById('dash-starlight-grid').textContent = data.starlight_count || 0;
+    document.getElementById('dash-feedback-grid').textContent = data.feedback_count || 0;
+
+    // Show Dashboard card
+    document.getElementById('dashboard-card').style.display = 'block';
+
+    // Save global reference for later use
+    window.currentDashboard = {
+      soulHash,
+      token,
+      data
+    };
+
+  } catch (error) {
+    console.error('Error loading dashboard:', error);
+    document.getElementById('dashboard-card').style.display = 'none';
+  }
+}
+
+/**
+ * View full Dashboard (can be expanded functionality)
+ */
+function viewFullDashboard() {
+  const { soulHash, token } = window.currentDashboard || {};
+  if (!soulHash || !token) return;
+
+  // Option 1: Scroll to full dashboard section if exists
+  const dashboardSection = document.getElementById('my-skill-dashboard');
+  if (dashboardSection) {
+    dashboardSection.scrollIntoView({ behavior: 'smooth' });
+  } else {
+    // Option 2: Open separate dashboard page
+    window.open(
+      `/creator-dashboard?soul_hash=${soulHash}&token=${token}`,
+      '_blank'
+    );
+  }
+}
+
+/**
+ * Share Skill via native share API or copy to clipboard
+ */
+function shareSkill() {
+  const { data } = window.currentDashboard || {};
+  if (!data) return;
+
+  const text = `我刚铸造了一个新的 Skill：《${data.title}》\n\nSoul-Hash: ${data.id}\n\n来 THE 42 POST 体验吧！\nhttps://42post.io`;
+
+  // Use native Share API if available
+  if (navigator.share) {
+    navigator.share({
+      title: 'THE 42 POST',
+      text: text,
+      url: `https://42post.io?skill=${data.id}`
+    }).catch(err => console.error('Share failed:', err));
+  } else {
+    // Fallback: Copy to clipboard
+    navigator.clipboard.writeText(text).then(() => {
+      alert('✨ 分享文本已复制到剪贴板！');
+    }).catch(err => console.error('Copy failed:', err));
+  }
+}
+
+/**
+ * Save created Skill to localStorage and refresh Dashboard display
+ * Called after Skill Forge completes successfully
+ */
+function onSkillForgeSuccess(skillData) {
+  // Save to localStorage
+  const mySkills = JSON.parse(localStorage.getItem('my_forged_skills') || '[]');
+  mySkills.unshift({
+    soul_hash: skillData.id,
+    token: skillData.tracking_token || 'temp_token',
+    title: skillData.title,
+    created_at: new Date().toISOString()
+  });
+  // Keep only the 10 most recent Skills
+  localStorage.setItem('my_forged_skills', JSON.stringify(mySkills.slice(0, 10)));
+
+  // Reload Dashboard display
+  checkAndDisplayDashboard();
+}
+
+// Run on page load
+document.addEventListener('DOMContentLoaded', () => {
+  // Initialize Dashboard card check after a short delay to ensure DOM is ready
+  setTimeout(checkAndDisplayDashboard, 500);
+});

@@ -18,6 +18,7 @@ import forgeRoutes from './routes/forge.js';
 import skillsRoutes from './routes/skills.js';
 import searchRoutes from './routes/search.js';
 import agentRoutes from './routes/agents.js';
+import emailRoutes from './routes/email.js';
 
 import { initDatabase } from './db/init.js';
 import { errorHandler } from './middleware/errorHandler.js';
@@ -36,10 +37,12 @@ const PORT = process.env.PORT || 3000;
 let db;
 
 console.log('Using SQLite database (forced)...');
-const sqliteUrl = 'sqlite:///./database.sqlite3';
+// 使用相对于 backend 目录的路径
+const dbPath = join(__dirname, '../database.sqlite3');
+console.log('Database path:', dbPath);
 
 db = new SqlitePool({
-  connectionString: sqliteUrl
+  connectionString: `sqlite:///${dbPath}`
 });
 
 // Test connection
@@ -103,6 +106,7 @@ app.use('/api/forge', forgeRoutes);
 app.use('/api/skills', skillsRoutes);
 app.use('/api/search', searchRoutes);
 app.use('/api/agents', agentRoutes);
+app.use('/api/email', emailRoutes);
 
 // ═══ ERROR HANDLING ═══
 app.use((req, res) => {
