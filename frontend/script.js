@@ -2005,15 +2005,14 @@ function initSkillForge() {
     });
   }
   
-  // STEP 2: Confirm Button
+  // STEP 3: Confirm Button
   const btnConfirmSkill = document.getElementById('btnConfirmSkill');
   if (btnConfirmSkill) {
     btnConfirmSkill.addEventListener('click', () => {
       const domain = document.querySelector('.domain-choice.selected');
-      if (!domain) {
-        alert('请选择技能分类 / Please select a domain');
-        return;
-      }
+
+      // Domain is optional - use default if not selected
+      const selectedDomainValue = domain ? domain.dataset.domain : 'ideas';
 
       // 保存编辑后的技能内容
       const editedName = document.getElementById('reviewSkillName').value;
@@ -2028,7 +2027,7 @@ function initSkillForge() {
         // 更新技能信息（使用编辑后的值）
         window.forgeData.skillName = editedName.trim();
         window.forgeData.skillDefinition = editedDef.trim();
-        window.forgeData.domain = domain.dataset.domain; // Save domain to forgeData
+        window.forgeData.domain = selectedDomainValue; // Save domain to forgeData (or use default)
         window.forgeData.generatedSkill.name = editedName.trim();
         window.forgeData.generatedSkill.definition = editedDef.trim();
       }
