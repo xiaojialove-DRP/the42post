@@ -3019,12 +3019,11 @@ function initSkillForge() {
       publishBtn.textContent = '⚔ FORGING...';
       publishBtn.style.pointerEvents = 'none';
 
-      setTimeout(() => {
+      setTimeout(async () => {
         const hash = 'SOUL_' + Math.random().toString(16).slice(2, 10);
         const inviteCode = generateInviteCode();
 
         // Collect skill data from form
-        // 使用编辑后的技能名称（如果存在），否则使用原始值
         let skillNameValue = 'Unnamed Skill';
         const editedName = document.getElementById('reviewSkillName');
         if (editedName && editedName.value.trim()) {
@@ -3058,7 +3057,6 @@ function initSkillForge() {
 
         // Collect data based on selected mode
         if (selectedMode === 'a') {
-          // Mode A: Natural Text
           const nativeText = document.getElementById('forgeNativeText');
           skillDesc = nativeText ? nativeText.value : '';
           const skillOverview = document.getElementById('forgeSkillOverview');
@@ -3070,7 +3068,6 @@ function initSkillForge() {
             bindingAgent: 'agent_42'
           };
         } else if (selectedMode === 'b') {
-          // Mode B: Agent Binding
           if (!agentVerified) {
             alert('Please verify your agent binding first');
             publishBtn.textContent = '⚔ PUBLISH & FORGE';
@@ -3111,7 +3108,7 @@ function initSkillForge() {
           agentName = agentIdEl ? agentIdEl.value : 'agent_unknown';
         }
 
-        // Save forged skill to localStorage (with five-layer data if available)
+        // Prepare skill data
         const forgedSkillData = {
           title: skillNameValue,
           titleCn: skillNameValue,
@@ -3132,6 +3129,57 @@ function initSkillForge() {
           fiveLayerSkill: window.agent42StructuredData || null,
         };
 
+        // ═══ NEW: Save to backend database ═══
+        try {
+          publishBtn.textContent = '🔄 保存到数据库...';
+
+          const backendPayload = {
+            title: skillNameValue,
+            title_cn: skillNameValue,
+            description: skillDesc,
+            description_cn: skillDesc,
+            domain: selectedDomain || 'ideas',
+            five_layer: window.agent42StructuredData || {},
+            forge_mode: selectedMode === 'a' ? 'shadow_agent' : 'direct_knight',
+            source_agent_id: sourceData.sourceAgentId || agentName,
+            commercial_use: commercialValue,
+            remix_allowed: remixValue === 'yes',
+            applicable_when: useCasesValue,
+            disallowed_uses: disallowedUsesValue
+          };
+
+          const response = await fetch(`${window.location.origin}/api/skills`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${window.authToken || ''}`
+            },
+            body: JSON.stringify(backendPayload)
+          });
+
+          if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            console.error('Backend skill save failed:', errorData);
+            alert('保存到数据库失败: ' + (errorData.message || response.statusText));
+            publishBtn.textContent = '⚔ PUBLISH & FORGE';
+            publishBtn.style.pointerEvents = 'auto';
+            return;
+          }
+
+          const savedSkill = await response.json();
+          console.log('✅ Skill saved to backend:', savedSkill);
+          forgedSkillData.backendId = savedSkill.id;
+
+        } catch (error) {
+          console.error('Error saving skill to backend:', error);
+          alert('保存失败: ' + error.message);
+          publishBtn.textContent = '⚔ PUBLISH & FORGE';
+          publishBtn.style.pointerEvents = 'auto';
+          return;
+        }
+        // ═══ Backend save complete ═══
+
+        // Save to localStorage (local storage)
         saveForgedSkill(forgedSkillData);
 
         // Refresh the skills feed and vibe grid
@@ -3146,7 +3194,6 @@ function initSkillForge() {
         // Show completion section with commemorative card
         showForgeCompletion(forgedSkillData, hash);
 
-        // NOTE: Skill Package Download section moved to email - not shown on success page
         // Store skill data globally for reference
         window.currentForgedSkill = forgedSkillData;
       }, 1800);
