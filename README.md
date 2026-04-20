@@ -18,9 +18,10 @@ Instead of leaving AI values as implicit in training data, THE 42 POST makes the
 
 ### Key Features
 
-- 🛠️ **Skill Forging Workshop** — A guided 5-step process to transform your ideas into structured skills
+- 🛠️ **Skill Forging Workshop** — A guided 4-step process to transform your ideas into structured skills
 - 📚 **Skill Library** — Discover 42+ example skills created by designers, ethicists, and AI researchers
-- 👥 **Creator Dashboard** — Manage your published skills and see how they're being used
+- 👁️ **Preview & Review** — See the complete five-layer structure before publishing
+- ✏️ **Edit & Regenerate** — Refine skills based on feedback from the AI
 - 🤖 **AI Integration** — Skills can be integrated into AI agents and systems
 - 📊 **Usage Analytics** — Track when and how your skills are adopted
 - 🌍 **Open Source** — MIT licensed, built with Node.js and open data
@@ -50,53 +51,113 @@ We created THE 42 POST to:
 
 ## 🚀 How to Use THE 42 POST
 
-### For Users (Discovering Skills)
+### For Everyone (Getting Started)
 
-1. **Visit the platform**: Open the web application at your deployed instance
-2. **Browse the library**: Explore 42+ example skills organized by creative dimension (narrative, aesthetics, culture, etc.)
-3. **Read skill details**: Each skill includes:
-   - The creator's story and motivation
-   - The five-layer structure (defining principle, examples, boundaries, tests, cultural context)
-   - Usage data and community feedback
-4. **Experience a skill**: Try an interactive "Shadow Agent" conversation using a specific skill
-5. **Provide feedback**: Comment on skills and suggest improvements
+1. **Visit the platform**: Open http://localhost:8080 (or your deployed instance)
+2. **Browse the Skill Library**: Explore 42+ example skills created by designers, ethicists, and researchers
+3. **Learn from Examples**: Read the five-layer structure of existing skills to understand the approach
+4. **Try the Shadow Agent**: Experience how skills influence AI behavior in conversations
+5. **Start Creating**: Click "Skill Forge" to create your first skill
+
+### For Skill Discoverers (Using Skills)
+
+1. **Search the Library**: Find skills by domain, creator, or keyword
+2. **Read Skill Details**: Each skill includes:
+   - The creator's motivation and story
+   - Five-layer structure (DEFINING, INSTANTIATING, FENCING, VALIDATING, CONTEXTUALIZING)
+   - Real-world usage examples
+   - Community feedback and ratings
+3. **Experience Skills**: Try the "Shadow Agent" to see how a skill guides AI behavior
+4. **Provide Feedback**: Rate skills and suggest improvements
+5. **Share Skills**: Use skills in your own AI projects or recommend them to others
 
 ### For Creators (Forging Skills)
 
-1. **Start the Forge Workshop**: Click "Create Skill" to enter the 5-step process:
+1. **Start the Forge Workshop**: Click "Skill Forge" to enter the 4-step process:
    
-   **Step 1: Capture Your Idea**
+   **Step 1️⃣  IDEA** (2-3 min)
    - Input your username and email
    - Describe your core idea or value principle
-   - Select the creative dimension that best fits
-
-   **Step 2: Intuition Probe**
-   - The system asks clarifying questions about your idea
-   - Choose which values resonate most
-
-   **Step 3: Five-Layer Generation**
-   - The system auto-generates your skill structure:
+   - Select the creative dimension that best fits your idea
+   
+   **Step 2️⃣  GENERATE** (1-2 min)
+   - Watch the system generate your five-layer skill structure:
      - **DEFINING**: Core principle statement
-     - **INSTANTIATING**: Real-world examples
-     - **FENCING**: When to apply and when not to
+     - **INSTANTIATING**: Real-world examples of the principle
+     - **FENCING**: When to apply and when NOT to apply
      - **VALIDATING**: Test cases to verify the principle
-     - **CONTEXTUALIZING**: How it adapts across cultures
+     - **CONTEXTUALIZING**: How it adapts across different cultures
+   - Clear visual feedback shows you the forging process
 
-   **Step 4: Review & Refine**
-   - Review the generated skill
-   - Make edits as needed
-   - Optionally invite reviewers to sign off
+   **Step 3️⃣  REVIEW** (3-5 min)
+   - Preview your complete skill with all five layers
+   - Edit the skill name and definition as needed
+   - Optionally provide feedback to regenerate any part
+   - View the full structure in an interactive preview modal
 
-   **Step 5: Publish**
-   - Choose licensing options (commercial use, remixing)
+   **Step 4️⃣  PUBLISH** (1 min)
+   - Choose licensing options (commercial use, remixing rights)
+   - Accept the creator covenant
    - Publish to the library
-   - Get your permanent Soul-Hash identity
+   - Receive your permanent Soul-Hash identity
+   - Download your commemorative Creator Card
+   - Receive confirmation email
 
-2. **Track impact**: After publishing, see:
-   - How many people viewed your skill
-   - Which AI systems adopted it
-   - What feedback you received
-   - Version history and improvements
+2. **After Publishing**: 
+   - Your skill is added to the public library
+   - Monitor who uses your skill
+   - Receive feedback from researchers and AI developers
+   - Iterate on your skill based on real-world usage
+
+### For Researchers (Studying & Validating Skills)
+
+Researchers can use THE 42 POST to study human values in AI systems and validate the effectiveness of structured skill definitions.
+
+**Research Workflow:**
+
+1. **Explore the Skill Library**
+   - Browse 42+ example skills across different domains
+   - Analyze the five-layer structure of each skill
+   - Understand how different creators approach value definition
+   - Export skill data in JSON format for analysis
+
+2. **Study Skill Effectiveness**
+   - Test how skills influence AI behavior using the "Shadow Agent"
+   - Run custom test cases against the VALIDATING layer
+   - Compare how the same principle is instantiated across cultures
+   - Measure alignment between intended values and actual AI outputs
+
+3. **Validate Skill Quality**
+   - Use the FENCING layer to test boundary cases
+   - Verify the CONTEXTUALIZING layer captures cultural nuances
+   - Provide feedback on skill clarity and applicability
+   - Suggest improvements through the feedback system
+
+4. **Conduct Comparative Studies**
+   - Analyze patterns across multiple skills in a domain
+   - Compare how different skill creators approach similar problems
+   - Study the evolution of skills through iterations
+   - Extract insights about value prioritization across cultures
+
+5. **Publish Research Findings**
+   - Forge research-oriented skills based on findings
+   - Document case studies in skill descriptions
+   - Create reference skills for your research domain
+   - Contribute to the growing body of human-centered AI research
+
+**API Access for Research:**
+- Access skill data via REST API (`/api/skills`, `/api/search`)
+- Get full five-layer structure in JSON format
+- Query skills by domain, creator, or tags
+- Download batches of skills for large-scale analysis
+
+**Example Research Questions You Can Answer:**
+- How consistently do creators define values across cultures?
+- What makes a skill's test cases more effective?
+- How do skills in different domains differ in structure?
+- What cultural adaptations are most important for global AI?
+
+---
 
 ### For Developers (Integrating Skills)
 
