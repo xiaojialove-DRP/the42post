@@ -6718,34 +6718,6 @@ function generateForgeSuccessEmail(skillData) {
   return emailHtml;
 }
 
-/**
- * Send forge success email to creator
- * Call this after Skill is successfully created
- */
-async function sendForgeSuccessEmail(skillData, creatorEmail) {
-  try {
-    const emailHtml = generateForgeSuccessEmail(skillData);
-
-    const response = await fetch('/api/email/send-forge-success', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        recipientEmail: creatorEmail,
-        skillData: skillData,
-        emailHtml: emailHtml
-      })
-    });
-
-    if (!response.ok) {
-      console.error('Failed to send email');
-    }
-  } catch (error) {
-    console.error('Error sending email:', error);
-  }
-}
-
 /* ═══════════════ DASHBOARD CARD FUNCTIONS ═══════════════ */
 
 /**
