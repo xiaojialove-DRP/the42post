@@ -2089,6 +2089,171 @@ function initSkillForge() {
     });
   }
 
+  // ═══ Method B: Preview Skill Modal ═══
+  const btnPreviewSkill = document.getElementById('btnPreviewSkill');
+  if (btnPreviewSkill) {
+    btnPreviewSkill.addEventListener('click', async () => {
+      const editedName = document.getElementById('reviewSkillName').value;
+      const editedDef = document.getElementById('reviewSkillDef').value;
+
+      if (!editedName.trim()) {
+        alert('请先输入技能名称');
+        return;
+      }
+
+      // 打开预览弹窗
+      const modal = document.getElementById('skillPreviewModal');
+      if (modal) modal.style.display = 'flex';
+
+      // 填充编辑的内容到预览框
+      document.getElementById('previewSkillName').value = editedName.trim();
+      document.getElementById('previewSkillDef').value = editedDef.trim();
+
+      // 显示加载状态，隐藏五层
+      document.getElementById('previewFiveLayer').style.display = 'none';
+      document.getElementById('previewLoading').style.display = 'block';
+
+      try {
+        // 生成五层结构
+        const domain = document.querySelector('.domain-choice.selected');
+        const selectedDomain = domain ? domain.dataset.domain : 'ideas';
+
+        const fiveLayerResponse = await fetch(`${ApiClient.BASE_URL}/forge/generate`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: editedName.trim(),
+            definition: editedDef.trim(),
+            domain: selectedDomain
+          })
+        });
+
+        if (!fiveLayerResponse.ok) throw new Error('生成五层结构失败');
+
+        const fiveLayerData = await fiveLayerResponse.json();
+        const skill = fiveLayerData.data || fiveLayerData;
+
+        // 存储五层数据
+        window.previewFiveLayer = skill;
+
+        // 填充五层内容
+        document.getElementById('previewDefining').textContent = skill.defining || '...';
+        document.getElementById('previewInstantiating').textContent = skill.instantiating || '...';
+        document.getElementById('previewFencing').textContent = skill.fencing || '...';
+        document.getElementById('previewValidating').textContent = skill.validating || '...';
+        document.getElementById('previewContextualizing').textContent = skill.contextualizing || '...';
+
+        // 隐藏加载，显示五层
+        document.getElementById('previewLoading').style.display = 'none';
+        document.getElementById('previewFiveLayer').style.display = 'block';
+      } catch (error) {
+        console.error('生成五层结构失败:', error);
+        document.getElementById('previewLoading').innerHTML = '<p style="color: red;">❌ 生成失败，请重试</p>';
+      }
+    });
+  }
+
+  // 关闭预览弹窗
+  const btnClosePreview = document.getElementById('btnClosePreview');
+  if (btnClosePreview) {
+    btnClosePreview.addEventListener('click', () => {
+      const modal = document.getElementById('skillPreviewModal');
+      if (modal) modal.style.display = 'none';
+    });
+  }
+
+  // 点击背景关闭预览弹窗
+  const skillPreviewModal = document.getElementById('skillPreviewModal');
+  if (skillPreviewModal) {
+    skillPreviewModal.addEventListener('click', (e) => {
+      if (e.target === skillPreviewModal) {
+        skillPreviewModal.style.display = 'none';
+      }
+    });
+  }
+
+  // 从预览返回编辑
+  const btnBackToEdit = document.getElementById('btnBackToEdit');
+  if (btnBackToEdit) {
+    btnBackToEdit.addEventListener('click', () => {
+      const modal = document.getElementById('skillPreviewModal');
+      if (modal) modal.style.display = 'none';
+      // 同步预览框中的编辑回 Step 2
+      document.getElementById('reviewSkillName').value = document.getElementById('previewSkillName').value;
+      document.getElementById('reviewSkillDef').value = document.getElementById('previewSkillDef').value;
+    });
+  }
+
+  // 从预览确认发布
+  const btnConfirmFromPreview = document.getElementById('btnConfirmFromPreview');
+  if (btnConfirmFromPreview) {
+    btnConfirmFromPreview.addEventListener('click', () => {
+      // 同步预览框中的编辑回 Step 2
+      document.getElementById('reviewSkillName').value = document.getElementById('previewSkillName').value;
+      document.getElementById('reviewSkillDef').value = document.getElementById('previewSkillDef').value;
+
+      // 触发原始的 btnConfirmSkill
+      const btnConfirm = document.getElementById('btnConfirmSkill');
+      if (btnConfirm) btnConfirm.click();
+
+      // 关闭弹窗
+      const modal = document.getElementById('skillPreviewModal');
+      if (modal) modal.style.display = 'none';
+    });
+  }
+
+  // 从预览重新生成
+  const btnRegenerateFromPreview = document.getElementById('btnRegenerateFromPreview');
+  if (btnRegenerateFromPreview) {
+    btnRegenerateFromPreview.addEventListener('click', async () => {
+      const feedback = prompt('告诉AI你想要什么改动？/ What would you like to change?');
+      if (!feedback || !feedback.trim()) return;
+
+      btnRegenerateFromPreview.disabled = true;
+      btnRegenerateFromPreview.textContent = '🔄 重新生成中...';
+
+      try {
+        const domain = document.querySelector('.domain-choice.selected');
+        const selectedDomain = domain ? domain.dataset.domain : 'ideas';
+
+        const response = await fetch(`${ApiClient.BASE_URL}/forge/generate`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: document.getElementById('previewSkillName').value,
+            definition: document.getElementById('previewSkillDef').value,
+            domain: selectedDomain,
+            feedback: feedback
+          })
+        });
+
+        if (!response.ok) throw new Error('重新生成失败');
+
+        const newSkill = await response.json();
+        const skill = newSkill.data || newSkill;
+
+        // 更新预览框
+        document.getElementById('previewSkillName').value = skill.name || document.getElementById('previewSkillName').value;
+        document.getElementById('previewSkillDef').value = skill.definition || document.getElementById('previewSkillDef').value;
+
+        // 更新五层
+        document.getElementById('previewDefining').textContent = skill.defining || '...';
+        document.getElementById('previewInstantiating').textContent = skill.instantiating || '...';
+        document.getElementById('previewFencing').textContent = skill.fencing || '...';
+        document.getElementById('previewValidating').textContent = skill.validating || '...';
+        document.getElementById('previewContextualizing').textContent = skill.contextualizing || '...';
+
+        alert('✓ 已重新生成！');
+      } catch (error) {
+        console.error('重新生成失败:', error);
+        alert('重新生成失败，请重试');
+      } finally {
+        btnRegenerateFromPreview.disabled = false;
+        btnRegenerateFromPreview.textContent = '🔄 重新生成 / Regenerate';
+      }
+    });
+  }
+
 
     // Domain selection
   document.querySelectorAll('.forge-domain').forEach(domain => {

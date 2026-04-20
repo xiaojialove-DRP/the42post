@@ -558,9 +558,10 @@
           <button class="btn-secondary" id="btnRegenerateSkill" style="margin-top: 12px; width: 100%;">🔄 重新生成 / Regenerate</button>
         </div>
 
-        <!-- Confirmation -->
+        <!-- Preview & Confirmation -->
         <div class="skill-confirmation-minimal">
-          <button class="btn-confirm-skill" id="btnConfirmSkill">继续发布 / Continue to Publish →</button>
+          <button class="btn-confirm-skill" id="btnPreviewSkill">👁 预览完整技能 / Preview Full Skill</button>
+          <button class="btn-secondary" id="btnConfirmSkill" style="margin-top: 12px; width: 100%;">继续发布 / Publish →</button>
         </div>
       </div>
 
@@ -838,6 +839,74 @@
               <button class="btn-proceed-forge" id="btnProceedToForge">开始铸造 / Begin Forging →</button>
             </div>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Preview Modal (Method B) -->
+    <div class="skill-preview-modal" id="skillPreviewModal" style="display: none;">
+      <div class="skill-preview-overlay"></div>
+      <div class="skill-preview-container">
+        <!-- Modal Header -->
+        <div class="skill-preview-header">
+          <h2>预览完整技能 / Full Skill Preview</h2>
+          <button class="modal-close-btn" id="btnClosePreview">✕</button>
+        </div>
+
+        <!-- Basic Info (Editable) -->
+        <div class="preview-section">
+          <h3>基本信息 / Basic Info</h3>
+          <div class="preview-item">
+            <label>技能名称 / Name</label>
+            <input type="text" class="preview-input" id="previewSkillName" placeholder="技能名称...">
+          </div>
+          <div class="preview-item">
+            <label>技能定义 / Definition</label>
+            <textarea class="preview-textarea" id="previewSkillDef" placeholder="技能定义..."></textarea>
+          </div>
+        </div>
+
+        <!-- Five-Layer Structure -->
+        <div class="preview-section" id="previewFiveLayer" style="display: none;">
+          <h3>五层结构 / Five-Layer Structure</h3>
+
+          <div class="five-layer-item">
+            <div class="layer-label">01 DEFINING / 定义</div>
+            <div class="layer-content" id="previewDefining">生成中...</div>
+          </div>
+
+          <div class="five-layer-item">
+            <div class="layer-label">02 INSTANTIATING / 场景举例</div>
+            <div class="layer-content" id="previewInstantiating">生成中...</div>
+          </div>
+
+          <div class="five-layer-item">
+            <div class="layer-label">03 FENCING / 边界定义</div>
+            <div class="layer-content" id="previewFencing">生成中...</div>
+          </div>
+
+          <div class="five-layer-item">
+            <div class="layer-label">04 VALIDATING / 验证</div>
+            <div class="layer-content" id="previewValidating">生成中...</div>
+          </div>
+
+          <div class="five-layer-item">
+            <div class="layer-label">05 CONTEXTUALIZING / 文化适配</div>
+            <div class="layer-content" id="previewContextualizing">生成中...</div>
+          </div>
+        </div>
+
+        <!-- Loading indicator -->
+        <div class="preview-loading" id="previewLoading" style="display: none;">
+          <div class="spinner"></div>
+          <p>生成中... / Generating...</p>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="preview-actions">
+          <button class="btn-secondary" id="btnBackToEdit">← 返回编辑 / Back to Edit</button>
+          <button class="btn-secondary" id="btnRegenerateFromPreview">🔄 重新生成 / Regenerate</button>
+          <button class="btn-confirm-skill" id="btnConfirmFromPreview">✓ 确认发布 / Confirm Publish</button>
         </div>
       </div>
     </div>
