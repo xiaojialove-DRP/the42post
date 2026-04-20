@@ -1936,6 +1936,9 @@ function initSkillForge() {
     choice.addEventListener('click', function() {
       document.querySelectorAll('.domain-choice').forEach(c => c.classList.remove('selected'));
       this.classList.add('selected');
+      // Update selectedDomain when domain is chosen in Step 2
+      selectedDomain = this.dataset.domain;
+      console.log('✓ Domain selected:', selectedDomain);
     });
   });
   
@@ -2007,7 +2010,7 @@ function initSkillForge() {
     btnConfirmSkill.addEventListener('click', () => {
       const domain = document.querySelector('.domain-choice.selected');
       if (!domain) {
-        alert('请选择技能分类');
+        alert('请选择技能分类 / Please select a domain');
         return;
       }
 
@@ -2016,7 +2019,7 @@ function initSkillForge() {
       const editedDef = document.getElementById('reviewSkillDef').value;
 
       if (!editedName.trim()) {
-        alert('请输入技能名称');
+        alert('请输入技能名称 / Please enter skill name');
         return;
       }
 
@@ -2024,6 +2027,7 @@ function initSkillForge() {
         // 更新技能信息（使用编辑后的值）
         window.forgeData.skillName = editedName.trim();
         window.forgeData.skillDefinition = editedDef.trim();
+        window.forgeData.domain = domain.dataset.domain; // Save domain to forgeData
         window.forgeData.generatedSkill.name = editedName.trim();
         window.forgeData.generatedSkill.definition = editedDef.trim();
       }
