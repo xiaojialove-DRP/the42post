@@ -1139,12 +1139,14 @@ function startFiveLayerAnimation() {
 
           window.forgeData.generatedSkill = skill;
 
-          // 在STEP 2中显示生成的结果
+          // 在STEP 2中显示生成的结果（可编辑字段）
           setTimeout(() => {
-            document.getElementById('reviewSkillName').textContent = skill.name;
-            document.getElementById('reviewSkillDef').textContent = skill.definition;
+            document.getElementById('reviewSkillName').value = skill.name;
+            document.getElementById('reviewSkillDef').value = skill.definition;
             document.getElementById('reviewUseWhen').textContent = skill.useWhen;
             document.getElementById('reviewRefuseWhen').textContent = skill.refuseWhen;
+            // 清空反馈框（用户可以给新反馈）
+            document.getElementById('skillFeedback').value = '';
           }, 500);
         }
       }, 1000);
@@ -2012,17 +2014,78 @@ function initSkillForge() {
         alert('请选择技能分类');
         return;
       }
-      
-      // 保存反馈
-      const feedback = document.getElementById('skillFeedback').value;
-      if (window.forgeData) {
-        window.forgeData.feedback = feedback;
+
+      // 保存编辑后的技能内容
+      const editedName = document.getElementById('reviewSkillName').value;
+      const editedDef = document.getElementById('reviewSkillDef').value;
+
+      if (!editedName.trim()) {
+        alert('请输入技能名称');
+        return;
       }
-      
-      console.log('✓ 用户确认了技能:', window.forgeData);
-      
+
+      if (window.forgeData) {
+        // 更新技能信息（使用编辑后的值）
+        window.forgeData.skillName = editedName.trim();
+        window.forgeData.skillDefinition = editedDef.trim();
+        window.forgeData.generatedSkill.name = editedName.trim();
+        window.forgeData.generatedSkill.definition = editedDef.trim();
+      }
+
+      console.log('✓ 用户确认了技能（编辑后）:', window.forgeData);
+
       // 进入STEP 3
       goToStep(3);
+    });
+  }
+
+  // 重新生成按钮
+  const btnRegenerateSkill = document.getElementById('btnRegenerateSkill');
+  if (btnRegenerateSkill) {
+    btnRegenerateSkill.addEventListener('click', async () => {
+      const feedback = document.getElementById('skillFeedback').value;
+
+      if (!feedback.trim()) {
+        alert('请输入你想要改动的内容');
+        return;
+      }
+
+      // 显示加载状态
+      btnRegenerateSkill.disabled = true;
+      btnRegenerateSkill.textContent = '🔄 重新生成中...';
+
+      try {
+        // 调用 API 重新生成
+        const probeResponse = await fetch(`${ApiClient.BASE_URL}/forge/generate`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            idea: window.forgeData.skillIdea,
+            domain: window.forgeData.selectedDomain || 'ideas',
+            feedback: feedback  // 用户的反馈
+          })
+        });
+
+        if (!probeResponse.ok) throw new Error('重新生成失败');
+
+        const newSkill = await probeResponse.json();
+
+        // 更新技能内容
+        window.forgeData.generatedSkill = newSkill.data || newSkill;
+
+        // 刷新显示
+        document.getElementById('reviewSkillName').value = newSkill.data?.name || newSkill.name || '';
+        document.getElementById('reviewSkillDef').value = newSkill.data?.definition || newSkill.definition || '';
+        document.getElementById('skillFeedback').value = '';
+
+        alert('✓ 已重新生成！请查看上面的新内容');
+      } catch (error) {
+        console.error('重新生成失败:', error);
+        alert('重新生成失败，请重试');
+      } finally {
+        btnRegenerateSkill.disabled = false;
+        btnRegenerateSkill.textContent = '🔄 重新生成 / Regenerate';
+      }
     });
   }
 
@@ -2796,8 +2859,15 @@ function initSkillForge() {
         const inviteCode = generateInviteCode();
 
         // Collect skill data from form
-        const skillName = document.getElementById('forgeSkillName');
-        const skillNameValue = skillName ? skillName.value : 'Unnamed Skill';
+        // 使用编辑后的技能名称（如果存在），否则使用原始值
+        let skillNameValue = 'Unnamed Skill';
+        const editedName = document.getElementById('reviewSkillName');
+        if (editedName && editedName.value.trim()) {
+          skillNameValue = editedName.value.trim();
+        } else {
+          const skillName = document.getElementById('forgeSkillName');
+          skillNameValue = skillName ? skillName.value : 'Unnamed Skill';
+        }
 
         let skillDesc = '';
         let sourceData = {};

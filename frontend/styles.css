@@ -6186,6 +6186,42 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
   letter-spacing: 0.2px;
 }
 
+/* ═══ Editable Skill Fields ═══ */
+.skill-editable-input,
+.skill-editable-textarea {
+  width: 100%;
+  padding: 16px 20px;
+  background: linear-gradient(135deg, #ffffff 0%, #fafafa 100%);
+  border: 2px solid #d4d4d4;
+  border-left: 5px solid #d4726a;
+  border-radius: 8px;
+  font-size: 15px;
+  line-height: 1.6;
+  color: #222;
+  font-family: var(--font-serif);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+  transition: all 0.3s ease;
+}
+
+.skill-editable-input:focus,
+.skill-editable-textarea:focus {
+  outline: none;
+  border-color: #d4726a;
+  border-left-color: #d4726a;
+  background: linear-gradient(135deg, #ffffff 0%, #fcfcfc 100%);
+  box-shadow: 0 4px 12px rgba(212, 114, 106, 0.12);
+}
+
+.skill-editable-input::placeholder,
+.skill-editable-textarea::placeholder {
+  color: #aaa;
+}
+
+.skill-editable-textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
 .skill-category-section {
   margin-bottom: 44px;
   padding: 32px;

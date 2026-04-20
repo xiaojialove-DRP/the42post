@@ -495,25 +495,39 @@
       <!-- Step 2: Auto-Generated Skill Review + Domain Selection -->
       <div class="forge-page" id="forgePage2">
         <div class="forge-page-title">YOUR SKILL / 你的技能</div>
-        <div class="forge-page-subtitle">基于你的想法和直觉，AI生成了：</div>
-        
-        <!-- Auto-Generated Content -->
+        <div class="forge-page-subtitle">基于你的想法和直觉，AI生成了：你可以编辑调整</div>
+
+        <!-- Auto-Generated Content with Edit Mode -->
         <div class="skill-display">
+          <!-- Editable: Skill Name -->
           <div class="skill-item">
-            <div class="skill-item-label">技能名称 / Name</div>
-            <div class="skill-item-content" id="reviewSkillName">生成中...</div>
+            <div class="skill-item-label">技能名称 / Name <span style="color: #999; font-size: 12px;">✏️ 可编辑</span></div>
+            <input
+              type="text"
+              class="skill-editable-input"
+              id="reviewSkillName"
+              placeholder="技能名称..."
+              value=""
+            />
           </div>
-          
+
+          <!-- Editable: Skill Definition -->
           <div class="skill-item">
-            <div class="skill-item-label">技能描述 / Definition</div>
-            <div class="skill-item-content" id="reviewSkillDef">生成中...</div>
+            <div class="skill-item-label">技能描述 / Definition <span style="color: #999; font-size: 12px;">✏️ 可编辑</span></div>
+            <textarea
+              class="skill-editable-textarea"
+              id="reviewSkillDef"
+              placeholder="技能定义..."
+            ></textarea>
           </div>
-          
+
+          <!-- Read-only: When to Use -->
           <div class="skill-item">
             <div class="skill-item-label">使用场景 / When to Use</div>
             <div class="skill-item-content" id="reviewUseWhen">生成中...</div>
           </div>
-          
+
+          <!-- Read-only: When NOT to Use -->
           <div class="skill-item">
             <div class="skill-item-label">不被允许的场景 / When NOT to Use</div>
             <div class="skill-item-content" id="reviewRefuseWhen">生成中...</div>
@@ -537,15 +551,16 @@
           </div>
         </div>
         
-        <!-- User Feedback -->
+        <!-- User Feedback (Optional) -->
         <div class="skill-feedback-section">
-          <div class="skill-item-label">你的反馈 / Feedback (Optional)</div>
-          <textarea class="minimal-textarea" placeholder="想要微调吗？告诉我们..." id="skillFeedback"></textarea>
+          <div class="skill-item-label">想要重新生成？/ Regenerate? (Optional)</div>
+          <textarea class="minimal-textarea" placeholder="告诉AI你想要什么改动..." id="skillFeedback"></textarea>
+          <button class="btn-secondary" id="btnRegenerateSkill" style="margin-top: 12px; width: 100%;">🔄 重新生成 / Regenerate</button>
         </div>
-        
+
         <!-- Confirmation -->
         <div class="skill-confirmation-minimal">
-          <button class="btn-confirm-skill" id="btnConfirmSkill">确认 / Confirm →</button>
+          <button class="btn-confirm-skill" id="btnConfirmSkill">继续发布 / Continue to Publish →</button>
         </div>
       </div>
 
