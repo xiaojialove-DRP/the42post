@@ -5252,7 +5252,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 
 /* ═══ HONOR PANEL ═══ */
 .honor-panel {
-  width: 280px;
+  width: 380px;
   flex-shrink: 0;
   background: rgba(248,244,238,0.92);
   border-left: 1px solid rgba(44,36,32,0.08);
@@ -5260,6 +5260,8 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
   transition: width 0.4s cubic-bezier(0.23,1,0.32,1), opacity 0.3s;
   position: relative;
   backdrop-filter: blur(8px);
+  display: flex;
+  flex-direction: column;
 }
 
 .honor-panel.collapsed {
@@ -5322,6 +5324,12 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 }
 .honor-panel-title .star-icon { color: #d4a43c; font-size: 11px; }
 
+.honor-list {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
 .honor-panel-subtitle {
   font-size: 8px;
   color: #8a7a6e;
@@ -5331,21 +5339,51 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 
 .honor-row {
   display: grid;
-  grid-template-columns: 24px 32px 1fr 32px;
+  grid-template-columns: 32px 40px 1fr 40px;
   align-items: center;
-  padding: 6px 14px;
+  padding: 10px 14px;
   font-size: 10px;
   cursor: pointer;
-  transition: background 0.15s;
-  gap: 4px;
-  border-bottom: 1px solid rgba(44,36,32,0.03);
+  transition: background 0.15s, padding 0.15s;
+  gap: 8px;
+  border-bottom: 1px solid rgba(44,36,32,0.04);
 }
-.honor-row:hover { background: rgba(44,36,32,0.04); }
+.honor-row:hover {
+  background: rgba(44,36,32,0.05);
+  padding: 10px 16px;
+}
 
-.honor-rank { color: #b8a89a; text-align: right; font-weight: 600; font-size: 9px; }
-.honor-star { color: #d4a43c; text-align: center; font-size: 9px; }
-.honor-name { color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; }
-.honor-starlight { color: #8a7a6e; text-align: right; font-size: 9px; }
+.honor-rank {
+  color: #d4a43c;
+  text-align: center;
+  font-weight: 700;
+  font-size: 11px;
+  min-width: 32px;
+}
+
+.honor-star {
+  color: #d4a43c;
+  text-align: center;
+  font-size: 10px;
+  font-weight: 600;
+  min-width: 40px;
+}
+
+.honor-name {
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 500;
+  font-size: 11px;
+}
+
+.honor-starlight {
+  color: #8a7a6e;
+  text-align: right;
+  font-size: 8px;
+  min-width: 40px;
+}
 
 /* ═══ ZOOM CONTROLS ═══ */
 .zoom-controls {
