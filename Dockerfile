@@ -6,6 +6,9 @@ WORKDIR /app
 # Copy all files
 COPY . .
 
+# Copy frontend files to day1 directory (expected by backend)
+RUN mkdir -p /app/day1 && cp -r /app/frontend/* /app/day1/
+
 # Install backend dependencies
 WORKDIR /app/backend
 RUN npm install --omit=dev --no-optional
