@@ -1738,7 +1738,7 @@ function initSkillForge() {
       
       // Go to 5-layer auto generation page
       document.querySelectorAll('.forge-page').forEach(p => p.style.display = 'none');
-      const page25 = document.getElementById('forgePage2-5');
+      const page25 = document.getElementById('forgePage2');
       if (page25) page25.style.display = 'block';
       
       // Update step indicator
@@ -1854,7 +1854,7 @@ function initSkillForge() {
       console.log('✓ 验证通过，开始铸造:', window.forgeData);
 
       // 转到5层自动化动画页面
-      goToStep('2-5');
+      goToStep(2);
       startFiveLayerAnimation();
     });
   }
@@ -2000,7 +2000,7 @@ function initSkillForge() {
       if (probeModal) probeModal.style.display = 'none';
 
       // Go to STEP 2.5 (Five-Layer Animation)
-      goToStep('2-5');
+      goToStep(2);
       startFiveLayerAnimation();
     });
   }
@@ -2034,8 +2034,8 @@ function initSkillForge() {
 
       console.log('✓ 用户确认了技能（编辑后）:', window.forgeData);
 
-      // 进入STEP 3
-      goToStep(3);
+      // 进入STEP 4: PUBLISH
+      goToStep(4);
     });
   }
 
