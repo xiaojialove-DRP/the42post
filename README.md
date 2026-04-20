@@ -49,6 +49,32 @@ We created THE 42 POST to:
 
 ---
 
+## 🏗️ System Architecture
+
+THE 42 POST connects creators, the skill library, and AI systems through a clean, modular architecture:
+
+```
+┌─────────────────────────────────────────────────────────┐
+│         🌐 Web Browser (Frontend)                       │
+│  Skill Forge | Library | Arena | Dashboard              │
+└──────────────────────┬──────────────────────────────────┘
+                       │ HTTP/REST
+┌──────────────────────▼──────────────────────────────────┐
+│      🔌 API Server (Node.js/Express Backend)            │
+│  /auth | /skills | /forge | /search | /email | /agents  │
+└──────────────────────┬──────────────────────────────────┘
+         ┌─────────────┼─────────────┬──────────────┐
+         │             │             │              │
+    ┌────▼────┐ ┌─────▼──────┐ ┌───▼──────┐  ┌───▼─────┐
+    │ Database │ │ Claude API │ │SMTP Mail │  │Analytics│
+    │SQLite/PG│ │(Anthropic) │ │ Service  │  │Tracking │
+    └──────────┘ └────────────┘ └──────────┘  └─────────┘
+```
+
+**For detailed architecture diagrams** (system design, data flows, database schema, deployment), see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+
+---
+
 ## 🚀 How to Use THE 42 POST
 
 ### For Everyone (Getting Started)
