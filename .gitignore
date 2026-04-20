@@ -1,14 +1,28 @@
 # Dependencies
 node_modules/
-package-lock.json
-yarn.lock
-pnpm-lock.yaml
+/.pnp
+.pnp.js
 
-# Environment
+# Testing
+/coverage
+
+# Production
+/build
+/dist
+
+# Environment variables
 .env
 .env.local
 .env.*.local
-.env.production.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+*.sublime-workspace
 
 # Logs
 logs/
@@ -16,85 +30,33 @@ logs/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-lerna-debug.log*
 
-# OS
+# Database (temporary files)
+*.sqlite3-shm
+*.sqlite3-wal
+database.sqlite3-shm
+database.sqlite3-wal
+
+# OS files
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
 
-# Testing
-coverage/
-.nyc_output/
-.jest/
-
-# Build & Dist
+# Build output
 dist/
 build/
-out/
+*.o
+*.obj
 
-# IDE
-.vscode/
-.idea/
-*.sublime-workspace
-*.sublime-project
+# Editor configuration
+.vscode/settings.json
+.idea/workspace.xml
 
-# Temporary
+# Temporary files
+*.tmp
 tmp/
 temp/
-*.tmp
-
-# Database
-*.sqlite
-*.sqlite3
-*.db
-
-# Secrets
-.env.vault
-secrets.json
-api_keys.txt
-
-# Cache
-.cache/
-*.cache
-
-# Archives
-*.zip
-*.tar.gz
-*.rar
-
-# Screenshots & Media
-screenshots/
-media/
-*.psd
-
-# ===== Internal Documentation (不对外公开的42 POST系统实现文档) =====
-# 公开仓库需要包含backend/和day1/用于Railway部署
-# 以下是文档和工具配置排除项
-
-# Internal Technical Documentation (internal only)
-# BACKEND_ARCHITECTURE.md
-# API_QUICK_REFERENCE.md
-BACKEND_IMPLEMENTATION_SUMMARY.txt
-DELIVERY_SUMMARY.txt
-# FRONTEND_BACKEND_INTEGRATION.md
-# NATURAL_LANGUAGE_TO_SKILL.md
-# FORGING_METHODOLOGY.md
-
-# Internal Research
-RESEARCH_FOUNDATION_COMPLETE.md
-
-# Development & Build
-day2/
-.claude/
-specification/
-templates/
-docs/
-
-# Additional excludes for production
-.env.vault.local
-local-config.json
