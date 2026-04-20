@@ -4,6 +4,8 @@
 
 让普通人参与定义、分享和验证AI系统的价值观。
 
+> **基于 [SemanticForge](https://github.com/xiaojialove-DRP/SemanticForge)** — THE 42 POST 将 SemanticForge 的五层框架实现为一个社区平台，让任何人都能创建和分享与 AI 对齐的技能。
+
 ---
 
 ## 🎯 THE 42 POST 是什么？

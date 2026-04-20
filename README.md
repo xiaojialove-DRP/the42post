@@ -4,6 +4,8 @@
 
 Democratizing how humans define, share, and verify their values for AI systems.
 
+> **Built on [SemanticForge](https://github.com/xiaojialove-DRP/SemanticForge)** — THE 42 POST implements SemanticForge's five-layer framework as a community platform where anyone can create and share AI-aligned skills.
+
 ---
 
 ## 🎯 What is THE 42 POST?
