@@ -60,3 +60,4 @@ build/
 *.tmp
 tmp/
 temp/
+.claude/
