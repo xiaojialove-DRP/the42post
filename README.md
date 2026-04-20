@@ -36,6 +36,12 @@ THE 42 POST is a web platform where anyone can create "Skills" — structured, v
 
 ---
 
+## 📚 Architecture
+
+For detailed system design, data flows, database schema, and technical architecture, see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+
+---
+
 ## 📖 How to Use THE 42 POST
 
 ### For Skill Discoverers
