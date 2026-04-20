@@ -188,7 +188,7 @@ SMTP_PASSWORD=your_gmail_app_password
 
 ### 更新前端 API 地址
 
-在前端项目中（`day1/script.js` 等），更新 API 调用地址：
+在前端项目中（`frontend/script.js` 等），更新 API 调用地址：
 
 ```javascript
 // 从：

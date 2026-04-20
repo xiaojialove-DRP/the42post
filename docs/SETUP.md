@@ -46,7 +46,7 @@ npm start
 
 **Terminal 2 - Frontend**
 ```bash
-cd day1
+cd frontend
 python3 -m http.server 8080
 # Frontend at http://localhost:8080
 ```
@@ -85,7 +85,7 @@ Leave `SMTP_HOST` and `SMTP_USER` empty. Emails logged to console.
 ```
 42post/
 ├── backend/     # API server
-├── day1/        # Frontend app
+├── frontend/        # Frontend app
 ├── docs/        # Documentation
 └── database.sqlite3  # Local DB (auto-created)
 ```

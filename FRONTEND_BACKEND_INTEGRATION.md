@@ -6,7 +6,7 @@ This document describes how the frontend (表皮 - user-facing UI) connects to t
 
 ## Current State
 
-**Frontend** (`/day1/`):
+**Frontend** (`/frontend/`):
 - Pure client-side implementation with localStorage persistence
 - Demo data in `skills.js`
 - Local probe/skill generation using templates
@@ -459,7 +459,7 @@ npm run dev
 ### 2. Start Frontend
 
 ```bash
-cd day1
+cd frontend
 python3 -m http.server 8000
 # Frontend runs on http://localhost:8000
 ```

@@ -8,7 +8,7 @@ THE 42 POST combines a modern frontend with a powerful API backend for human-cen
 
 ```
 ┌─────────────────────────────────┐
-│    Browser (Frontend - day1/)    │
+│    Browser (Frontend - frontend/)    │
 │  Skill Forge | Arena | Dashboard │
 └─────────────────────────────────┘
               ↓ HTTP/REST
@@ -33,7 +33,7 @@ User Input → Intuition Probe → Five-Layer Generation → Review → Publish
 
 ## Key Components
 
-### Frontend (day1/)
+### Frontend (frontend/)
 - `index.html` - Main application (850 lines)
 - `script.js` - Logic and API integration (6,567 lines)
 - `styles.css` - Responsive design (134 KB)

@@ -194,7 +194,7 @@ For detailed deployment instructions, see [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE
 │      THE 42 POST — Full Stack           │
 ├─────────────────────────────────────────┤
 │                                         │
-│  Frontend (day1/)                      │
+│  Frontend (frontend/)                      │
 │  ├─ index.html (main app)              │
 │  ├─ arena.html (skill experience)     │
 │  ├─ agent-view.html (creators)        │
