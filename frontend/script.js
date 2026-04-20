@@ -1731,10 +1731,7 @@ function initSkillForge() {
         alert('Please enter a skill name');
         return;
       }
-      if (!selectedDomain) {
-        alert('Please select a domain');
-        return;
-      }
+      // Domain validation removed - domain is selected in Step 3, not Step 2
       if (!window.probeChoice) {
         alert('Please select one intuition probe response');
         return;
@@ -2279,21 +2276,6 @@ function initSkillForge() {
     btnBackPage2.addEventListener('click', () => goToStep(1));
   }
 
-  const btnNextPage2 = document.getElementById('btnNextPage2');
-  if (btnNextPage2) {
-    btnNextPage2.addEventListener('click', () => {
-      const skillName = document.getElementById('forgeSkillName');
-      if (!skillName || !skillName.value.trim()) {
-        alert('Please enter a skill name');
-        return;
-      }
-      if (!selectedDomain) {
-        alert('Please select a domain');
-        return;
-      }
-      goToStep(3);
-    });
-  }
 
   const btnBackPage3 = document.getElementById('btnBackPage3');
   if (btnBackPage3) {
