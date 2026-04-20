@@ -5,8 +5,15 @@
 import Anthropic from '@anthropic-ai/sdk';
 import crypto from 'crypto';
 
+// ═══ INITIALIZE CLAUDE CLIENT ═══
+if (!process.env.ANTHROPIC_API_KEY) {
+  console.error('❌ CRITICAL: ANTHROPIC_API_KEY not set!');
+  console.error('Skill generation will not work without this environment variable.');
+  console.error('Please set ANTHROPIC_API_KEY in your Railway variables.');
+}
+
 const client = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY
+  apiKey: process.env.ANTHROPIC_API_KEY || 'sk-missing-key'
 });
 
 // ═══ PROBE GENERATION ═══
@@ -86,11 +93,21 @@ Important: Return ONLY valid JSON, no markdown formatting or extra text.`;
       throw new Error('Failed to parse Claude response as JSON');
     }
   } catch (error) {
-    console.error('Claude API error:', error);
+    console.error('❌ Claude API error:', error.message);
+
+    // Check if it's an API key issue
+    if (error.message?.includes('api_key') || error.message?.includes('401') || error.message?.includes('authentication')) {
+      throw {
+        status: 500,
+        message: '❌ Claude API认证失败。请检查Railway中是否设置了ANTHROPIC_API_KEY。',
+        details: 'Missing or invalid ANTHROPIC_API_KEY environment variable'
+      };
+    }
+
     throw {
       status: 500,
       message: `Probe generation failed: ${error.message}`,
-      error: error
+      error: error.message
     };
   }
 }

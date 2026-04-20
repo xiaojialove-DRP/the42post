@@ -159,6 +159,63 @@ git push origin main
 3. 查看 Railway 日志，搜索 `404` 或 `Not Found`
 4. 确保 `backend/server.js` 中正确设置了 `frontendPath`
 
+### 问题 7: 技能生成失败（❌ 生成失败，请重试）
+
+**症状**: 创建技能时显示"❌ 生成失败，请重试"
+
+**根本原因**: `ANTHROPIC_API_KEY` 未在 Railway 中配置
+
+**解决方案**:
+1. 获取 Anthropic API 密钥：
+   - 访问 [console.anthropic.com](https://console.anthropic.com)
+   - 登录或创建账户
+   - 点击 **API Keys** → **Create Key**
+   - 复制 API 密钥（格式为 `sk-ant-...`）
+
+2. 在 Railway 中设置：
+   - 进入 Railway 项目 → **Variables**
+   - 添加：`ANTHROPIC_API_KEY=sk-ant-...`
+   - 保存（Railway 会自动重新部署）
+
+3. 验证配置：
+   - Railway 日志中应该看到：`✅ Claude API 已配置 - 技能生成已启用`
+   - 如果看到 `❌ Claude API 未配置`，说明还需要检查
+
+**快速诊断**:
+```bash
+# 在 Railway 日志中搜索：
+"ANTHROPIC_API_KEY"  # 应该看到确认消息
+"Claude API error"   # 如果看到这个，说明API调用失败
+```
+
+### 问题 8: 邮件未发送到用户邮箱
+
+**症状**: 技能发布时看到"✓ 邮件已发送"，但用户没有收到邮件
+
+**根本原因**: `SMTP_*` 环境变量未在 Railway 中配置
+
+**解决方案**:
+1. **确认 SMTP 已配置**：
+   - Railway 日志应该显示：`✅ Email service configured - real emails will be sent`
+   - 如果显示：`📧 [DEV MODE] Email would be sent to...` → SMTP 未配置
+
+2. **配置 Gmail SMTP**：
+   ```env
+   SMTP_HOST=smtp.gmail.com
+   SMTP_PORT=587
+   SMTP_USER=your-email@gmail.com
+   SMTP_PASSWORD=[16位Google应用密码]
+   SMTP_SECURE=false
+   ```
+
+3. **验证邮件是否被发送**：
+   - Railway 日志中查看：`✓ Email sent successfully` → 邮件已发送 ✅
+   - 或：`📧 [DEV MODE]` → 邮件未真正发送 ⚠️
+
+**关键区别**:
+- ✅ **生产模式**: SMTP已配置 → 邮件实际发送到用户邮箱
+- ⚠️ **开发模式**: SMTP未配置 → 邮件只记录到日志，用户收不到
+
 ---
 
 ## 📋 完整检查清单

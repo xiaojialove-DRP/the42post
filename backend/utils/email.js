@@ -14,15 +14,23 @@ let transporter = null;
 function initializeEmailTransporter() {
   // If SMTP is not configured, return a mock transporter for development
   if (!process.env.SMTP_HOST || !process.env.SMTP_USER) {
-    console.warn('⚠ Email service not configured. Using development mode (emails logged only).');
+    console.warn('⚠️  WARNING: Email service not configured!');
+    console.warn('   SMTP_HOST or SMTP_USER not set in Railway variables');
+    console.warn('   Emails will NOT be sent to users - only logged to console');
+    console.warn('   To enable email notifications, set these in Railway:');
+    console.warn('   - SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD, SMTP_SECURE');
     return {
       sendMail: async (options) => {
-        console.log(`📧 [DEV MODE] Email would be sent to: ${options.to}`);
+        console.log(`📧 [DEV MODE - 邮件未实际发送] Would send to: ${options.to}`);
         console.log(`   Subject: ${options.subject}`);
-        return { messageId: 'dev-mode-' + Date.now() };
+        console.log(`   NOTE: User will NOT receive this email because SMTP is not configured`);
+        return { messageId: 'dev-mode-' + Date.now(), actuallyDelivered: false };
       }
     };
   }
+
+  console.log('✅ Email service configured - real emails will be sent');
+
 
   return nodemailer.createTransport({
     host: process.env.SMTP_HOST,
