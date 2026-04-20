@@ -1833,20 +1833,18 @@ function initSkillForge() {
       const username = document.getElementById('forgeUsername').value.trim();
       const email = document.getElementById('forgeEmail').value.trim();
       const idea = document.getElementById('forgeSkillIdea').value.trim();
-      const domain = document.querySelector('.forge-domain.selected') || document.querySelector('.domain-choice.selected');
       const probeChoice = window.probeChoice || (window.forgeData?.probeChoice);
 
-      // 验证
+      // 验证 (Domain selection moved to Step 2)
       if (!username) { alert('请输入用户名 / Please enter username'); return; }
       if (!email) { alert('请输入邮箱 / Please enter email'); return; }
       if (!idea) { alert('请分享你的想法 / Please share your idea'); return; }
-      if (!domain) { alert('请选择技能分类 / Please select a domain'); return; }
       if (!probeChoice) { alert('请选择直觉探针响应 / Please select a probe response'); return; }
 
-      // 保存用户信息
+      // 保存用户信息 (domain will be selected in Step 2)
       window.forgeData = {
         username, email,
-        domain: domain.dataset.domain,
+        domain: null, // Will be selected in Step 2 from domain-choice.selected
         idea,
         probeChoice
       };
@@ -1871,21 +1869,19 @@ function initSkillForge() {
   const btnGenerateProbe = document.getElementById('btnGenerateProbe');
   if (btnGenerateProbe) {
     btnGenerateProbe.addEventListener('click', async () => {
-      // Validate required fields
+      // Validate required fields (domain selection moved to Step 2)
       const username = document.getElementById('forgeUsername').value.trim();
       const email = document.getElementById('forgeEmail').value.trim();
       const idea = document.getElementById('forgeSkillIdea').value.trim();
-      const domainSelected = document.querySelector('.domain-choice.selected');
 
       if (!username) { alert('请输入用户名 / Please enter username'); return; }
       if (!email) { alert('请输入邮箱 / Please enter email'); return; }
       if (!idea) { alert('请分享你的想法 / Please share your idea'); return; }
-      if (!domainSelected) { alert('请选择技能分类 / Please select a domain'); return; }
 
-      // Save basic data to global object
+      // Save basic data to global object (domain will be selected in Step 2)
       window.forgeData = {
         username, email, idea,
-        domain: domainSelected.dataset.domain,
+        domain: null, // Will be selected in Step 2
         probeChoice: null // Will be set when user selects a probe
       };
 
