@@ -2988,10 +2988,8 @@ function initSkillForge() {
   // Step navigation
   document.querySelectorAll('.forge-next').forEach(btn => {
     btn.addEventListener('click', () => {
-      if (parseInt(btn.dataset.next) === 3 && !selectedDomain && !window.forgeData?.domain) {
-        alert('Please select a domain to continue');
-        return;
-      }
+      // Domain validation removed from Step 2 - domain is selected via btnConfirmSkill
+      // which properly saves it to selectedDomain and forgeData.domain before advancing
       goToStep(parseInt(btn.dataset.next));
     });
   });
