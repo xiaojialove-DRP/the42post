@@ -32,7 +32,23 @@ THE 42 POST is a web platform where anyone can create "Skills" — structured, v
 
 ## 🚀 Getting Started
 
-**[👉 Visit THE 42 POST](https://the42post-production.up.railway.app)** — Browse skills, create your own, and collaborate with the community.
+**No setup required.** Visit [THE 42 POST](https://the42post-production.up.railway.app):
+
+1. **Browse** 42+ community-created skills (2 min)
+2. **Create** your first skill using Skill Forge (5-10 min)
+3. **Publish** and receive your Soul-Hash identity (1 min)
+
+---
+
+## 💭 Why We're Committed to Open Research
+
+THE 42 POST is not a commercial product. We believe AI alignment should be:
+- **Owned by everyone**, not corporations
+- **Rooted in research**, not proprietary algorithms  
+- **Culturally diverse**, shaped by communities worldwide
+- **Verifiable and auditable**, not black-box
+
+This is why we open-sourced it.
 
 ---
 
@@ -82,6 +98,16 @@ We welcome contributions from creators, developers, and researchers:
 ## 📄 License
 
 MIT License — See [LICENSE](LICENSE) file
+
+---
+
+## 📚 Documentation
+
+- **[Architecture](docs/ARCHITECTURE.md)** — System design and data flows
+- **[API Reference](docs/API_REFERENCE.md)** — REST API endpoints for integration
+- **[Contributing Guide](docs/CONTRIBUTING.md)** — How to contribute
+- **[Changelog](CHANGELOG.md)** — What's new in each release
+- **[Deployment Guide](RAILWAY_DEPLOYMENT.md)** — For self-hosted instances
 
 ---
 
