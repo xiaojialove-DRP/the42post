@@ -33,10 +33,10 @@ DATABASE_URL=postgresql://[自动生成]
 JWT_SECRET=your-secret-key-minimum-32-chars-change-this
 JWT_EXPIRY=24h
 
-# Claude API
+# Claude API（技能生成必需）
 ANTHROPIC_API_KEY=sk-ant-[你的Anthropic API密钥]
 
-# 邮件服务（可选）
+# 邮件服务（✅ 必需 - 否则邮件只在日志中，不会实际发送）
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_USER=your-email@gmail.com
@@ -53,6 +53,30 @@ SIGNING_SECRET=your-signing-secret-minimum-32-chars-change-this
 NODE_ENV=production
 PORT=8080
 ```
+
+#### ⚠️ 邮件配置说明（重要）
+
+**如果不配置 SMTP 环境变量，系统会进入"开发模式"，邮件只会被记录到日志中，不会实际发送给用户。**
+
+**配置 Gmail SMTP 步骤：**
+
+1. 打开 [Google 账户设置](https://myaccount.google.com/)
+2. 进入左侧菜单 **安全** 
+3. 找到 **应用密码**（如果看不到，说明还未开启两步验证）
+4. 选择应用为"邮件"，选择设备为"Windows PC"（或您使用的设备）
+5. Google 会生成一个 16 位的专用密码
+6. 复制这个密码到 Railway Variables 的 `SMTP_PASSWORD` 字段（**不是你的 Google 账户密码！**）
+
+**验证邮件是否正确配置：**
+
+部署后，在 Railway 仪表板查看实时日志：
+- ✅ 如果看到 `✓ Email sent successfully to...` → 邮件配置正确，正在发送
+- ⚠️ 如果看到 `📧 [DEV MODE] Email would be sent to...` → SMTP 未配置，邮件只记录日志
+
+**测试邮件发送：**
+1. 创建一个技能并完成发布
+2. 查看 Railway 日志，确认邮件发送消息
+3. 检查用户邮箱（包括垃圾邮件文件夹）
 
 ### Step 4: 添加 PostgreSQL 数据库
 
@@ -121,6 +145,19 @@ git push origin main
 **解决方案**:
 1. 确保 `FRONTEND_URL` 已设置正确
 2. 确保与 Railway 域名匹配
+
+### 问题 6: 图片或资源无法加载（404 错误）
+
+**症状**: 前端页面显示但图片、样式或脚本无法加载
+
+**解决方案**:
+1. 检查 Dockerfile 是否正确复制前端文件到 `day1` 目录：
+   ```
+   RUN mkdir -p /app/day1 && cp -r /app/frontend/* /app/day1/
+   ```
+2. 在浏览器开发者工具 (F12 → Network) 检查 404 错误
+3. 查看 Railway 日志，搜索 `404` 或 `Not Found`
+4. 确保 `backend/server.js` 中正确设置了 `frontendPath`
 
 ---
 

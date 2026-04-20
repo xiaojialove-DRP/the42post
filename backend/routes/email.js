@@ -106,6 +106,57 @@ router.post('/send-forge-success', async (req, res, next) => {
  * GET /api/email/certificate/:skill_id
  * Download the creator certificate as HTML file
  */
+/**
+ * POST /api/email/test
+ * Test email sending configuration
+ * Used to verify SMTP is properly configured
+ */
+router.post('/test', async (req, res, next) => {
+  try {
+    const { testEmail } = req.body;
+
+    if (!testEmail) {
+      return res.status(400).json({
+        error: 'Missing input',
+        message: 'testEmail is required'
+      });
+    }
+
+    // Send test email
+    const emailResult = await sendForgeSuccessEmail({
+      recipientEmail: testEmail,
+      recipientName: 'Test User',
+      skillTitle: '测试技能 | Test Skill',
+      soulHash: 'SOUL_TEST_' + Math.random().toString(16).slice(2, 8),
+      invitationCode: 'TEST-CODE-42',
+      emailHtml: `
+        <h2>🧪 THE 42 POST 邮件配置测试</h2>
+        <p>这是一封测试邮件，用于验证 SMTP 配置是否正确。</p>
+        <p><strong>如果你收到这封邮件，说明邮件服务配置成功！</strong></p>
+        <hr>
+        <p><em>Generated at ${new Date().toISOString()}</em></p>
+      `
+    });
+
+    if (!emailResult.success) {
+      return res.status(500).json({
+        success: false,
+        error: emailResult.error,
+        message: '邮件发送失败。请检查 SMTP 配置。'
+      });
+    }
+
+    res.json({
+      success: true,
+      message: `测试邮件已发送到 ${testEmail}`,
+      messageId: emailResult.messageId,
+      note: '请检查邮箱（包括垃圾邮件文件夹）'
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 router.get('/certificate/:skill_id', async (req, res, next) => {
   try {
     const { skill_id } = req.params;

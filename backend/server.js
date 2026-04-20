@@ -68,16 +68,23 @@ app.use(requestLogger);
 const frontendPath = join(__dirname, '../day1');
 console.log('Frontend Path:', frontendPath);
 
-// Try to serve static files, but don't crash if folder doesn't exist
-try {
-  app.use(express.static(frontendPath, {
-    extensions: ['html', 'js', 'css', 'json'],
-    maxAge: '1h',
-    etag: false
-  }));
-} catch (err) {
-  console.warn('Frontend static folder not found, API-only mode');
-}
+// Serve static files with proper MIME types and caching
+app.use(express.static(frontendPath, {
+  extensions: ['html', 'js', 'css', 'json', 'png', 'jpg', 'jpeg', 'gif', 'svg', 'woff', 'woff2'],
+  maxAge: process.env.NODE_ENV === 'production' ? '7d' : '1h',
+  etag: false,
+  setHeaders: (res, path) => {
+    // Ensure correct MIME types
+    if (path.endsWith('.js')) res.setHeader('Content-Type', 'application/javascript');
+    if (path.endsWith('.css')) res.setHeader('Content-Type', 'text/css');
+    if (path.endsWith('.html')) res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    if (path.endsWith('.json')) res.setHeader('Content-Type', 'application/json');
+    // Add CORS headers for fonts and media files
+    if (path.match(/\.(woff|woff2|ttf|otf|png|jpg|jpeg|gif|svg)$/)) {
+      res.setHeader('Access-Control-Allow-Origin', '*');
+    }
+  }
+}));
 
 // Root route - return API info if frontend not found
 app.get('/', (req, res) => {
