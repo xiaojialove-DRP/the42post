@@ -3,6 +3,7 @@
 **An Open-Source Platform for Human-Centered AI Value Alignment**
 
 Democratizing how humans define, share, and verify their values for AI systems.
+🌐 **[中文版本 (Chinese Version)](./README.zh.md)** 
 
 > **Built on [SemanticForge](https://github.com/xiaojialove-DRP/SemanticForge)** — THE 42 POST implements SemanticForge's five-layer framework as a community platform where anyone can create and share AI-aligned skills.
 
