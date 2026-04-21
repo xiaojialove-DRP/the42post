@@ -1706,12 +1706,8 @@ body {
   min-height: 120px;
 }
 
-.chat-bubble-section {
-  max-width: 100%;
-}
-
 .chat-bubble-wrap {
-  border-width: 2px;
+  border: 2px solid #e0e0e0;
 }
 
 /* CHAT INPUT SECTION */
@@ -1862,12 +1858,15 @@ body {
   border-top: none;
   border-radius: 0 0 28px 28px;
   padding: 0;
+  position: absolute;
+  visibility: hidden;
 }
 
 .ethics-result.visible {
   opacity: 1;
   transform: translateY(0);
   pointer-events: auto;
+  visibility: visible;
 }
 
 .ethics-pass, .ethics-fail {
