@@ -1237,80 +1237,6 @@ body {
 }
 
 /* ═══ VOICE OF TODAY TICKER ═══ */
-.voice-ticker {
-  max-width: var(--max-w);
-  margin: 0 auto;
-  padding-left: 24px;
-  padding-right: 24px;
-  display: flex;
-  align-items: center;
-  border-bottom: 1px solid var(--rule);
-  overflow: hidden;
-  height: 32px;
-}
-
-.ticker-label {
-  font-family: var(--font-mono);
-  font-size: 8px;
-  letter-spacing: 2px;
-  color: var(--paper);
-  background: var(--ink);
-  padding: 8px 12px;
-  white-space: nowrap;
-  flex-shrink: 0;
-  text-transform: uppercase;
-  height: 100%;
-  display: flex;
-  align-items: center;
-}
-
-.ticker-track {
-  flex: 1;
-  overflow: hidden;
-  position: relative;
-  height: 100%;
-  display: flex;
-  align-items: center;
-}
-
-.ticker-content {
-  display: flex;
-  gap: 40px;
-  white-space: nowrap;
-  animation: tickerScroll 45s linear infinite;
-  padding-left: 16px;
-}
-
-.ticker-item {
-  font-family: var(--font-serif);
-  font-size: 11px;
-  color: var(--ink-light);
-  white-space: nowrap;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.ticker-item .ticker-skill {
-  font-weight: 600;
-  color: var(--ink);
-}
-
-.ticker-item .ticker-eval {
-  font-style: italic;
-  color: var(--ink-muted);
-}
-
-.ticker-sep {
-  color: var(--ink-faint);
-  font-size: 8px;
-}
-
-@keyframes tickerScroll {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
-}
-
 /* ═══ SECTION I: HEADLINE HERO — Newspaper Chat Input ═══ */
 .section-headline {
   padding-top: 0 !important;
@@ -1319,11 +1245,23 @@ body {
 }
 
 .headline-hero {
-  padding: 40px 0 24px;
+  padding: 64px 0 40px;
   max-width: var(--max-w);
   margin: 0 auto;
   padding-left: 24px;
   padding-right: 24px;
+}
+
+/* Upgrade section heading for AI-era feel */
+.section-headline .section-heading {
+  font-size: 34px;
+  margin-bottom: 12px;
+  letter-spacing: -0.02em;
+  text-align: center;
+}
+
+.section-headline .section-rule {
+  display: none;
 }
 
 .headline-welcome {
@@ -1367,16 +1305,30 @@ body {
 .chat-bubble-wrap {
   width: 100%;
   max-width: var(--max-w);
-  background: #ffffff;
-  border: 1px solid #e0e0e0;
-  border-radius: 28px 28px 0 0;
-  padding: 24px 32px;
+  background: linear-gradient(180deg, #ffffff 0%, #fcfbf8 100%);
+  border: 1.5px solid #e4e0d9;
+  border-radius: 24px;
+  padding: 36px 44px;
   display: flex;
   flex-direction: column;
   gap: 0;
   position: relative;
   transition: background 0.3s ease, color 0.3s ease, border-color 0.3s ease, opacity 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
-  min-height: 260px;
+  min-height: 360px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02), 0 8px 40px rgba(0, 0, 0, 0.04);
+}
+
+/* Subtle AI-era accent: thin gradient line at the top */
+.chat-bubble-wrap::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 24px;
+  right: 24px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent 0%, var(--coral) 20%, var(--periwinkle) 50%, var(--teal) 80%, transparent 100%);
+  opacity: 0.5;
+  border-radius: 2px;
 }
 
 /* State: has content being edited */
@@ -1614,19 +1566,30 @@ body {
   margin-top: 28px;
 }
 
+.voices-ticker-wrap {
+  overflow: hidden;
+  width: 100%;
+  position: relative;
+  padding-bottom: 8px;
+  -webkit-mask-image: linear-gradient(to right, transparent 0, black 60px, black calc(100% - 60px), transparent 100%);
+          mask-image: linear-gradient(to right, transparent 0, black 60px, black calc(100% - 60px), transparent 100%);
+}
+
 .voices-container {
   display: flex;
   flex-direction: row;
   gap: 12px;
-  overflow-x: auto;
-  scroll-behavior: smooth;
-  padding-bottom: 8px;
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+  width: max-content;
+  animation: voicesScroll 80s linear infinite;
 }
 
-.voices-container::-webkit-scrollbar {
-  display: none;
+.voices-ticker-wrap:hover .voices-container {
+  animation-play-state: paused;
+}
+
+@keyframes voicesScroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
 }
 
 .voice-item {
@@ -1699,15 +1662,39 @@ body {
   color: var(--ink-muted);
 }
 
-/* ═══ ENLARGED CHAT INPUT ═══ */
+/* ═══ ENLARGED CHAT INPUT — AI Era Feel ═══ */
 .chat-bubble-input {
-  font-size: 16px;
-  padding: 20px;
-  min-height: 120px;
+  font-size: 18px;
+  padding: 24px 0;
+  min-height: 200px;
+  max-height: 400px;
+  line-height: 1.65;
 }
 
-.chat-bubble-wrap {
-  border: 2px solid #e0e0e0;
+.chat-bubble-invite {
+  font-size: 17px;
+  line-height: 1.65;
+  padding: 12px 0;
+}
+
+.btn-chat-send {
+  font-size: 14px;
+  padding: 12px 28px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  transition: background 0.25s ease, transform 0.2s ease, box-shadow 0.25s ease;
+}
+
+.btn-chat-send:hover {
+  background: linear-gradient(135deg, var(--periwinkle) 0%, var(--teal) 100%);
+  box-shadow: 0 4px 16px rgba(58, 154, 140, 0.25);
+  transform: translateY(-1px);
+}
+
+.chat-bubble-footer {
+  padding-top: 18px;
+  border-top: 1px solid #f0ede5;
 }
 
 /* CHAT INPUT SECTION */
@@ -5184,12 +5171,13 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
     width: 100%;
   }
   .voices-container {
-    grid-template-columns: repeat(2, 1fr);
     gap: 10px;
   }
   .voice-item {
     padding: 12px;
-    min-height: 90px;
+    min-width: 260px;
+    width: 260px;
+    min-height: 140px;
   }
   .voice-quote {
     font-size: 13px;

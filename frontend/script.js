@@ -182,7 +182,6 @@ document.addEventListener('DOMContentLoaded', () => {
   initPlayground();
   initPlaygroundShowcase();
   initSkillsFeed();
-  initVoiceTicker();
   initHeadlineHero();
   initCreativeTriptych();
   initSkillPackageDownload();
@@ -4362,32 +4361,6 @@ function displayRandomPlaygroundTask(source = 'showcase') {
   }
 }
 
-/* ═══ VOICE OF TODAY TICKER ═══ */
-function initVoiceTicker() {
-  const tickerContent = document.getElementById('tickerContent');
-  if (!tickerContent) return;
-
-  const evaluations = [
-    { skill: 'Grandma Filter', eval: 'teaches AI to respect the unsaid' },
-    { skill: 'Slow Reader', eval: 'pauses to understand complexity' },
-    { skill: 'Grief Protocol', eval: 'presence over solutions' },
-    { skill: 'Childhood Compass', eval: 'protects wonder' },
-    { skill: 'Silence as Feature', eval: 'trusting human intuition' },
-    { skill: 'Craft Before Scale', eval: 'quality over velocity' },
-    { skill: 'Material Honesty', eval: 'admits what it cannot do' },
-  ];
-
-  const html = evaluations.map(e =>
-    `<div class="ticker-item">
-      <span class="ticker-skill">${e.skill}</span>
-      <span class="ticker-sep">·</span>
-      <span class="ticker-eval">${e.eval}</span>
-    </div>`
-  ).join('');
-
-  tickerContent.innerHTML = html + html; // Duplicate for seamless loop
-}
-
 /* ═══ COMMUNITY VOICES FROM 42 POST ═══ */
 function generateCommunityVoices() {
   const voicesEn = [
@@ -4417,12 +4390,15 @@ function populateCommunityVoices() {
 
   const voices = generateCommunityVoices();
 
-  container.innerHTML = voices.map((voice, idx) => `
+  const itemsHtml = voices.map((voice, idx) => `
     <div class="voice-item">
       <div class="voice-quote">"${voice.feedback}"</div>
       <div class="voice-attribution">— ${voice.author}, on <span class="voice-skill-name">${voice.skillTitle}</span></div>
     </div>
   `).join('');
+
+  // Duplicate content for seamless infinite scrolling loop
+  container.innerHTML = itemsHtml + itemsHtml;
 }
 
 /* ═══ HEADLINE HERO & ETHICS CHECK ═══ */
@@ -5690,7 +5666,6 @@ function showAgentArchive() {
   const hideSelectors = [
     '.global-header',
     '.manifesto-strip',
-    '#voiceTicker',
     '#sectionHeadline',
     '.section-breath',
     '#sectionCreative',
@@ -5724,7 +5699,6 @@ function showMainPage() {
   const showSelectors = [
     '.global-header',
     '.manifesto-strip',
-    '#voiceTicker',
     '#sectionHeadline',
     '.section-breath',
     '#sectionCreative',

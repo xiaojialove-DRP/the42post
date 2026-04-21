@@ -79,16 +79,6 @@
     </div>
   </div>
 
-  <!-- ═══════════════ SKILL OF TODAY — Scrolling Ticker ═══════════════ -->
-  <div class="voice-ticker" id="voiceTicker">
-    <div class="ticker-label" data-i18n="ticker_label">SKILL OF TODAY</div>
-    <div class="ticker-track">
-      <div class="ticker-content" id="tickerContent">
-        <!-- Populated by JS — real-time taste skill evaluations -->
-      </div>
-    </div>
-  </div>
-
   <!-- ═══════════════ SECTION I: HEADLINE — Chat-style Dialogue ═══════════════ -->
   <section class="section section-headline" id="sectionHeadline">
     <div class="headline-hero">
@@ -132,10 +122,12 @@
           <a href="#" class="nav-link" data-action="about">About</a>
         </div>
 
-        <!-- Community Voices List Section -->
+        <!-- Community Voices Auto-Scrolling Ticker -->
         <div class="community-voices-list">
-          <div class="voices-container" id="voicesContainer">
-            <!-- Populated by JS with simple community feedback items -->
+          <div class="voices-ticker-wrap">
+            <div class="voices-container" id="voicesContainer">
+              <!-- Populated by JS with community feedback items (duplicated for seamless loop) -->
+            </div>
           </div>
         </div>
       </div>
