@@ -469,7 +469,7 @@ const I18N = {
     footer_about_text: 'An open research community where anyone can turn personal values and fragments of thought into verifiable AI Skills.',
     about_main_text: 'An open research community where anyone can turn personal values and fragments of thought into verifiable AI Skills.',
     btn_howto: 'HOW IT WORKS',
-    section_1: 'I. Share Your Idea',
+    section_1: 'What should AI learn from you?',
     section_2: 'II. New Skill Story',
     section_3: 'III. Most Starred Skills',
     ticker_label: 'SKILL OF TODAY',
@@ -535,7 +535,7 @@ const I18N = {
     footer_about_text: '一个所有人都可以参与AI价值观塑造的开放研究社区。',
     about_main_text: '一个所有人都可以参与AI价值观塑造的开放研究社区。',
     btn_howto: '怎么玩',
-    section_1: 'I. 分享你的想法',
+    section_1: 'AI 应该向你学什么？',
     section_2: 'II. 新技能故事',
     section_3: 'III. 最受欢迎的技能',
     ticker_label: '今日技能',
@@ -4367,6 +4367,7 @@ function generateCommunityVoices() {
     { author: 'Maya L.', skillTitle: 'The Poetic Bridge', feedback: 'Been struggling to explain aesthetic choices to engineers. This finally lets me teach taste without writing a thesis.' },
     { author: 'Dr. Hassan', skillTitle: 'Material Honesty', feedback: 'The first time I saw an AI admit "I don\'t know this"—and I actually believed it. That changed everything.' },
     { author: 'Yuki M.', skillTitle: 'Analog Intuition', feedback: 'My grandmother\'s way of making decisions—what I thought was outdated—might be exactly what AI needs to learn.' },
+    { author: 'Marcus R.', skillTitle: '—', feedback: 'Honestly? I\'m skeptical. Can "taste" really be taught to a model, or are we just projecting meaning onto statistical patterns? Still here though—watching.', skeptical: true },
     { author: 'James Chen', skillTitle: 'Dissent Amplifier', feedback: 'Tired of consensus. This skill says: sometimes the minority voice matters more than being agreeable.' },
     { author: 'Priya S.', skillTitle: 'Temporal Ripples', feedback: 'Finally, someone asking: what are the cost of this tech on cultures 50 years from now? Not just next quarter.' },
     { author: 'Olaf H.', skillTitle: 'Friction by Design', feedback: 'We made everything instant. But maybe some decisions deserve to be slow. This taught AI that slowness can be moral.' },
@@ -4376,6 +4377,7 @@ function generateCommunityVoices() {
     { author: 'Maya L.', skillTitle: 'The Poetic Bridge', feedback: '一直在努力向工程师解释美学选择。这个框架终于让我不用写论文就能教 AI 理解想法。' },
     { author: 'Dr. Hassan', skillTitle: 'Material Honesty', feedback: '第一次看到 AI 说"我不知道"——而且我真的相信它。这改变了一切。' },
     { author: 'Yuki M.', skillTitle: 'Analog Intuition', feedback: '我奶奶的决策方式——我以为早就过时了——可能正是 AI 需要学习的。' },
+    { author: 'Marcus R.', skillTitle: '—', feedback: '说实话？我是怀疑的。"品味"真的能教给模型吗，还是我们只是在统计规律上投射意义？但我还在这儿——观望着。', skeptical: true },
     { author: 'James Chen', skillTitle: 'Dissent Amplifier', feedback: '厌倦了和谐。这个技能说的是：有时少数声音比顺从更重要。' },
     { author: 'Priya S.', skillTitle: 'Temporal Ripples', feedback: '终于有人问：50年后，这项技术对文化的代价是什么？而不只是下个季度的收益。' },
     { author: 'Olaf H.', skillTitle: 'Friction by Design', feedback: '我们把一切都做成了即时的。但也许有些决定值得慢下来。这教会了 AI 缓慢也能是道德的。' },
@@ -4390,12 +4392,17 @@ function populateCommunityVoices() {
 
   const voices = generateCommunityVoices();
 
-  const itemsHtml = voices.map((voice, idx) => `
-    <div class="voice-item">
+  const itemsHtml = voices.map((voice, idx) => {
+    const attribution = voice.skeptical
+      ? `— ${voice.author} <span class="voice-tag-skeptical">skeptic</span>`
+      : `— ${voice.author}, on <span class="voice-skill-name">${voice.skillTitle}</span>`;
+    return `
+    <div class="voice-item${voice.skeptical ? ' voice-item-skeptical' : ''}">
       <div class="voice-quote">"${voice.feedback}"</div>
-      <div class="voice-attribution">— ${voice.author}, on <span class="voice-skill-name">${voice.skillTitle}</span></div>
+      <div class="voice-attribution">${attribution}</div>
     </div>
-  `).join('');
+  `;
+  }).join('');
 
   // Duplicate content for seamless infinite scrolling loop
   container.innerHTML = itemsHtml + itemsHtml;

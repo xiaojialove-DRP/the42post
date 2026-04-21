@@ -1582,7 +1582,7 @@ body {
   flex-wrap: nowrap !important;
   gap: 12px;
   width: max-content;
-  animation: voicesScroll 80s linear infinite;
+  animation: voicesScroll 45s linear infinite;
   will-change: transform;
 }
 
@@ -1635,6 +1635,31 @@ body {
   color: var(--teal);
   font-style: italic;
   font-weight: 600;
+}
+
+/* Skeptical voice — subtle differentiation to signal authenticity */
+.voice-item-skeptical {
+  background: #fafafa;
+  border-style: dashed;
+  border-color: #d4c9b8;
+}
+
+.voice-item-skeptical .voice-quote {
+  color: var(--ink-light);
+}
+
+.voice-tag-skeptical {
+  display: inline-block;
+  margin-left: 4px;
+  padding: 1px 6px;
+  font-size: 8px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--coral);
+  border: 1px solid var(--coral);
+  border-radius: 3px;
+  font-weight: 500;
+  font-style: normal;
 }
 
 /* ═══ HEADLINE NAVIGATION ═══ */
@@ -1857,19 +1882,18 @@ body {
   transition: opacity 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
   pointer-events: none;
   background: #ffffff;
-  border: 1px solid #e0e0e0;
-  border-top: none;
-  border-radius: 0 0 28px 28px;
+  border: 1.5px solid #e4e0d9;
+  border-radius: 24px;
   padding: 0;
-  position: absolute;
-  visibility: hidden;
+  display: none;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02), 0 8px 40px rgba(0, 0, 0, 0.04);
 }
 
 .ethics-result.visible {
   opacity: 1;
   transform: translateY(0);
   pointer-events: auto;
-  visibility: visible;
+  display: block;
 }
 
 .ethics-pass, .ethics-fail {
