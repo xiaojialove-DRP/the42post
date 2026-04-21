@@ -1671,6 +1671,49 @@ body {
   font-weight: 600;
 }
 
+/* ═══ HEADLINE NAVIGATION ═══ */
+.headline-nav {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin-top: 24px;
+  margin-bottom: 32px;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+}
+
+.nav-link {
+  color: var(--ink-muted);
+  text-decoration: none;
+  transition: color 0.2s;
+  cursor: pointer;
+  font-family: var(--font-mono);
+}
+
+.nav-link:hover {
+  color: var(--ink);
+}
+
+.nav-divider {
+  color: var(--ink-muted);
+}
+
+/* ═══ ENLARGED CHAT INPUT ═══ */
+.chat-bubble-input {
+  font-size: 16px;
+  padding: 20px;
+  min-height: 120px;
+}
+
+.chat-bubble-section {
+  max-width: 100%;
+}
+
+.chat-bubble-wrap {
+  border-width: 2px;
+}
+
 /* CHAT INPUT SECTION */
 .headline-input-wrap {
   border: 2px solid var(--ink);
