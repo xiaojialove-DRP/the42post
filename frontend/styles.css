@@ -5209,7 +5209,6 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
   height: 70vh;
   min-height: 500px;
   width: 100%;
-  max-width: 1400px;
 }
 
 .av-canvas-wrap {
