@@ -21,7 +21,7 @@ async function testConnection() {
 
   // TEST 1: Environment Variables
   console.log('📋 TEST 1: Environment Variables');
-  const required = ['DATABASE_URL', 'JWT_SECRET', 'SIGNING_SECRET', 'ANTHROPIC_API_KEY'];
+  const required = ['DATABASE_URL', 'JWT_SECRET', 'SIGNING_SECRET', 'GEMINI_API_KEY'];
   for (const key of required) {
     if (process.env[key]) {
       console.log(`  ✅ ${key}`);
@@ -81,13 +81,13 @@ async function testConnection() {
     failed++;
   }
 
-  // TEST 5: Claude API
-  console.log('\n🤖 TEST 5: Claude API Key');
-  if (process.env.ANTHROPIC_API_KEY?.startsWith('sk-ant-')) {
-    console.log(`  ✅ ANTHROPIC_API_KEY present`);
+  // TEST 5: Gemini API
+  console.log('\n🤖 TEST 5: Gemini API Key');
+  if (process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY.length > 10) {
+    console.log(`  ✅ GEMINI_API_KEY present (model: ${process.env.GEMINI_MODEL || 'gemini-2.5-flash'})`);
     passed++;
   } else {
-    console.log(`  ⚠️  ANTHROPIC_API_KEY invalid or missing (required for /forge endpoints)`);
+    console.log(`  ⚠️  GEMINI_API_KEY invalid or missing (required for /forge endpoints)`);
     failed++;
   }
 

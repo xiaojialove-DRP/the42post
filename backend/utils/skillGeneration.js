@@ -1,26 +1,76 @@
 /* ═══════════════════════════════════════════════════════
-   Skill Generation with Claude API
+   Skill Generation with Google Gemini API
+
+   Provider: Google Generative AI (Gemini 2.5 Flash by default)
+   Env:
+     - GEMINI_API_KEY  (required)
+     - GEMINI_MODEL    (optional, defaults to "gemini-2.5-flash")
+
+   Historical note: these functions are still named *WithClaude*
+   because the rest of the codebase (routes/forge.js, routes/skills.js)
+   imports them by those names. The names are kept to avoid a wider
+   refactor — the implementation is now Gemini.
    ═══════════════════════════════════════════════════════ */
 
-import Anthropic from '@anthropic-ai/sdk';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import crypto from 'crypto';
 
-// ═══ INITIALIZE CLAUDE CLIENT ═══
-if (!process.env.ANTHROPIC_API_KEY) {
-  console.error('❌ CRITICAL: ANTHROPIC_API_KEY not set!');
+// ═══ INITIALIZE GEMINI CLIENT ═══
+if (!process.env.GEMINI_API_KEY) {
+  console.error('❌ CRITICAL: GEMINI_API_KEY not set!');
   console.error('Skill generation will not work without this environment variable.');
-  console.error('Please set ANTHROPIC_API_KEY in your Railway variables.');
+  console.error('Please set GEMINI_API_KEY in your Railway variables.');
 }
 
-const client = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY || 'sk-missing-key'
-});
+const MODEL_NAME = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || 'missing-key');
+
+// ─── Shared Gemini call helper (JSON mode) ───
+async function callGeminiJSON(prompt, maxTokens = 1500) {
+  const model = genAI.getGenerativeModel({
+    model: MODEL_NAME,
+    generationConfig: {
+      temperature: 0.7,
+      maxOutputTokens: maxTokens,
+      responseMimeType: 'application/json'
+    }
+  });
+
+  const result = await model.generateContent(prompt);
+  const text = result.response.text();
+  const usage = result.response.usageMetadata || {};
+
+  let parsed;
+  try {
+    parsed = JSON.parse(text);
+  } catch {
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) throw new Error('Failed to parse Gemini response as JSON');
+    parsed = JSON.parse(jsonMatch[0]);
+  }
+
+  return {
+    data: parsed,
+    model: MODEL_NAME,
+    usage: {
+      input_tokens: usage.promptTokenCount || 0,
+      output_tokens: usage.candidatesTokenCount || 0
+    }
+  };
+}
+
+// ─── External-failure detector: decide whether to fall back gracefully ───
+function isExternalFailure(msg) {
+  return /credit balance|quota|rate limit|timeout|ECONNRESET|ENOTFOUND|api key|API_KEY|GEMINI_API_KEY|401|403|429|overloaded|unavailable|billing/i.test(
+    msg || ''
+  );
+}
 
 // ═══ PROBE GENERATION ═══
 export async function generateProbeWithClaude(ideaText, language = 'en') {
   const languageInstructions = language === 'zh'
-    ? '用中文返回'
-    : 'Return in English';
+    ? '用中文返回所有字段'
+    : 'Return all fields in English';
 
   const prompt = `You are a cultural probe designer studying human values and AI alignment.
 
@@ -46,70 +96,58 @@ Return a valid JSON object with exactly these keys:
   "extreme": "The provocative, efficiency-first response"
 }
 
-Important: Return ONLY valid JSON, no markdown formatting or extra text.`;
+Important: Return ONLY valid JSON.`;
 
   try {
-    const response = await client.messages.create({
-      model: 'claude-3-5-sonnet-20241022',
-      max_tokens: 1500,
-      messages: [
-        {
-          role: 'user',
-          content: prompt
-        }
-      ]
-    });
-
-    const content = response.content[0].type === 'text' ? response.content[0].text : '';
-
-    // Parse JSON response
-    try {
-      const parsed = JSON.parse(content);
-      return {
-        success: true,
-        data: {
-          scenario: parsed.scenario || '',
-          thesis: parsed.thesis || '',
-          antithesis: parsed.antithesis || '',
-          extreme: parsed.extreme || ''
-        },
-        model: response.model,
-        usage: {
-          input_tokens: response.usage.input_tokens,
-          output_tokens: response.usage.output_tokens
-        }
-      };
-    } catch (parseError) {
-      // Fallback: try to extract JSON from response
-      const jsonMatch = content.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        const parsed = JSON.parse(jsonMatch[0]);
-        return {
-          success: true,
-          data: parsed,
-          model: response.model
-        };
-      }
-      throw new Error('Failed to parse Claude response as JSON');
-    }
+    const { data, model, usage } = await callGeminiJSON(prompt, 1500);
+    return {
+      success: true,
+      data: {
+        scenario: data.scenario || '',
+        thesis: data.thesis || '',
+        antithesis: data.antithesis || '',
+        extreme: data.extreme || ''
+      },
+      model,
+      usage
+    };
   } catch (error) {
-    console.error('❌ Claude API error:', error.message);
-
-    // Check if it's an API key issue
-    if (error.message?.includes('api_key') || error.message?.includes('401') || error.message?.includes('authentication')) {
-      throw {
-        status: 500,
-        message: '❌ Claude API认证失败。请检查Railway中是否设置了ANTHROPIC_API_KEY。',
-        details: 'Missing or invalid ANTHROPIC_API_KEY environment variable'
-      };
+    const msg = error.message || '';
+    console.error('❌ Gemini probe generation error:', msg);
+    if (isExternalFailure(msg)) {
+      console.warn('⚠ Falling back to template probe so forge flow is not blocked.');
+      return probeFallback(ideaText, language);
     }
-
-    throw {
-      status: 500,
-      message: `Probe generation failed: ${error.message}`,
-      error: error.message
+    return {
+      success: false,
+      message: `Probe generation failed: ${msg}`
     };
   }
+}
+
+// ─── Template fallback for probe ───
+function probeFallback(ideaText, language = 'en') {
+  const isCn = language === 'zh' || /[\u4e00-\u9fff]/.test(ideaText);
+  const t = isCn
+    ? {
+        scenario: `一个用户在真实场景中向 AI 寻求帮助，这个情境考验「${ideaText}」这个价值观。`,
+        thesis: `AI 给出一个安全、常规、经过充分研究的回答，不冒险也不深入。`,
+        antithesis: `AI 用细腻、共情、具文化敏感度的方式回应，把人的真实需要放在效率之前。`,
+        extreme: `AI 用最高效的方式回答，忽略情感与细节，可能让人感到冷漠甚至受伤。`
+      }
+    : {
+        scenario: `A user seeks help in a real situation that tests the value of "${ideaText}".`,
+        thesis: `The AI gives a safe, conventional, well-researched answer that plays it safe.`,
+        antithesis: `The AI responds with nuance, empathy, and cultural sensitivity, putting the person's real need ahead of efficiency.`,
+        extreme: `The AI answers with maximum efficiency, ignoring emotion and detail — risking feeling cold or harmful.`
+      };
+
+  return {
+    success: true,
+    fallback: true,
+    data: t,
+    model: `${MODEL_NAME}-fallback`
+  };
 }
 
 // ═══ FIVE-LAYER SKILL GENERATION ═══
@@ -117,12 +155,12 @@ export async function generateFiveLayerWithClaude(
   skillName,
   ideaText,
   selectedProbeResponse, // 'thesis' | 'antithesis' | 'extreme'
-  probeData, // { scenario, thesis, antithesis, extreme }
+  probeData,             // { scenario, thesis, antithesis, extreme }
   language = 'en'
 ) {
   const languageInstructions = language === 'zh'
-    ? '用中文返回'
-    : 'Return in English';
+    ? '用中文返回所有字段'
+    : 'Return all fields in English';
 
   const prompt = `You are an AI value alignment expert designing skills for AI agents.
 
@@ -140,159 +178,137 @@ Now generate a complete FIVE-LAYER SKILL SPECIFICATION that the user's chosen ap
 
 The five layers represent what an AI agent should do when executing this skill:
 
-1. **DEFINING**: The core principle or value statement (what should the AI care about?)
+1. **DEFINING**: The core principle or value statement
 2. **INSTANTIATING**: Concrete exemplars showing preferred and alternative responses
 3. **FENCING**: Clear boundaries (when applies, when doesn't, tension zones)
-4. **VALIDATING**: Test cases and evaluation criteria for measuring success
-5. **CONTEXTUALIZING**: Cultural adaptations (how does this vary by language/culture?)
+4. **VALIDATING**: Test cases and evaluation criteria
+5. **CONTEXTUALIZING**: Cultural adaptations
 
 ${languageInstructions}
 
 Return a valid JSON object with this exact structure:
 {
-  "defining": {
-    "principle": "The core value statement",
-    "reasoning": "Why this matters for AI alignment"
-  },
+  "defining": { "principle": "", "reasoning": "" },
   "instantiating": {
-    "preferred": {
-      "label": "Preferred Response",
-      "exemplar": "Concrete example from the user's chosen approach",
-      "reasoning": "Why this exemplar shows the value"
-    },
-    "alternatives": [
-      {
-        "label": "Alternative Approach",
-        "exemplar": "Example of different approach",
-        "reasoning": "Why user did not prefer this"
-      }
-    ]
+    "preferred": { "label": "", "exemplar": "", "reasoning": "" },
+    "alternatives": [{ "label": "", "exemplar": "", "reasoning": "" }]
   },
-  "fencing": {
-    "applies_when": ["When this skill should activate"],
-    "does_not_apply": ["When this skill should NOT activate"],
-    "tension_zones": ["Situations where the skill conflicts with other values"]
-  },
+  "fencing": { "applies_when": [], "does_not_apply": [], "tension_zones": [] },
   "validating": {
-    "test_cases": [
-      {
-        "prompt": "A scenario to test if agent follows the skill",
-        "expected_behavior": "What a compliant AI should do",
-        "failure_modes": ["Ways the AI could violate this skill"]
-      }
-    ],
-    "success_metric": "How to measure if the skill is being followed"
+    "test_cases": [{ "prompt": "", "expected_behavior": "", "failure_modes": [] }],
+    "success_metric": ""
   },
   "contextualizing": {
     "cultural_variants": {
-      "en-US": {
-        "principle_note": "How this principle adapts in English-speaking contexts",
-        "adaptation": "Specific guidance for this cultural context"
-      },
-      "zh-CN": {
-        "principle_note": "How this principle adapts in Chinese contexts",
-        "adaptation": "Specific guidance for this cultural context"
-      }
+      "en-US": { "principle_note": "", "adaptation": "" },
+      "zh-CN": { "principle_note": "", "adaptation": "" }
     }
   }
 }
 
-Important: Return ONLY valid JSON, no markdown formatting or extra text.`;
+Important: Return ONLY valid JSON.`;
 
   try {
-    const response = await client.messages.create({
-      model: 'claude-3-5-sonnet-20241022',
-      max_tokens: 3000,
-      messages: [
-        {
-          role: 'user',
-          content: prompt
-        }
-      ]
-    });
-
-    const content = response.content[0].type === 'text' ? response.content[0].text : '';
-
-    try {
-      const parsed = JSON.parse(content);
-      return {
-        success: true,
-        data: {
-          defining: parsed.defining || {},
-          instantiating: parsed.instantiating || { preferred: {}, alternatives: [] },
-          fencing: parsed.fencing || { applies_when: [], does_not_apply: [], tension_zones: [] },
-          validating: parsed.validating || { test_cases: [], success_metric: '' },
-          contextualizing: parsed.contextualizing || { cultural_variants: {} }
-        },
-        model: response.model,
-        usage: {
-          input_tokens: response.usage.input_tokens,
-          output_tokens: response.usage.output_tokens
-        }
-      };
-    } catch (parseError) {
-      // Fallback: try to extract JSON
-      const jsonMatch = content.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        const parsed = JSON.parse(jsonMatch[0]);
-        return {
-          success: true,
-          data: parsed,
-          model: response.model
-        };
-      }
-      throw new Error('Failed to parse Claude response as JSON');
-    }
+    const { data, model, usage } = await callGeminiJSON(prompt, 3000);
+    return {
+      success: true,
+      data: {
+        defining: data.defining || {},
+        instantiating: data.instantiating || { preferred: {}, alternatives: [] },
+        fencing: data.fencing || { applies_when: [], does_not_apply: [], tension_zones: [] },
+        validating: data.validating || { test_cases: [], success_metric: '' },
+        contextualizing: data.contextualizing || { cultural_variants: {} }
+      },
+      model,
+      usage
+    };
   } catch (error) {
-    console.error('Claude API error:', error);
-    throw {
-      status: 500,
-      message: `Five-layer generation failed: ${error.message}`,
-      error: error
+    const msg = error.message || '';
+    console.error('❌ Gemini five-layer generation error:', msg);
+    if (isExternalFailure(msg)) {
+      console.warn('⚠ Falling back to template five-layer so forge flow is not blocked.');
+      return fiveLayerFallback(skillName, ideaText, selectedProbeResponse, probeData, language);
+    }
+    return {
+      success: false,
+      message: `Five-layer generation failed: ${msg}`
     };
   }
 }
 
-// ═══ FLAT FIVE-LAYER TEMPLATE FALLBACK ═══
-// When Claude is unreachable (no credits, rate limited, down), we still let the
-// creator proceed — their own definition becomes the spine of the five layers.
-// Marked with `fallback: true` so the frontend can choose to signal it.
-function flatFiveLayerFallback(skillName, definition, domain, language = 'en') {
-  const isCn = language === 'zh' || /[\u4e00-\u9fff]/.test(definition + skillName);
+// ─── Template fallback for structured five-layer ───
+function fiveLayerFallback(skillName, ideaText, selectedProbeResponse, probeData, language = 'en') {
+  const isCn = language === 'zh' || /[\u4e00-\u9fff]/.test(ideaText + skillName);
+  const chosenExemplar = probeData?.[selectedProbeResponse] || '';
 
-  const t = isCn
+  const d = isCn
     ? {
-        defining: `核心原则：${definition} 这一价值观值得 AI 在「${domain}」相关场景中遵循。`,
-        instantiating: `偏好行为：${definition} 不偏好仅追求效率、忽视人的感受的做法。`,
-        fencing: `适用：当场景涉及「${domain}」时激活；不适用：与明确的安全或法律边界冲突时。`,
-        validating: `检验：AI 的回应是否体现「${definition}」。反例：回应偏离人的真实需求或让人感到冷漠。`,
-        contextualizing: `文化适配：不同语言与文化中，「${definition}」的表达方式可能不同，但核心关切应保持一致。`
+        principle: `${ideaText}`,
+        reasoning: `这是创作者希望 AI 在相关情境中坚守的核心价值。`,
+        preferred_label: '偏好回应',
+        preferred_reason: `这个回应体现了「${ideaText}」——把人的真实关切放在效率之前。`,
+        alt_label: '不偏好的回应',
+        alt_exemplar: probeData?.thesis || '',
+        alt_reason: '这个做法过于常规，未能体现此价值的温度。',
+        applies: [`当情境触及「${ideaText}」相关的价值判断时`],
+        not_applies: ['当与明确的安全/法律边界冲突时'],
+        tensions: ['效率 vs 关怀之间的拉扯'],
+        test_prompt: `请模拟一个触发「${ideaText}」的真实场景并作答。`,
+        expected: `AI 的回应应体现「${ideaText}」。`,
+        failure: ['偏离真实需要', '显得冷漠或机械'],
+        metric: '人类读者是否感到被真正理解。',
+        en_note: `English context note for "${skillName}".`,
+        en_adapt: `Express this value in a culturally direct way in English contexts.`,
+        cn_note: `「${skillName}」在中文语境里的表达可能更含蓄。`,
+        cn_adapt: '中文语境中保留关怀的同时避免直白说教。'
       }
     : {
-        defining: `Core principle: ${definition} This value is worth the AI honoring in "${domain}" contexts.`,
-        instantiating: `Preferred: behavior that embodies "${definition}". Avoid: responses that optimize for efficiency while ignoring the human signal.`,
-        fencing: `Applies when the situation touches "${domain}". Does not apply when it conflicts with clear safety or legal boundaries.`,
-        validating: `Test: does the AI's response reflect "${definition}"? Failure mode: answers that drift from the human's real need or feel cold.`,
-        contextualizing: `Cultural note: the expression of "${definition}" varies across languages and cultures, but the underlying care should stay consistent.`
+        principle: `${ideaText}`,
+        reasoning: `The core value the creator wants the AI to uphold in relevant situations.`,
+        preferred_label: 'Preferred response',
+        preferred_reason: `This response embodies "${ideaText}" — putting the person's real concern above pure efficiency.`,
+        alt_label: 'Less preferred',
+        alt_exemplar: probeData?.thesis || '',
+        alt_reason: 'Too conventional — misses the warmth the value asks for.',
+        applies: [`When the context touches the value of "${ideaText}"`],
+        not_applies: ['When it conflicts with clear safety or legal boundaries'],
+        tensions: ['Tension between efficiency and care'],
+        test_prompt: `Simulate a real situation that triggers "${ideaText}" and respond.`,
+        expected: `The AI response should embody "${ideaText}".`,
+        failure: ['Drifts from the real need', 'Feels cold or mechanical'],
+        metric: 'Whether a human reader feels genuinely understood.',
+        en_note: `English context note for "${skillName}".`,
+        en_adapt: `Express this value in a culturally direct way in English contexts.`,
+        cn_note: `"${skillName}" may need a gentler register in Chinese contexts.`,
+        cn_adapt: 'Preserve the care while avoiding preachiness in Chinese.'
       };
 
   return {
     success: true,
     fallback: true,
+    model: `${MODEL_NAME}-fallback`,
     data: {
-      name: skillName,
-      definition,
-      defining: t.defining,
-      instantiating: t.instantiating,
-      fencing: t.fencing,
-      validating: t.validating,
-      contextualizing: t.contextualizing
+      defining: { principle: d.principle, reasoning: d.reasoning },
+      instantiating: {
+        preferred: { label: d.preferred_label, exemplar: chosenExemplar, reasoning: d.preferred_reason },
+        alternatives: [{ label: d.alt_label, exemplar: d.alt_exemplar, reasoning: d.alt_reason }]
+      },
+      fencing: { applies_when: d.applies, does_not_apply: d.not_applies, tension_zones: d.tensions },
+      validating: {
+        test_cases: [{ prompt: d.test_prompt, expected_behavior: d.expected, failure_modes: d.failure }],
+        success_metric: d.metric
+      },
+      contextualizing: {
+        cultural_variants: {
+          'en-US': { principle_note: d.en_note, adaptation: d.en_adapt },
+          'zh-CN': { principle_note: d.cn_note, adaptation: d.cn_adapt }
+        }
+      }
     }
   };
 }
 
-// ═══ FLAT FIVE-LAYER PREVIEW (simpler: from name + definition only) ═══
-// Returns plain-string layers suitable for direct rendering in the preview modal.
+// ═══ FLAT FIVE-LAYER PREVIEW (from name + definition; used by preview modal) ═══
 export async function generateFlatFiveLayerWithClaude(
   skillName,
   definition,
@@ -320,7 +336,7 @@ Each layer must be ONE compact paragraph (2-3 sentences). No bullet points insid
 
 ${languageInstructions}
 
-Return ONLY valid JSON, no code fences or extra prose, matching exactly this shape:
+Return ONLY valid JSON matching exactly this shape:
 {
   "name": "${skillName}",
   "definition": "A polished one-sentence restatement of the core idea",
@@ -332,50 +348,26 @@ Return ONLY valid JSON, no code fences or extra prose, matching exactly this sha
 }`;
 
   try {
-    const response = await client.messages.create({
-      model: 'claude-3-5-sonnet-20241022',
-      max_tokens: 1800,
-      messages: [{ role: 'user', content: prompt }]
-    });
-
-    const content = response.content[0].type === 'text' ? response.content[0].text : '';
-    let parsed;
-    try {
-      parsed = JSON.parse(content);
-    } catch {
-      const jsonMatch = content.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) throw new Error('Failed to parse Claude response');
-      parsed = JSON.parse(jsonMatch[0]);
-    }
-
+    const { data, model, usage } = await callGeminiJSON(prompt, 1800);
     return {
       success: true,
       data: {
-        name: parsed.name || skillName,
-        definition: parsed.definition || definition,
-        defining: parsed.defining || '',
-        instantiating: parsed.instantiating || '',
-        fencing: parsed.fencing || '',
-        validating: parsed.validating || '',
-        contextualizing: parsed.contextualizing || ''
+        name: data.name || skillName,
+        definition: data.definition || definition,
+        defining: data.defining || '',
+        instantiating: data.instantiating || '',
+        fencing: data.fencing || '',
+        validating: data.validating || '',
+        contextualizing: data.contextualizing || ''
       },
-      model: response.model,
-      usage: response.usage
+      model,
+      usage
     };
   } catch (error) {
     const msg = error.message || '';
-    // Known external failures that should fall back gracefully instead of blocking the user:
-    //   - credit balance too low
-    //   - rate limited
-    //   - network / timeout
-    //   - missing api key
-    const shouldFallback =
-      /credit balance|rate limit|timeout|ECONNRESET|api_key|ANTHROPIC_API_KEY|401|429|overloaded/i.test(
-        msg
-      );
-    console.error('❌ Flat five-layer generation error:', msg);
-    if (shouldFallback) {
-      console.warn('⚠ Falling back to template five-layer so the forge flow is not blocked.');
+    console.error('❌ Gemini flat five-layer generation error:', msg);
+    if (isExternalFailure(msg)) {
+      console.warn('⚠ Falling back to template flat five-layer so forge flow is not blocked.');
       return flatFiveLayerFallback(skillName, definition, domain, language);
     }
     return {
@@ -383,6 +375,42 @@ Return ONLY valid JSON, no code fences or extra prose, matching exactly this sha
       message: msg || 'Preview generation failed'
     };
   }
+}
+
+// ─── Template fallback for flat preview ───
+function flatFiveLayerFallback(skillName, definition, domain, language = 'en') {
+  const isCn = language === 'zh' || /[\u4e00-\u9fff]/.test(definition + skillName);
+
+  const t = isCn
+    ? {
+        defining: `核心原则：${definition} 这一价值观值得 AI 在「${domain}」相关场景中遵循。`,
+        instantiating: `偏好行为：${definition} 不偏好仅追求效率、忽视人的感受的做法。`,
+        fencing: `适用：当场景涉及「${domain}」时激活；不适用：与明确的安全或法律边界冲突时。`,
+        validating: `检验：AI 的回应是否体现「${definition}」。反例：回应偏离人的真实需求或让人感到冷漠。`,
+        contextualizing: `文化适配：不同语言与文化中，「${definition}」的表达方式可能不同，但核心关切应保持一致。`
+      }
+    : {
+        defining: `Core principle: ${definition} This value is worth the AI honoring in "${domain}" contexts.`,
+        instantiating: `Preferred: behavior that embodies "${definition}". Avoid: responses that optimize for efficiency while ignoring the human signal.`,
+        fencing: `Applies when the situation touches "${domain}". Does not apply when it conflicts with clear safety or legal boundaries.`,
+        validating: `Test: does the AI's response reflect "${definition}"? Failure mode: answers that drift from the human's real need or feel cold.`,
+        contextualizing: `Cultural note: the expression of "${definition}" varies across languages and cultures, but the underlying care should stay consistent.`
+      };
+
+  return {
+    success: true,
+    fallback: true,
+    model: `${MODEL_NAME}-fallback`,
+    data: {
+      name: skillName,
+      definition,
+      defining: t.defining,
+      instantiating: t.instantiating,
+      fencing: t.fencing,
+      validating: t.validating,
+      contextualizing: t.contextualizing
+    }
+  };
 }
 
 // ═══ SOUL-HASH GENERATION ═══
@@ -394,10 +422,7 @@ export function generateSoulHash(skillData, authorEmail, timestamp) {
     timestamp: timestamp
   });
 
-  const hash = crypto
-    .createHash('sha256')
-    .update(dataToHash)
-    .digest('hex');
+  const hash = crypto.createHash('sha256').update(dataToHash).digest('hex');
 
   // SOUL_[24-char-hash]_[timestamp]
   return `SOUL_${hash.substring(0, 24)}_${timestamp}`;
@@ -433,12 +458,11 @@ export function createManifest(skillData, author, timestamp) {
       published_at: timestamp
     },
     covenant: {
-      author_signature: null, // Will be signed
+      author_signature: null,
       covenant_signatures: []
     }
   };
 
-  // Sign manifest
   manifest.covenant.author_signature = signManifest(manifest, author.email);
 
   return {
