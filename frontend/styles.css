@@ -5200,7 +5200,8 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
   border-right: 1px solid #d4c8bc;
   overflow: hidden;
   display: flex;
-  justify-content: center;
+  justify-content: stretch;
+  width: 100%;
   max-width: 100%;
 }
 
