@@ -1615,9 +1615,31 @@ body {
 }
 
 .voices-container {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  display: flex;
+  flex-direction: row;
   gap: 12px;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  padding-bottom: 8px;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.voices-container::-webkit-scrollbar {
+  display: none;
+}
+
+.voice-item {
+  padding: 16px;
+  border: 1px solid #e0e0e0;
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 180px;
+  flex-shrink: 0;
+  min-width: 320px;
+  width: 320px;
 }
 
 .voice-item {
