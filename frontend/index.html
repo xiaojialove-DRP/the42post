@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Noto+Serif+SC:wght@400;700;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=68">
+  <link rel="stylesheet" href="styles.css?v=69">
 </head>
 <body data-lang="en">
   <!-- ═══════════════ GLOBAL HEADER ═══════════════ -->
@@ -95,7 +95,7 @@
             </div>
             <textarea class="chat-bubble-input" id="chaosInput" placeholder=""></textarea>
             <div class="chat-bubble-footer">
-              <button class="btn-chat-send" id="btnTest">分享 / Share</button>
+              <button class="btn-chat-send" id="btnTest" data-i18n="btn_share">Share</button>
             </div>
           </div>
 
@@ -117,10 +117,7 @@
         <div class="community-voices-list">
           <div class="voices-header">
             <span class="voices-header-line"></span>
-            <div class="voices-header-text">
-              <span class="voices-header-en">Voices from the Community</span>
-              <span class="voices-header-cn">来自社区的声音</span>
-            </div>
+            <span class="voices-header-text" data-i18n="voices_header">Voices from the Community</span>
             <span class="voices-header-line"></span>
           </div>
           <div class="voices-ticker-wrap">
@@ -914,6 +911,6 @@
   <script>
     console.log('✓ Scripts loaded, SHARED_SKILLS available for rendering');
   </script>
-  <script src="script.js?t=1776900000"></script>
+  <script src="script.js?t=1777000000"></script>
 </body>
 </html>

@@ -1680,14 +1680,7 @@ body {
 }
 
 .voices-header-text {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
   flex-shrink: 0;
-}
-
-.voices-header-en {
   font-family: var(--font-mono);
   font-size: 10px;
   letter-spacing: 2.5px;
@@ -1696,11 +1689,13 @@ body {
   font-weight: 500;
 }
 
-.voices-header-cn {
+/* When page is in Chinese, use serif font and different sizing */
+body[data-lang="cn"] .voices-header-text {
   font-family: var(--font-serif-cn);
   font-size: 13px;
+  letter-spacing: 2px;
+  text-transform: none;
   color: var(--ink-muted);
-  letter-spacing: 1px;
 }
 
 /* ═══ ENLARGED CHAT INPUT — AI Era Feel ═══ */
