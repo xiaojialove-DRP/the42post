@@ -5209,7 +5209,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
     gap: 10px;
   }
   .voice-item {
-    padding: 12px;
+    padding: 14px;
     min-width: 260px;
     width: 260px;
     min-height: 140px;
@@ -5221,11 +5221,229 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
     font-size: 9px;
   }
 }
+
+/* ═══════════════════════════════════════════════════════
+   MOBILE RESPONSIVE — Comprehensive phone/tablet refinements
+   ═══════════════════════════════════════════════════════ */
+
+/* Tablet & phone (≤768px) — overrides & additions */
+@media (max-width: 768px) {
+  /* Homepage hero */
+  .headline-hero {
+    padding: 28px 16px 20px;
+  }
+  .section-headline .section-heading {
+    font-size: 22px;
+    letter-spacing: -0.01em;
+  }
+
+  /* Enlarged chat input — scale down */
+  .chat-bubble-wrap {
+    min-height: 240px !important;
+    padding: 20px 20px !important;
+    border-radius: 18px !important;
+  }
+  .chat-bubble-wrap::before {
+    left: 16px;
+    right: 16px;
+  }
+  .chat-bubble-input {
+    font-size: 15px !important;
+    min-height: 140px !important;
+    padding: 14px 0 !important;
+  }
+  .chat-bubble-invite {
+    font-size: 14px !important;
+    padding: 8px 0 !important;
+  }
+  .btn-chat-send {
+    padding: 10px 22px !important;
+    font-size: 13px !important;
+  }
+  .chat-bubble-footer {
+    flex-direction: row !important;
+    justify-content: flex-end !important;
+    padding-top: 14px !important;
+  }
+
+  /* Ethics result matches new chat-bubble-wrap */
+  .ethics-result {
+    border-radius: 18px;
+  }
+  .ethics-pass, .ethics-fail {
+    flex-direction: column;
+    gap: 12px;
+    padding: 18px 20px;
+    text-align: center;
+  }
+
+  /* Voices header: keep one line, tighter */
+  .voices-header {
+    margin: 32px auto 14px;
+    padding: 0 16px;
+    gap: 12px;
+  }
+  .voices-header-text {
+    font-size: 9px;
+    letter-spacing: 2px;
+  }
+  body[data-lang="cn"] .voices-header-text {
+    font-size: 12px;
+  }
+
+  /* Ticker: narrower cards, faster scroll */
+  .voices-ticker-wrap {
+    -webkit-mask-image: linear-gradient(to right, transparent 0, black 24px, black calc(100% - 24px), transparent 100%);
+            mask-image: linear-gradient(to right, transparent 0, black 24px, black calc(100% - 24px), transparent 100%);
+  }
+
+  /* Global header tightening */
+  .masthead {
+    padding: 16px 0 10px;
+  }
+  .masthead-title {
+    font-size: 44px !important;
+  }
+  .masthead-crest-icon {
+    width: 40px;
+    height: auto;
+  }
+  .masthead-subtitle {
+    font-size: 11px;
+  }
+  .masthead-vol, .masthead-protocol {
+    font-size: 8px;
+  }
+  .header-status-bar {
+    font-size: 8px;
+    letter-spacing: 1.5px;
+  }
+  .header-buttons {
+    justify-content: center;
+    gap: 8px;
+  }
+  .btn-arena, .btn-agent-view, .btn-lang {
+    font-size: 11px;
+    padding: 6px 10px;
+  }
+
+  /* Forge & Probe modals */
+  .forge-modal, .probe-modal-content {
+    width: 94% !important;
+    padding: 20px 18px !important;
+    max-height: 92vh !important;
+    border-radius: 12px !important;
+  }
+  .forge-close {
+    top: 10px;
+    right: 10px;
+    font-size: 16px;
+  }
+  .forge-steps {
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+  .forge-step-line {
+    display: none;
+  }
+  .forge-page-title {
+    font-size: 18px;
+  }
+  .forge-page-subtitle {
+    font-size: 13px;
+  }
+
+  /* Agent Archive tooltip */
+  .star-tooltip {
+    max-width: calc(100vw - 32px);
+    padding: 10px 12px;
+    font-size: 11px;
+  }
 }
 
+/* Small phones (≤480px) — aggressive compact mode */
 @media (max-width: 480px) {
   .vibe-grid { grid-template-columns: 1fr; }
-  .masthead-title { font-size: 40px; }
+
+  /* Masthead — biggest visual impact */
+  .masthead-title {
+    font-size: 32px !important;
+    letter-spacing: -0.01em;
+  }
+  .masthead-crest {
+    gap: 8px !important;
+  }
+  .masthead-crest-icon {
+    width: 32px;
+  }
+
+  /* Header buttons wrap cleanly */
+  .header-buttons {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .nav-separator {
+    display: none;
+  }
+
+  /* Hero heading */
+  .section-headline .section-heading {
+    font-size: 19px !important;
+  }
+
+  /* Chat input — extra snug */
+  .chat-bubble-wrap {
+    min-height: 200px !important;
+    padding: 16px !important;
+    border-radius: 14px !important;
+  }
+  .chat-bubble-wrap::before {
+    left: 12px;
+    right: 12px;
+  }
+  .chat-bubble-input {
+    font-size: 14px !important;
+    min-height: 110px !important;
+  }
+  .chat-bubble-invite {
+    font-size: 13px !important;
+    line-height: 1.55 !important;
+  }
+
+  /* Voice cards full-ish width */
+  .voice-item {
+    min-width: 240px !important;
+    width: 240px !important;
+    min-height: 130px !important;
+    padding: 12px !important;
+  }
+  .voice-quote {
+    font-size: 12px !important;
+    line-height: 1.55;
+  }
+  .voice-attribution {
+    font-size: 8px !important;
+  }
+
+  /* Forge modal — pack tight */
+  .forge-modal, .probe-modal-content {
+    width: 96% !important;
+    padding: 16px 14px !important;
+    border-radius: 10px !important;
+  }
+  .forge-step-label {
+    font-size: 6px;
+    letter-spacing: 0.5px;
+  }
+  .forge-page-title {
+    font-size: 16px;
+  }
+
+  /* Manifesto text smaller */
+  .manifesto-line {
+    font-size: 11px !important;
+    line-height: 1.55;
+  }
 }
 
 /* ═══════════════════════════════════════════════════════

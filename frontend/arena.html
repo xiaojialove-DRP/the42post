@@ -781,6 +781,93 @@
     .creations-header {
       position: relative;
     }
+
+    /* ═══ MOBILE RESPONSIVE ═══ */
+    @media (max-width: 768px) {
+      .workshop-bar {
+        padding: 8px 12px;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .bar-left {
+        gap: 8px;
+        min-width: 0;
+        flex: 1 1 auto;
+      }
+      .bar-logo {
+        font-size: 14px;
+      }
+      .bar-divider {
+        display: none;
+      }
+      .bar-subtitle {
+        font-size: 10px;
+        letter-spacing: 1px;
+      }
+      .bar-right {
+        gap: 6px;
+      }
+      .bar-btn, .btn-back-home {
+        font-size: 10px;
+        padding: 5px 10px;
+        letter-spacing: 0.5px;
+      }
+      .workshop-canvas {
+        padding: 16px 12px;
+      }
+      .task-card {
+        padding: 16px;
+        border-radius: 10px;
+      }
+      .card-title {
+        font-size: 15px;
+      }
+      .card-desc {
+        font-size: 12px;
+      }
+      .card-skill-tag {
+        font-size: 9px;
+        padding: 2px 6px;
+      }
+      .card-btn-start, .card-btn-submit {
+        padding: 8px 14px;
+        font-size: 11px;
+      }
+      .workshop-dock {
+        padding: 8px 12px;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+      .dock-item {
+        padding: 6px 10px;
+        font-size: 10px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .bar-logo { font-size: 13px; }
+      .bar-subtitle { display: none; }
+      .bar-btn, .btn-back-home {
+        font-size: 9px;
+        padding: 4px 8px;
+      }
+      .workshop-canvas { padding: 12px 10px; }
+      .task-card { padding: 14px; }
+      .card-title { font-size: 14px; }
+      .card-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+      }
+      .card-footer {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+      }
+      .card-btn-start, .card-btn-submit {
+        width: 100%;
+      }
+    }
   </style>
 </head>
 <body>
