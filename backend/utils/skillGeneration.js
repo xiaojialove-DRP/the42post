@@ -60,8 +60,11 @@ async function callGeminiJSON(prompt, maxTokens = 1500) {
 }
 
 // ─── External-failure detector: decide whether to fall back gracefully ───
+// Covers both (a) Gemini's own error responses and (b) malformed JSON output
+// that we can't use. When any of these fire, the forge flow degrades to a
+// template-based five-layer instead of returning a 500.
 function isExternalFailure(msg) {
-  return /credit balance|quota|rate limit|timeout|ECONNRESET|ENOTFOUND|api key|API_KEY|GEMINI_API_KEY|401|403|429|overloaded|unavailable|billing/i.test(
+  return /credit balance|quota|rate limit|timeout|ECONNRESET|ENOTFOUND|fetch failed|api key|API_KEY|GEMINI_API_KEY|401|403|429|500|502|503|504|overloaded|unavailable|billing|Failed to parse|JSON|Unexpected token|invalid response/i.test(
     msg || ''
   );
 }

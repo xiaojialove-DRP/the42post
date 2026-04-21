@@ -1,66 +1,101 @@
 /* ═══════════════════════════════════════════════════════
-   Email Service Utility
-   Handles email sending for skill forging confirmations
+   Email Service — Resend (HTTP API)
+
+   Why Resend (not SMTP): Railway blocks outbound SMTP ports
+   (25/465/587) to prevent spam, so nodemailer always times out.
+   Resend uses HTTPS (port 443), works reliably on Railway, and
+   has a generous free tier (3,000 emails / month).
+
+   Env:
+     RESEND_API_KEY   (required) — https://resend.com/api-keys
+     EMAIL_FROM       (optional) — defaults to onboarding@resend.dev
+                                   (Resend's test sender, no domain
+                                   verification needed)
    ═══════════════════════════════════════════════════════ */
 
-import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
-let transporter = null;
+const RESEND_API_KEY = process.env.RESEND_API_KEY;
+const EMAIL_FROM = process.env.EMAIL_FROM || 'onboarding@resend.dev';
+const EMAIL_FROM_NAME = process.env.EMAIL_FROM_NAME || 'THE 42 POST';
 
-// Initialize email transporter
-function initializeEmailTransporter() {
-  // If SMTP is not configured, return a mock transporter for development
-  if (!process.env.SMTP_HOST || !process.env.SMTP_USER) {
-    console.warn('⚠️  WARNING: Email service not configured!');
-    console.warn('   SMTP_HOST or SMTP_USER not set in Railway variables');
-    console.warn('   Emails will NOT be sent to users - only logged to console');
-    console.warn('   To enable email notifications, set these in Railway:');
-    console.warn('   - SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD, SMTP_SECURE');
+// ─── Startup check ───
+if (!RESEND_API_KEY) {
+  console.warn('⚠️  WARNING: RESEND_API_KEY not set!');
+  console.warn('   Emails will NOT be delivered — only logged to console.');
+  console.warn('   Get a key at https://resend.com/api-keys');
+  console.warn('   Then set RESEND_API_KEY in Railway Variables.');
+} else {
+  console.log(`✅ Email service: Resend (from: ${EMAIL_FROM_NAME} <${EMAIL_FROM}>)`);
+}
+
+// ─── Singleton Resend client ───
+let resendClient = null;
+function getResend() {
+  if (!resendClient && RESEND_API_KEY) {
+    resendClient = new Resend(RESEND_API_KEY);
+  }
+  return resendClient;
+}
+
+// ─── Shared send helper ───
+async function sendViaResend({ to, subject, html, text }) {
+  const client = getResend();
+
+  // Dev mode: no key → log & fake success so the app flow isn't blocked
+  if (!client) {
+    console.log(`📧 [DEV MODE - email NOT actually sent] → ${to}`);
+    console.log(`   Subject: ${subject}`);
     return {
-      sendMail: async (options) => {
-        console.log(`📧 [DEV MODE - 邮件未实际发送] Would send to: ${options.to}`);
-        console.log(`   Subject: ${options.subject}`);
-        console.log(`   NOTE: User will NOT receive this email because SMTP is not configured`);
-        return { messageId: 'dev-mode-' + Date.now(), actuallyDelivered: false };
-      }
+      success: false,
+      dev_mode: true,
+      error: 'RESEND_API_KEY not configured',
+      messageId: 'dev-' + Date.now()
     };
   }
 
-  console.log('✅ Email service configured - real emails will be sent');
+  try {
+    const result = await client.emails.send({
+      from: `${EMAIL_FROM_NAME} <${EMAIL_FROM}>`,
+      to,
+      subject,
+      html,
+      text
+    });
 
-
-  return nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: parseInt(process.env.SMTP_PORT || '587', 10),
-    secure: process.env.SMTP_SECURE === 'true', // true for 465, false for other ports
-    auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASSWORD
+    // Resend returns { data: { id }, error: null } on success
+    // or { data: null, error: { message, name } } on failure
+    if (result.error) {
+      console.error('❌ Resend API error:', result.error);
+      return {
+        success: false,
+        error: result.error.message || JSON.stringify(result.error),
+        timestamp: new Date().toISOString()
+      };
     }
-  });
-}
 
-// Get or create transporter
-function getTransporter() {
-  if (!transporter) {
-    transporter = initializeEmailTransporter();
+    const messageId = result.data?.id;
+    console.log(`✓ Email sent to ${to} (id: ${messageId})`);
+    return {
+      success: true,
+      messageId,
+      timestamp: new Date().toISOString()
+    };
+  } catch (error) {
+    console.error('❌ Email sending error:', error.message);
+    return {
+      success: false,
+      error: error.message,
+      timestamp: new Date().toISOString()
+    };
   }
-  return transporter;
 }
 
 /**
- * Send forge success email to creator
- * @param {Object} options - Email options
- * @param {string} options.recipientEmail - Creator's email
- * @param {string} options.recipientName - Creator's name/username
- * @param {string} options.skillTitle - Skill title
- * @param {string} options.soulHash - Soul-Hash identifier
- * @param {string} options.invitationCode - Invitation code
- * @param {string} options.emailHtml - HTML content of the email
- * @returns {Promise<Object>} - Result with messageId or error
+ * Send forge success email to creator.
  */
 export async function sendForgeSuccessEmail(options) {
   const {
@@ -76,16 +111,11 @@ export async function sendForgeSuccessEmail(options) {
     throw new Error('recipientEmail is required');
   }
 
-  try {
-    const transporter = getTransporter();
-
-    const mailOptions = {
-      from: `THE 42 POST <${process.env.SMTP_USER || 'noreply@42post.io'}>`,
-      to: recipientEmail,
-      subject: `✨ 恭喜！你的 Skill 已成功铸造 | YOUR SKILL HAS BEEN FORGED`,
-      html: emailHtml,
-      // Plain text fallback
-      text: `
+  return sendViaResend({
+    to: recipientEmail,
+    subject: `✨ 恭喜！你的 Skill 已成功铸造 | YOUR SKILL HAS BEEN FORGED`,
+    html: emailHtml,
+    text: `
 恭喜！你的 Skill 已成功铸造
 
 标题: ${skillTitle}
@@ -96,67 +126,29 @@ Soul-Hash: ${soulHash}
 
 YOUR SKILL HAS BEEN FORGED
 
-Congratulations on forging your skill!
-      `.trim()
-    };
-
-    const result = await transporter.sendMail(mailOptions);
-
-    console.log(`✓ Email sent successfully to ${recipientEmail}`);
-    return {
-      success: true,
-      messageId: result.messageId,
-      timestamp: new Date().toISOString()
-    };
-  } catch (error) {
-    console.error('❌ Email sending error:', error.message);
-    return {
-      success: false,
-      error: error.message,
-      timestamp: new Date().toISOString()
-    };
-  }
+Congratulations on forging your skill, ${recipientName}!
+    `.trim()
+  });
 }
 
 /**
- * Send verification email for new accounts
- * @param {string} email - Recipient email
- * @param {string} verificationLink - Verification link
- * @returns {Promise<Object>}
+ * Send verification email for new accounts.
  */
 export async function sendVerificationEmail(email, verificationLink) {
-  try {
-    const transporter = getTransporter();
-
-    const mailOptions = {
-      from: `THE 42 POST <${process.env.SMTP_USER || 'noreply@42post.io'}>`,
-      to: email,
-      subject: 'Verify Your THE 42 POST Account',
-      html: `
-        <h2>Welcome to THE 42 POST</h2>
-        <p>Please verify your email address by clicking the link below:</p>
-        <a href="${verificationLink}">Verify Email</a>
-        <p>This link will expire in 24 hours.</p>
-      `
-    };
-
-    const result = await transporter.sendMail(mailOptions);
-    return {
-      success: true,
-      messageId: result.messageId
-    };
-  } catch (error) {
-    console.error('❌ Verification email error:', error.message);
-    return {
-      success: false,
-      error: error.message
-    };
-  }
+  return sendViaResend({
+    to: email,
+    subject: 'Verify Your THE 42 POST Account',
+    html: `
+      <h2>Welcome to THE 42 POST</h2>
+      <p>Please verify your email address by clicking the link below:</p>
+      <p><a href="${verificationLink}">Verify Email</a></p>
+      <p>This link will expire in 24 hours.</p>
+    `,
+    text: `Welcome to THE 42 POST\n\nVerify your email: ${verificationLink}\n\nThis link will expire in 24 hours.`
+  });
 }
 
 export default {
   sendForgeSuccessEmail,
-  sendVerificationEmail,
-  getTransporter,
-  initializeEmailTransporter
+  sendVerificationEmail
 };
