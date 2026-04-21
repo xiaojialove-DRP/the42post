@@ -253,6 +253,44 @@ Important: Return ONLY valid JSON, no markdown formatting or extra text.`;
   }
 }
 
+// ═══ FLAT FIVE-LAYER TEMPLATE FALLBACK ═══
+// When Claude is unreachable (no credits, rate limited, down), we still let the
+// creator proceed — their own definition becomes the spine of the five layers.
+// Marked with `fallback: true` so the frontend can choose to signal it.
+function flatFiveLayerFallback(skillName, definition, domain, language = 'en') {
+  const isCn = language === 'zh' || /[\u4e00-\u9fff]/.test(definition + skillName);
+
+  const t = isCn
+    ? {
+        defining: `核心原则：${definition} 这一价值观值得 AI 在「${domain}」相关场景中遵循。`,
+        instantiating: `偏好行为：${definition} 不偏好仅追求效率、忽视人的感受的做法。`,
+        fencing: `适用：当场景涉及「${domain}」时激活；不适用：与明确的安全或法律边界冲突时。`,
+        validating: `检验：AI 的回应是否体现「${definition}」。反例：回应偏离人的真实需求或让人感到冷漠。`,
+        contextualizing: `文化适配：不同语言与文化中，「${definition}」的表达方式可能不同，但核心关切应保持一致。`
+      }
+    : {
+        defining: `Core principle: ${definition} This value is worth the AI honoring in "${domain}" contexts.`,
+        instantiating: `Preferred: behavior that embodies "${definition}". Avoid: responses that optimize for efficiency while ignoring the human signal.`,
+        fencing: `Applies when the situation touches "${domain}". Does not apply when it conflicts with clear safety or legal boundaries.`,
+        validating: `Test: does the AI's response reflect "${definition}"? Failure mode: answers that drift from the human's real need or feel cold.`,
+        contextualizing: `Cultural note: the expression of "${definition}" varies across languages and cultures, but the underlying care should stay consistent.`
+      };
+
+  return {
+    success: true,
+    fallback: true,
+    data: {
+      name: skillName,
+      definition,
+      defining: t.defining,
+      instantiating: t.instantiating,
+      fencing: t.fencing,
+      validating: t.validating,
+      contextualizing: t.contextualizing
+    }
+  };
+}
+
 // ═══ FLAT FIVE-LAYER PREVIEW (simpler: from name + definition only) ═══
 // Returns plain-string layers suitable for direct rendering in the preview modal.
 export async function generateFlatFiveLayerWithClaude(
@@ -325,10 +363,24 @@ Return ONLY valid JSON, no code fences or extra prose, matching exactly this sha
       usage: response.usage
     };
   } catch (error) {
-    console.error('❌ Flat five-layer generation error:', error.message);
+    const msg = error.message || '';
+    // Known external failures that should fall back gracefully instead of blocking the user:
+    //   - credit balance too low
+    //   - rate limited
+    //   - network / timeout
+    //   - missing api key
+    const shouldFallback =
+      /credit balance|rate limit|timeout|ECONNRESET|api_key|ANTHROPIC_API_KEY|401|429|overloaded/i.test(
+        msg
+      );
+    console.error('❌ Flat five-layer generation error:', msg);
+    if (shouldFallback) {
+      console.warn('⚠ Falling back to template five-layer so the forge flow is not blocked.');
+      return flatFiveLayerFallback(skillName, definition, domain, language);
+    }
     return {
       success: false,
-      message: error.message || 'Preview generation failed'
+      message: msg || 'Preview generation failed'
     };
   }
 }
