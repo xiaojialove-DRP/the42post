@@ -5206,6 +5206,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 }
 
 .av-celestial-inner {
+  flex: 1;
   display: flex;
   height: 70vh;
   min-height: 500px;
