@@ -2292,6 +2292,47 @@ body[data-lang="cn"] .footer-text-muted {
   font-style: normal;
 }
 
+/* Social icons row — GitHub / X / Instagram */
+.footer-social-icons {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 8px 0 14px 0;
+}
+
+.footer-social-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  color: var(--ink-light);
+  text-decoration: none;
+  transition: color 0.25s ease, transform 0.2s ease;
+}
+
+.footer-social-icon svg {
+  width: 20px;
+  height: 20px;
+  display: block;
+}
+
+.footer-social-icon:hover {
+  color: var(--teal);
+  transform: translateY(-2px);
+}
+
+.footer-social-placeholder {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.footer-social-placeholder:hover {
+  color: var(--ink-light);
+  transform: none;
+  opacity: 0.4;
+}
+
 .footer-logo-row {
   display: flex;
   align-items: center;
