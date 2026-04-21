@@ -60,19 +60,35 @@ export class SqlitePool {
       const prepared = this.db.prepare(normalizedSql);
 
       // Determine if SELECT or INSERT/UPDATE/DELETE
-      if (normalizedSql.trim().toUpperCase().startsWith('SELECT')) {
+      const upper = normalizedSql.trim().toUpperCase();
+      const hasReturning = / RETURNING /i.test(normalizedSql);
+
+      if (upper.startsWith('SELECT')) {
         const rows = prepared.all(...params);
         return { rows };
-      } else if (normalizedSql.trim().toUpperCase().startsWith('INSERT')) {
-        const info = prepared.run(...params);
-        return { rows: [] };
-      } else if (normalizedSql.trim().toUpperCase().startsWith('UPDATE')) {
+      } else if (upper.startsWith('INSERT')) {
+        if (hasReturning) {
+          // better-sqlite3 supports INSERT … RETURNING via .all()
+          const rows = prepared.all(...params);
+          return { rows };
+        }
         prepared.run(...params);
         return { rows: [] };
-      } else if (normalizedSql.trim().toUpperCase().startsWith('DELETE')) {
+      } else if (upper.startsWith('UPDATE')) {
+        if (hasReturning) {
+          const rows = prepared.all(...params);
+          return { rows };
+        }
         prepared.run(...params);
         return { rows: [] };
-      } else if (normalizedSql.trim().toUpperCase().startsWith('CREATE')) {
+      } else if (upper.startsWith('DELETE')) {
+        if (hasReturning) {
+          const rows = prepared.all(...params);
+          return { rows };
+        }
+        prepared.run(...params);
+        return { rows: [] };
+      } else if (upper.startsWith('CREATE')) {
         prepared.run(...params);
         return { rows: [] };
       } else {
@@ -89,6 +105,18 @@ export class SqlitePool {
 
   exec(sql) {
     return this.db.exec(sql);
+  }
+
+  // Mimic pg Pool.connect() — return a client with query/release.
+  // SQLite transactions are handled via BEGIN/COMMIT/ROLLBACK at this layer.
+  async connect() {
+    const pool = this;
+    return {
+      query: (sql, params) => pool.query(sql, params),
+      release: () => {
+        // no-op — single shared connection
+      }
+    };
   }
 
   end() {

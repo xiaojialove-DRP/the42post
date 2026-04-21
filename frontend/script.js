@@ -105,8 +105,34 @@ const ApiClient = {
 
   async get(endpoint) {
     return this.request(endpoint, { method: 'GET' });
+  },
+
+  // Zero-friction session: email + username → JWT.
+  // Auto-provisions a user on the backend if none exists.
+  async establishForgeSession(email, username) {
+    try {
+      const resp = await fetch(`${API_CONFIG.BASE_URL}/auth/forge-session`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, username })
+      });
+      const data = await resp.json().catch(() => ({}));
+      if (!resp.ok || !data.token) {
+        console.error('❌ forge-session failed:', data);
+        return { ok: false, message: data.message || 'Session creation failed' };
+      }
+      this.setToken(data.token);
+      this.setUser(data.user || null);
+      return { ok: true, user: data.user };
+    } catch (err) {
+      console.error('❌ forge-session network error:', err);
+      return { ok: false, message: err.message };
+    }
   }
 };
+
+// BASE_URL helper (backwards-compatible reference used throughout the file)
+ApiClient.BASE_URL = API_CONFIG.BASE_URL;
 
 // API Methods for Forge (Skill Creation)
 const API = {
@@ -1845,7 +1871,7 @@ function initSkillForge() {
   // "开始铸造"按钮处理
   const btnForgeBegin = document.getElementById('btnForgeBegin');
   if (btnForgeBegin) {
-    btnForgeBegin.addEventListener('click', () => {
+    btnForgeBegin.addEventListener('click', async () => {
       const username = document.getElementById('forgeUsername').value.trim();
       const email = document.getElementById('forgeEmail').value.trim();
       const idea = document.getElementById('forgeSkillIdea').value.trim();
@@ -1856,6 +1882,15 @@ function initSkillForge() {
       if (!email) { alert('请输入邮箱 / Please enter email'); return; }
       if (!idea) { alert('请分享你的想法 / Please share your idea'); return; }
       if (!probeChoice) { alert('请选择直觉探针响应 / Please select a probe response'); return; }
+
+      // Establish forge session (zero-friction JWT)
+      btnForgeBegin.disabled = true;
+      const sess = await ApiClient.establishForgeSession(email, username);
+      btnForgeBegin.disabled = false;
+      if (!sess.ok) {
+        alert('无法建立会话 / Session failed: ' + (sess.message || 'Unknown error'));
+        return;
+      }
 
       // 保存用户信息 (domain will be selected in Step 2)
       window.forgeData = {
@@ -1893,6 +1928,15 @@ function initSkillForge() {
       if (!username) { alert('请输入用户名 / Please enter username'); return; }
       if (!email) { alert('请输入邮箱 / Please enter email'); return; }
       if (!idea) { alert('请分享你的想法 / Please share your idea'); return; }
+
+      // Establish forge session (zero-friction JWT)
+      btnGenerateProbe.disabled = true;
+      const sess = await ApiClient.establishForgeSession(email, username);
+      btnGenerateProbe.disabled = false;
+      if (!sess.ok) {
+        alert('无法建立会话 / Session failed: ' + (sess.message || 'Unknown error'));
+        return;
+      }
 
       // Save basic data to global object (domain will be selected in Step 2)
       window.forgeData = {
@@ -2070,21 +2114,27 @@ function initSkillForge() {
       btnRegenerateSkill.textContent = '🔄 重新生成中...';
 
       try {
-        // 调用 API 重新生成
-        const probeResponse = await fetch(`${ApiClient.BASE_URL}/forge/generate`, {
+        // 调用 API 重新生成（使用已编辑的名称+定义+反馈）
+        const editedNameEl = document.getElementById('reviewSkillName');
+        const editedDefEl = document.getElementById('reviewSkillDef');
+        const probeResponse = await fetch(`${ApiClient.BASE_URL}/forge/preview`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${ApiClient.getToken() || ''}`
           },
           body: JSON.stringify({
-            idea: window.forgeData.skillIdea,
-            domain: window.forgeData.selectedDomain || 'ideas',
-            feedback: feedback  // 用户的反馈
+            name: (editedNameEl && editedNameEl.value.trim()) || (window.forgeData?.idea || '').slice(0, 40),
+            definition: (editedDefEl && editedDefEl.value.trim()) || (window.forgeData?.idea || ''),
+            domain: window.forgeData?.domain || window.forgeData?.selectedDomain || 'ideas',
+            feedback: feedback
           })
         });
 
-        if (!probeResponse.ok) throw new Error('重新生成失败');
+        if (!probeResponse.ok) {
+          const err = await probeResponse.json().catch(() => ({}));
+          throw new Error(err.message || '重新生成失败');
+        }
 
         const newSkill = await probeResponse.json();
 
@@ -2136,7 +2186,7 @@ function initSkillForge() {
         const domain = document.querySelector('.domain-choice.selected');
         const selectedDomain = domain ? domain.dataset.domain : 'ideas';
 
-        const fiveLayerResponse = await fetch(`${ApiClient.BASE_URL}/forge/generate`, {
+        const fiveLayerResponse = await fetch(`${ApiClient.BASE_URL}/forge/preview`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -2149,7 +2199,10 @@ function initSkillForge() {
           })
         });
 
-        if (!fiveLayerResponse.ok) throw new Error('生成五层结构失败');
+        if (!fiveLayerResponse.ok) {
+          const err = await fiveLayerResponse.json().catch(() => ({}));
+          throw new Error(err.message || '生成五层结构失败');
+        }
 
         const fiveLayerData = await fiveLayerResponse.json();
         const skill = fiveLayerData.data || fiveLayerData;
@@ -2157,12 +2210,13 @@ function initSkillForge() {
         // 存储五层数据
         window.previewFiveLayer = skill;
 
-        // 填充五层内容
-        document.getElementById('previewDefining').textContent = skill.defining || '...';
-        document.getElementById('previewInstantiating').textContent = skill.instantiating || '...';
-        document.getElementById('previewFencing').textContent = skill.fencing || '...';
-        document.getElementById('previewValidating').textContent = skill.validating || '...';
-        document.getElementById('previewContextualizing').textContent = skill.contextualizing || '...';
+        // 填充五层内容（扁平字符串）
+        const flat = v => (typeof v === 'string' ? v : (v ? JSON.stringify(v) : '...'));
+        document.getElementById('previewDefining').textContent = flat(skill.defining);
+        document.getElementById('previewInstantiating').textContent = flat(skill.instantiating);
+        document.getElementById('previewFencing').textContent = flat(skill.fencing);
+        document.getElementById('previewValidating').textContent = flat(skill.validating);
+        document.getElementById('previewContextualizing').textContent = flat(skill.contextualizing);
 
         // 隐藏加载，显示五层
         document.getElementById('previewLoading').style.display = 'none';
@@ -2237,7 +2291,7 @@ function initSkillForge() {
         const domain = document.querySelector('.domain-choice.selected');
         const selectedDomain = domain ? domain.dataset.domain : 'ideas';
 
-        const response = await fetch(`${ApiClient.BASE_URL}/forge/generate`, {
+        const response = await fetch(`${ApiClient.BASE_URL}/forge/preview`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -2251,7 +2305,10 @@ function initSkillForge() {
           })
         });
 
-        if (!response.ok) throw new Error('重新生成失败');
+        if (!response.ok) {
+          const err = await response.json().catch(() => ({}));
+          throw new Error(err.message || '重新生成失败');
+        }
 
         const newSkill = await response.json();
         const skill = newSkill.data || newSkill;
@@ -2260,12 +2317,13 @@ function initSkillForge() {
         document.getElementById('previewSkillName').value = skill.name || document.getElementById('previewSkillName').value;
         document.getElementById('previewSkillDef').value = skill.definition || document.getElementById('previewSkillDef').value;
 
-        // 更新五层
-        document.getElementById('previewDefining').textContent = skill.defining || '...';
-        document.getElementById('previewInstantiating').textContent = skill.instantiating || '...';
-        document.getElementById('previewFencing').textContent = skill.fencing || '...';
-        document.getElementById('previewValidating').textContent = skill.validating || '...';
-        document.getElementById('previewContextualizing').textContent = skill.contextualizing || '...';
+        // 更新五层（扁平字符串）
+        const flat = v => (typeof v === 'string' ? v : (v ? JSON.stringify(v) : '...'));
+        document.getElementById('previewDefining').textContent = flat(skill.defining);
+        document.getElementById('previewInstantiating').textContent = flat(skill.instantiating);
+        document.getElementById('previewFencing').textContent = flat(skill.fencing);
+        document.getElementById('previewValidating').textContent = flat(skill.validating);
+        document.getElementById('previewContextualizing').textContent = flat(skill.contextualizing);
 
         alert('✓ 已重新生成！');
       } catch (error) {
@@ -3139,6 +3197,19 @@ function initSkillForge() {
         // ═══ NEW: Save to backend database ═══
         try {
           publishBtn.textContent = '🔄 保存到数据库...';
+
+          // Safety net: if we somehow reached Step 4 without a valid session
+          // (e.g. token was cleared mid-flow), re-establish it from the
+          // email+username the user supplied at Step 1.
+          if (!ApiClient.getToken() && emailValue && usernameValue) {
+            const sess = await ApiClient.establishForgeSession(emailValue, usernameValue);
+            if (!sess.ok) {
+              alert('无法建立会话 / Session failed: ' + (sess.message || 'Unknown error'));
+              publishBtn.textContent = '⚔ PUBLISH & FORGE';
+              publishBtn.style.pointerEvents = 'auto';
+              return;
+            }
+          }
 
           const backendPayload = {
             title: skillNameValue,

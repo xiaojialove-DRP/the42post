@@ -194,34 +194,35 @@ router.post('/', requireAuth, async (req, res, next) => {
     try {
       await client.query('BEGIN');
 
-      // Insert skill
+      // Insert skill (SQLite-compatible: 1/0 for booleans, CURRENT_TIMESTAMP for NOW())
       const skillResult = await client.query(
         `INSERT INTO skills (
           id, author_id, title, title_cn, description, description_cn, domain,
           soul_hash, five_layer, forge_mode, source_agent_id, commercial_use,
           remix_allowed, applicable_when, disallowed_uses, published, published_at
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, true, NOW())
-        RETURNING id, soul_hash, published_at`,
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, 1, CURRENT_TIMESTAMP)`,
         [
-          skillId, userId, title.trim(), title_cn, description, description_cn,
+          skillId, userId, title.trim(), title_cn || null, description || null, description_cn || null,
           domain || 'ideas', soul_hash, JSON.stringify(five_layer),
-          forge_mode, source_agent_id, commercial_use || 'authorized',
-          remix_allowed !== false, applicable_when, disallowed_uses
+          forge_mode, source_agent_id || null, commercial_use || 'authorized',
+          remix_allowed === false ? 0 : 1,
+          applicable_when || null,
+          disallowed_uses || null
         ]
       );
 
-      // Insert manifest
+      // Insert manifest (needs explicit id — TEXT PK, no default)
       await client.query(
-        `INSERT INTO skill_manifests (skill_id, soul_hash, author_signature, manifest_json)
-         VALUES ($1, $2, $3, $4)`,
-        [skillId, soul_hash, manifest.covenant.author_signature, JSON.stringify(manifest)]
+        `INSERT INTO skill_manifests (id, skill_id, soul_hash, author_signature, manifest_json)
+         VALUES ($1, $2, $3, $4, $5)`,
+        [uuidv4(), skillId, soul_hash, manifest.covenant.author_signature, JSON.stringify(manifest)]
       );
 
       // Insert initial version
       await client.query(
-        `INSERT INTO skill_versions (skill_id, version_number, five_layer, author_signature)
-         VALUES ($1, 1, $2, $3)`,
-        [skillId, JSON.stringify(five_layer), manifest.covenant.author_signature]
+        `INSERT INTO skill_versions (id, skill_id, version_number, five_layer, author_signature)
+         VALUES ($1, $2, 1, $3, $4)`,
+        [uuidv4(), skillId, JSON.stringify(five_layer), manifest.covenant.author_signature]
       );
 
       await client.query('COMMIT');

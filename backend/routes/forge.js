@@ -3,11 +3,13 @@
    ═══════════════════════════════════════════════════════ */
 
 import express from 'express';
+import { v4 as uuidv4 } from 'uuid';
 import { db } from '../server.js';
 import { requireAuth } from '../utils/auth.js';
 import {
   generateProbeWithClaude,
   generateFiveLayerWithClaude,
+  generateFlatFiveLayerWithClaude,
   generateSoulHash
 } from '../utils/skillGeneration.js';
 
@@ -39,12 +41,16 @@ router.post('/probe', requireAuth, async (req, res, next) => {
       });
     }
 
-    // Log probe generation
-    await db.query(
-      `INSERT INTO probe_logs (user_id, idea_text, generated_probe, model_version)
-       VALUES ($1, $2, $3, $4)`,
-      [userId, idea_text.trim(), JSON.stringify(probeResult.data), probeResult.model]
-    );
+    // Log probe generation (explicit id for SQLite TEXT PK — don't fail the request if logging hiccups)
+    try {
+      await db.query(
+        `INSERT INTO probe_logs (id, user_id, idea_text, generated_probe, model_version)
+         VALUES ($1, $2, $3, $4, $5)`,
+        [uuidv4(), userId, idea_text.trim(), JSON.stringify(probeResult.data), probeResult.model]
+      );
+    } catch (logErr) {
+      console.warn('probe_logs insert failed (non-fatal):', logErr.message);
+    }
 
     res.json({
       success: true,
@@ -128,6 +134,49 @@ router.post('/generate', requireAuth, async (req, res, next) => {
       skill_draft: skillDraft,
       model: generationResult.model,
       usage: generationResult.usage
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// ═══ SIMPLIFIED PREVIEW (from name + definition; used by the review/preview modals) ═══
+router.post('/preview', requireAuth, async (req, res, next) => {
+  try {
+    const { name, definition, domain, feedback, language } = req.body || {};
+
+    if (!name || !name.trim()) {
+      return res.status(400).json({
+        error: 'Missing input',
+        message: 'name is required'
+      });
+    }
+    if (!definition || !definition.trim()) {
+      return res.status(400).json({
+        error: 'Missing input',
+        message: 'definition is required'
+      });
+    }
+
+    const result = await generateFlatFiveLayerWithClaude(
+      name.trim(),
+      definition.trim(),
+      domain || 'ideas',
+      feedback || '',
+      language || 'en'
+    );
+
+    if (!result.success) {
+      return res.status(500).json({
+        error: 'Preview generation failed',
+        message: result.message
+      });
+    }
+
+    res.json({
+      success: true,
+      data: result.data,
+      model: result.model
     });
   } catch (error) {
     next(error);

@@ -253,6 +253,86 @@ Important: Return ONLY valid JSON, no markdown formatting or extra text.`;
   }
 }
 
+// ═══ FLAT FIVE-LAYER PREVIEW (simpler: from name + definition only) ═══
+// Returns plain-string layers suitable for direct rendering in the preview modal.
+export async function generateFlatFiveLayerWithClaude(
+  skillName,
+  definition,
+  domain = 'ideas',
+  feedback = '',
+  language = 'en'
+) {
+  const languageInstructions = language === 'zh'
+    ? '用中文返回所有文案字段'
+    : 'Return all fields in English';
+
+  const feedbackBlock = feedback
+    ? `\n\nThe user gave this feedback on a previous attempt: "${feedback}". Incorporate it.`
+    : '';
+
+  const prompt = `You are an AI value alignment expert drafting a five-layer skill specification.
+
+**Skill Name**: "${skillName}"
+**Definition / Core Idea**: "${definition}"
+**Domain**: "${domain}"${feedbackBlock}
+
+Produce a concise, editorial preview of the five layers that describe how an AI agent should behave when executing this skill.
+
+Each layer must be ONE compact paragraph (2-3 sentences). No bullet points inside values. No markdown.
+
+${languageInstructions}
+
+Return ONLY valid JSON, no code fences or extra prose, matching exactly this shape:
+{
+  "name": "${skillName}",
+  "definition": "A polished one-sentence restatement of the core idea",
+  "defining": "Plain-text paragraph describing the core principle and why it matters.",
+  "instantiating": "Plain-text paragraph giving one vivid example of preferred behavior and one contrast.",
+  "fencing": "Plain-text paragraph describing when this applies and when it does not.",
+  "validating": "Plain-text paragraph describing how to test whether the AI is honoring this skill.",
+  "contextualizing": "Plain-text paragraph describing how this adapts across cultures/languages."
+}`;
+
+  try {
+    const response = await client.messages.create({
+      model: 'claude-3-5-sonnet-20241022',
+      max_tokens: 1800,
+      messages: [{ role: 'user', content: prompt }]
+    });
+
+    const content = response.content[0].type === 'text' ? response.content[0].text : '';
+    let parsed;
+    try {
+      parsed = JSON.parse(content);
+    } catch {
+      const jsonMatch = content.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) throw new Error('Failed to parse Claude response');
+      parsed = JSON.parse(jsonMatch[0]);
+    }
+
+    return {
+      success: true,
+      data: {
+        name: parsed.name || skillName,
+        definition: parsed.definition || definition,
+        defining: parsed.defining || '',
+        instantiating: parsed.instantiating || '',
+        fencing: parsed.fencing || '',
+        validating: parsed.validating || '',
+        contextualizing: parsed.contextualizing || ''
+      },
+      model: response.model,
+      usage: response.usage
+    };
+  } catch (error) {
+    console.error('❌ Flat five-layer generation error:', error.message);
+    return {
+      success: false,
+      message: error.message || 'Preview generation failed'
+    };
+  }
+}
+
 // ═══ SOUL-HASH GENERATION ═══
 export function generateSoulHash(skillData, authorEmail, timestamp) {
   const dataToHash = JSON.stringify({
