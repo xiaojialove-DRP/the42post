@@ -2266,6 +2266,32 @@ body[data-lang="cn"] .voices-header-text {
   color: var(--teal);
 }
 
+/* Contact section — warm, quiet, readable */
+.footer-link-inline {
+  color: var(--ink-light);
+  text-decoration: none;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.15);
+  transition: color 0.25s, border-color 0.25s;
+  word-break: break-all;
+}
+
+.footer-link-inline:hover {
+  color: var(--teal);
+  border-bottom-color: var(--teal);
+}
+
+.footer-text-muted {
+  color: var(--ink-muted);
+  font-style: italic;
+  opacity: 0.75;
+  margin-top: 4px;
+}
+
+body[data-lang="cn"] .footer-text-muted {
+  font-family: var(--font-serif-cn);
+  font-style: normal;
+}
+
 .footer-logo-row {
   display: flex;
   align-items: center;
