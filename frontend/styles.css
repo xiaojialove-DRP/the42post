@@ -2348,6 +2348,14 @@ body[data-lang="cn"] .footer-text-muted {
   gap: 6px;
 }
 
+.footer-logo-the {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--ink-muted);
+  text-transform: uppercase;
+}
+
 .footer-logo-42 {
   font-family: var(--font-head);
   font-size: 18px;
