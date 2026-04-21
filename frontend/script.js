@@ -4691,9 +4691,45 @@ function initHeadlineHero() {
     // Fade out ethics result and fade in forge
     setTimeout(() => {
       ethicsResult.classList.remove('visible');
-      const chatBubbleWrap = document.querySelector('.chat-bubble-wrap');
-      if (chatBubbleWrap) chatBubbleWrap.style.display = 'block';
+      restoreChatBubble();
     }, 500);
+  }
+
+  // Fully restore the home chat bubble to an interactive state.
+  // Must reset opacity + transform too — hiding only `display` left the
+  // bubble invisible with `opacity:0` on return, producing a phantom gap.
+  function restoreChatBubble() {
+    const chatBubbleWrap = document.querySelector('.chat-bubble-wrap');
+    if (!chatBubbleWrap) return;
+    chatBubbleWrap.style.display = 'block';
+    chatBubbleWrap.style.opacity = '1';
+    chatBubbleWrap.style.transform = 'translateY(0)';
+    chatBubbleWrap.style.pointerEvents = '';
+    if (testBtn) {
+      testBtn.style.pointerEvents = '';
+      // Reset the button label back to its i18n default
+      const lang = document.documentElement.getAttribute('data-lang') || 'en';
+      testBtn.textContent = lang === 'cn' ? '分享' : 'Share';
+    }
+    if (ethicsResult) ethicsResult.classList.remove('visible');
+  }
+
+  // Safety net: whenever the forge overlay is dismissed, make sure the
+  // home page returns to a fully interactive state. Otherwise users who
+  // open the forge via Share and then close it see a blank homepage.
+  const forgeOverlayEl = document.getElementById('forgeOverlay');
+  if (forgeOverlayEl) {
+    const closeBtns = forgeOverlayEl.querySelectorAll('.forge-close, [data-forge-close], .btn-forge-close');
+    closeBtns.forEach(b => b.addEventListener('click', () => setTimeout(restoreChatBubble, 50)));
+    forgeOverlayEl.addEventListener('click', (e) => {
+      if (e.target === forgeOverlayEl) setTimeout(restoreChatBubble, 50);
+    });
+    // Also listen for Esc key as a fallback close
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && forgeOverlayEl.classList.contains('active')) {
+        setTimeout(restoreChatBubble, 50);
+      }
+    });
   }
 
 
@@ -6179,7 +6215,84 @@ function initAgentArchiveView() {
     cam.zoom = Math.max(0.3, Math.min(5, cam.zoom * (e.deltaY > 0 ? 0.9 : 1.1)));
     document.getElementById('zoomInfo').textContent = Math.round(cam.zoom * 100) + '%';
   }, { passive: false });
-  
+
+  /* ═══════════════════════════════════════════════════════
+     Touch support (mobile) — one-finger pan, two-finger pinch-zoom,
+     tap-to-select (distinguished from drag by movement threshold).
+     ═══════════════════════════════════════════════════════ */
+  let pinchStart = null; // { dist, zoom }
+  let tapCandidate = null; // { x, y, t }
+
+  function touchDist(t1, t2) {
+    return Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
+  }
+
+  canvas.addEventListener('touchstart', e => {
+    if (e.touches.length === 1) {
+      const t = e.touches[0];
+      drag = { active: true, startX: t.clientX, startY: t.clientY, camStartX: cam.x, camStartY: cam.y };
+      tapCandidate = { x: t.clientX, y: t.clientY, t: Date.now() };
+      pinchStart = null;
+    } else if (e.touches.length === 2) {
+      drag.active = false;
+      tapCandidate = null;
+      pinchStart = { dist: touchDist(e.touches[0], e.touches[1]), zoom: cam.zoom };
+    }
+  }, { passive: true });
+
+  canvas.addEventListener('touchmove', e => {
+    if (e.touches.length === 1 && drag.active) {
+      e.preventDefault();
+      const t = e.touches[0];
+      cam.x = drag.camStartX + (t.clientX - drag.startX) / cam.zoom;
+      cam.y = drag.camStartY + (t.clientY - drag.startY) / cam.zoom;
+      tooltip.classList.remove('visible');
+      hoveredNode = null;
+      if (tapCandidate && (Math.abs(t.clientX - tapCandidate.x) > 6 || Math.abs(t.clientY - tapCandidate.y) > 6)) {
+        tapCandidate = null; // moved too much — no tap
+      }
+    } else if (e.touches.length === 2 && pinchStart) {
+      e.preventDefault();
+      const d = touchDist(e.touches[0], e.touches[1]);
+      const ratio = d / pinchStart.dist;
+      cam.zoom = Math.max(0.3, Math.min(5, pinchStart.zoom * ratio));
+      document.getElementById('zoomInfo').textContent = Math.round(cam.zoom * 100) + '%';
+    }
+  }, { passive: false });
+
+  canvas.addEventListener('touchend', e => {
+    drag.active = false;
+    pinchStart = null;
+    if (tapCandidate && Date.now() - tapCandidate.t < 400) {
+      const idx = findNodeAt(tapCandidate.x, tapCandidate.y);
+      if (idx !== null) {
+        const n = nodes[idx];
+        const rect = canvasWrap.getBoundingClientRect();
+        document.getElementById('ttName').textContent = n.title;
+        document.getElementById('ttNameCn').textContent = n.titleCn;
+        document.getElementById('ttAgent').textContent = n.agent;
+        document.getElementById('ttDesc').textContent = n.desc;
+        document.getElementById('ttHash').textContent = n.hash;
+        document.getElementById('ttStarlight').textContent = '★ ' + n.starlight;
+        document.getElementById('ttDomain').textContent = n.domain;
+        tooltip.style.left = Math.min(tapCandidate.x - rect.left + 16, cw - 300) + 'px';
+        tooltip.style.top = Math.min(tapCandidate.y - rect.top + 16, ch - 180) + 'px';
+        tooltip.classList.add('visible');
+        clickedNode = clickedNode === idx ? null : idx;
+      } else {
+        tooltip.classList.remove('visible');
+        clickedNode = null;
+      }
+    }
+    tapCandidate = null;
+  }, { passive: true });
+
+  canvas.addEventListener('touchcancel', () => {
+    drag.active = false;
+    pinchStart = null;
+    tapCandidate = null;
+  }, { passive: true });
+
   document.getElementById('zoomIn').onclick = () => { cam.zoom = Math.min(5, cam.zoom * 1.3); document.getElementById('zoomInfo').textContent = Math.round(cam.zoom * 100) + '%'; };
   document.getElementById('zoomOut').onclick = () => { cam.zoom = Math.max(0.3, cam.zoom * 0.7); document.getElementById('zoomInfo').textContent = Math.round(cam.zoom * 100) + '%'; };
   document.getElementById('zoomReset').onclick = () => { cam = { x: 0, y: 0, zoom: 1 }; document.getElementById('zoomInfo').textContent = '100%'; };
@@ -6205,10 +6318,10 @@ function initAgentArchiveView() {
     refreshCanvas();
   });
   
-  // Honor List
+  // Honor List — top 42 only (name-consistent with "Most Starred Skills 42")
   function initHonorList() {
     const list = document.getElementById('honorList');
-    const sorted = [...allSkills].sort((a, b) => b.starlight - a.starlight);
+    const sorted = [...allSkills].sort((a, b) => b.starlight - a.starlight).slice(0, 42);
 
     list.innerHTML = '';
     sorted.forEach((s, i) => {

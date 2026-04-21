@@ -5597,6 +5597,11 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
   height: 100%;
   cursor: grab;
   display: block;
+  /* Let our JS fully own pan/pinch gestures on mobile — otherwise the
+     browser kicks in native scroll/zoom and the canvas feels broken. */
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 #celestialCanvas:active { cursor: grabbing; }
 
