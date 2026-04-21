@@ -1638,31 +1638,44 @@ body {
 }
 
 /* ═══ HEADLINE NAVIGATION ═══ */
-.headline-nav {
+/* ═══ COMMUNITY VOICES HEADER ═══ */
+.voices-header {
   display: flex;
-  justify-content: center;
   align-items: center;
-  gap: 8px;
-  margin-top: 24px;
-  margin-bottom: 32px;
-  font-size: 11px;
-  letter-spacing: 0.5px;
+  gap: 20px;
+  max-width: var(--max-w);
+  margin: 48px auto 20px;
+  padding: 0 24px;
 }
 
-.nav-link {
-  color: var(--ink-muted);
-  text-decoration: none;
-  transition: color 0.2s;
-  cursor: pointer;
+.voices-header-line {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, var(--rule) 50%, transparent 100%);
+}
+
+.voices-header-text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.voices-header-en {
   font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: var(--ink-light);
+  font-weight: 500;
 }
 
-.nav-link:hover {
-  color: var(--ink);
-}
-
-.nav-divider {
+.voices-header-cn {
+  font-family: var(--font-serif-cn);
+  font-size: 13px;
   color: var(--ink-muted);
+  letter-spacing: 1px;
 }
 
 /* ═══ ENLARGED CHAT INPUT — AI Era Feel ═══ */

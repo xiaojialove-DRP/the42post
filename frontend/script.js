@@ -4603,22 +4603,6 @@ function initHeadlineHero() {
   }
 
 
-  // ═══ HEADLINE NAVIGATION ═══
-  document.querySelectorAll('.nav-link').forEach(link => {
-    link.addEventListener('click', (e) => {
-      e.preventDefault();
-      const action = link.dataset.action;
-      
-      if (action === 'archive') {
-        document.getElementById('btnAgentView').click();
-      } else if (action === 'playground') {
-        document.getElementById('btnArena').click();
-      } else if (action === 'about') {
-        document.getElementById('footerAboutBtn').click();
-      }
-    });
-  });
-
 }
 
 /* ═══ CREATIVE TRIPTYCH ═══ */

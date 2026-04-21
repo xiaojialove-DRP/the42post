@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Noto+Serif+SC:wght@400;700;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=66">
+  <link rel="stylesheet" href="styles.css?v=67">
 </head>
 <body data-lang="en">
   <!-- ═══════════════ GLOBAL HEADER ═══════════════ -->
@@ -113,17 +113,16 @@
           </div>
         </div>
 
-        <!-- Navigation Bar -->
-        <div class="headline-nav">
-          <a href="#" class="nav-link" data-action="archive">Explore Archive</a>
-          <span class="nav-divider">·</span>
-          <a href="#" class="nav-link" data-action="playground">Playground</a>
-          <span class="nav-divider">·</span>
-          <a href="#" class="nav-link" data-action="about">About</a>
-        </div>
-
-        <!-- Community Voices Auto-Scrolling Ticker -->
+        <!-- Community Voices Section -->
         <div class="community-voices-list">
+          <div class="voices-header">
+            <span class="voices-header-line"></span>
+            <div class="voices-header-text">
+              <span class="voices-header-en">Voices from the Community</span>
+              <span class="voices-header-cn">来自社区的声音</span>
+            </div>
+            <span class="voices-header-line"></span>
+          </div>
           <div class="voices-ticker-wrap">
             <div class="voices-container" id="voicesContainer">
               <!-- Populated by JS with community feedback items (duplicated for seamless loop) -->
@@ -915,6 +914,6 @@
   <script>
     console.log('✓ Scripts loaded, SHARED_SKILLS available for rendering');
   </script>
-  <script src="script.js?t=1776700000"></script>
+  <script src="script.js?t=1776800000"></script>
 </body>
 </html>
