@@ -65,23 +65,29 @@ app.use(express.urlencoded({ limit: '10mb', extended: true }));
 app.use(requestLogger);
 
 // ═══ STATIC FILES (Serve frontend) ═══
-const frontendPath = join(__dirname, '../day1');
+const frontendPath = join(__dirname, '../frontend');
 console.log('Frontend Path:', frontendPath);
 
 // Serve static files with proper MIME types and caching
 app.use(express.static(frontendPath, {
   extensions: ['html', 'js', 'css', 'json', 'png', 'jpg', 'jpeg', 'gif', 'svg', 'woff', 'woff2'],
-  maxAge: process.env.NODE_ENV === 'production' ? '7d' : '1h',
-  etag: false,
-  setHeaders: (res, path) => {
+  etag: true,
+  setHeaders: (res, filePath) => {
     // Ensure correct MIME types
-    if (path.endsWith('.js')) res.setHeader('Content-Type', 'application/javascript');
-    if (path.endsWith('.css')) res.setHeader('Content-Type', 'text/css');
-    if (path.endsWith('.html')) res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    if (path.endsWith('.json')) res.setHeader('Content-Type', 'application/json');
+    if (filePath.endsWith('.js')) res.setHeader('Content-Type', 'application/javascript');
+    if (filePath.endsWith('.css')) res.setHeader('Content-Type', 'text/css');
+    if (filePath.endsWith('.html')) res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    if (filePath.endsWith('.json')) res.setHeader('Content-Type', 'application/json');
     // Add CORS headers for fonts and media files
-    if (path.match(/\.(woff|woff2|ttf|otf|png|jpg|jpeg|gif|svg)$/)) {
+    if (filePath.match(/\.(woff|woff2|ttf|otf|png|jpg|jpeg|gif|svg)$/)) {
       res.setHeader('Access-Control-Allow-Origin', '*');
+    }
+    // HTML files: never cache so users always get the latest version
+    if (filePath.endsWith('.html')) {
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    } else if (filePath.match(/\.(js|css)$/)) {
+      // JS/CSS: short cache (10 min) so deployments roll out quickly
+      res.setHeader('Cache-Control', 'public, max-age=600');
     }
   }
 }));
