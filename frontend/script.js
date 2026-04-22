@@ -2112,7 +2112,7 @@ function initSkillForge() {
 
       // 显示加载状态
       btnRegenerateSkill.disabled = true;
-      btnRegenerateSkill.textContent = '🔄 重新生成中...';
+      btnRegenerateSkill.innerHTML = '<span class="regen-emoji" style="display:block;font-size:18px;animation:spin 0.8s linear infinite">⟳</span><span class="regen-label" style="font-size:8px">生成中</span>';
 
       try {
         // 调用 API 重新生成（使用已编辑的名称+定义+反馈）
@@ -2153,7 +2153,7 @@ function initSkillForge() {
         alert('重新生成失败，请重试');
       } finally {
         btnRegenerateSkill.disabled = false;
-        btnRegenerateSkill.textContent = '🔄 重新生成 / Regenerate';
+        btnRegenerateSkill.innerHTML = '<span class="regen-emoji">🔄</span><span class="regen-label">重新生成<br>Regen</span>';
       }
     });
   }

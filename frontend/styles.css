@@ -8921,3 +8921,81 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
   .card-title-main { font-size: 18px !important; }
 }
 
+
+/* ╔═══════════════════════════════════════════════════════════════════╗
+   ║  FEEDBACK INPUT GROUP — textarea + regen button side by side     ║
+   ╚═══════════════════════════════════════════════════════════════════╝ */
+
+.feedback-input-group {
+  display: flex;
+  gap: 9px;
+  align-items: stretch;
+}
+
+/* Textarea fills all remaining width */
+.feedback-input-group .minimal-textarea {
+  flex: 1 1 0;
+  min-width: 0;          /* prevent flex child overflow */
+  min-height: 88px;
+  resize: none;
+  box-sizing: border-box;
+  width: auto !important; /* override the generic 100% rule inside flex */
+}
+
+/* Regen button — vertical pill on the right */
+.btn-regen-send {
+  flex: 0 0 68px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 10px 6px;
+  background: linear-gradient(155deg, var(--wc-amber, #f0d090) 0%, var(--wc-coral, #e4a090) 100%);
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  box-shadow: 0 3px 14px rgba(228,160,144,0.28);
+  transition: transform 0.22s, box-shadow 0.22s, opacity 0.2s;
+  min-height: 88px;
+}
+
+.btn-regen-send:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 7px 24px rgba(228,160,144,0.42);
+}
+.btn-regen-send:active { transform: translateY(0); }
+
+.btn-regen-send:disabled {
+  opacity: 0.55;
+  cursor: wait;
+  transform: none !important;
+}
+
+/* Inner elements */
+.regen-emoji {
+  display: block;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.regen-label {
+  font-family: var(--font-mono, monospace);
+  font-size: 8px;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+  color: var(--wc-charcoal, #3c3028);
+  text-align: center;
+  line-height: 1.4;
+}
+
+/* Spinning loading emoji */
+@keyframes spin-regen {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+.btn-regen-send:disabled .regen-emoji {
+  display: inline-block;
+  animation: spin-regen 0.7s linear infinite;
+}
+

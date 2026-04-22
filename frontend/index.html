@@ -592,8 +592,13 @@
         <!-- User Feedback (Optional) -->
         <div class="skill-feedback-section">
           <div class="skill-item-label">想要重新生成？/ Regenerate? (Optional)</div>
-          <textarea class="minimal-textarea" placeholder="告诉AI你想要什么改动..." id="skillFeedback"></textarea>
-          <button class="btn-secondary" id="btnRegenerateSkill" style="margin-top: 12px; width: 100%;">🔄 重新生成 / Regenerate</button>
+          <div class="feedback-input-group">
+            <textarea class="minimal-textarea" placeholder="告诉AI你想要什么改动...  Tell AI what to change" id="skillFeedback"></textarea>
+            <button class="btn-regen-send" id="btnRegenerateSkill">
+              <span class="regen-emoji">🔄</span>
+              <span class="regen-label">重新生成<br>Regen</span>
+            </button>
+          </div>
         </div>
 
         <!-- Preview & Confirmation -->
