@@ -5534,7 +5534,9 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 14px 28px;
+  max-width: var(--max-w);
+  margin: 0 auto;
+  padding: 14px 24px;
   border-bottom: 1px solid #d4c8bc;
   background: #f8f4ee;
 }
@@ -5807,9 +5809,9 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 
 /* ═══ READABLE LAYER ═══ */
 .av-readable {
-  max-width: 1200px;
+  max-width: var(--max-w);
   margin: 0 auto;
-  padding: 48px 28px 40px;
+  padding: 48px 24px 40px;
   background: #f8f4ee;
 }
 
@@ -5922,9 +5924,9 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 
 /* ═══ FOOTER ═══ */
 .av-footer {
-  max-width: 1200px;
+  max-width: var(--max-w);
   margin: 0 auto;
-  padding: 0 28px 48px;
+  padding: 0 24px 48px;
   background: #f8f4ee;
 }
 .av-footer-rule {
