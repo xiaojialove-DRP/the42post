@@ -457,124 +457,130 @@
 
       <!-- Step 1: Choose Domain -->
             <div class="forge-page active" id="forgePage1">
-        <!-- Account Section (Same for both paths) -->
+        <!-- Account Section -->
         <div class="minimal-section">
-          <div class="minimal-label">账户 / Account</div>
+          <div class="minimal-label" data-i18n="forge_account">ACCOUNT</div>
           <div class="minimal-inputs">
-            <input type="text" class="minimal-input" placeholder="用户名 / Username" id="forgeUsername">
-            <input type="email" class="minimal-input" placeholder="邮箱 / Email" id="forgeEmail">
+            <input type="text" class="minimal-input" placeholder="Username" data-i18n-placeholder="forge_username_ph" id="forgeUsername">
+            <input type="email" class="minimal-input" placeholder="Email" data-i18n-placeholder="forge_email_ph" id="forgeEmail">
           </div>
         </div>
-        
-        <!-- Unified: Your Idea + Domain Selection -->
+
+        <!-- Your Idea -->
         <div class="minimal-section">
-          <div class="minimal-label">你的想法 / Your Thought</div>
-          <div class="minimal-instruction">你希望AI拥有或最不希望它拥有的技能。任何想法都可以。</div>
-          <textarea class="minimal-textarea" placeholder="例：我希望AI能理解人类悲伤时的沉默..." id="forgeSkillIdea"></textarea>
+          <div class="minimal-label" data-i18n="forge_thought">YOUR THOUGHT</div>
+          <div class="minimal-instruction" data-i18n="forge_instruction">Any skill you wish or don't wish AI to have. Any idea counts.</div>
+          <textarea class="minimal-textarea" placeholder="e.g. AI should understand the silence of grief…" data-i18n-placeholder="forge_idea_ph" id="forgeSkillIdea"></textarea>
         </div>
 
         <!-- Generate Probe Button -->
         <div class="minimal-section" style="text-align: center;">
           <button class="intuition-probe-btn" id="btnGenerateProbe">
-            <div style="font-size: 24px; margin-bottom: 8px;">🧭</div>
-            <div>GENERATE PROBE / 生成直觉探针</div>
-            <div style="font-size: 12px; color: #999; margin-top: 4px;">基于你的想法和直觉生成探针</div>
+            <div class="probe-emoji">🧭</div>
+            <div class="probe-title" data-i18n="forge_probe_title">GENERATE PROBE</div>
+            <div class="probe-desc" data-i18n="forge_probe_desc">Generate intuition probes from your idea</div>
           </button>
         </div>
       </div>
 
-      <!-- Step 2: Auto-Generated Skill Review + Domain Selection -->
       <!-- Step 2: Five-Layer Structure Generation -->
       <div class="forge-page" id="forgePage2">
-        <div class="forge-page-title">YOUR SKILL IS BEING FORGED</div>
-        <div class="forge-page-subtitle">你的技能正在铸造中</div>
-        
+        <div class="forge-page-title" data-i18n="forge_forging_title">YOUR SKILL IS BEING FORGED</div>
+
         <div class="five-layer-generation" id="fiveLayerGeneration">
           <div class="layer-item">
             <div class="layer-status">🔄</div>
-            <div class="layer-name">01 DEFINING / 定义</div>
+            <div class="layer-name" data-i18n="forge_layer_1">01 DEFINING</div>
             <div class="layer-progress"><div class="progress-bar" style="width: 25%;"></div></div>
           </div>
-          
+
           <div class="layer-item">
             <div class="layer-status">🔄</div>
-            <div class="layer-name">02 INSTANTIATING / 场景举例</div>
+            <div class="layer-name" data-i18n="forge_layer_2">02 INSTANTIATING</div>
             <div class="layer-progress"><div class="progress-bar" style="width: 20%;"></div></div>
           </div>
-          
+
           <div class="layer-item">
             <div class="layer-status">🔄</div>
-            <div class="layer-name">03 FENCING / 边界定义</div>
+            <div class="layer-name" data-i18n="forge_layer_3">03 FENCING</div>
             <div class="layer-progress"><div class="progress-bar" style="width: 15%;"></div></div>
           </div>
-          
+
           <div class="layer-item">
             <div class="layer-status">🔄</div>
-            <div class="layer-name">04 VALIDATING / 验证测试</div>
+            <div class="layer-name" data-i18n="forge_layer_4">04 VALIDATING</div>
             <div class="layer-progress"><div class="progress-bar" style="width: 10%;"></div></div>
           </div>
-          
+
           <div class="layer-item">
             <div class="layer-status">🔄</div>
-            <div class="layer-name">05 CONTEXTUALIZING / 文化适配</div>
+            <div class="layer-name" data-i18n="forge_layer_5">05 CONTEXTUALIZING</div>
             <div class="layer-progress"><div class="progress-bar" style="width: 5%;"></div></div>
           </div>
-          
+
           <div class="forge-separator" style="margin: 24px 0;"></div>
-          
-          <div class="forge-ready" id="forgeReady" style="text-align: center; padding: 20px; background: #f0f9ff; border-radius: 4px; display: none;">
-            <div style="font-size: 24px; margin-bottom: 8px;">✓</div>
-            <div style="font-weight: bold;">Ready to forge / 准备铸造</div>
-            <button class="forge-next" data-next="3" style="margin-top: 16px;">PROCEED TO PUBLISH →</button>
+
+          <div class="forge-ready" id="forgeReady" style="display: none;">
+            <div class="forge-ready-check">✓</div>
+            <div class="forge-ready-text" data-i18n="forge_ready">Ready to forge</div>
+            <button class="forge-next" data-next="3" data-i18n="forge_proceed">PROCEED TO PUBLISH →</button>
           </div>
         </div>
       </div>
 
       <!-- Step 3: Preview & Review -->
       <div class="forge-page" id="forgePage3">
-        <div class="forge-page-title">YOUR SKILL / 你的技能</div>
-        <div class="forge-page-subtitle">基于你的想法和直觉，AI生成了：你可以编辑调整</div>
+        <div class="forge-page-title" data-i18n="forge_skill_title">YOUR SKILL</div>
+        <div class="forge-page-subtitle" data-i18n="forge_skill_subtitle">AI generated this from your idea — you can edit it</div>
 
         <!-- Auto-Generated Content with Edit Mode -->
         <div class="skill-display">
           <!-- Editable: Skill Name -->
           <div class="skill-item">
-            <div class="skill-item-label">技能名称 / Name <span style="color: #999; font-size: 12px;">✏️ 可编辑</span></div>
+            <div class="skill-item-label">
+              <span data-i18n="forge_label_name">SKILL NAME</span>
+              <span class="forge-editable-hint" data-i18n="forge_label_editable">✏️ editable</span>
+            </div>
             <input
               type="text"
               class="skill-editable-input"
               id="reviewSkillName"
-              placeholder="技能名称..."
+              placeholder="Skill name…"
+              data-i18n-placeholder="forge_skill_name_ph"
               value=""
             />
           </div>
 
           <!-- Editable: Skill Definition -->
           <div class="skill-item">
-            <div class="skill-item-label">技能描述 / Definition <span style="color: #999; font-size: 12px;">✏️ 可编辑</span></div>
+            <div class="skill-item-label">
+              <span data-i18n="forge_label_def">DEFINITION</span>
+              <span class="forge-editable-hint" data-i18n="forge_label_editable">✏️ editable</span>
+            </div>
             <textarea
               class="skill-editable-textarea"
               id="reviewSkillDef"
-              placeholder="技能定义..."
+              placeholder="Skill definition…"
+              data-i18n-placeholder="forge_skill_def_ph"
             ></textarea>
           </div>
 
           <!-- Read-only: When to Use -->
           <div class="skill-item">
-            <div class="skill-item-label">使用场景 / When to Use</div>
-            <div class="skill-item-content" id="reviewUseWhen">生成中...</div>
+            <div class="skill-item-label" data-i18n="forge_label_when">WHEN TO USE</div>
+            <div class="skill-item-content" id="reviewUseWhen">…</div>
           </div>
 
           <!-- Read-only: When NOT to Use -->
           <div class="skill-item">
-            <div class="skill-item-label">不被允许的场景 / When NOT to Use</div>
-            <div class="skill-item-content" id="reviewRefuseWhen">生成中...</div>
+            <div class="skill-item-label" data-i18n="forge_label_refuse">WHEN NOT TO USE</div>
+            <div class="skill-item-content" id="reviewRefuseWhen">…</div>
           </div>
         </div>
 
         <!-- Skill Category Selection -->
         <div class="skill-category-section">
-          <div class="skill-item-label">技能分类 / Domain</div>
+          <div class="skill-item-label" data-i18n="forge_label_domain">DOMAIN</div>
           <div class="domain-grid" id="domainGridStep2">
             <div class="domain-choice" data-domain="safety">🛡️ Safety</div>
             <div class="domain-choice" data-domain="science">🔬 Science</div>
@@ -591,72 +597,72 @@
 
         <!-- User Feedback (Optional) -->
         <div class="skill-feedback-section">
-          <div class="skill-item-label">想要重新生成？/ Regenerate? (Optional)</div>
+          <div class="skill-item-label" data-i18n="forge_regen_label">REGENERATE? (optional)</div>
           <div class="feedback-input-group">
-            <textarea class="minimal-textarea" placeholder="告诉AI你想要什么改动...  Tell AI what to change" id="skillFeedback"></textarea>
+            <textarea class="minimal-textarea" placeholder="Tell AI what to change…" data-i18n-placeholder="forge_regen_ph" id="skillFeedback"></textarea>
             <button class="btn-regen-send" id="btnRegenerateSkill">
               <span class="regen-emoji">🔄</span>
-              <span class="regen-label">重新生成<br>Regen</span>
+              <span class="regen-label" data-i18n="forge_regen_btn">Regen</span>
             </button>
           </div>
         </div>
 
         <!-- Preview & Confirmation -->
         <div class="skill-confirmation-minimal">
-          <button class="btn-confirm-skill" id="btnPreviewSkill">👁 预览完整技能 / Preview Full Skill</button>
-          <button class="btn-secondary" id="btnConfirmSkill" style="margin-top: 12px; width: 100%;">继续发布 / Publish →</button>
+          <button class="btn-confirm-skill" id="btnPreviewSkill" data-i18n="forge_preview_btn">👁 Preview Full Skill</button>
+          <button class="btn-secondary" id="btnConfirmSkill" style="margin-top: 12px; width: 100%;" data-i18n="forge_confirm_btn">Continue to Publish →</button>
         </div>
       </div>
 
       <!-- Step 4: Rights & Publish -->
       <div class="forge-page" id="forgePage4">
-        <div class="forge-page-title">RIGHTS & PUBLISH / 权益与发布</div>
+        <div class="forge-page-title" data-i18n="forge_rights_title">RIGHTS & PUBLISH</div>
 
         <!-- Creator Rights -->
         <div class="forge-creator-rights">
-          <div class="rights-title">CREATOR RIGHTS / 创作者权益</div>
+          <div class="rights-title" data-i18n="forge_creator_rights">CREATOR RIGHTS</div>
           <div class="forge-field">
-            <label>AUTHOR / 作者署名</label>
-            <input type="text" class="forge-input" placeholder="Your name or pseudonym" id="forgeAuthor">
+            <label data-i18n="forge_author_label">AUTHOR</label>
+            <input type="text" class="forge-input" placeholder="Your name or pseudonym" data-i18n-placeholder="forge_author_ph" id="forgeAuthor">
           </div>
           <div class="forge-field">
-            <label>COMMERCIAL USE / 商用条件</label>
+            <label data-i18n="forge_commercial_label">COMMERCIAL USE</label>
             <div class="forge-tags" id="commercialTags">
-              <span class="forge-tag" data-value="allowed">允许 Allowed</span>
-              <span class="forge-tag" data-value="authorized">需授权 Authorization Required</span>
-              <span class="forge-tag" data-value="prohibited">禁止 Prohibited</span>
+              <span class="forge-tag" data-value="allowed" data-i18n="forge_tag_allowed">Allowed</span>
+              <span class="forge-tag" data-value="authorized" data-i18n="forge_tag_auth">Authorization Required</span>
+              <span class="forge-tag" data-value="prohibited" data-i18n="forge_tag_prohibited">Prohibited</span>
             </div>
           </div>
           <div class="forge-field">
-            <label>REMIX / 二次创作</label>
+            <label data-i18n="forge_remix_label">REMIX</label>
             <div class="forge-tags" id="remixTags">
-              <span class="forge-tag" data-value="yes">允许 Remix OK</span>
-              <span class="forge-tag" data-value="share-alike">相同方式共享 Share-alike</span>
-              <span class="forge-tag" data-value="no">禁止 No Remix</span>
+              <span class="forge-tag" data-value="yes" data-i18n="forge_tag_remix_ok">Remix OK</span>
+              <span class="forge-tag" data-value="share-alike" data-i18n="forge_tag_share_alike">Share-alike</span>
+              <span class="forge-tag" data-value="no" data-i18n="forge_tag_no_remix">No Remix</span>
             </div>
           </div>
         </div>
 
-        <!-- The Oath -->
+        <!-- The Covenant -->
         <div class="forge-oath">
-          <div class="oath-title">THE COVENANT / 契约</div>
+          <div class="oath-title" data-i18n="forge_covenant">THE COVENANT</div>
           <label class="oath-check">
             <input type="checkbox" id="oathRevision">
-            <span>I allow public revision rationale. 允许公开修订动机日志。</span>
+            <span data-i18n="forge_oath_1">I allow public revision rationale.</span>
           </label>
           <label class="oath-check">
             <input type="checkbox" id="oathChallenge">
-            <span>I accept community critique. 承诺接受社区审计与质疑。</span>
+            <span data-i18n="forge_oath_2">I accept community critique.</span>
           </label>
           <label class="oath-check">
             <input type="checkbox" id="oathHarm">
-            <span>I commit to no intentional harm. 承诺无主观恶意伤害。</span>
+            <span data-i18n="forge_oath_3">I commit to no intentional harm.</span>
           </label>
         </div>
 
         <div class="forge-nav">
-          <button class="forge-prev" data-prev="1">← BACK</button>
-          <button class="forge-publish" id="btnPublish" disabled>⚔ PUBLISH & FORGE</button>
+          <button class="forge-prev" data-prev="1" data-i18n="forge_back">← BACK</button>
+          <button class="forge-publish" id="btnPublish" disabled data-i18n="forge_publish_btn">⚔ PUBLISH & FORGE</button>
         </div>
 
         <!-- COMPLETION SECTION (shown after publish) -->
@@ -664,50 +670,47 @@
 
           <!-- Creator Card Section Header -->
           <div class="completion-header">
-            <h2 class="completion-title">Creator Card</h2>
-            <p class="completion-subtitle">Your perspective has been recorded. Download your card as proof of contribution.</p>
+            <h2 class="completion-title" data-i18n="knight_card_title">Creator Card</h2>
+            <p class="completion-subtitle" data-i18n="knight_card_desc">Your perspective has been recorded. Download your card as proof of contribution.</p>
           </div>
 
-          <!-- Commemorative Card -->
+          <!-- Commemorative Card — Square Badge Format -->
           <div class="commemorative-card">
-            <div class="card-border-outer">
-              <div class="card-border-inner">
-                <div class="card-title-main">The 42 Post</div>
-                <div class="card-header">Creator's Certificate · 创作者证书</div>
-                <div class="card-divider-top"></div>
-                <div class="card-crest">✨</div>
-                <div class="card-divider-line"></div>
-                <div class="card-creator-role">Community Creator</div>
-                <div class="card-skill-name" id="cardTitle">[Skill Title]</div>
-                <div class="card-meta"><p id="cardCreator">Created by: [Creator]</p></div>
-                <div class="card-rights">License: ⊕ Open · Remix: ✓</div>
-                <div class="card-soul-hash" id="cardSoulHash">Soul-Hash: [Loading...]</div>
-                <div class="card-forged-date" id="cardDate">Forged: [Date]</div>
-                <div class="card-divider-bottom"></div>
-                <div class="invite-code-label">INVITATION CODE · 邀请码</div>
-                <div class="invite-code-value" id="cardInviteCode">[Code]</div>
-                <div class="invite-code-desc">Share this code with those who share our values<br/>用邀请码分享给志同道合的伙伴</div>
-                <div class="card-divider-bottom"></div>
-                <div class="card-footer">www.42post.io</div>
-              </div>
+            <div class="sq-top">
+              <div class="sq-brand">THE 42 POST</div>
+              <div class="sq-cert" data-i18n="card_certificate">Creator's Certificate</div>
             </div>
+            <div class="sq-crest">✦</div>
+            <div class="sq-skill-name" id="cardTitle">[Skill Title]</div>
+            <div class="sq-creator-role">Community Creator</div>
+            <div class="sq-hr"></div>
+            <div class="sq-meta-row">
+              <span id="cardCreator">[Creator]</span>
+              <span id="cardDate">[Date]</span>
+            </div>
+            <div class="sq-hash-line" id="cardSoulHash">SOUL_xxxxxxxx</div>
+            <div class="sq-hr"></div>
+            <div class="sq-invite-label" data-i18n="forge_invite_label">INVITATION CODE</div>
+            <div class="sq-invite-code" id="cardInviteCode">[Code]</div>
+            <div class="sq-invite-desc" data-i18n="forge_invite_desc">Share this with those who share our values</div>
+            <div class="sq-url">www.42post.io</div>
           </div>
 
           <!-- Download Certificate Button -->
           <div class="completion-download-wrap">
-            <button id="btnDownloadCertificate">↓ DOWNLOAD CREATOR CARD</button>
+            <button id="btnDownloadCertificate" data-i18n="btn_download_card">↓ DOWNLOAD CREATOR CARD</button>
           </div>
 
           <!-- Email Message -->
           <div class="completion-email-block">
-            <p class="email-block-main">📧 所有文件已发送到你的邮件</p>
+            <p class="email-block-main" data-i18n="forge_email_sent">📧 All files sent to your email</p>
             <p class="email-block-addr" id="completionEmail">[Your Email]</p>
           </div>
 
           <!-- Action Buttons -->
           <div class="forge-completion-actions">
-            <button class="action-btn" id="btnViewDashboard">📊 Impact Dashboard</button>
-            <button class="action-btn action-btn-secondary" id="btnTryPlayground">🎮 Playground</button>
+            <button class="action-btn" id="btnViewDashboard" data-i18n="forge_dashboard">📊 Impact Dashboard</button>
+            <button class="action-btn action-btn-secondary" id="btnTryPlayground" data-i18n="forge_playground">🎮 Playground</button>
           </div>
         </div>
 

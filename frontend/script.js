@@ -560,6 +560,62 @@ const I18N = {
     btn_go_deeper: 'Go deeper → Turn this into a taste skill',
     showcase_title: 'THIS WEEK\'S QUESTION',
     creator_name_placeholder: 'Your name (optional)',
+    /* ── Forge modal labels ── */
+    forge_account: 'ACCOUNT',
+    forge_username_ph: 'Username',
+    forge_email_ph: 'Email',
+    forge_thought: 'YOUR THOUGHT',
+    forge_instruction: 'Any skill you wish or don\'t wish AI to have. Any idea counts.',
+    forge_idea_ph: 'e.g. AI should understand the silence of grief…',
+    forge_probe_title: 'GENERATE PROBE',
+    forge_probe_desc: 'Generate intuition probes from your idea',
+    forge_forging_title: 'YOUR SKILL IS BEING FORGED',
+    forge_layer_1: '01  DEFINING',
+    forge_layer_2: '02  INSTANTIATING',
+    forge_layer_3: '03  FENCING',
+    forge_layer_4: '04  VALIDATING',
+    forge_layer_5: '05  CONTEXTUALIZING',
+    forge_ready: 'Ready to forge',
+    forge_proceed: 'PROCEED TO PUBLISH →',
+    forge_skill_title: 'YOUR SKILL',
+    forge_skill_subtitle: 'AI generated this from your idea — you can edit it',
+    forge_label_name: 'SKILL NAME',
+    forge_label_editable: '✏️ editable',
+    forge_label_def: 'DEFINITION',
+    forge_label_when: 'WHEN TO USE',
+    forge_label_refuse: 'WHEN NOT TO USE',
+    forge_label_domain: 'DOMAIN',
+    forge_skill_name_ph: 'Skill name…',
+    forge_skill_def_ph: 'Skill definition…',
+    forge_regen_label: 'REGENERATE? (optional)',
+    forge_regen_ph: 'Tell AI what to change…',
+    forge_regen_btn: 'Regen',
+    forge_preview_btn: '👁  Preview Full Skill',
+    forge_confirm_btn: 'Continue to Publish →',
+    forge_rights_title: 'RIGHTS & PUBLISH',
+    forge_creator_rights: 'CREATOR RIGHTS',
+    forge_author_label: 'AUTHOR',
+    forge_author_ph: 'Your name or pseudonym',
+    forge_commercial_label: 'COMMERCIAL USE',
+    forge_remix_label: 'REMIX',
+    forge_tag_allowed: 'Allowed',
+    forge_tag_auth: 'Authorization Required',
+    forge_tag_prohibited: 'Prohibited',
+    forge_tag_remix_ok: 'Remix OK',
+    forge_tag_share_alike: 'Share-alike',
+    forge_tag_no_remix: 'No Remix',
+    forge_covenant: 'THE COVENANT',
+    forge_oath_1: 'I allow public revision rationale.',
+    forge_oath_2: 'I accept community critique.',
+    forge_oath_3: 'I commit to no intentional harm.',
+    forge_back: '← BACK',
+    forge_publish_btn: '⚔  PUBLISH & FORGE',
+    forge_invite_label: 'INVITATION CODE',
+    forge_invite_desc: 'Share this with those who share our values',
+    forge_email_sent: '📧  All files sent to your email',
+    card_certificate: 'Creator\'s Certificate',
+    forge_dashboard: '📊  Impact Dashboard',
+    forge_playground: '🎮  Playground',
   },
   cn: {
     masthead_subtitle: 'AI 每天都在变得更聪明。<br>但它有让我们的生活更好吗？',
@@ -634,6 +690,62 @@ const I18N = {
     btn_go_deeper: '深入 → 将它变成想法技能',
     showcase_title: '本周问题',
     creator_name_placeholder: '你的名字（可选）',
+    /* ── 锻造流程标签 ── */
+    forge_account: '账户',
+    forge_username_ph: '用户名',
+    forge_email_ph: '邮箱',
+    forge_thought: '你的想法',
+    forge_instruction: '你希望 AI 拥有或最不希望它拥有的技能。任何想法都可以。',
+    forge_idea_ph: '例：我希望 AI 能理解人类悲伤时的沉默…',
+    forge_probe_title: '生成直觉探针',
+    forge_probe_desc: '基于你的想法和直觉生成探针',
+    forge_forging_title: '你的技能正在铸造中',
+    forge_layer_1: '01  定义',
+    forge_layer_2: '02  场景举例',
+    forge_layer_3: '03  边界定义',
+    forge_layer_4: '04  验证测试',
+    forge_layer_5: '05  文化适配',
+    forge_ready: '准备铸造',
+    forge_proceed: '继续发布 →',
+    forge_skill_title: '你的技能',
+    forge_skill_subtitle: '基于你的想法和直觉，AI 生成了以下内容，你可以编辑调整',
+    forge_label_name: '技能名称',
+    forge_label_editable: '✏️ 可编辑',
+    forge_label_def: '技能描述',
+    forge_label_when: '使用场景',
+    forge_label_refuse: '不被允许的场景',
+    forge_label_domain: '技能分类',
+    forge_skill_name_ph: '技能名称…',
+    forge_skill_def_ph: '技能描述…',
+    forge_regen_label: '想要重新生成？（可选）',
+    forge_regen_ph: '告诉 AI 你想要什么改动…',
+    forge_regen_btn: '重新生成',
+    forge_preview_btn: '👁  预览完整技能',
+    forge_confirm_btn: '继续发布 →',
+    forge_rights_title: '权益与发布',
+    forge_creator_rights: '创作者权益',
+    forge_author_label: '作者署名',
+    forge_author_ph: '你的名字或笔名',
+    forge_commercial_label: '商用条件',
+    forge_remix_label: '二次创作',
+    forge_tag_allowed: '允许',
+    forge_tag_auth: '需授权',
+    forge_tag_prohibited: '禁止',
+    forge_tag_remix_ok: '允许 Remix',
+    forge_tag_share_alike: '相同方式共享',
+    forge_tag_no_remix: '禁止 Remix',
+    forge_covenant: '契约',
+    forge_oath_1: '允许公开修订动机日志。',
+    forge_oath_2: '承诺接受社区审计与质疑。',
+    forge_oath_3: '承诺无主观恶意伤害。',
+    forge_back: '← 返回',
+    forge_publish_btn: '⚔  发布并铸造',
+    forge_invite_label: '邀请码',
+    forge_invite_desc: '用邀请码分享给志同道合的伙伴',
+    forge_email_sent: '📧  所有文件已发送到你的邮件',
+    card_certificate: '创作者证书',
+    forge_dashboard: '📊  数据面板',
+    forge_playground: '🎮  探索广场',
   }
 };
 
@@ -3489,154 +3601,77 @@ async function sendForgeSuccessEmail(options) {
 
 /* ═══ DOWNLOAD CREATOR CARD ═══ */
 function downloadCreatorCard(skillData, soulHash) {
-  // Get the commemorative card element
   const cardElement = document.querySelector('.commemorative-card');
-  if (!cardElement) {
-    alert('Certificate card not found');
-    return;
-  }
+  if (!cardElement) { alert('Certificate card not found'); return; }
 
-  // Clone the card for downloading
-  const cardClone = cardElement.cloneNode(true);
-
-  // Create a new HTML document for the certificate
   const certificateHTML = `
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Creator Card - ${skillData.title || 'Skill'}</title>
+  <title>Creator Card — ${skillData.title || 'Skill'}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
-      font-family: 'Playfair Display', 'Courier New', serif;
-      background: #f5f5f5;
-      padding: 40px;
+      background: #f0ebe2;
       display: flex;
       justify-content: center;
       align-items: center;
       min-height: 100vh;
+      font-family: 'JetBrains Mono', monospace;
     }
-    .certificate-wrapper {
-      background: white;
-      padding: 40px;
-      border-radius: 3px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    }
+    /* Square card */
     .commemorative-card {
-      background: linear-gradient(135deg, #f5f5f0 0%, #ffffff 100%);
-      border: 2px solid #222;
-      padding: 35px 30px;
-      max-width: 500px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
       text-align: center;
-      font-family: 'Courier New', monospace;
-      border-radius: 2px;
+      position: relative;
+      width: 340px;
+      height: 340px;
+      padding: 24px 26px 20px;
+      background: linear-gradient(150deg, #faf5ec 0%, #f3e8d5 55%, #f0e2ce 100%);
+      border: 1px solid rgba(60,48,40,0.16);
+      border-radius: 12px;
+      box-shadow: 0 4px 28px rgba(42,32,24,0.14), 0 1px 5px rgba(42,32,24,0.08);
+      overflow: hidden;
     }
-    .card-border-outer {
-      border: 4px solid #222;
-      padding: 10px;
-      background: white;
+    .commemorative-card::before,
+    .commemorative-card::after {
+      content: '✦';
+      position: absolute;
+      font-size: 8px;
+      color: rgba(138,124,110,0.28);
     }
-    .card-border-inner {
-      border: 1px solid #222;
-      padding: 32px 60px;
-      background: linear-gradient(135deg, #f5f5f0 0%, #ffffff 100%);
-    }
-    .card-title-main {
-      font-size: 24px;
-      font-weight: bold;
-      color: #222;
-      margin-bottom: 4px;
-      font-family: 'Playfair Display', serif;
-      letter-spacing: 2px;
-    }
-    .card-header {
-      font-size: 11px;
-      font-style: italic;
-      color: #999;
-      margin-bottom: 8px;
-      letter-spacing: 0.5px;
-    }
-    .card-divider-top, .card-divider-line, .card-divider-bottom {
-      width: 100%;
-      height: 1px;
-      background: #ddd;
-      margin: 12px 0;
-    }
-    .card-crest {
-      font-size: 40px;
-      margin: 12px 0;
-      line-height: 1;
-    }
-    .card-creator-role {
-      font-size: 14px;
-      font-weight: bold;
-      color: #222;
-      margin: 6px 0 4px 0;
-      font-family: 'Playfair Display', serif;
-    }
-    .card-skill-name {
-      font-size: 12px;
-      font-style: italic;
-      color: #666;
-      margin: 4px 0;
-      font-family: 'Playfair Display', serif;
-    }
-    .card-meta {
-      font-size: 11px;
-      color: #999;
-      margin: 4px 0;
-      line-height: 1.6;
-      font-family: 'Courier New', monospace;
-    }
-    .card-meta p {
-      margin: 2px 0;
-    }
-    .card-rights {
-      font-size: 10px;
-      color: #bbb;
-      margin: 4px 0;
-      font-family: 'Courier New', monospace;
-      letter-spacing: 0.5px;
-    }
-    .card-soul-hash {
-      font-size: 13px;
-      color: #222;
-      margin: 6px 0;
-      word-break: break-all;
-      font-family: 'Courier New', monospace;
-      font-weight: bold;
-      letter-spacing: 0.5px;
-    }
-    .card-forged-date {
-      font-size: 11px;
-      color: #666;
-      margin: 4px 0;
-      font-family: 'Courier New', monospace;
-    }
-    .card-footer {
-      font-size: 9px;
-      color: #222;
-      font-weight: bold;
-      letter-spacing: 0.5px;
-      font-family: 'Courier New', monospace;
-      margin-top: 8px;
-    }
+    .commemorative-card::before { top: 10px; left: 13px; }
+    .commemorative-card::after  { bottom: 10px; right: 13px; }
+    .sq-top { display:flex; flex-direction:column; align-items:center; gap:3px; width:100%; }
+    .sq-brand { font-family:'JetBrains Mono',monospace; font-size:9px; font-weight:700; letter-spacing:3px; color:#3c3028; text-transform:uppercase; }
+    .sq-cert  { font-family:'Playfair Display',serif; font-size:10px; font-style:italic; color:#8a7c6e; }
+    .sq-crest { font-size:26px; color:#d4a849; line-height:1; }
+    .sq-skill-name { font-family:'Playfair Display',serif; font-size:17px; font-weight:700; color:#2a2018; line-height:1.25; max-width:88%; word-break:break-word; }
+    .sq-creator-role { font-family:'JetBrains Mono',monospace; font-size:7.5px; letter-spacing:2px; color:#8a7c6e; text-transform:uppercase; }
+    .sq-hr { width:56%; height:1px; background:rgba(60,48,40,0.13); border:none; margin:0 auto; }
+    .sq-meta-row { display:flex; justify-content:space-between; width:88%; font-family:'JetBrains Mono',monospace; font-size:7.5px; color:#8a7c6e; }
+    .sq-hash-line { font-family:'JetBrains Mono',monospace; font-size:7.5px; color:rgba(60,48,40,0.38); }
+    .sq-invite-label { font-family:'JetBrains Mono',monospace; font-size:7px; letter-spacing:2px; color:rgba(138,124,110,0.55); text-transform:uppercase; }
+    .sq-invite-code  { font-family:'JetBrains Mono',monospace; font-size:16px; font-weight:700; color:#3c3028; letter-spacing:2.5px; }
+    .sq-invite-desc  { font-family:'JetBrains Mono',monospace; font-size:6.5px; color:rgba(138,124,110,0.42); line-height:1.5; max-width:80%; }
+    .sq-url { font-family:'JetBrains Mono',monospace; font-size:7px; letter-spacing:1px; color:rgba(138,124,110,0.38); }
     @media print {
-      body { background: white; padding: 0; }
-      .certificate-wrapper { background: transparent; padding: 0; box-shadow: none; }
+      body { background: #f0ebe2; }
+      .commemorative-card { box-shadow: none; }
     }
   </style>
 </head>
 <body>
-  <div class="certificate-wrapper">
-    ${cardElement.outerHTML}
-  </div>
+  ${cardElement.outerHTML}
   <script>
-    window.addEventListener('load', () => {
-      window.print();
-    });
+    window.addEventListener('load', () => setTimeout(() => window.print(), 400));
   </script>
 </body>
 </html>`;

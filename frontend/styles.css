@@ -8999,3 +8999,205 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
   animation: spin-regen 0.7s linear infinite;
 }
 
+
+
+/* ╔═══════════════════════════════════════════════════════════════════╗
+   ║  SQUARE CREATOR CARD  —  Badge / Token aesthetic                 ║
+   ║  Replaces the old double-border portrait rectangle               ║
+   ╚═══════════════════════════════════════════════════════════════════╝ */
+
+/* Override old commemorative-card styles */
+.commemorative-card {
+  all: unset;
+  display: flex !important;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  text-align: center;
+  position: relative;
+  /* Square: match width with aspect-ratio */
+  width: 100%;
+  max-width: 300px;
+  aspect-ratio: 1 / 1;
+  margin: 0 auto 18px !important;
+  padding: 20px 22px 16px;
+  box-sizing: border-box;
+  /* Warm cream background */
+  background: linear-gradient(150deg, #faf5ec 0%, #f3e8d5 55%, #f0e2ce 100%);
+  border: 1px solid rgba(60,48,40,0.16);
+  border-radius: 10px;
+  box-shadow: 0 3px 20px rgba(42,32,24,0.11), 0 1px 4px rgba(42,32,24,0.07);
+  overflow: hidden;
+}
+
+/* Corner ornaments via pseudo-elements */
+.commemorative-card::before,
+.commemorative-card::after {
+  content: '✦';
+  position: absolute;
+  font-size: 7px;
+  color: rgba(138,124,110,0.30);
+  line-height: 1;
+  pointer-events: none;
+}
+.commemorative-card::before { top: 9px;    left: 11px;  }
+.commemorative-card::after  { bottom: 9px; right: 11px; }
+
+/* ── Brand header ── */
+.sq-top {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  width: 100%;
+}
+.sq-brand {
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  color: var(--wc-charcoal, #3c3028);
+  text-transform: uppercase;
+}
+.sq-cert {
+  font-family: var(--font-serif, 'Playfair Display', serif);
+  font-size: 9px;
+  font-style: italic;
+  color: var(--wc-muted, #8a7c6e);
+  letter-spacing: 0.3px;
+}
+
+/* ── Central sparkle icon ── */
+.sq-crest {
+  font-size: 22px;
+  color: #d4a849;
+  line-height: 1;
+}
+
+/* ── Skill name — hero element ── */
+.sq-skill-name {
+  font-family: var(--font-serif, 'Playfair Display', serif);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--wc-ink, #2a2018);
+  line-height: 1.25;
+  max-width: 88%;
+  word-break: break-word;
+}
+
+/* ── Creator role badge ── */
+.sq-creator-role {
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: 7px;
+  letter-spacing: 2.2px;
+  color: var(--wc-muted, #8a7c6e);
+  text-transform: uppercase;
+}
+
+/* ── Thin divider rules ── */
+.sq-hr {
+  width: 56%;
+  height: 1px;
+  background: rgba(60,48,40,0.13);
+  border: none;
+  margin: 0 auto;
+  flex-shrink: 0;
+}
+
+/* ── Creator + Date row ── */
+.sq-meta-row {
+  display: flex;
+  justify-content: space-between;
+  width: 88%;
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: 7px;
+  color: var(--wc-muted, #8a7c6e);
+}
+
+/* ── Soul-Hash ── */
+.sq-hash-line {
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: 7px;
+  color: rgba(60,48,40,0.40);
+  letter-spacing: 0.3px;
+}
+
+/* ── Invitation code section ── */
+.sq-invite-label {
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: 6.5px;
+  letter-spacing: 2px;
+  color: rgba(138,124,110,0.55);
+  text-transform: uppercase;
+  margin-bottom: 1px;
+}
+.sq-invite-code {
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--wc-charcoal, #3c3028);
+  letter-spacing: 2.5px;
+}
+.sq-invite-desc {
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: 6.5px;
+  color: rgba(138,124,110,0.45);
+  line-height: 1.5;
+  max-width: 80%;
+}
+
+/* ── Footer URL ── */
+.sq-url {
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: 6.5px;
+  letter-spacing: 1px;
+  color: rgba(138,124,110,0.40);
+}
+
+/* ── Responsive scaling ── */
+@media (max-width: 559px) {
+  .commemorative-card { max-width: 260px !important; }
+}
+@media (max-width: 360px) {
+  .commemorative-card { max-width: 230px !important; }
+  .sq-invite-code { font-size: 12px; letter-spacing: 1.5px; }
+  .sq-skill-name { font-size: 13px; }
+}
+
+/* ── forge-ready box — clean up inline styles ── */
+.forge-ready {
+  text-align: center;
+  padding: 20px;
+  background: linear-gradient(135deg,
+    rgba(196,212,180,0.25) 0%,
+    rgba(240,208,144,0.18) 100%);
+  border: 1px solid rgba(60,48,40,0.09);
+  border-radius: 10px;
+}
+.forge-ready-check {
+  font-size: 22px;
+  margin-bottom: 6px;
+  color: var(--wc-muted, #8a7c6e);
+}
+.forge-ready-text {
+  font-family: var(--font-mono, monospace);
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: 1px;
+  color: var(--wc-charcoal, #3c3028);
+  text-transform: uppercase;
+  margin-bottom: 14px;
+}
+
+/* ── Probe button clean styles (replace inline) ── */
+.probe-emoji  { font-size: 24px; margin-bottom: 8px; display: block; }
+.probe-title  { font-size: 13px; font-weight: 600; letter-spacing: 1px; }
+.probe-desc   { font-size: 11px; color: rgba(138,124,110,0.7); margin-top: 4px; }
+
+/* ── forge-editable-hint ── */
+.forge-editable-hint {
+  font-size: 11px;
+  color: var(--wc-muted, #8a7c6e);
+  font-weight: 400;
+  margin-left: 6px;
+}
