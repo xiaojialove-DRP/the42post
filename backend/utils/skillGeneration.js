@@ -22,7 +22,8 @@ if (!process.env.GEMINI_API_KEY) {
   console.error('Please set GEMINI_API_KEY in your Railway variables.');
 }
 
-const MODEL_NAME = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+// gemini-1.5-flash: 1500 req/day free tier  vs  gemini-2.5-flash: only 20/day
+const MODEL_NAME = process.env.GEMINI_MODEL || 'gemini-1.5-flash';
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || 'missing-key');
 
 // ─── Shared Gemini call helper (JSON mode) ───
@@ -44,9 +45,19 @@ async function callGeminiJSON(prompt, maxTokens = 1500) {
   try {
     parsed = JSON.parse(text);
   } catch {
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) throw new Error('Failed to parse Gemini response as JSON');
-    parsed = JSON.parse(jsonMatch[0]);
+    // Gemini sometimes wraps JSON in markdown code fences: ```json {...} ```
+    // Strip fences, then try the first {...} or [...] block
+    const stripped = text
+      .replace(/^```(?:json)?\s*/i, '')
+      .replace(/\s*```\s*$/, '')
+      .trim();
+    try {
+      parsed = JSON.parse(stripped);
+    } catch {
+      const jsonMatch = stripped.match(/(\{[\s\S]*\}|\[[\s\S]*\])/);
+      if (!jsonMatch) throw new Error('Failed to parse Gemini response as JSON');
+      parsed = JSON.parse(jsonMatch[0]);
+    }
   }
 
   return {
