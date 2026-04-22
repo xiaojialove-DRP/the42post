@@ -91,11 +91,11 @@ export async function initDatabase() {
     `);
     await db.query(`CREATE INDEX IF NOT EXISTS idx_skill_manifests_soul_hash ON skill_manifests(soul_hash)`);
 
-    // Create probe_logs table
+    // Create probe_logs table (user_id nullable — probe endpoint is public, no auth required)
     await db.query(`
       CREATE TABLE IF NOT EXISTS probe_logs (
         id TEXT PRIMARY KEY,
-        user_id TEXT NOT NULL REFERENCES users(id),
+        user_id TEXT REFERENCES users(id),
         idea_text TEXT NOT NULL,
         generated_probe TEXT NOT NULL,
         model_version VARCHAR(50),
@@ -103,6 +103,33 @@ export async function initDatabase() {
       )
     `);
     await db.query(`CREATE INDEX IF NOT EXISTS idx_probe_logs_user ON probe_logs(user_id)`);
+
+    // Migration: if probe_logs already exists with NOT NULL on user_id, recreate it.
+    // SQLite cannot ALTER COLUMN, so we use the rename-recreate pattern.
+    try {
+      // Test if we can insert a row with null user_id (if it fails, old schema is in place)
+      await db.query(`INSERT INTO probe_logs (id, user_id, idea_text, generated_probe) VALUES ('__schema_test__', NULL, 'test', 'test')`);
+      await db.query(`DELETE FROM probe_logs WHERE id = '__schema_test__'`);
+    } catch (schemaErr) {
+      if (schemaErr.message && schemaErr.message.includes('NOT NULL')) {
+        console.log('Migrating probe_logs: removing NOT NULL constraint on user_id…');
+        await db.query(`ALTER TABLE probe_logs RENAME TO probe_logs_old`);
+        await db.query(`
+          CREATE TABLE probe_logs (
+            id TEXT PRIMARY KEY,
+            user_id TEXT REFERENCES users(id),
+            idea_text TEXT NOT NULL,
+            generated_probe TEXT NOT NULL,
+            model_version VARCHAR(50),
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+          )
+        `);
+        await db.query(`INSERT INTO probe_logs SELECT * FROM probe_logs_old`);
+        await db.query(`DROP TABLE probe_logs_old`);
+        await db.query(`CREATE INDEX IF NOT EXISTS idx_probe_logs_user ON probe_logs(user_id)`);
+        console.log('✓ probe_logs migration complete');
+      }
+    }
 
     // Create skill_usage_logs table
     await db.query(`
