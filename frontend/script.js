@@ -704,12 +704,13 @@ let SLOT_DATA = [];
 const getAllSkillsForVibe = () => {
   try {
     const forgedSkills = (typeof getRecentForges === 'function') ? getRecentForges() : [];
-    const allSkills = [...(SHARED_SKILLS || []), ...forgedSkills];
+    const base = (typeof ALL_SKILLS !== 'undefined' ? ALL_SKILLS : SHARED_SKILLS) || [];
+    const allSkills = [...base, ...forgedSkills];
     // Sort by starlight descending to show most popular skills first
     return allSkills.sort((a, b) => (b.starlight || 0) - (a.starlight || 0));
   } catch (e) {
     console.error('Error in getAllSkillsForVibe:', e);
-    return SHARED_SKILLS || [];
+    return (typeof ALL_SKILLS !== 'undefined' ? ALL_SKILLS : SHARED_SKILLS) || [];
   }
 };
 
@@ -5991,7 +5992,10 @@ function initAgentArchiveView() {
     descCn: s.descCn || s.desc
   }));
 
-  const allSkills = [...SHARED_SKILLS, ...forgedSkillsWithStarlight];
+  // ALL_SKILLS = SHARED_SKILLS (21) + DEMO_SKILLS_50 (39) = 60 total, defined in skills.js.
+  // Fallback to SHARED_SKILLS in case ALL_SKILLS isn't yet available.
+  const baseSkills = (typeof ALL_SKILLS !== 'undefined' ? ALL_SKILLS : SHARED_SKILLS);
+  const allSkills = [...baseSkills, ...forgedSkillsWithStarlight];
   
   function resizeCanvas() {
     const rect = canvasWrap.getBoundingClientRect();
