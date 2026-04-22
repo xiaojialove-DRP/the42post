@@ -36,7 +36,7 @@
   --font-sans: -apple-system, 'Helvetica Neue', Arial, sans-serif;
   --gap: 20px;
   --section-pad: 40px 0;
-  --max-w: 1200px;
+  --max-w: clamp(900px, 90vw, 1320px);
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -1246,10 +1246,6 @@ body {
 
 .headline-hero {
   padding: 64px 0 40px;
-  max-width: var(--max-w);
-  margin: 0 auto;
-  padding-left: 24px;
-  padding-right: 24px;
 }
 
 /* Upgrade section heading for AI-era feel */
