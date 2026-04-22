@@ -658,70 +658,45 @@
         <div class="forge-completion-section" id="forgeCompletionSection" style="display: none;">
 
           <!-- Creator Card Section Header -->
-          <div style="text-align: center; margin-bottom: 30px;">
-            <h2 style="font-size: 28px; font-weight: bold; color: #222; margin-bottom: 12px; font-family: 'Playfair Display', serif;">Creator Card</h2>
-            <p style="font-size: 14px; color: #666; line-height: 1.8; max-width: 600px; margin: 0 auto;">Your perspective has been recorded. Download your card as proof of contribution.</p>
+          <div class="completion-header">
+            <h2 class="completion-title">Creator Card</h2>
+            <p class="completion-subtitle">Your perspective has been recorded. Download your card as proof of contribution.</p>
           </div>
 
           <!-- Commemorative Card -->
           <div class="commemorative-card">
             <div class="card-border-outer">
               <div class="card-border-inner">
-                <!-- Header -->
                 <div class="card-title-main">The 42 Post</div>
                 <div class="card-header">Creator's Certificate · 创作者证书</div>
-
-                <!-- Crest/Icon -->
                 <div class="card-divider-top"></div>
                 <div class="card-crest">✨</div>
                 <div class="card-divider-line"></div>
-
-                <!-- Creator Role -->
                 <div class="card-creator-role">Community Creator</div>
-
-                <!-- Skill Info -->
                 <div class="card-skill-name" id="cardTitle">[Skill Title]</div>
-                <div class="card-meta">
-                  <p id="cardCreator">Created by: [Creator]</p>
-                </div>
-
-                <!-- Rights Info -->
-                <div class="card-rights">
-                  License: ⊕ Open · Remix: ✓
-                </div>
-
-                <!-- Soul Hash and Date -->
+                <div class="card-meta"><p id="cardCreator">Created by: [Creator]</p></div>
+                <div class="card-rights">License: ⊕ Open · Remix: ✓</div>
                 <div class="card-soul-hash" id="cardSoulHash">Soul-Hash: [Loading...]</div>
                 <div class="card-forged-date" id="cardDate">Forged: [Date]</div>
-
-                <!-- Divider -->
                 <div class="card-divider-bottom"></div>
-
-                <!-- Invitation Code -->
-                <div style="font-size: 10px; color: #bbb; margin: 8px 0; letter-spacing: 1px;">INVITATION CODE · 邀请码</div>
-                <div style="font-size: 14px; font-weight: bold; color: #222; margin: 4px 0; font-family: 'Courier New', monospace; letter-spacing: 2px;" id="cardInviteCode">[Code]</div>
-                <div style="font-size: 9px; color: #ccc; margin: 6px 0; line-height: 1.5;">Share this code with those who share our values<br/>用邀请码分享给志同道合的伙伴</div>
-
-                <!-- Divider -->
+                <div class="invite-code-label">INVITATION CODE · 邀请码</div>
+                <div class="invite-code-value" id="cardInviteCode">[Code]</div>
+                <div class="invite-code-desc">Share this code with those who share our values<br/>用邀请码分享给志同道合的伙伴</div>
                 <div class="card-divider-bottom"></div>
-
-                <!-- Footer -->
                 <div class="card-footer">www.42post.io</div>
               </div>
             </div>
           </div>
 
           <!-- Download Certificate Button -->
-          <div style="text-align: center; margin: 40px 0 20px 0;">
-            <button id="btnDownloadCertificate" style="display: inline-block; background: #222; color: white; padding: 14px 40px; text-decoration: none; border: none; border-radius: 3px; font-size: 12px; font-weight: bold; letter-spacing: 0.5px; cursor: pointer; transition: background 0.2s;">
-              ↓ DOWNLOAD CREATOR CARD
-            </button>
+          <div class="completion-download-wrap">
+            <button id="btnDownloadCertificate">↓ DOWNLOAD CREATOR CARD</button>
           </div>
 
           <!-- Email Message -->
-          <div style="text-align: center; margin: 30px 0; padding: 20px; background: #f9f9f9; border-radius: 3px; max-width: 500px; margin-left: auto; margin-right: auto;">
-            <p style="font-size: 14px; color: #333; margin-bottom: 8px;">📧 所有文件已发送到你的邮件</p>
-            <p style="font-size: 12px; color: #666;" id="completionEmail">[Your Email]</p>
+          <div class="completion-email-block">
+            <p class="email-block-main">📧 所有文件已发送到你的邮件</p>
+            <p class="email-block-addr" id="completionEmail">[Your Email]</p>
           </div>
 
           <!-- Action Buttons -->
