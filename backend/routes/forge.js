@@ -16,10 +16,11 @@ import {
 const router = express.Router();
 
 // ═══ GENERATE INTUITION PROBE ═══
-router.post('/probe', requireAuth, async (req, res, next) => {
+// No auth required — probe is called before account creation (Step 1 of forge)
+router.post('/probe', async (req, res, next) => {
   try {
     const { idea_text, language } = req.body;
-    const userId = req.user.userId;
+    const userId = req.user?.userId || null; // optional; used only for logging
 
     if (!idea_text || !idea_text.trim()) {
       return res.status(400).json({

@@ -1574,8 +1574,9 @@ function generateAdaptiveProbeScenarios(agentName, agentDesc, agentCapabilities)
 }
 
 async function generateProbeScenarios(idea) {
-  // Try to use backend API first, fall back to client-side generation
-  if (ApiClient.isAuthenticated()) {
+  // Always try the real API first — the probe endpoint is public (no auth required).
+  // Auth guard was the bug: users click Generate Probe before creating an account.
+  try {
     const result = await API.generateProbe(idea, document.body.dataset.lang || 'en');
     if (result.success && result.probe) {
       return {
@@ -1587,9 +1588,11 @@ async function generateProbeScenarios(idea) {
         fullProbe: result.probe
       };
     }
+  } catch (e) {
+    console.warn('Probe API unavailable, falling back to client-side generation:', e);
   }
 
-  // Fallback: client-side generation
+  // Fallback: client-side generation (keyword matching)
   console.log('↙ Using client-side fallback for probe generation');
   if (!idea || idea.length === 0) {
     return {
