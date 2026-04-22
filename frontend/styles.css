@@ -9201,3 +9201,40 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
   font-weight: 400;
   margin-left: 6px;
 }
+
+/* ═══ MASTHEAD ENTRANCE — first impression animation ═══ */
+@keyframes mastheadReveal {
+  from { opacity: 0; transform: translateY(-10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.masthead {
+  animation: mastheadReveal 0.7s ease both;
+}
+
+.masthead-sub-row {
+  animation: mastheadReveal 0.7s 0.18s ease both;
+}
+
+.header-actions {
+  animation: mastheadReveal 0.6s 0.3s ease both;
+}
+
+/* Section I heading entrance — only the first visible one */
+#sectionMain .section-heading:first-child {
+  animation: mastheadReveal 0.6s 0.45s ease both;
+}
+
+/* Chat bubble entrance */
+.chat-bubble-wrap {
+  animation: mastheadReveal 0.65s 0.55s ease both;
+}
+
+/* ── masthead-vol subtle emphasis on hover ── */
+.masthead-vol {
+  transition: letter-spacing 0.3s ease, color 0.3s ease;
+}
+.masthead-vol:hover {
+  letter-spacing: 2.5px;
+  color: var(--ink);
+}

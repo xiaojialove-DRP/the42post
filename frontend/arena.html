@@ -40,8 +40,7 @@
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
-      background: var(--paper);
-      /* clean white — no texture */
+      background: #f8f4ee;
       color: var(--ink);
       font-family: var(--font-serif);
       font-size: 14px;
@@ -71,8 +70,10 @@
     }
 
     .bar-logo {
-      font-family: var(--font-gothic);
-      font-size: 18px;
+      font-family: var(--font-serif);
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
       color: var(--ink);
     }
 
@@ -544,35 +545,57 @@
     /* ── Empty State ── */
     .canvas-empty {
       position: absolute;
-      top: 50%;
+      top: 44%;
       left: 50%;
       transform: translate(-50%, -50%);
       text-align: center;
       pointer-events: none;
-      opacity: 0.4;
+      opacity: 0.72;
       transition: opacity 0.5s;
     }
 
     .canvas-empty.hidden { opacity: 0; }
 
     .canvas-empty-icon {
-      font-size: 32px;
-      margin-bottom: 12px;
+      font-size: 52px;
+      margin-bottom: 18px;
       color: var(--ink-muted);
+      display: block;
+      animation: emptyFloat 3.2s ease-in-out infinite;
     }
 
     .canvas-empty-text {
       font-family: var(--font-serif);
-      font-size: 16px;
-      color: var(--ink-muted);
-      margin-bottom: 6px;
+      font-size: 19px;
+      font-weight: 700;
+      color: var(--ink-light);
+      margin-bottom: 10px;
+      letter-spacing: 0.3px;
     }
 
     .canvas-empty-hint {
       font-family: var(--font-mono);
       font-size: 9px;
-      letter-spacing: 1px;
-      color: var(--ink-faint);
+      letter-spacing: 1.5px;
+      color: var(--ink-muted);
+      margin-bottom: 22px;
+    }
+
+    .canvas-empty-arrow {
+      font-size: 20px;
+      color: var(--coral);
+      display: block;
+      animation: emptyBounce 1.5s ease-in-out infinite;
+    }
+
+    @keyframes emptyFloat {
+      0%, 100% { transform: translateY(0px); }
+      50%       { transform: translateY(-9px); }
+    }
+
+    @keyframes emptyBounce {
+      0%, 100% { transform: translateY(0); opacity: 0.55; }
+      50%       { transform: translateY(7px); opacity: 1; }
     }
 
     /* ── Minimize animation ── */
@@ -875,7 +898,7 @@
   <!-- ═══ TOP BAR ═══ -->
   <div class="workshop-bar">
     <div class="bar-left">
-      <div class="bar-logo">The 42 Post</div>
+      <div class="bar-logo">THE 42 POST</div>
       <div class="bar-divider"></div>
       <div class="bar-subtitle">Taste Playground / 品味游乐场</div>
     </div>
@@ -889,8 +912,9 @@
   <div class="workshop-canvas" id="workshopCanvas">
     <div class="canvas-empty" id="canvasEmpty">
       <div class="canvas-empty-icon">☉</div>
-      <div class="canvas-empty-text">Your creative canvas is empty.</div>
-      <div class="canvas-empty-hint">CLICK A SKILL REPOSITORY BELOW TO SPAWN TASK CARDS</div>
+      <div class="canvas-empty-text">Your canvas awaits.</div>
+      <div class="canvas-empty-hint">TAP A SKILL CARD BELOW TO SPAWN A TASK</div>
+      <span class="canvas-empty-arrow">↓</span>
     </div>
   </div>
 
