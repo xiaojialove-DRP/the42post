@@ -1957,17 +1957,29 @@ function initSkillForge() {
       // Generate probe scenarios based on idea
       const scenarios = await generateProbeScenarios(idea);
 
-      // Generate cultural probe responses
-      const culturalProbes = generateCulturalProbeResponses(scenarios.context, idea);
-
-      // Display scenario
-      const scenarioEl = document.getElementById('probeScenarioText');
-      if (scenarioEl) {
-        scenarioEl.textContent = scenarios.context;
+      // Build the three A/B/C choices.
+      // If the API returned real AI-generated responses use them directly;
+      // only fall back to local keyword matching when the API was unavailable.
+      let probeResponses;
+      if (scenarios.apiSource && scenarios.a && scenarios.b && scenarios.c) {
+        // Real Gemini responses — each choice is unique to the user's idea
+        probeResponses = [
+          { label: 'A', style: 'Mainstream',   styleCN: '主流派',  content: scenarios.a, tone: 'safe',     tag: 'mainstream' },
+          { label: 'B', style: 'Contextual',   styleCN: '情景派',  content: scenarios.b, tone: 'nuanced',  tag: 'contextual' },
+          { label: 'C', style: 'Experimental', styleCN: '实验派',  content: scenarios.c, tone: 'extreme',  tag: 'experimental' }
+        ];
+      } else {
+        // Fallback: client-side keyword matching (no API or API failed)
+        const culturalProbes = generateCulturalProbeResponses(scenarios.context, idea);
+        probeResponses = culturalProbes.responses;
       }
 
+      // Display scenario text
+      const scenarioEl = document.getElementById('probeScenarioText');
+      if (scenarioEl) scenarioEl.textContent = scenarios.context;
+
       // Fill in the three choices
-      culturalProbes.responses.forEach((response) => {
+      probeResponses.forEach((response) => {
         const choiceEl = document.querySelector(`.probe-choice[data-choice="${response.label.toLowerCase()}"]`);
         if (choiceEl) {
           const typeEl = choiceEl.querySelector('.choice-type');

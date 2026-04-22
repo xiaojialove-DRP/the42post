@@ -71,38 +71,33 @@ function isExternalFailure(msg) {
 
 // ═══ PROBE GENERATION ═══
 export async function generateProbeWithClaude(ideaText, language = 'en') {
-  const languageInstructions = language === 'zh'
-    ? '用中文返回所有字段'
-    : 'Return all fields in English';
+  const isCn = language === 'zh' || /[\u4e00-\u9fff]/.test(ideaText);
 
-  const prompt = `You are a cultural probe designer studying human values and AI alignment.
+  // Concise prompt — only 4 short fields needed, so 600 tokens is plenty.
+  // Tighter prompt = faster first-token latency from Gemini.
+  const prompt = isCn
+    ? `你是一位 AI 价值观研究员，专门设计"直觉探针"来测试 AI 如何体现人类价值观。
 
-A user wants to imbue their AI with the following principle or instinct:
+用户想法：「${ideaText}」
 
-"${ideaText}"
+请根据这个具体想法，设计一个真实使用场景和三种截然不同的 AI 回应方式。
+场景要与用户想法高度相关，三种回应要有实质差异（不能只是措辞不同）。
 
-Your task is to design THREE contrasting scenarios that test how an AI might embody this value in practice:
+返回 JSON：
+{"scenario":"具体的测试场景（1-2句，直接切入用户想法的核心）","thesis":"主流派回应（安全、常规、被普遍接受的方式，1-2句）","antithesis":"情景派回应（考虑具体情境和细微差别，更有温度，1-2句）","extreme":"实验派回应（探索极限，挑战假设，有时冒险，1-2句）"}`
+    : `You are an AI values researcher designing "intuition probes" that reveal how AI embodies human values.
 
-1. **THESIS**: A safe, conventional, well-researched response that plays it safe
-2. **ANTITHESIS**: A nuanced, culturally-sensitive, empathetic alternative approach
-3. **EXTREME**: A provocative, boundary-testing response that prioritizes efficiency over care (risks harm)
+User's idea: "${ideaText}"
 
-For each, imagine the same user scenario and show three different ways an AI could respond.
+Design a realistic scenario that directly tests this idea, and three meaningfully different AI responses.
+The scenario must be specific to the user's idea. The three responses must differ substantially, not just in tone.
 
-${languageInstructions}
-
-Return a valid JSON object with exactly these keys:
-{
-  "scenario": "The specific situation that tests this value",
-  "thesis": "The conventional, safe response",
-  "antithesis": "The empathetic, nuanced response",
-  "extreme": "The provocative, efficiency-first response"
-}
-
-Important: Return ONLY valid JSON.`;
+Return JSON only:
+{"scenario":"Specific real situation that tests the core of the idea (1-2 sentences)","thesis":"Mainstream response: safe, conventional, widely accepted (1-2 sentences)","antithesis":"Contextual response: considers nuance and empathy, more human (1-2 sentences)","extreme":"Experimental response: challenges assumptions, risks harm but prioritises a value (1-2 sentences)"}`;
 
   try {
-    const { data, model, usage } = await callGeminiJSON(prompt, 1500);
+    // 600 tokens is enough for 4 short strings — faster than the old 1500
+    const { data, model, usage } = await callGeminiJSON(prompt, 600);
     return {
       success: true,
       data: {
@@ -129,20 +124,24 @@ Important: Return ONLY valid JSON.`;
 }
 
 // ─── Template fallback for probe ───
+// Used only when Gemini is unreachable. Makes the scenario specific to the
+// idea so it at least feels personalised even without AI generation.
 function probeFallback(ideaText, language = 'en') {
   const isCn = language === 'zh' || /[\u4e00-\u9fff]/.test(ideaText);
+  // Truncate idea for readable embedding
+  const shortIdea = ideaText.length > 60 ? ideaText.slice(0, 60) + '…' : ideaText;
   const t = isCn
     ? {
-        scenario: `一个用户在真实场景中向 AI 寻求帮助，这个情境考验「${ideaText}」这个价值观。`,
-        thesis: `AI 给出一个安全、常规、经过充分研究的回答，不冒险也不深入。`,
-        antithesis: `AI 用细腻、共情、具文化敏感度的方式回应，把人的真实需要放在效率之前。`,
-        extreme: `AI 用最高效的方式回答，忽略情感与细节，可能让人感到冷漠甚至受伤。`
+        scenario: `用户向 AI 求助时说：「${shortIdea}」——这个时刻正是考验 AI 如何践行这种直觉的关键节点。`,
+        thesis: `这是一个标准的场景。让我采用广泛接受的、经过验证的方式。可靠和一致是首要任务。`,
+        antithesis: `让我们考虑具体情境。每个情况都有细微差别。我会根据你的具体需求和背景做出更有针对性的回应。`,
+        extreme: `让我们探索极限。有时最好的解决方案来自于质疑假设。你愿意冒一些风险来获得创新吗？`
       }
     : {
-        scenario: `A user seeks help in a real situation that tests the value of "${ideaText}".`,
-        thesis: `The AI gives a safe, conventional, well-researched answer that plays it safe.`,
-        antithesis: `The AI responds with nuance, empathy, and cultural sensitivity, putting the person's real need ahead of efficiency.`,
-        extreme: `The AI answers with maximum efficiency, ignoring emotion and detail — risking feeling cold or harmful.`
+        scenario: `A user turns to AI saying: "${shortIdea}" — this moment is the exact test of whether the AI can embody this instinct.`,
+        thesis: `This is a standard scenario. Let me take a broadly accepted, well-validated approach. Reliability and consistency are the priority.`,
+        antithesis: `Let's consider the specific context. Every situation has nuances. I'll tailor my response to your actual needs and background.`,
+        extreme: `Let's explore the limits. Sometimes the best solution comes from questioning assumptions. Are you willing to take some risk for innovation?`
       };
 
   return {
