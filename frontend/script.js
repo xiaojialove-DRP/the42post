@@ -257,9 +257,9 @@ function initSkillGrids() {
           
           <!-- Action Buttons -->
           <div class="skill-card-actions">
-            <!-- Star Button (changed to heart for warmth) -->
-            <button class="btn-star" data-skill-id="${skill.id}" title="Appreciate this skill">
-              <span class="star-icon">${isStarred ? '♥' : '♡'}</span>
+            <!-- Star Button (echoes the celestial archive above) -->
+            <button class="btn-star" data-skill-id="${skill.id}" title="Light up this skill">
+              <span class="star-icon">${isStarred ? '★' : '☆'}</span>
               <span class="star-count">${skill.stars || 0}</span>
             </button>
 

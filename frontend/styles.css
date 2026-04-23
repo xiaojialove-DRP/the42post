@@ -7110,18 +7110,19 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 }
 
 .btn-star:hover {
-  border-color: #d4726a;
-  background: #fff5f4;
+  border-color: #d4a43c;
+  background: #fffcf0;
 }
 
 .btn-star:active {
-  background: #ffebea;
-  border-color: #d4726a;
+  background: #fffaf0;
+  border-color: #d4a43c;
 }
 
 .btn-star:hover .star-icon {
-  color: #d4726a;
-  transform: scale(1.15);
+  color: #d4a43c;
+  transform: scale(1.2) rotateZ(10deg);
+  text-shadow: 0 0 8px rgba(212, 164, 60, 0.4);
 }
 
 .btn-download:hover,
@@ -7142,8 +7143,9 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 }
 
 .star-icon {
-  font-size: 16px;
-  transition: color 0.2s ease, transform 0.2s ease;
+  font-size: 17px;
+  transition: color 0.25s ease, transform 0.25s ease, text-shadow 0.25s ease;
+  letter-spacing: 0;
 }
 
 .download-icon {
