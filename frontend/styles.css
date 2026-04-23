@@ -7109,22 +7109,31 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
   font-family: 'JetBrains Mono', monospace;
 }
 
-.btn-star:hover,
+.btn-star:hover {
+  border-color: #d4726a;
+  background: #fff5f4;
+}
+
+.btn-star:active {
+  background: #ffebea;
+  border-color: #d4726a;
+}
+
+.btn-star:hover .star-icon {
+  color: #d4726a;
+  transform: scale(1.15);
+}
+
 .btn-download:hover,
 .btn-view-full:hover {
   border-color: #333;
   background: #f5f5f5;
 }
 
-.btn-star:active {
-  background: #fffacd;
-  border-color: #333;
-}
-
 .btn-download:disabled {
   opacity: 0.5;
   cursor: not-allowed;
-  background: #f0f0f0;
+  background: #f9f9f9;
 }
 
 .btn-download:disabled:hover {
@@ -7132,17 +7141,29 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
   border-color: #ccc;
 }
 
-.star-icon,
+.star-icon {
+  font-size: 16px;
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
 .download-icon {
-  font-size: 14px;
+  font-size: 13px;
+  color: #999;
+  transition: color 0.2s ease;
+}
+
+.btn-download:not(:disabled):hover .download-icon {
+  color: #333;
+  transform: translateY(2px);
 }
 
 .star-count,
 .download-count {
   font-size: 11px;
-  color: #666;
+  color: #999;
   min-width: 20px;
   text-align: right;
+  font-weight: 400;
 }
 
 .btn-view-full {

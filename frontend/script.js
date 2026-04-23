@@ -257,18 +257,18 @@ function initSkillGrids() {
           
           <!-- Action Buttons -->
           <div class="skill-card-actions">
-            <!-- Star Button -->
-            <button class="btn-star" data-skill-id="${skill.id}" title="Give a star">
-              <span class="star-icon">${isStarred ? '⭐' : '☆'}</span>
+            <!-- Star Button (changed to heart for warmth) -->
+            <button class="btn-star" data-skill-id="${skill.id}" title="Appreciate this skill">
+              <span class="star-icon">${isStarred ? '♥' : '♡'}</span>
               <span class="star-count">${skill.stars || 0}</span>
             </button>
-            
-            <!-- Download Button -->
-            <button class="btn-download" 
-                    data-skill-id="${skill.id}" 
-                    ${!canDownload ? 'disabled' : ''} 
-                    title="${canDownload ? 'Download this skill' : 'Star first to download'}">
-              <span class="download-icon">📥</span>
+
+            <!-- Download Button (disabled until fully implemented) -->
+            <button class="btn-download"
+                    data-skill-id="${skill.id}"
+                    disabled
+                    title="Download coming soon">
+              <span class="download-icon">⬇</span>
               <span class="download-count">${skill.downloads || 0}</span>
             </button>
             
