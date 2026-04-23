@@ -3030,12 +3030,12 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 }
 
 .forge-page {
-  display: none;
+  display: none !important;
   animation: fadeInPage 0.5s ease-out;
 }
 
 .forge-page.active {
-  display: block;
+  display: block !important;
 }
 
 @keyframes fadeInPage {

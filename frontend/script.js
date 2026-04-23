@@ -560,6 +560,12 @@ const I18N = {
     btn_go_deeper: 'Go deeper → Turn this into a taste skill',
     showcase_title: 'THIS WEEK\'S QUESTION',
     creator_name_placeholder: 'Your name (optional)',
+    /* ── Probe modal ── */
+    probe_modal_title: 'INTUITION PROBE',
+    probe_scenario_label: 'Scenario:',
+    probe_choice_a_type: 'Thesis',
+    probe_choice_b_type: 'Antithesis',
+    probe_choice_c_type: 'Extreme',
     /* ── Forge modal labels ── */
     forge_account: 'ACCOUNT',
     forge_username_ph: 'Username',
@@ -690,6 +696,12 @@ const I18N = {
     btn_go_deeper: '深入 → 将它变成想法技能',
     showcase_title: '本周问题',
     creator_name_placeholder: '你的名字（可选）',
+    /* ── 直觉探针 modal ── */
+    probe_modal_title: '直觉探针',
+    probe_scenario_label: '场景:',
+    probe_choice_a_type: '主流派',
+    probe_choice_b_type: '反题派',
+    probe_choice_c_type: '实验派',
     /* ── 锻造流程标签 ── */
     forge_account: '账户',
     forge_username_ph: '用户名',
