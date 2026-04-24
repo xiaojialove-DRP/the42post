@@ -5749,6 +5749,14 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
     font-size: 11px !important;
     line-height: 1.55;
   }
+
+  /* Agent Archive — domain grid single column */
+  .domain-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .av-readable {
+    padding: 20px 12px !important;
+  }
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -6179,8 +6187,13 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
   .av-canvas-wrap { height: 50vh; min-height: 300px; }
   .honor-panel { width: 100% !important; border-left: none; border-top: 1px solid rgba(44,36,32,0.06); max-height: 35vh; }
   .honor-panel.collapsed { height: 0; max-height: 0; }
-  .domain-grid { grid-template-columns: 1fr; }
-  .av-readable { padding: 24px 16px; }
+  /* Agent Archive — single column layout on mobile */
+  .domain-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .av-readable {
+    padding: 24px 16px !important;
+  }
   .honor-toggle-open { top: auto; bottom: 12px; }
 }
 
