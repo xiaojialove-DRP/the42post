@@ -5726,15 +5726,15 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
     padding: 0 !important;
   }
 
-  /* Chat input — full screen width with balanced padding for small phones */
+  /* Chat input — prominent on mobile with breathing room */
   .chat-bubble-wrap {
-    min-height: auto !important;
+    min-height: 70vh !important;
     max-width: calc(100vw - 24px) !important;
     margin-left: 12px !important;
     margin-right: 12px !important;
     width: auto !important;
-    /* BALANCED padding: 18px 16px maintains comfort for small screens */
-    padding: 18px 16px !important;
+    /* Increased padding for spacious feel */
+    padding: 28px 20px !important;
     border-radius: 16px !important;
     flex: none !important;
     display: flex !important;
@@ -5746,9 +5746,9 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
   }
   .chat-bubble-input {
     font-size: 16px !important;
-    min-height: 120px !important;
+    min-height: 160px !important;
     max-height: 40vh !important;
-    padding: 14px 0 !important;
+    padding: 16px 0 !important;
   }
   .chat-bubble-invite {
     font-size: 13px !important;
