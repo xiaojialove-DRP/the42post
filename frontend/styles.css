@@ -62,7 +62,7 @@ body {
 }
 
 .header-status-bar {
-  display: flex;
+  display: none; /* Hidden for cleaner UI */
   justify-content: space-between;
   padding: 8px 0;
   font-family: var(--font-mono);
@@ -76,6 +76,7 @@ body {
 .status-item.right { text-align: right; }
 
 .header-rule-top {
+  display: none; /* Hidden to match status bar */
   height: 3px;
   background: linear-gradient(90deg, var(--coral), var(--periwinkle), var(--teal), var(--marigold), var(--lavender));
 }
@@ -2467,15 +2468,16 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 
 .playground-title {
   font-family: var(--font-mono);
-  font-size: 13px;
+  font-size: 20px;
   letter-spacing: 3px;
   color: var(--ink);
   text-transform: uppercase;
   margin-bottom: 8px;
+  font-weight: 700;
 }
 
 .playground-subtitle {
-  font-size: 12px;
+  font-size: 14px;
   color: var(--ink-muted);
 }
 
@@ -2531,7 +2533,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 
 .domain-label {
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   letter-spacing: 1px;
   text-transform: uppercase;
@@ -2572,11 +2574,11 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 }
 
 .playground-tag {
-  padding: 6px 12px;
+  padding: 8px 14px;
   background: var(--paper);
   border: 1px solid var(--rule);
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 1px;
   color: var(--ink-muted);
   cursor: pointer;
@@ -2610,7 +2612,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 
 .task-title {
   font-family: var(--font-serif);
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 700;
   line-height: 1.5;
   margin-bottom: 12px;
@@ -2618,7 +2620,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 }
 
 .task-description {
-  font-size: 13px;
+  font-size: 14px;
   line-height: 1.6;
   color: var(--ink-light);
   margin-bottom: 16px;
@@ -5538,11 +5540,12 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 }
 
 .av-title {
-  font-size: 11px;
+  font-size: 18px;
   letter-spacing: 3px;
   color: var(--ink);
   text-transform: uppercase;
   font-family: var(--font-mono);
+  font-weight: 700;
 }
 
 .av-back {
