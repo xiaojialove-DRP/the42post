@@ -5293,6 +5293,35 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
   .voice-attribution {
     font-size: 9px;
   }
+
+  /* ═══ MOBILE FONT SIZE ADJUSTMENTS FOR NEW RESPONSIVE DESIGN ═══ */
+  /* Playground Page Mobile */
+  .playground-title {
+    font-size: 16px;
+  }
+  .playground-subtitle {
+    font-size: 12px;
+  }
+  .domain-label {
+    font-size: 11px;
+  }
+  .playground-tag {
+    font-size: 11px;
+    padding: 6px 10px;
+  }
+
+  /* Archive Page Mobile */
+  .av-title {
+    font-size: 16px;
+  }
+
+  /* Task/Content Mobile */
+  .task-title {
+    font-size: 16px;
+  }
+  .task-description {
+    font-size: 13px;
+  }
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -5481,6 +5510,35 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
   .chat-bubble-invite {
     font-size: 13px !important;
     line-height: 1.55 !important;
+  }
+
+  /* ═══ SMALL PHONE FONT SIZE OPTIMIZATIONS (≤480px) ═══ */
+  /* Playground Page Small Phone */
+  .playground-title {
+    font-size: 15px;
+  }
+  .playground-subtitle {
+    font-size: 11px;
+  }
+  .domain-label {
+    font-size: 10px;
+  }
+  .playground-tag {
+    font-size: 10px;
+    padding: 5px 8px;
+  }
+
+  /* Archive Page Small Phone */
+  .av-title {
+    font-size: 14px;
+  }
+
+  /* Task/Content Small Phone */
+  .task-title {
+    font-size: 15px;
+  }
+  .task-description {
+    font-size: 12px;
   }
 
   /* Voice cards full-ish width */
