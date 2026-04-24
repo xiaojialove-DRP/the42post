@@ -1060,22 +1060,37 @@ const I18N = {
   }
 };
 
-let currentLang = 'en';
+// 从 localStorage 读取保存的语言，默认为英文
+let currentLang = localStorage.getItem('42post_lang') || 'en';
 
 function initI18n() {
+  // 应用保存的语言
+  document.body.setAttribute('data-lang', currentLang);
   applyI18n(); // Apply on initial load
 
   const btnLang = document.getElementById('btnLang');
   if (!btnLang) return;
 
+  // 更新按钮文本以反映当前语言（始终显示"中文"不管当前语言是什么）
+  updateLanguageButtonText();
+
   btnLang.addEventListener('click', () => {
     currentLang = currentLang === 'en' ? 'cn' : 'en';
+    // 保存语言选择到 localStorage
+    localStorage.setItem('42post_lang', currentLang);
     document.body.setAttribute('data-lang', currentLang);
-    // Keep button text as "中文" consistently in both languages
+    updateLanguageButtonText();
     applyI18n();
     // Trigger language change event for components like wisdom fable
     document.dispatchEvent(new Event('languageChange'));
   });
+}
+
+function updateLanguageButtonText() {
+  const btnLang = document.getElementById('btnLang');
+  if (!btnLang) return;
+  // 按钮文本始终显示另一种语言选项
+  btnLang.textContent = currentLang === 'en' ? '中文' : 'English';
 }
 
 function applyI18n() {
