@@ -5344,27 +5344,42 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 @media (max-width: 768px) {
   /* Homepage hero */
   .headline-hero {
-    padding: 28px 16px 20px;
+    padding: 24px 16px 16px;
   }
   .section-headline .section-heading {
-    font-size: 22px;
+    font-size: 20px;
     letter-spacing: -0.01em;
+    margin-bottom: 8px;
+  }
+  .community-section-wrap {
+    margin: 16px auto 0 !important;
+  }
+  .chat-bubble-section {
+    margin-bottom: 0 !important;
+    min-height: calc(100vh - 140px);
   }
 
-  /* Enlarged chat input — scale down */
+  /* Chat input — maximize screen usage */
   .chat-bubble-wrap {
-    min-height: 240px !important;
-    padding: 20px 20px !important;
+    min-height: 65vh !important;
+    padding: 16px 12px !important;
     border-radius: 18px !important;
+    flex: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
   }
   .chat-bubble-wrap::before {
-    left: 16px;
-    right: 16px;
+    left: 12px;
+    right: 12px;
   }
   .chat-bubble-input {
-    font-size: 15px !important;
-    min-height: 140px !important;
-    padding: 14px 0 !important;
+    font-size: 16px !important;
+    min-height: 150px !important;
+    max-height: 55vh !important;
+    padding: 18px 0 !important;
+    flex-grow: 1 !important;
+    line-height: 1.6 !important;
   }
   .chat-bubble-invite {
     font-size: 14px !important;
@@ -5507,29 +5522,39 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 
   /* Hero heading */
   .section-headline .section-heading {
-    font-size: 19px !important;
+    font-size: 18px !important;
+    margin-bottom: 6px !important;
+  }
+
+  /* Minimize margins for maximum input box height */
+  .community-section-wrap {
+    margin: 12px auto 0 !important;
+  }
+  .chat-bubble-section {
+    margin-bottom: 0 !important;
+    min-height: calc(100vh - 120px) !important;
   }
 
   /* Chat input — optimized for small phones */
   .chat-bubble-wrap {
-    min-height: 70vh !important;
-    padding: 16px 14px !important;
-    border-radius: 14px !important;
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
+    min-height: 75vh !important;
+    padding: 14px 12px !important;
+    border-radius: 12px !important;
+    flex: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
   }
   .chat-bubble-wrap::before {
-    left: 10px;
-    right: 10px;
+    left: 8px;
+    right: 8px;
   }
   .chat-bubble-input {
     font-size: 16px !important;
-    min-height: 140px !important;
-    max-height: 50vh !important;
+    min-height: 150px !important;
+    max-height: 55vh !important;
     padding: 16px 0 !important;
-    flex-grow: 1;
+    flex-grow: 1 !important;
   }
   .chat-bubble-invite {
     font-size: 13px !important;
