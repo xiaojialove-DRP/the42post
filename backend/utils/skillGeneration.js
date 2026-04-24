@@ -22,14 +22,31 @@ if (!process.env.GEMINI_API_KEY) {
   console.error('Please set GEMINI_API_KEY in your Railway variables.');
 }
 
-// gemini-1.5-flash: 1500 req/day free tier  vs  gemini-2.5-flash: only 20/day
-const MODEL_NAME = process.env.GEMINI_MODEL || 'gemini-1.5-flash';
+// Primary model from env, with an ordered fallback chain.
+// gemini-1.5-flash: 1500 req/day free  |  gemini-2.5-flash: only 20/day + frequent 503s
+const PRIMARY_MODEL = process.env.GEMINI_MODEL || 'gemini-1.5-flash';
+// When the primary model returns 503/overloaded, walk down this list.
+// We dedupe the primary out of the fallback list so we never hit the same
+// overloaded endpoint twice in a row.
+const FALLBACK_MODELS = [
+  'gemini-1.5-flash',
+  'gemini-2.0-flash',
+  'gemini-2.5-flash-lite',
+  'gemini-flash-latest'
+].filter(m => m !== PRIMARY_MODEL);
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || 'missing-key');
 
-// ─── Shared Gemini call helper (JSON mode) ───
-async function callGeminiJSON(prompt, maxTokens = 1500) {
+// Which error messages are worth retrying / failing over for
+function isRetryable(msg) {
+  return /503|502|504|overloaded|unavailable|Service Unavailable|high demand|temporary|ECONNRESET|timeout|fetch failed/i.test(msg || '');
+}
+
+async function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+// ─── Single-model call (no retry) ───
+async function callGeminiSingle(modelName, prompt, maxTokens) {
   const model = genAI.getGenerativeModel({
-    model: MODEL_NAME,
+    model: modelName,
     generationConfig: {
       temperature: 0.7,
       maxOutputTokens: maxTokens,
@@ -45,8 +62,7 @@ async function callGeminiJSON(prompt, maxTokens = 1500) {
   try {
     parsed = JSON.parse(text);
   } catch {
-    // Gemini sometimes wraps JSON in markdown code fences: ```json {...} ```
-    // Strip fences, then try the first {...} or [...] block
+    // Gemini sometimes wraps JSON in markdown code fences
     const stripped = text
       .replace(/^```(?:json)?\s*/i, '')
       .replace(/\s*```\s*$/, '')
@@ -62,12 +78,47 @@ async function callGeminiJSON(prompt, maxTokens = 1500) {
 
   return {
     data: parsed,
-    model: MODEL_NAME,
+    model: modelName,
     usage: {
       input_tokens: usage.promptTokenCount || 0,
       output_tokens: usage.candidatesTokenCount || 0
     }
   };
+}
+
+// ─── Shared Gemini call helper (JSON mode) — with retry + model fallback ───
+// Strategy:
+//   1. Try PRIMARY_MODEL up to 2 times with exponential backoff (800ms, 1600ms)
+//   2. On persistent 503/overloaded, walk through FALLBACK_MODELS once each
+//   3. Surface the last error so the caller's own fallback logic can kick in
+async function callGeminiJSON(prompt, maxTokens = 1500) {
+  const attempts = [
+    { model: PRIMARY_MODEL, delay: 0 },
+    { model: PRIMARY_MODEL, delay: 800 },
+    { model: PRIMARY_MODEL, delay: 1600 },
+    ...FALLBACK_MODELS.map(m => ({ model: m, delay: 0 }))
+  ];
+
+  let lastError;
+  for (const attempt of attempts) {
+    if (attempt.delay) await sleep(attempt.delay);
+    try {
+      const result = await callGeminiSingle(attempt.model, prompt, maxTokens);
+      if (attempt.model !== PRIMARY_MODEL) {
+        console.warn(`⚠ Gemini primary (${PRIMARY_MODEL}) unavailable, succeeded with fallback: ${attempt.model}`);
+      }
+      return result;
+    } catch (err) {
+      lastError = err;
+      const msg = err.message || '';
+      if (!isRetryable(msg)) {
+        // Not a transient error — don't burn through fallbacks
+        throw err;
+      }
+      console.warn(`⚠ Gemini call failed on ${attempt.model}: ${msg.substring(0, 120)}`);
+    }
+  }
+  throw lastError || new Error('All Gemini attempts exhausted');
 }
 
 // ─── External-failure detector: decide whether to fall back gracefully ───
