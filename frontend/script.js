@@ -6541,15 +6541,33 @@ async function initAgentArchiveView() {
       const result = await response.json();
       baseSkills = result.skills || [];
       console.log(`✓ Loaded ${baseSkills.length} published skills from API`);
+
+      // CRITICAL FIX: If API returns fewer than 40 skills, supplement with fallback
+      // This ensures 42 skills always display even if database wasn't seeded
+      if (baseSkills.length < 40) {
+        console.warn(`⚠️ API returned only ${baseSkills.length} skills, supplementing with local fallback for 42 display`);
+        const fallbackSkills = (typeof ALL_SKILLS !== 'undefined' ? ALL_SKILLS : SHARED_SKILLS) || [];
+        // Merge: keep API skills, add fallback skills that don't duplicate
+        const existingIds = new Set(baseSkills.map(s => s.id));
+        const additional = fallbackSkills.filter(s => !existingIds.has(s.id));
+        baseSkills = [...baseSkills, ...additional].slice(0, 42);
+        console.log(`✓ Combined to ${baseSkills.length} skills for display`);
+      }
     } else {
       // Fallback to hardcoded skills if API fails
-      console.warn('Failed to fetch skills from API, falling back to SHARED_SKILLS');
+      console.warn('❌ API request failed, falling back to local SHARED_SKILLS/ALL_SKILLS');
       baseSkills = (typeof ALL_SKILLS !== 'undefined' ? ALL_SKILLS : SHARED_SKILLS) || [];
     }
   } catch (error) {
-    console.error('Error fetching skills:', error);
+    console.error('❌ Error fetching skills:', error);
     // Fallback to hardcoded skills
     baseSkills = (typeof ALL_SKILLS !== 'undefined' ? ALL_SKILLS : SHARED_SKILLS) || [];
+  }
+
+  // Safety: ensure we always have at least some skills to display
+  if (!baseSkills || baseSkills.length === 0) {
+    console.warn('⚠️ No skills available from API or fallback, using SHARED_SKILLS');
+    baseSkills = (typeof SHARED_SKILLS !== 'undefined' ? SHARED_SKILLS : []);
   }
 
   // Combine published skills with forged skills from localStorage
