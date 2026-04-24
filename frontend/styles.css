@@ -5422,11 +5422,16 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
   }
   .header-buttons {
     justify-content: center;
-    gap: 8px;
+    gap: 4px;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
   }
   .btn-arena, .btn-agent-view, .btn-lang {
-    font-size: 11px;
-    padding: 6px 10px;
+    font-size: 10px;
+    padding: 5px 8px;
+    white-space: nowrap;
+    flex-shrink: 0;
   }
 
   /* Forge & Probe modals */
@@ -7112,28 +7117,29 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 
 .skill-card {
   position: relative;
-  border: 1px solid #e0e0e0;
-  border-radius: 4px;
+  border: 1px solid #d4c8bc;
+  border-radius: 8px;
   padding: 16px;
-  background: white;
+  background: linear-gradient(135deg, #faf7f2 0%, #f5f0eb 100%);
   transition: all 0.3s ease;
   cursor: pointer;
 }
 
 .skill-card:hover {
-  border-color: #333;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-color: #c4b8ac;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
 }
 
 /* Soul Hash Display */
 .skill-card-hash {
   margin: 8px 0;
   padding: 8px;
-  background: #f5f5f5;
-  border-radius: 2px;
+  background: rgba(212, 200, 188, 0.15);
+  border-radius: 4px;
   font-family: 'JetBrains Mono', monospace;
-  font-size: 11px;
-  color: #666;
+  font-size: 10px;
+  color: #8a7a6e;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -7151,7 +7157,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
   gap: 8px;
   margin-top: 12px;
   padding-top: 12px;
-  border-top: 1px solid #eee;
+  border-top: 1px solid rgba(212, 200, 188, 0.3);
 }
 
 .btn-star,
@@ -7159,64 +7165,66 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 .btn-view-full {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 6px 12px;
-  background: none;
-  border: 1px solid #ddd;
-  border-radius: 3px;
+  gap: 6px;
+  padding: 8px 12px;
+  background: rgba(212, 200, 188, 0.1);
+  border: 1px solid rgba(212, 200, 188, 0.3);
+  border-radius: 6px;
   font-size: 12px;
   cursor: pointer;
   transition: all 0.2s ease;
   font-family: 'JetBrains Mono', monospace;
+  font-weight: 500;
 }
 
 .btn-star:hover {
   border-color: #d4a43c;
-  background: #fffcf0;
+  background: rgba(212, 164, 60, 0.08);
 }
 
 .btn-star:active {
-  background: #fffaf0;
+  background: rgba(212, 164, 60, 0.12);
   border-color: #d4a43c;
 }
 
 .btn-star:hover .star-icon {
   color: #d4a43c;
-  transform: scale(1.2) rotateZ(10deg);
-  text-shadow: 0 0 8px rgba(212, 164, 60, 0.4);
+  transform: scale(1.3) rotateZ(15deg);
+  text-shadow: 0 0 12px rgba(212, 164, 60, 0.3);
 }
 
 .btn-download:hover,
 .btn-view-full:hover {
-  border-color: #333;
-  background: #f5f5f5;
+  border-color: #8a7a6e;
+  background: rgba(138, 122, 110, 0.08);
 }
 
 .btn-download:disabled {
-  opacity: 0.5;
+  opacity: 0.4;
   cursor: not-allowed;
-  background: #f9f9f9;
+  background: rgba(212, 200, 188, 0.05);
 }
 
 .btn-download:disabled:hover {
-  background: #f0f0f0;
-  border-color: #ccc;
+  background: rgba(212, 200, 188, 0.08);
+  border-color: rgba(212, 200, 188, 0.3);
 }
 
 .star-icon {
-  font-size: 17px;
+  font-size: 18px;
   transition: color 0.25s ease, transform 0.25s ease, text-shadow 0.25s ease;
   letter-spacing: 0;
+  color: #d4a43c;
 }
 
 .download-icon {
-  font-size: 13px;
-  color: #999;
+  font-size: 14px;
+  color: #8a7a6e;
   transition: color 0.2s ease;
 }
 
 .btn-download:not(:disabled):hover .download-icon {
-  color: #333;
+  color: #6b5b4f;
   transform: translateY(2px);
 }
 

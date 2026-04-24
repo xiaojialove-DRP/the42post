@@ -3836,42 +3836,44 @@ function showImpactDashboard(stats, skillData) {
   }
 
   const content = `
-    <div style="background: white; border-radius: 12px; padding: 32px; max-width: 500px; position: relative;">
-      <button style="position: absolute; top: 16px; right: 16px; background: none; border: none; font-size: 24px; cursor: pointer;" onclick="document.getElementById('impactDashboardModal').style.display='none'">×</button>
+    <div style="background: linear-gradient(135deg, #faf7f2 0%, #f5f0eb 100%); border: 1px solid #d4c8bc; border-radius: 12px; padding: 28px; max-width: 520px; position: relative; box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);">
+      <button style="position: absolute; top: 12px; right: 12px; background: none; border: none; font-size: 24px; color: #8a7a6e; cursor: pointer; transition: color 0.2s;" onclick="document.getElementById('impactDashboardModal').style.display='none'" onmouseover="this.style.color='#1a1a1a'" onmouseout="this.style.color='#8a7a6e'">×</button>
 
-      <h2 style="margin-top: 0; font-family: 'Playfair Display', serif;">📊 Impact Dashboard</h2>
-      <p style="color: #666; margin-bottom: 24px;">${skillData.title}</p>
+      <div style="text-align: center; margin-bottom: 28px;">
+        <h2 style="margin: 0 0 8px 0; font-family: 'Playfair Display', serif; font-size: 28px; color: #1a1a1a;">Impact Dashboard</h2>
+        <p style="color: #8a7a6e; margin: 0; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 1px; text-transform: uppercase;">${skillData.title}</p>
+      </div>
 
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px;">
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 24px;">
         <!-- Downloads Card -->
-        <div style="background: #f0f4ff; padding: 16px; border-radius: 8px; text-align: center;">
-          <div style="font-size: 32px; font-weight: bold; color: #2563eb;">${stats.downloads}</div>
-          <div style="font-size: 12px; color: #666; margin-top: 8px;">📥 Downloads</div>
+        <div style="background: white; padding: 18px; border: 1px solid #d4c8bc; border-radius: 8px; text-align: center; transition: all 0.2s;">
+          <div style="font-size: 36px; font-weight: 700; color: #c4a455; font-family: 'Playfair Display', serif;">${stats.downloads}</div>
+          <div style="font-size: 11px; color: #8a7a6e; margin-top: 6px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.5px; text-transform: uppercase;">Downloads</div>
         </div>
 
         <!-- Unique Downloaders Card -->
-        <div style="background: #f0fdf4; padding: 16px; border-radius: 8px; text-align: center;">
-          <div style="font-size: 32px; font-weight: bold; color: #16a34a;">${stats.uniqueDownloaders}</div>
-          <div style="font-size: 12px; color: #666; margin-top: 8px;">👥 People</div>
+        <div style="background: white; padding: 18px; border: 1px solid #d4c8bc; border-radius: 8px; text-align: center; transition: all 0.2s;">
+          <div style="font-size: 36px; font-weight: 700; color: #8a7a6e; font-family: 'Playfair Display', serif;">${stats.uniqueDownloaders}</div>
+          <div style="font-size: 11px; color: #8a7a6e; margin-top: 6px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.5px; text-transform: uppercase;">People</div>
         </div>
 
         <!-- Days Published Card -->
-        <div style="background: #fef3c7; padding: 16px; border-radius: 8px; text-align: center;">
-          <div style="font-size: 32px; font-weight: bold; color: #d97706;">${stats.daysSincePublish}</div>
-          <div style="font-size: 12px; color: #666; margin-top: 8px;">📅 Days Live</div>
+        <div style="background: white; padding: 18px; border: 1px solid #d4c8bc; border-radius: 8px; text-align: center; transition: all 0.2s;">
+          <div style="font-size: 36px; font-weight: 700; color: #d4a43c; font-family: 'Playfair Display', serif;">${stats.daysSincePublish}</div>
+          <div style="font-size: 11px; color: #8a7a6e; margin-top: 6px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.5px; text-transform: uppercase;">Days Live</div>
         </div>
 
         <!-- Daily Rate Card -->
-        <div style="background: #fce7f3; padding: 16px; border-radius: 8px; text-align: center;">
-          <div style="font-size: 32px; font-weight: bold; color: #ec4899;">${stats.dailyDownloadRate}</div>
-          <div style="font-size: 12px; color: #666; margin-top: 8px;">📈 Per Day</div>
+        <div style="background: white; padding: 18px; border: 1px solid #d4c8bc; border-radius: 8px; text-align: center; transition: all 0.2s;">
+          <div style="font-size: 36px; font-weight: 700; color: #c4a455; font-family: 'Playfair Display', serif;">${stats.dailyDownloadRate}</div>
+          <div style="font-size: 11px; color: #8a7a6e; margin-top: 6px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.5px; text-transform: uppercase;">Per Day</div>
         </div>
       </div>
 
-      <div style="background: #f9f9f9; padding: 16px; border-radius: 8px; border-left: 4px solid #2563eb;">
-        <div style="font-size: 12px; color: #666; line-height: 1.6;">
-          <p style="margin: 0 0 8px 0;"><strong>✨ Keep Going!</strong></p>
-          <p style="margin: 0;">Your skill is gaining traction! Share it more to increase downloads.</p>
+      <div style="background: rgba(212, 200, 188, 0.2); padding: 16px; border-radius: 8px; border-left: 3px solid #d4a43c;">
+        <div style="font-size: 13px; color: #1a1a1a; line-height: 1.6; font-family: 'Playfair Display', serif;">
+          <p style="margin: 0 0 6px 0;"><strong>Keep Going!</strong></p>
+          <p style="margin: 0; color: #8a7a6e;">Your skill is gaining traction. Share it to increase reach.</p>
         </div>
       </div>
     </div>
