@@ -196,7 +196,7 @@ body {
 }
 
 .btn-lang {
-  border: none;
+  border: 1px solid var(--rule);
   font-weight: 600;
 }
 
