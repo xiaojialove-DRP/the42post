@@ -375,6 +375,7 @@ body[data-lang="cn"] .voices-header-text {
   color: var(--ink-muted);
   line-height: 1.5;
   margin: 0;
+  font-style: normal;
 }
 
 .manifesto-line em {
