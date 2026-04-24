@@ -1090,7 +1090,7 @@ function updateLanguageButtonText() {
   const btnLang = document.getElementById('btnLang');
   if (!btnLang) return;
   // 按钮文本始终显示另一种语言选项
-  btnLang.textContent = currentLang === 'en' ? '中文' : 'English';
+  btnLang.textContent = currentLang === 'en' ? '中文' : 'En';
 }
 
 function applyI18n() {
