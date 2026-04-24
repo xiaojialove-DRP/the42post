@@ -55,6 +55,36 @@ body {
 
 ::selection { background: var(--ink); color: #f2e2c0; }
 
+/* ═══ CHINESE TYPOGRAPHY — Noto Serif SC for all Chinese (matches Playground) ═══ */
+.manifesto-line,
+.section-heading,
+.inspiration-question,
+.inspiration-context,
+.chat-bubble-invite,
+.chat-bubble-input,
+.the-textarea,
+.ethics-msg,
+.voice-quote,
+.voices-header-text,
+.masthead-subtitle,
+.btn-enter-forge,
+.creator-name-input {
+  font-family: var(--font-serif-cn), var(--font-serif);
+}
+
+/* When in Chinese mode, enforce Noto Serif SC globally */
+body[data-lang="cn"] {
+  font-family: var(--font-serif-cn), var(--font-serif);
+}
+
+body[data-lang="cn"] .voices-header-text {
+  font-family: var(--font-serif-cn);
+  font-size: 13px;
+  letter-spacing: 1px;
+  text-transform: none;
+  color: var(--ink-muted);
+}
+
 /* ═══ GLOBAL HEADER ═══ */
 .global-header {
   max-width: var(--max-w);
