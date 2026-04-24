@@ -70,6 +70,61 @@ router.get('/', async (req, res, next) => {
   }
 });
 
+// ═══ GET SKILL STATISTICS (Impact Dashboard) ═══
+router.get('/:skill_id/stats', async (req, res, next) => {
+  try {
+    const { skill_id } = req.params;
+
+    // Fetch skill stats from skill_usage_logs
+    const statsResult = await db.query(
+      `SELECT
+         s.id, s.title, s.published_at, s.domain,
+         COUNT(CASE WHEN sul.outcome = 'download_success' THEN 1 END) as download_count,
+         COUNT(DISTINCT sul.agent_id) as unique_downloaders
+       FROM skills s
+       LEFT JOIN skill_usage_logs sul ON s.id = sul.skill_id
+       WHERE s.id = $1
+       GROUP BY s.id, s.title, s.published_at, s.domain`,
+      [skill_id]
+    );
+
+    if (statsResult.rows.length === 0) {
+      return res.status(404).json({
+        error: 'Not found',
+        message: 'Skill not found'
+      });
+    }
+
+    const stats = statsResult.rows[0];
+
+    // 计算自发布以来的时间
+    const publishedDate = new Date(stats.published_at);
+    const now = new Date();
+    const daysSincePublish = Math.floor((now - publishedDate) / (1000 * 60 * 60 * 24));
+
+    // 计算每日下载速率
+    const dailyDownloadRate = daysSincePublish > 0 ? (stats.download_count / daysSincePublish).toFixed(2) : stats.download_count;
+
+    res.json({
+      success: true,
+      skill: {
+        id: stats.id,
+        title: stats.title,
+        domain: stats.domain,
+        publishedAt: stats.published_at
+      },
+      stats: {
+        downloads: parseInt(stats.download_count) || 0,
+        uniqueDownloaders: parseInt(stats.unique_downloaders) || 0,
+        daysSincePublish: daysSincePublish,
+        dailyDownloadRate: parseFloat(dailyDownloadRate)
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 // ═══ GET SKILL DETAIL ═══
 router.get('/:skill_id', async (req, res, next) => {
   try {
@@ -409,6 +464,138 @@ router.post('/:skill_id/sign', requireAuth, async (req, res, next) => {
       message: 'Signature added',
       signature: newSignature,
       total_signatures: signatures.length
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// ═══ STAR/FAVORITE SKILL (Anonymous User) ═══
+router.post('/:skill_id/star', async (req, res, next) => {
+  try {
+    const { skill_id } = req.params;
+    const { starred } = req.body;
+    const anonymousId = req.headers['x-anonymous-id'] || req.headers['x-anon-id'];
+
+    if (!anonymousId) {
+      return res.status(400).json({
+        error: 'Missing anonymous ID',
+        message: 'X-Anonymous-Id header is required'
+      });
+    }
+
+    // Verify skill exists
+    const skillCheck = await db.query('SELECT id FROM skills WHERE id = $1', [skill_id]);
+    if (skillCheck.rows.length === 0) {
+      return res.status(404).json({ error: 'Skill not found' });
+    }
+
+    if (typeof starred !== 'boolean') {
+      return res.status(400).json({
+        error: 'Invalid input',
+        message: 'starred must be boolean'
+      });
+    }
+
+    // Insert or update interaction record
+    const interactionId = uuidv4();
+    const now = new Date().toISOString();
+
+    try {
+      // Try to insert
+      await db.query(
+        `INSERT INTO user_skill_interactions (id, anonymous_id, skill_id, starred, starred_at, created_at, updated_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+        [
+          interactionId,
+          anonymousId,
+          skill_id,
+          starred ? 1 : 0,
+          starred ? now : null,
+          now,
+          now
+        ]
+      );
+    } catch (insertErr) {
+      // If unique constraint fails, update instead
+      if (insertErr.message && insertErr.message.includes('UNIQUE')) {
+        await db.query(
+          `UPDATE user_skill_interactions
+           SET starred = $1, starred_at = $2, updated_at = $3
+           WHERE anonymous_id = $4 AND skill_id = $5`,
+          [
+            starred ? 1 : 0,
+            starred ? now : null,
+            now,
+            anonymousId,
+            skill_id
+          ]
+        );
+      } else {
+        throw insertErr;
+      }
+    }
+
+    // Get updated star count
+    const countResult = await db.query(
+      `SELECT COUNT(*) as star_count
+       FROM user_skill_interactions
+       WHERE skill_id = $1 AND starred = 1`,
+      [skill_id]
+    );
+
+    const starCount = parseInt(countResult.rows[0].star_count) || 0;
+
+    res.json({
+      success: true,
+      starred,
+      totalStars: starCount,
+      message: starred ? 'Skill starred' : 'Star removed'
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// ═══ GET SKILL STARS ═══
+router.get('/:skill_id/stars', async (req, res, next) => {
+  try {
+    const { skill_id } = req.params;
+    const anonymousId = req.headers['x-anonymous-id'] || req.headers['x-anon-id'];
+
+    // Verify skill exists
+    const skillCheck = await db.query('SELECT id FROM skills WHERE id = $1', [skill_id]);
+    if (skillCheck.rows.length === 0) {
+      return res.status(404).json({ error: 'Skill not found' });
+    }
+
+    // Get star count
+    const countResult = await db.query(
+      `SELECT COUNT(*) as star_count
+       FROM user_skill_interactions
+       WHERE skill_id = $1 AND starred = 1`,
+      [skill_id]
+    );
+
+    const starCount = parseInt(countResult.rows[0].star_count) || 0;
+
+    // Check if current user has starred
+    let userStarred = false;
+    if (anonymousId) {
+      const userStarResult = await db.query(
+        `SELECT starred FROM user_skill_interactions
+         WHERE skill_id = $1 AND anonymous_id = $2`,
+        [skill_id, anonymousId]
+      );
+      userStarred = userStarResult.rows.length > 0 && userStarResult.rows[0].starred === 1;
+    }
+
+    res.json({
+      success: true,
+      skill_id,
+      totalStars: starCount,
+      userStarred,
+      userAnonymousId: anonymousId || null
     });
   } catch (error) {
     next(error);

@@ -144,6 +144,23 @@ export async function initDatabase() {
     `);
     await db.query(`CREATE INDEX IF NOT EXISTS idx_skill_usage_logs_skill ON skill_usage_logs(skill_id)`);
 
+    // Create user_skill_interactions table (for star/favorite tracking)
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS user_skill_interactions (
+        id TEXT PRIMARY KEY,
+        anonymous_id VARCHAR(255),
+        skill_id TEXT NOT NULL REFERENCES skills(id) ON DELETE CASCADE,
+        starred INTEGER DEFAULT 0,
+        starred_at TIMESTAMP,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(anonymous_id, skill_id)
+      )
+    `);
+    await db.query(`CREATE INDEX IF NOT EXISTS idx_user_skill_interactions_anon_id ON user_skill_interactions(anonymous_id)`);
+    await db.query(`CREATE INDEX IF NOT EXISTS idx_user_skill_interactions_skill ON user_skill_interactions(skill_id)`);
+    await db.query(`CREATE INDEX IF NOT EXISTS idx_user_skill_interactions_starred ON user_skill_interactions(starred) WHERE starred = 1`);
+
     console.log('✓ All database tables initialized');
   } catch (error) {
     console.error('Database initialization failed:', error);

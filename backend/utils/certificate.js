@@ -252,7 +252,7 @@ export function generateCertificateHTML(skillData, soulHash, invitationCode, cre
           <div class="card-divider-bottom"></div>
 
           <!-- Footer -->
-          <div class="card-footer">www.42post.io</div>
+          <div class="card-footer">www.the42post.com</div>
         </div>
       </div>
     </div>
@@ -278,6 +278,7 @@ export function generateCertificateHTML(skillData, soulHash, invitationCode, cre
  * @param {string} invitationCode - Invitation code
  * @param {string} createdDate - Creation date
  * @param {Object} downloadUrls - Download URLs for different formats
+ * @param {string} cardImageBase64 - Optional card image as base64 PNG
  * @returns {string} - HTML content of the email
  */
 export function generateEmailTemplate(
@@ -285,7 +286,8 @@ export function generateEmailTemplate(
   soulHash,
   invitationCode,
   createdDate,
-  downloadUrls = {}
+  downloadUrls = {},
+  cardImageBase64 = null
 ) {
   const title = skillData.title || 'Untitled Skill';
   const author = skillData.author || skillData.username || 'Creator';
@@ -629,7 +631,13 @@ export function generateEmailTemplate(
 
       <!-- COMMEMORATIVE CARD SECTION -->
       <div class="skill-card-section">
-        <!-- COMMEMORATIVE CARD - Creator's Certificate -->
+        ${cardImageBase64 ? `
+        <!-- Card Image (PNG) -->
+        <div style="margin: 20px 0; text-align: center;">
+          <img src="${cardImageBase64}" alt="Creator Card" style="max-width: 100%; height: auto; border-radius: 4px; display: inline-block;">
+        </div>
+        ` : `
+        <!-- COMMEMORATIVE CARD - Creator's Certificate (HTML Fallback) -->
         <div class="commemorative-card">
           <div class="card-border-outer">
             <div class="card-border-inner">
@@ -672,14 +680,16 @@ export function generateEmailTemplate(
               <div class="card-divider-bottom"></div>
 
               <!-- Footer -->
-              <div class="card-footer">www.42post.io</div>
+              <div class="card-footer">www.the42post.com</div>
             </div>
           </div>
         </div>
+        `}
 
-        <!-- DOWNLOAD CERTIFICATE -->
+        <!-- Card Download Option -->
         <div style="text-align: center; margin: 20px 0;">
-          <a href="${certificateUrl}" style="display: inline-block; background: #222; color: white; padding: 12px 28px; text-decoration: none; border-radius: 3px; font-size: 12px; font-weight: bold; letter-spacing: 0.5px;">📥 下载证书 / DOWNLOAD CERTIFICATE</a>
+          <p style="font-size: 12px; color: #666; margin-bottom: 10px;">💾 Your Creator Card is ready to download:</p>
+          <a href="${certificateUrl}" style="display: inline-block; background: #222; color: white; padding: 12px 28px; text-decoration: none; border-radius: 3px; font-size: 12px; font-weight: bold; letter-spacing: 0.5px;">📥 Download as PNG</a>
         </div>
 
         <!-- DOWNLOAD SECTION -->

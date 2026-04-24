@@ -19,6 +19,7 @@ import skillsRoutes from './routes/skills.js';
 import searchRoutes from './routes/search.js';
 import agentRoutes from './routes/agents.js';
 import emailRoutes from './routes/email.js';
+import downloadsRoutes from './routes/downloads.js';
 
 import { initDatabase } from './db/init.js';
 import { errorHandler } from './middleware/errorHandler.js';
@@ -120,6 +121,7 @@ app.use('/api/skills', skillsRoutes);
 app.use('/api/search', searchRoutes);
 app.use('/api/agents', agentRoutes);
 app.use('/api/email', emailRoutes);
+app.use('/api/download', downloadsRoutes);
 
 // ═══ ERROR HANDLING ═══
 app.use((req, res) => {

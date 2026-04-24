@@ -22,7 +22,8 @@ router.post('/send-forge-success', async (req, res, next) => {
       skillId,
       soulHash,
       invitationCode,
-      createdDate
+      createdDate,
+      cardImageBase64
     } = req.body;
 
     // Validation
@@ -40,18 +41,19 @@ router.post('/send-forge-success', async (req, res, next) => {
       });
     }
 
-    // Generate email HTML with download links
+    // Generate email HTML with download links and card image
     const skillData = {
       title: skillTitle,
       author: recipientName || 'Creator'
     };
 
-    // Construct download URLs (these will be implemented separately)
+    // Construct download URLs
+    const apiBaseUrl = process.env.FRONTEND_URL || 'https://the42post.com';
     const downloadUrls = {
-      markdown: `${process.env.FRONTEND_URL}/download/${skillId}?format=markdown`,
-      langchain: `${process.env.FRONTEND_URL}/download/${skillId}?format=langchain`,
-      mcp: `${process.env.FRONTEND_URL}/download/${skillId}?format=mcp`,
-      certificate: `${process.env.FRONTEND_URL}/download/${skillId}?format=certificate`
+      markdown: `${apiBaseUrl}/api/download/${skillId}?format=markdown`,
+      langchain: `${apiBaseUrl}/api/download/${skillId}?format=langchain`,
+      mcp: `${apiBaseUrl}/api/download/${skillId}?format=mcp`,
+      certificate: `${apiBaseUrl}/api/download/${skillId}?format=certificate`
     };
 
     const emailHtml = generateEmailTemplate(
@@ -59,7 +61,8 @@ router.post('/send-forge-success', async (req, res, next) => {
       soulHash,
       invitationCode,
       createdDate || new Date().toISOString(),
-      downloadUrls
+      downloadUrls,
+      cardImageBase64
     );
 
     // Send email
