@@ -5221,9 +5221,11 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 @media (max-width: 768px) {
   :root { --section-pad: 24px 0; }
   .global-header {
-    padding: 0 !important;
+    max-width: 100vw !important;
     width: 100vw !important;
+    margin: 0 !important;
     margin-left: calc(-50vw + 50%) !important;
+    padding: 0 !important;
   }
   .header-rule-top,
   .header-rule-double,
@@ -5555,9 +5557,11 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 /* Small phones (≤480px) — aggressive compact mode */
 @media (max-width: 480px) {
   .global-header {
-    padding: 0 !important;
+    max-width: 100vw !important;
     width: 100vw !important;
+    margin: 0 !important;
     margin-left: calc(-50vw + 50%) !important;
+    padding: 0 !important;
   }
   .header-rule-top,
   .header-rule-double,
