@@ -74,16 +74,6 @@ router.get('/:skillId', async (req, res, next) => {
       }
     }
 
-    // Fetch five-layer data if it exists
-    let fiveLayer = null;
-    if (skill.five_layer) {
-      try {
-        fiveLayer = JSON.parse(skill.five_layer);
-      } catch (e) {
-        console.warn('Failed to parse five_layer JSON:', e.message);
-      }
-    }
-
     // Prepare skill data object
     const skillData = {
       id: skill.id,
