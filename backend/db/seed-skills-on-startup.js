@@ -20,7 +20,13 @@ export async function seedSkillsIfNeeded(db) {
       return;
     }
 
-    console.log(`\n⚠️  Database has only ${existingSkills} skills. Seeding 42 curated skills...\n`);
+    console.log(`
+    📊 Seed Status Report:
+      - Existing published skills: ${existingSkills}
+      - Seed file location: ${sqlPath}
+      - Seed file exists: ${fs.existsSync(sqlPath)}
+      - Statements to execute: ${statements.length}
+    `);
 
     // Read SQL seed file
     const sqlPath = path.join(__dirname, '../sql/seed-42-skills.sql');
