@@ -9384,3 +9384,74 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
   letter-spacing: 2.5px;
   color: var(--ink);
 }
+
+/* ═══════════════════════════════════════════════════════
+   BILINGUAL CONTENT — Hide/Show based on language setting
+   ═══════════════════════════════════════════════════════ */
+
+/* English content hidden by default (Chinese is default) */
+body[data-lang="cn"] .about-en,
+body[data-lang="cn"] .howto-en {
+  display: none;
+}
+
+/* Chinese content shown by default */
+body[data-lang="cn"] .about-cn,
+body[data-lang="cn"] .howto-cn {
+  display: block;
+}
+
+/* When switched to English */
+body[data-lang="en"] .about-en,
+body[data-lang="en"] .howto-en {
+  display: block;
+}
+
+/* Chinese content hidden when English is selected */
+body[data-lang="en"] .about-cn,
+body[data-lang="en"] .howto-cn {
+  display: none;
+}
+
+/* Default (if data-lang not set, show Chinese) */
+.about-en,
+.howto-en {
+  display: none;
+}
+
+.about-cn,
+.howto-cn {
+  display: block;
+}
+
+/* Styling for list items in About/HowTo */
+.about-list,
+.howto-rule ol {
+  margin-top: 12px;
+  margin-left: 20px;
+  color: #666;
+  line-height: 1.8;
+}
+
+.about-list li,
+.howto-rule ol li {
+  margin-bottom: 8px;
+  color: #666;
+}
+
+.howto-rule h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-top: 24px;
+  margin-bottom: 12px;
+}
+
+.about-section h4,
+.about-section h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-top: 20px;
+  margin-bottom: 12px;
+}
