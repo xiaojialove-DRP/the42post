@@ -924,7 +924,7 @@ function initI18n() {
   btnLang.addEventListener('click', () => {
     currentLang = currentLang === 'en' ? 'cn' : 'en';
     document.body.setAttribute('data-lang', currentLang);
-    btnLang.textContent = currentLang === 'en' ? '中文' : 'EN';
+    // Keep button text as "中文" consistently in both languages
     applyI18n();
     // Trigger language change event for components like wisdom fable
     document.dispatchEvent(new Event('languageChange'));
