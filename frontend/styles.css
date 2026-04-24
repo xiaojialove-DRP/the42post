@@ -5342,37 +5342,47 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 
 /* Tablet & phone (≤768px) — overrides & additions */
 @media (max-width: 768px) {
-  /* Homepage hero */
+  /* Homepage hero — COMPLETELY REDESIGNED for proportional harmony */
   .section-headline {
     padding-left: 0 !important;
     padding-right: 0 !important;
   }
   .headline-hero {
-    padding: 24px 0 16px;
+    /* TIGHT vertical padding to eliminate wasted space */
+    padding: 6px 0 0;
   }
   .section-headline .section-heading {
-    font-size: 20px;
+    /* REDUCED from 20px to 16px for visual balance with enlarged input */
+    font-size: 16px;
     letter-spacing: -0.01em;
-    margin-bottom: 8px;
+    margin-bottom: 4px;
     padding: 0 16px;
+    line-height: 1.4;
+  }
+  .section-rule {
+    /* Reduce rule height/prominence when input dominates */
+    margin: 6px 0 !important;
   }
   .community-section-wrap {
     margin: 0 !important;
-    padding: 16px 0 0;
+    /* Remove padding entirely — input should flow directly */
+    padding: 0 !important;
   }
   .chat-bubble-section {
     margin-bottom: 0 !important;
-    min-height: calc(100vh - 120px);
+    /* Remove min-height that creates excessive space */
+    min-height: auto;
   }
 
-  /* Chat input — fill full screen width */
+  /* Chat input — fill full screen width with optimized padding */
   .chat-bubble-wrap {
     min-height: auto !important;
     max-width: 100vw !important;
     margin-left: calc(-50vw + 50%) !important;
     margin-right: calc(-50vw + 50%) !important;
     width: 100vw !important;
-    padding: 28px 20px !important;
+    /* REDUCED padding from 28px 20px to 16px 20px — tighter vertical spacing */
+    padding: 16px 20px !important;
     border-radius: 0 !important;
     flex: none !important;
     display: flex !important;
@@ -5414,9 +5424,9 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
     text-align: center;
   }
 
-  /* Voices header: keep one line, tighter */
+  /* Voices header: aggressive reduction from 32px margin to 12px */
   .voices-header {
-    margin: 32px auto 14px;
+    margin: 12px auto 8px;
     padding: 0 16px;
     gap: 12px;
   }
@@ -5528,11 +5538,20 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
     display: none;
   }
 
-  /* Hero heading */
+  /* Hero heading — TIGHT SIZE for small screens */
   .section-headline .section-heading {
-    font-size: 18px !important;
-    margin-bottom: 6px !important;
+    font-size: 14px !important;
+    margin-bottom: 2px !important;
     padding: 0 12px !important;
+    line-height: 1.35;
+  }
+  .headline-hero {
+    /* Aggressive padding reduction for small phones */
+    padding: 4px 0 0 !important;
+  }
+  .section-rule {
+    /* Minimal rule at small phone size */
+    margin: 4px 0 !important;
   }
 
   /* Full-width input container */
@@ -5545,14 +5564,15 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
     padding: 0 !important;
   }
 
-  /* Chat input — full screen width */
+  /* Chat input — full screen width with tight padding for small phones */
   .chat-bubble-wrap {
     min-height: auto !important;
     max-width: 100vw !important;
     margin-left: calc(-50vw + 50%) !important;
     margin-right: calc(-50vw + 50%) !important;
     width: 100vw !important;
-    padding: 28px 16px !important;
+    /* REDUCED from 28px 16px to 12px 16px for aggressive space optimization */
+    padding: 12px 16px !important;
     border-radius: 0 !important;
     flex: none !important;
     display: flex !important;
