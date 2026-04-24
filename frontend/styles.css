@@ -5660,6 +5660,11 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
     width: 32px;
   }
 
+  /* Header actions centered on mobile */
+  .header-actions {
+    justify-content: center !important;
+  }
+
   /* Header buttons wrap cleanly */
   .header-buttons {
     justify-content: center;
