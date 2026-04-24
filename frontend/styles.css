@@ -5292,7 +5292,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
   .forge-paths { grid-template-columns: 1fr; }
   .about-modules { grid-template-columns: 1fr; }
   .howto-paths { grid-template-columns: 1fr; }
-  .masthead-crest { flex-direction: column; gap: 10px; }
+  .masthead-crest { flex-direction: row; gap: 8px; flex-wrap: wrap; justify-content: center; }
   .creative-triptych { grid-template-columns: 1fr; }
   .global-footer {
     max-width: 100vw !important;
@@ -5646,11 +5646,14 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 
   /* Masthead — biggest visual impact */
   .masthead-title {
-    font-size: 32px !important;
+    font-size: 28px !important;
     letter-spacing: -0.01em;
   }
   .masthead-crest {
-    gap: 8px !important;
+    flex-direction: row !important;
+    gap: 6px !important;
+    flex-wrap: wrap;
+    justify-content: center;
   }
   .masthead-crest-icon {
     width: 32px;
