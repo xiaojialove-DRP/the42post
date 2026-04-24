@@ -7,6 +7,74 @@
    PHASE 0: API CLIENT LAYER (Front-Back Connection)
    ═══════════════════════════════════════════════════════ */
 
+/* ═══ TOAST NOTIFICATION SYSTEM ═══ */
+let notyfInstance = null;
+
+function initNotyf() {
+  if (notyfInstance) return notyfInstance;
+  if (typeof Notyf === 'undefined') {
+    console.warn('⚠ Notyf library not loaded, using fallback alerts');
+    return null;
+  }
+  notyfInstance = new Notyf({
+    duration: 4000,
+    position: { x: 'right', y: 'top' },
+    types: [
+      {
+        type: 'success',
+        background: '#10b981',
+        icon: { class: 'material-icons', tagName: 'i', text: 'check_circle' }
+      },
+      {
+        type: 'error',
+        background: '#ef4444',
+        icon: { class: 'material-icons', tagName: 'i', text: 'error' }
+      },
+      {
+        type: 'warning',
+        background: '#f59e0b',
+        icon: { class: 'material-icons', tagName: 'i', text: 'warning' }
+      },
+      {
+        type: 'info',
+        background: '#3b82f6',
+        icon: { class: 'material-icons', tagName: 'i', text: 'info' }
+      }
+    ]
+  });
+  return notyfInstance;
+}
+
+// Toast notification functions
+function showToast(message, type = 'success') {
+  const notyf = initNotyf();
+  if (notyf) {
+    notyf.open({ type, message });
+  } else {
+    // Fallback to console if Notyf not available
+    console.log(`[${type.toUpperCase()}] ${message}`);
+  }
+}
+
+function showSuccess(message) { showToast(message, 'success'); }
+function showError(message) { showToast(message, 'error'); }
+function showWarning(message) { showToast(message, 'warning'); }
+function showInfo(message) { showToast(message, 'info'); }
+
+// Override window.alert to use toast notifications
+const originalAlert = window.alert;
+window.alert = function(message) {
+  // Detect message type based on content
+  const msgStr = String(message).toLowerCase();
+  if (msgStr.includes('error') || msgStr.includes('failed') || msgStr.includes('invalid') || msgStr.includes('session failed') || msgStr.includes('missing')) {
+    showError(message);
+  } else if (msgStr.includes('success') || msgStr.includes('✓') || msgStr.includes('已')) {
+    showSuccess(message);
+  } else {
+    showInfo(message);
+  }
+};
+
 // Auto-detect API URL based on current domain
 function getDefaultAPIUrl() {
   const stored = localStorage.getItem('42post_api_url');
@@ -22,8 +90,19 @@ function getDefaultAPIUrl() {
 const API_CONFIG = {
   BASE_URL: getDefaultAPIUrl(),
   TOKEN_KEY: '42post_jwt_token',
-  USER_KEY: '42post_user'
+  USER_KEY: '42post_user',
+  ANON_ID_KEY: '42post_anon_id'
 };
+
+// 生成或获取匿名用户ID（用于追踪未登录用户的行为）
+function getAnonymousId() {
+  let anonId = localStorage.getItem(API_CONFIG.ANON_ID_KEY);
+  if (!anonId) {
+    anonId = 'anon_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    localStorage.setItem(API_CONFIG.ANON_ID_KEY, anonId);
+  }
+  return anonId;
+}
 
 const ApiClient = {
   // Get stored JWT token
@@ -294,67 +373,140 @@ function initSkillGrids() {
 function attachSkillCardListeners() {
   const starredSkills = JSON.parse(localStorage.getItem('starred_skills') || '{}');
 
-  // Star button handler
+  // Star button handler (with backend sync)
   document.querySelectorAll('.btn-star').forEach(btn => {
-    btn.addEventListener('click', (e) => {
+    btn.addEventListener('click', async (e) => {
       e.preventDefault();
       e.stopPropagation();
       const skillId = btn.dataset.skillId;
       const skill = SHARED_SKILLS.find(s => s.id === skillId);
-      
+
       if (!skill) return;
 
-      // Toggle star
-      if (starredSkills[skillId]) {
-        delete starredSkills[skillId];
-        skill.stars = Math.max(0, (skill.stars || 1) - 1);
-      } else {
-        starredSkills[skillId] = true;
-        skill.stars = (skill.stars || 0) + 1;
-      }
+      // Determine new state
+      const isCurrentlyStar = starredSkills[skillId];
+      const newStarred = !isCurrentlyStar;
 
-      // Save to localStorage
-      localStorage.setItem('starred_skills', JSON.stringify(starredSkills));
-      
-      // Update button
-      btn.querySelector('.star-icon').textContent = starredSkills[skillId] ? '⭐' : '☆';
-      btn.querySelector('.star-count').textContent = skill.stars || 0;
+      // Show loading state
+      const originalIcon = btn.querySelector('.star-icon').textContent;
+      btn.querySelector('.star-icon').textContent = '⏳';
+      btn.disabled = true;
 
-      // Enable/disable download button
-      const downloadBtn = btn.parentElement.querySelector('.btn-download');
-      if (downloadBtn) {
-        if (starredSkills[skillId]) {
-          downloadBtn.disabled = false;
-          downloadBtn.title = 'Download this skill';
-        } else {
-          downloadBtn.disabled = true;
-          downloadBtn.title = 'Star first to download';
+      try {
+        // Call backend API to save star
+        const anonId = getAnonymousId();
+        const response = await fetch(`${API_CONFIG.BASE_URL}/skills/${skillId}/star`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Anonymous-Id': anonId
+          },
+          body: JSON.stringify({ starred: newStarred })
+        });
+
+        if (!response.ok) {
+          throw new Error(`Star API error: ${response.status}`);
         }
+
+        const result = await response.json();
+
+        // Update local state
+        if (newStarred) {
+          starredSkills[skillId] = true;
+          skill.stars = result.totalStars;
+        } else {
+          delete starredSkills[skillId];
+          skill.stars = result.totalStars;
+        }
+
+        // Save to localStorage as backup
+        localStorage.setItem('starred_skills', JSON.stringify(starredSkills));
+
+        // Update button
+        btn.querySelector('.star-icon').textContent = newStarred ? '⭐' : '☆';
+        btn.querySelector('.star-count').textContent = skill.stars || 0;
+
+        // Enable/disable download button
+        const downloadBtn = btn.parentElement.querySelector('.btn-download');
+        if (downloadBtn) {
+          if (newStarred) {
+            downloadBtn.disabled = false;
+            downloadBtn.title = 'Download this skill';
+          } else {
+            downloadBtn.disabled = true;
+            downloadBtn.title = 'Star first to download';
+          }
+        }
+
+        // Show success message
+        showSuccess(newStarred ? 'Skill starred! ⭐' : 'Star removed');
+      } catch (error) {
+        console.error('Error updating star:', error);
+        // Revert UI on error
+        btn.querySelector('.star-icon').textContent = originalIcon;
+        showError('Failed to update star. Please try again.');
+      } finally {
+        btn.disabled = false;
       }
     });
   });
 
-  // Download button handler
+  // Download button handler (with backend sync)
   document.querySelectorAll('.btn-download').forEach(btn => {
-    btn.addEventListener('click', (e) => {
+    btn.addEventListener('click', async (e) => {
       e.preventDefault();
       e.stopPropagation();
       const skillId = btn.dataset.skillId;
       const skill = SHARED_SKILLS.find(s => s.id === skillId);
-      
+
       if (!skill) return;
       if (!starredSkills[skillId]) {
-        alert('Please star this skill first to download it');
+        showWarning('Please star this skill first to download it');
         return;
       }
 
-      // Record download
-      skill.downloads = (skill.downloads || 0) + 1;
-      btn.querySelector('.download-count').textContent = skill.downloads;
+      // Show loading state
+      const originalText = btn.textContent;
+      btn.textContent = '⏳ Downloading...';
+      btn.disabled = true;
 
-      // Generate markdown and trigger download
-      const markdown = generateSkillMarkdown(skill);
-      downloadMarkdownFile(markdown, `${skill.title.replace(/\s+/g, '-')}.md`);
+      try {
+        // Call backend download API
+        const anonId = getAnonymousId();
+        const downloadUrl = `${API_CONFIG.BASE_URL}/download/${skillId}?format=markdown`;
+
+        const response = await fetch(downloadUrl, {
+          headers: {
+            'X-Anonymous-Id': anonId
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error(`Download error: ${response.status}`);
+        }
+
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${skill.title.replace(/\s+/g, '-')}.md`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        // Update download count
+        skill.downloads = (skill.downloads || 0) + 1;
+        btn.querySelector('.download-count').textContent = skill.downloads;
+
+        showSuccess('Skill downloaded! 📥');
+      } catch (error) {
+        console.error('Error downloading skill:', error);
+        showError('Failed to download. Please try again.');
+      } finally {
+        btn.textContent = originalText;
+        btn.disabled = false;
+      }
     });
   });
 
@@ -3386,7 +3538,9 @@ function initSkillForge() {
 
           const savedSkill = await response.json();
           console.log('✅ Skill saved to backend:', savedSkill);
-          forgedSkillData.backendId = savedSkill.id;
+          forgedSkillData.id = savedSkill.skill.id;
+          forgedSkillData.backendId = savedSkill.skill.id;
+          forgedSkillData.soulHash = savedSkill.skill.soul_hash;
 
         } catch (error) {
           console.error('Error saving skill to backend:', error);
@@ -3476,19 +3630,39 @@ function showForgeCompletion(skillData, soulHash) {
   const forgeNav = document.querySelector('.forge-nav');
   const skillPackageSection = document.getElementById('skillPackageSection');
 
-  // Send forge success email (async, non-blocking)
+  // Send forge success email with card image (async, non-blocking)
   if (skillData && skillData.email) {
-    sendForgeSuccessEmail({
-      recipientEmail: skillData.email,
-      recipientName: skillData.author || skillData.username,
-      skillTitle: skillData.title,
-      skillId: skillData.id,
-      soulHash: soulHash,
-      invitationCode: window.currentInvitationCode || generateInviteCode(),
-      createdDate: new Date().toISOString()
-    }).catch(err => {
-      console.warn('Email sending failed (non-blocking):', err.message);
-    });
+    (async () => {
+      try {
+        const cardElement = document.querySelector('.commemorative-card');
+        let cardImageBase64 = null;
+
+        // Generate card image if available
+        if (cardElement && window.html2canvas) {
+          const canvas = await html2canvas(cardElement, {
+            scale: 2,
+            backgroundColor: '#f0ebe2',
+            logging: false,
+            useCORS: true,
+            allowTaint: true
+          });
+          cardImageBase64 = canvas.toDataURL('image/png');
+        }
+
+        await sendForgeSuccessEmail({
+          recipientEmail: skillData.email,
+          recipientName: skillData.author || skillData.username,
+          skillTitle: skillData.title,
+          skillId: skillData.id,
+          soulHash: soulHash,
+          invitationCode: window.currentInvitationCode || generateInviteCode(),
+          createdDate: new Date().toISOString(),
+          cardImageBase64: cardImageBase64
+        });
+      } catch (err) {
+        console.warn('Email sending failed (non-blocking):', err.message);
+      }
+    })();
   }
 
   // Hide the rights and publish form
@@ -3526,9 +3700,31 @@ function showForgeCompletion(skillData, soulHash) {
     const btnTryPlayground = document.getElementById('btnTryPlayground');
 
     if (btnViewDashboard) {
-      btnViewDashboard.addEventListener('click', () => {
-        // Navigate to dashboard (implemented later)
-        alert('Impact Dashboard coming soon');
+      btnViewDashboard.addEventListener('click', async () => {
+        try {
+          btnViewDashboard.disabled = true;
+          btnViewDashboard.textContent = '⏳ Loading...';
+
+          // 从后端获取skill统计数据
+          const response = await fetch(
+            `${ApiClient.BASE_URL}/skills/${skillData.id}/stats`
+          );
+
+          if (!response.ok) {
+            throw new Error('Failed to load dashboard');
+          }
+
+          const result = await response.json();
+          showImpactDashboard(result.stats, skillData);
+
+          btnViewDashboard.textContent = '📊 Impact Dashboard';
+          btnViewDashboard.disabled = false;
+        } catch (error) {
+          console.error('Dashboard load error:', error);
+          alert('Failed to load dashboard. Please try again.');
+          btnViewDashboard.textContent = '📊 Impact Dashboard';
+          btnViewDashboard.disabled = false;
+        }
       });
     }
 
@@ -3577,7 +3773,8 @@ async function sendForgeSuccessEmail(options) {
     skillId,
     soulHash,
     invitationCode,
-    createdDate = new Date().toISOString()
+    createdDate = new Date().toISOString(),
+    cardImageBase64
   } = options;
 
   try {
@@ -3595,7 +3792,8 @@ async function sendForgeSuccessEmail(options) {
           skillId,
           soulHash,
           invitationCode,
-          createdDate
+          createdDate,
+          cardImageBase64
         })
       }
     );
@@ -3614,93 +3812,127 @@ async function sendForgeSuccessEmail(options) {
   }
 }
 
-/* ═══ DOWNLOAD CREATOR CARD ═══ */
-function downloadCreatorCard(skillData, soulHash) {
-  const cardElement = document.querySelector('.commemorative-card');
-  if (!cardElement) { alert('Certificate card not found'); return; }
-
-  const certificateHTML = `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Creator Card — ${skillData.title || 'Skill'}</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      background: #f0ebe2;
+/* ═══ SHOW IMPACT DASHBOARD ═══ */
+function showImpactDashboard(stats, skillData) {
+  // Create or reuse modal
+  let modal = document.getElementById('impactDashboardModal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'impactDashboardModal';
+    modal.className = 'impact-dashboard-modal';
+    modal.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
       display: flex;
       justify-content: center;
       align-items: center;
-      min-height: 100vh;
-      font-family: 'JetBrains Mono', monospace;
-    }
-    /* Square card */
-    .commemorative-card {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: space-between;
-      text-align: center;
-      position: relative;
-      width: 340px;
-      height: 340px;
-      padding: 24px 26px 20px;
-      background: linear-gradient(150deg, #faf5ec 0%, #f3e8d5 55%, #f0e2ce 100%);
-      border: 1px solid rgba(60,48,40,0.16);
-      border-radius: 12px;
-      box-shadow: 0 4px 28px rgba(42,32,24,0.14), 0 1px 5px rgba(42,32,24,0.08);
-      overflow: hidden;
-    }
-    .commemorative-card::before,
-    .commemorative-card::after {
-      content: '✦';
-      position: absolute;
-      font-size: 8px;
-      color: rgba(138,124,110,0.28);
-    }
-    .commemorative-card::before { top: 10px; left: 13px; }
-    .commemorative-card::after  { bottom: 10px; right: 13px; }
-    .sq-top { display:flex; flex-direction:column; align-items:center; gap:3px; width:100%; }
-    .sq-brand { font-family:'JetBrains Mono',monospace; font-size:9px; font-weight:700; letter-spacing:3px; color:#3c3028; text-transform:uppercase; }
-    .sq-cert  { font-family:'Playfair Display',serif; font-size:10px; font-style:italic; color:#8a7c6e; }
-    .sq-crest { font-size:26px; color:#d4a849; line-height:1; }
-    .sq-skill-name { font-family:'Playfair Display',serif; font-size:17px; font-weight:700; color:#2a2018; line-height:1.25; max-width:88%; word-break:break-word; }
-    .sq-creator-role { font-family:'JetBrains Mono',monospace; font-size:7.5px; letter-spacing:2px; color:#8a7c6e; text-transform:uppercase; }
-    .sq-hr { width:56%; height:1px; background:rgba(60,48,40,0.13); border:none; margin:0 auto; }
-    .sq-meta-row { display:flex; justify-content:space-between; width:88%; font-family:'JetBrains Mono',monospace; font-size:7.5px; color:#8a7c6e; }
-    .sq-hash-line { font-family:'JetBrains Mono',monospace; font-size:7.5px; color:rgba(60,48,40,0.38); }
-    .sq-invite-label { font-family:'JetBrains Mono',monospace; font-size:7px; letter-spacing:2px; color:rgba(138,124,110,0.55); text-transform:uppercase; }
-    .sq-invite-code  { font-family:'JetBrains Mono',monospace; font-size:16px; font-weight:700; color:#3c3028; letter-spacing:2.5px; }
-    .sq-invite-desc  { font-family:'JetBrains Mono',monospace; font-size:6.5px; color:rgba(138,124,110,0.42); line-height:1.5; max-width:80%; }
-    .sq-url { font-family:'JetBrains Mono',monospace; font-size:7px; letter-spacing:1px; color:rgba(138,124,110,0.38); }
-    @media print {
-      body { background: #f0ebe2; }
-      .commemorative-card { box-shadow: none; }
-    }
-  </style>
-</head>
-<body>
-  ${cardElement.outerHTML}
-  <script>
-    window.addEventListener('load', () => setTimeout(() => window.print(), 400));
-  </script>
-</body>
-</html>`;
+      z-index: 9999;
+    `;
+    document.body.appendChild(modal);
+  }
 
-  // Create a blob and download
-  const blob = new Blob([certificateHTML], { type: 'text/html' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `Creator_Card_${soulHash || 'certificate'}.html`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  const content = `
+    <div style="background: white; border-radius: 12px; padding: 32px; max-width: 500px; position: relative;">
+      <button style="position: absolute; top: 16px; right: 16px; background: none; border: none; font-size: 24px; cursor: pointer;" onclick="document.getElementById('impactDashboardModal').style.display='none'">×</button>
+
+      <h2 style="margin-top: 0; font-family: 'Playfair Display', serif;">📊 Impact Dashboard</h2>
+      <p style="color: #666; margin-bottom: 24px;">${skillData.title}</p>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px;">
+        <!-- Downloads Card -->
+        <div style="background: #f0f4ff; padding: 16px; border-radius: 8px; text-align: center;">
+          <div style="font-size: 32px; font-weight: bold; color: #2563eb;">${stats.downloads}</div>
+          <div style="font-size: 12px; color: #666; margin-top: 8px;">📥 Downloads</div>
+        </div>
+
+        <!-- Unique Downloaders Card -->
+        <div style="background: #f0fdf4; padding: 16px; border-radius: 8px; text-align: center;">
+          <div style="font-size: 32px; font-weight: bold; color: #16a34a;">${stats.uniqueDownloaders}</div>
+          <div style="font-size: 12px; color: #666; margin-top: 8px;">👥 People</div>
+        </div>
+
+        <!-- Days Published Card -->
+        <div style="background: #fef3c7; padding: 16px; border-radius: 8px; text-align: center;">
+          <div style="font-size: 32px; font-weight: bold; color: #d97706;">${stats.daysSincePublish}</div>
+          <div style="font-size: 12px; color: #666; margin-top: 8px;">📅 Days Live</div>
+        </div>
+
+        <!-- Daily Rate Card -->
+        <div style="background: #fce7f3; padding: 16px; border-radius: 8px; text-align: center;">
+          <div style="font-size: 32px; font-weight: bold; color: #ec4899;">${stats.dailyDownloadRate}</div>
+          <div style="font-size: 12px; color: #666; margin-top: 8px;">📈 Per Day</div>
+        </div>
+      </div>
+
+      <div style="background: #f9f9f9; padding: 16px; border-radius: 8px; border-left: 4px solid #2563eb;">
+        <div style="font-size: 12px; color: #666; line-height: 1.6;">
+          <p style="margin: 0 0 8px 0;"><strong>✨ Keep Going!</strong></p>
+          <p style="margin: 0;">Your skill is gaining traction! Share it more to increase downloads.</p>
+        </div>
+      </div>
+    </div>
+  `;
+
+  modal.innerHTML = content;
+  modal.style.display = 'flex';
+
+  // Close on overlay click
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) {
+      modal.style.display = 'none';
+    }
+  });
+}
+
+/* ═══ DOWNLOAD CREATOR CARD ═══ */
+async function downloadCreatorCard(skillData, soulHash) {
+  const cardElement = document.querySelector('.commemorative-card');
+  if (!cardElement) { alert('Certificate card not found'); return; }
+
+  try {
+    // Show loading state
+    const btn = event?.target;
+    if (btn) {
+      const originalText = btn.textContent;
+      btn.textContent = '⏳ Processing...';
+      btn.disabled = true;
+
+      // Convert card to image using html2canvas
+      const canvas = await html2canvas(cardElement, {
+        scale: 2,
+        backgroundColor: '#f0ebe2',
+        logging: false,
+        useCORS: true,
+        allowTaint: true
+      });
+
+      // Convert canvas to PNG blob and download
+      canvas.toBlob((blob) => {
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `Creator_Card_${soulHash || 'certificate'}.png`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+
+        // Restore button
+        btn.textContent = originalText;
+        btn.disabled = false;
+      }, 'image/png');
+    }
+  } catch (error) {
+    console.error('Failed to generate card image:', error);
+    alert('Failed to generate creator card image. Please try again.');
+    if (event?.target) {
+      event.target.disabled = false;
+    }
+  }
 }
 
 /* ═══ KNIGHT CARD GENERATOR ═══ */
@@ -5791,9 +6023,9 @@ function generateMCPConfigFormat(skillData) {
         "expected_output": "Aligned response respecting the skill's five-layer principles"
       },
       "support": {
-        "creator_contact": skillData.email || "creator@42post.io",
-        "documentation_url": "https://42post.io/skills/" + skillData.soulHash,
-        "feedback_url": "https://42post.io/skills/" + skillData.soulHash + "/feedback"
+        "creator_contact": skillData.email || "creator@the42post.com",
+        "documentation_url": "https://the42post.com/skills/" + skillData.soulHash,
+        "feedback_url": "https://the42post.com/skills/" + skillData.soulHash + "/feedback"
       }
     }
   };
@@ -5860,8 +6092,8 @@ function showAgentArchive() {
     window.scrollTo(0, 0);
 
     // Wait for next frame to ensure DOM is ready, then init canvas
-    requestAnimationFrame(() => {
-      initAgentArchiveView();
+    requestAnimationFrame(async () => {
+      await initAgentArchiveView();
     });
   }
 }
@@ -6025,7 +6257,7 @@ function soulHash(str) {
   return 'SOUL_' + Math.abs(h).toString(16).padStart(8, '0');
 }
 
-function initAgentArchiveView() {
+async function initAgentArchiveView() {
   const canvas = document.getElementById('celestialCanvas');
   const canvasWrap = document.getElementById('canvasWrap');
   const tooltip = document.getElementById('starTooltip');
@@ -6044,7 +6276,27 @@ function initAgentArchiveView() {
   let clickedNode = null;
   let cw = 0, ch = 0;
 
-  // Combine demo skills with forged skills from localStorage
+  // ═══ FETCH PUBLISHED SKILLS FROM DATABASE ═══
+  let baseSkills = [];
+  try {
+    // 从后端API获取所有已发布的skills
+    const response = await fetch(`${ApiClient.BASE_URL}/skills?limit=100`);
+    if (response.ok) {
+      const result = await response.json();
+      baseSkills = result.skills || [];
+      console.log(`✓ Loaded ${baseSkills.length} published skills from API`);
+    } else {
+      // Fallback to hardcoded skills if API fails
+      console.warn('Failed to fetch skills from API, falling back to SHARED_SKILLS');
+      baseSkills = (typeof ALL_SKILLS !== 'undefined' ? ALL_SKILLS : SHARED_SKILLS) || [];
+    }
+  } catch (error) {
+    console.error('Error fetching skills:', error);
+    // Fallback to hardcoded skills
+    baseSkills = (typeof ALL_SKILLS !== 'undefined' ? ALL_SKILLS : SHARED_SKILLS) || [];
+  }
+
+  // Combine published skills with forged skills from localStorage
   const forgedSkills = getRecentForges();
   // Add starlight=5 to forged skills so they appear smaller initially
   const forgedSkillsWithStarlight = forgedSkills.map(s => ({
@@ -6054,9 +6306,6 @@ function initAgentArchiveView() {
     descCn: s.descCn || s.desc
   }));
 
-  // ALL_SKILLS = SHARED_SKILLS (21) + DEMO_SKILLS_50 (39) = 60 total, defined in skills.js.
-  // Fallback to SHARED_SKILLS in case ALL_SKILLS isn't yet available.
-  const baseSkills = (typeof ALL_SKILLS !== 'undefined' ? ALL_SKILLS : SHARED_SKILLS);
   const allSkills = [...baseSkills, ...forgedSkillsWithStarlight];
   
   function resizeCanvas() {
@@ -6694,7 +6943,7 @@ function attachDomainSkillListeners() {
     // Download button handler
     const downloadBtn = card.querySelector('.btn-skill-download');
     if (downloadBtn) {
-      downloadBtn.addEventListener('click', (e) => {
+      downloadBtn.addEventListener('click', async (e) => {
         e.stopPropagation();
 
         const starredSkills = JSON.parse(localStorage.getItem('starred_skills') || '{}');
@@ -6703,14 +6952,47 @@ function attachDomainSkillListeners() {
           return;
         }
 
-        skill.downloads = (skill.downloads || 0) + 1;
-        downloadBtn.textContent = `📥 ${skill.downloads}`;
+        downloadBtn.disabled = true;
+        downloadBtn.style.opacity = '0.6';
+        const originalText = downloadBtn.textContent;
+        downloadBtn.textContent = '⏳ Downloading...';
 
-        const markdown = generateDomainSkillMarkdown(skill);
-        const filename = `${skill.title.replace(/[^a-z0-9]/gi, '-').toLowerCase()}.md`;
-        downloadMarkdownFile(markdown, filename);
+        try {
+          // Download from backend API
+          const response = await fetch(
+            `${ApiClient.BASE_URL}/download/${skill.id}?format=markdown`,
+            {
+              headers: {
+                'X-Anonymous-Id': getAnonymousId()
+              }
+            }
+          );
 
-        console.log(`📥 Skill "${skill.title}" downloaded (${skill.downloads} total)`);
+          if (!response.ok) {
+            throw new Error(`Download failed with status ${response.status}`);
+          }
+
+          const blob = await response.blob();
+          const url = window.URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = `${skill.title.replace(/\s+/g, '_')}_SKILL.md`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          window.URL.revokeObjectURL(url);
+
+          skill.downloads = (skill.downloads || 0) + 1;
+          downloadBtn.textContent = `📥 ${skill.downloads}`;
+          console.log(`📥 Skill "${skill.title}" downloaded (${skill.downloads} total)`);
+        } catch (error) {
+          console.error('Download error:', error);
+          alert('Failed to download skill. Please try again.');
+          downloadBtn.textContent = originalText;
+        } finally {
+          downloadBtn.disabled = false;
+          downloadBtn.style.opacity = '1';
+        }
       });
     }
   });
@@ -6890,7 +7172,7 @@ function generateForgeSuccessEmail(skillData) {
                   <p>Domain: ${domain}</p>
                 </div>
                 <div class="card-divider"></div>
-                <div class="card-footer">www.42post.io</div>
+                <div class="card-footer">www.the42post.com</div>
               </div>
             </div>
           </div>
@@ -7060,14 +7342,14 @@ function shareSkill() {
   const { data } = window.currentDashboard || {};
   if (!data) return;
 
-  const text = `我刚铸造了一个新的 Skill：《${data.title}》\n\nSoul-Hash: ${data.id}\n\n来 THE 42 POST 体验吧！\nhttps://42post.io`;
+  const text = `我刚铸造了一个新的 Skill：《${data.title}》\n\nSoul-Hash: ${data.id}\n\n来 THE 42 POST 体验吧！\nhttps://the42post.com`;
 
   // Use native Share API if available
   if (navigator.share) {
     navigator.share({
       title: 'THE 42 POST',
       text: text,
-      url: `https://42post.io?skill=${data.id}`
+      url: `https://the42post.com?skill=${data.id}`
     }).catch(err => console.error('Share failed:', err));
   } else {
     // Fallback: Copy to clipboard
