@@ -22,6 +22,7 @@ import emailRoutes from './routes/email.js';
 import downloadsRoutes from './routes/downloads.js';
 
 import { initDatabase } from './db/init.js';
+import { seedSkillsIfNeeded } from './db/seed-skills-on-startup.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { requestLogger } from './middleware/requestLogger.js';
 
@@ -140,6 +141,9 @@ async function startServer() {
     // Initialize database schema
     await initDatabase();
     console.log('✓ Database schema initialized');
+    
+    // Auto-seed 42 skills if needed
+    await seedSkillsIfNeeded(db);
 
     const server = app.listen(PORT, () => {
       console.log(`
