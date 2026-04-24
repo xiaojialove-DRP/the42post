@@ -774,6 +774,8 @@ const I18N = {
     card_certificate: 'Creator\'s Certificate',
     forge_dashboard: '📊  Impact Dashboard',
     forge_playground: '🎮  Playground',
+    ethics_pass_msg: 'We heard you. Let\'s turn this idea into a Skill.',
+    btn_enter_forge: 'Enter Skill Forge',
   },
   cn: {
     masthead_subtitle: 'AI 每天都在变得更聪明。<br>但它有让我们的生活更好吗？',
@@ -910,6 +912,8 @@ const I18N = {
     card_certificate: '创作者证书',
     forge_dashboard: '📊  数据面板',
     forge_playground: '🎮  探索广场',
+    ethics_pass_msg: '我们听到你了。让我们一起把这个想法变成技能。',
+    btn_enter_forge: '进入技能铸造',
   }
 };
 
