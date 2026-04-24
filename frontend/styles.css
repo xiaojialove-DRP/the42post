@@ -5661,6 +5661,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 
   /* Header buttons wrap cleanly */
   .header-buttons {
+    justify-content: center;
     flex-wrap: wrap;
     gap: 6px;
   }
