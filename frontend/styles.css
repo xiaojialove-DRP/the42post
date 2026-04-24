@@ -5220,13 +5220,21 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 /* ═══ RESPONSIVE ═══ */
 @media (max-width: 768px) {
   :root { --section-pad: 24px 0; }
-  .global-header { padding: 0 16px; }
-  .section { padding-left: 16px; padding-right: 16px; }
+  .global-header {
+    padding: 0 !important;
+    width: 100vw !important;
+    margin-left: calc(-50vw + 50%) !important;
+  }
+  .section { padding-left: 0 !important; padding-right: 0 !important; }
   .skills-feed { grid-template-columns: 1fr; }
   .input-actions { flex-direction: column; align-items: flex-start; }
   .input-actions-right { width: 100%; justify-content: space-between; }
-  .manifesto-strip { padding: 10px 16px; }
-  .manifesto-inner { flex-direction: column; gap: 4px; text-align: center; }
+  .manifesto-strip {
+    padding: 12px 0 !important;
+    width: 100vw !important;
+    margin-left: calc(-50vw + 50%) !important;
+  }
+  .manifesto-inner { flex-direction: column; gap: 4px; text-align: center; padding: 0 16px; }
   .manifesto-line:first-child::after, .manifesto-line:nth-child(2)::after { content: ''; margin: 0; }
   .triptych-honor { grid-template-columns: 1fr; }
   .honor-community { grid-template-columns: 1fr; }
@@ -5242,8 +5250,25 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
   .howto-paths { grid-template-columns: 1fr; }
   .masthead-crest { flex-direction: column; gap: 10px; }
   .creative-triptych { grid-template-columns: 1fr; }
-  .footer-main { grid-template-columns: 1fr; }
-  .footer-logo-row { flex-direction: column; gap: 12px; }
+  .global-footer {
+    max-width: 100vw !important;
+    width: 100vw !important;
+    margin-left: calc(-50vw + 50%) !important;
+    padding: 0 !important;
+  }
+  .footer-rule-heavy {
+    width: 100vw !important;
+    margin-left: calc(-50vw + 50%) !important;
+  }
+  .footer-main {
+    grid-template-columns: 1fr;
+    width: 100vw !important;
+    margin-left: calc(-50vw + 50%) !important;
+  }
+  .footer-section {
+    padding: 24px 16px !important;
+  }
+  .footer-logo-row { flex-direction: column; gap: 12px; padding: 20px 16px 24px !important; }
   .footer-quotes { text-align: left; }
   .headline-textarea { font-size: 15px; min-height: 120px; padding: 24px; }
   .headline-textarea.chat-textarea { padding: 12px 0; }
@@ -5425,9 +5450,14 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
   }
 
   /* Voices header: balanced spacing that separates without excessive gap */
+  .community-voices-list {
+    width: 100vw !important;
+    margin-left: calc(-50vw + 50%) !important;
+    padding: 0 !important;
+  }
   .voices-header {
-    margin: 16px auto 10px;
-    padding: 0 16px;
+    margin: 16px 0 10px !important;
+    padding: 0 16px !important;
     gap: 12px;
   }
   .voices-header-text {
@@ -5515,6 +5545,18 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 
 /* Small phones (≤480px) — aggressive compact mode */
 @media (max-width: 480px) {
+  .global-header {
+    padding: 0 !important;
+    width: 100vw !important;
+    margin-left: calc(-50vw + 50%) !important;
+  }
+  .section { padding-left: 0 !important; padding-right: 0 !important; }
+  .manifesto-strip {
+    padding: 10px 0 !important;
+    width: 100vw !important;
+    margin-left: calc(-50vw + 50%) !important;
+  }
+  .manifesto-inner { padding: 0 12px; }
   .vibe-grid { grid-template-columns: 1fr; }
 
   /* Masthead — biggest visual impact */
@@ -5552,6 +5594,38 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
   .section-rule {
     /* Balanced rule at small phone size */
     margin: 6px 0 !important;
+  }
+
+  /* Full-width voices section */
+  .community-voices-list {
+    width: 100vw !important;
+    margin-left: calc(-50vw + 50%) !important;
+    padding: 0 !important;
+  }
+  .voices-header {
+    padding: 0 12px !important;
+  }
+
+  /* Full-width footer */
+  .global-footer {
+    max-width: 100vw !important;
+    width: 100vw !important;
+    margin-left: calc(-50vw + 50%) !important;
+    padding: 0 !important;
+  }
+  .footer-rule-heavy {
+    width: 100vw !important;
+    margin-left: calc(-50vw + 50%) !important;
+  }
+  .footer-main {
+    width: 100vw !important;
+    margin-left: calc(-50vw + 50%) !important;
+  }
+  .footer-section {
+    padding: 20px 12px !important;
+  }
+  .footer-logo-row {
+    padding: 16px 12px 20px !important;
   }
 
   /* Full-width input container */
