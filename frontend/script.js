@@ -216,11 +216,9 @@ ApiClient.BASE_URL = API_CONFIG.BASE_URL;
 // API Methods for Forge (Skill Creation)
 const API = {
   // Generate intuition probe from idea
+  // NOTE: Backend /forge/probe endpoint is PUBLIC (no auth required).
+  // Users typically run this BEFORE creating an account during the forge flow.
   async generateProbe(ideaText, language = 'en') {
-    if (!ApiClient.isAuthenticated()) {
-      console.warn('⚠ Not authenticated, using fallback probe generation');
-      return { success: false, fallback: true };
-    }
     return await ApiClient.post('/forge/probe', {
       idea_text: ideaText,
       language: language
@@ -3023,26 +3021,43 @@ function initSkillForge() {
     fiveLayerSkill: null
   };
 
-  // ═══ PROBE GENERATION (uses local intelligence — replace with Claude API for production) ═══
+  // ═══ PROBE GENERATION (client-side fallback ONLY — real generation happens via API) ═══
+  // This function is used ONLY when /api/forge/probe is unreachable.
+  // It personalizes output by embedding the user's own idea into each response,
+  // so no two users see the exact same probe even on fallback.
   function generateProbeFromIdea(ideaText) {
-    // This generates thesis/antithesis/extreme probes from a user's idea.
-    // In production, call Claude API: POST /v1/messages with a carefully designed prompt.
-    // For now, we use a template engine that creates meaningful probes.
-
     const idea = ideaText.trim();
-    const isEnglish = /^[a-zA-Z\s.,!?'"()-]+$/.test(idea.substring(0, 30));
+    const isCn = /[\u4e00-\u9fff]/.test(idea);
+    const shortIdea = idea.length > 80 ? idea.slice(0, 80) + '…' : idea;
 
-    // Extract core concept for scenario generation
-    const probes = PROBE_TEMPLATES.find(t => {
+    // Still use PROBE_TEMPLATES to pick a *theme* (grief/ethics/beauty/etc.)
+    // but rewrite all three responses so they reference the user's actual idea.
+    const theme = PROBE_TEMPLATES.find(t => {
       const keywords = t.keywords;
       return keywords.some(k => idea.toLowerCase().includes(k));
-    }) || PROBE_TEMPLATES[PROBE_TEMPLATES.length - 1]; // fallback to universal
+    }) || PROBE_TEMPLATES[PROBE_TEMPLATES.length - 1];
+
+    // Inject idea into the canonical scenario so it matches the theme
+    const scenario = theme.scenario(shortIdea);
+
+    // Rewrite thesis/antithesis/extreme to each reference the user's actual idea —
+    // this prevents the identical-templates-for-every-user bug.
+    let thesis, antithesis, extreme;
+    if (isCn) {
+      thesis = `主流回应：遵循被广泛接受的最佳实践。针对"${shortIdea}"，采用安全、标准、可靠的方式——优先考虑稳定性和一致性。`;
+      antithesis = `情境回应：暂停一下，先理解"${shortIdea}"背后的真实需求。不急于答复，而是根据具体情境与情感细节做出有温度的回应。`;
+      extreme = `实验回应：质疑"${shortIdea}"中隐含的假设。选择一种可能冒犯、但能真正推动价值观落地的极端立场，即使代价是效率或舒适。`;
+    } else {
+      thesis = `Mainstream response: follow widely accepted best practice. For "${shortIdea}", take the safe, standard, reliable route — prioritise stability and consistency above all.`;
+      antithesis = `Contextual response: pause before answering. Understand what "${shortIdea}" really asks for at the emotional and situational level, then reply with nuance and human warmth.`;
+      extreme = `Experimental response: challenge the assumptions inside "${shortIdea}". Take a position that risks offence but embodies the value uncompromisingly, even if it costs efficiency or comfort.`;
+    }
 
     return {
-      scenario: probes.scenario(idea),
-      thesis: probes.thesis,
-      antithesis: probes.antithesis,
-      extreme: probes.extreme
+      scenario,
+      thesis,
+      antithesis,
+      extreme
     };
   }
 
@@ -3353,9 +3368,39 @@ function initSkillForge() {
       btnAutoStructure.disabled = true;
 
       try {
-        // Generate probe scenarios from idea
-        const probe = generateProbeFromIdea(ideaText);
+        // Generate probe scenarios from idea — try REAL API first (Gemini/Claude),
+        // fall back to client-side generation only if the API is unreachable.
+        const currentLang = document.body.dataset.lang || 'en';
+        let probe;
+        let probeSource = 'template';
+
+        try {
+          const apiResult = await API.generateProbe(ideaText, currentLang);
+          if (apiResult && apiResult.success && apiResult.probe) {
+            probe = {
+              scenario: apiResult.probe.scenario,
+              thesis: apiResult.probe.thesis,
+              antithesis: apiResult.probe.antithesis,
+              extreme: apiResult.probe.extreme
+            };
+            probeSource = 'api';
+            console.log('✓ Probe generated via API (Gemini)', apiResult.model || '');
+          } else {
+            console.warn('⚠ Probe API returned no data, using personalized fallback:', apiResult);
+          }
+        } catch (apiErr) {
+          console.warn('⚠ Probe API call failed, using personalized fallback:', apiErr);
+        }
+
+        // Fallback: personalized idea-specific probe (NOT a static template)
+        if (!probe) {
+          probe = generateProbeFromIdea(ideaText);
+          probe._fallback = true;
+        }
+
         probeState.scenario = probe.scenario;
+        probeState.fullProbe = probe;
+        probeState.source = probeSource;
 
         // Reset probe state
         probeState.responses = { thesis: null, antithesis: null, extreme: null };
@@ -3854,6 +3899,8 @@ function showForgeCompletion(skillData, soulHash) {
   const skillPackageSection = document.getElementById('skillPackageSection');
 
   // Send forge success email with card image (async, non-blocking)
+  // Surface any failure to the user via a small banner — silent failure was
+  // the reason users kept reporting "my email never arrived".
   if (skillData && skillData.email) {
     (async () => {
       try {
@@ -3872,7 +3919,7 @@ function showForgeCompletion(skillData, soulHash) {
           cardImageBase64 = canvas.toDataURL('image/png');
         }
 
-        await sendForgeSuccessEmail({
+        const emailResult = await sendForgeSuccessEmail({
           recipientEmail: skillData.email,
           recipientName: skillData.author || skillData.username,
           skillTitle: skillData.title,
@@ -3882,8 +3929,12 @@ function showForgeCompletion(skillData, soulHash) {
           createdDate: new Date().toISOString(),
           cardImageBase64: cardImageBase64
         });
+
+        // Show confirmation banner on success, hint on failure
+        showEmailStatusBanner(emailResult, skillData.email);
       } catch (err) {
-        console.warn('Email sending failed (non-blocking):', err.message);
+        console.error('Email sending failed:', err.message);
+        showEmailStatusBanner({ success: false, error: err.message }, skillData.email);
       }
     })();
   }
@@ -4028,11 +4079,64 @@ async function sendForgeSuccessEmail(options) {
 
     const result = await response.json();
     console.log('✓ Forge success email sent:', result.messageId);
-    return result;
+    return { success: true, ...result };
   } catch (error) {
     console.error('❌ Email sending error:', error.message);
-    throw error;
+    return { success: false, error: error.message };
   }
+}
+
+/* ═══ EMAIL STATUS BANNER ═══
+   Visible feedback after forge: tells the user whether the email
+   actually went out. Previously this failed silently.
+   ═════════════════════════════════════════════════════════════ */
+function showEmailStatusBanner(result, recipientEmail) {
+  // Remove any previous banner
+  const existing = document.getElementById('emailStatusBanner');
+  if (existing) existing.remove();
+
+  const banner = document.createElement('div');
+  banner.id = 'emailStatusBanner';
+  banner.style.cssText = `
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    max-width: 420px;
+    padding: 16px 20px;
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+    font-family: inherit;
+    font-size: 14px;
+    line-height: 1.5;
+    z-index: 10000;
+    animation: slideInRight 0.3s ease-out;
+  `;
+
+  if (result && result.success) {
+    banner.style.background = '#e8f5e9';
+    banner.style.border = '1px solid #66bb6a';
+    banner.style.color = '#1b5e20';
+    banner.innerHTML = `
+      <div style="font-weight:600;margin-bottom:4px;">✓ Email sent successfully</div>
+      <div style="opacity:0.85;">Check <strong>${recipientEmail}</strong> (including spam folder) for your certificate and download links.</div>
+      <div style="margin-top:8px;font-size:12px;opacity:0.7;">邮件已成功发送 · 请查收收件箱和垃圾邮件箱</div>
+    `;
+    setTimeout(() => { banner.style.opacity = '0'; banner.style.transition = 'opacity 0.5s'; setTimeout(() => banner.remove(), 500); }, 8000);
+  } else {
+    banner.style.background = '#fff3e0';
+    banner.style.border = '1px solid #ff9800';
+    banner.style.color = '#5d2f00';
+    const errMsg = (result && result.error) ? result.error : 'Unknown error';
+    banner.innerHTML = `
+      <div style="font-weight:600;margin-bottom:4px;">⚠ Email delivery issue</div>
+      <div style="opacity:0.9;">We couldn't send to <strong>${recipientEmail}</strong>:</div>
+      <div style="margin:6px 0;padding:6px 8px;background:rgba(0,0,0,0.05);border-radius:4px;font-size:12px;font-family:monospace;word-break:break-word;">${errMsg}</div>
+      <div style="margin-top:6px;font-size:12px;opacity:0.8;">Your skill was still forged successfully. You can download the certificate directly from this page.</div>
+      <button style="margin-top:10px;padding:4px 10px;border:none;background:#8d6e63;color:#fff;border-radius:4px;cursor:pointer;font-size:12px;" onclick="this.parentElement.remove()">Dismiss</button>
+    `;
+  }
+
+  document.body.appendChild(banner);
 }
 
 /* ═══ SHOW IMPACT DASHBOARD ═══ */

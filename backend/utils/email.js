@@ -21,6 +21,9 @@ dotenv.config();
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const EMAIL_FROM = process.env.EMAIL_FROM || 'onboarding@resend.dev';
 const EMAIL_FROM_NAME = process.env.EMAIL_FROM_NAME || 'THE 42 POST';
+// Resend's test sender can only deliver to the account owner's verified email.
+// Any other recipient fails with a 403. We use this flag to surface a clear error.
+const USING_TEST_SENDER = EMAIL_FROM === 'onboarding@resend.dev';
 
 // ─── Startup check ───
 if (!RESEND_API_KEY) {
@@ -30,6 +33,12 @@ if (!RESEND_API_KEY) {
   console.warn('   Then set RESEND_API_KEY in Railway Variables.');
 } else {
   console.log(`✅ Email service: Resend (from: ${EMAIL_FROM_NAME} <${EMAIL_FROM}>)`);
+  if (USING_TEST_SENDER) {
+    console.warn('⚠️  Using Resend TEST sender (onboarding@resend.dev).');
+    console.warn('   This address can ONLY deliver to the Resend account owner\'s verified email.');
+    console.warn('   To send to real users, verify a domain at https://resend.com/domains');
+    console.warn('   and set EMAIL_FROM=you@yourdomain.com in Railway Variables.');
+  }
 }
 
 // ─── Singleton Resend client ───
@@ -57,6 +66,10 @@ async function sendViaResend({ to, subject, html, text }) {
     };
   }
 
+  console.log(`📤 Attempting to send email via Resend → ${to}`);
+  console.log(`   From: ${EMAIL_FROM_NAME} <${EMAIL_FROM}>`);
+  console.log(`   Subject: ${subject}`);
+
   try {
     const result = await client.emails.send({
       from: `${EMAIL_FROM_NAME} <${EMAIL_FROM}>`,
@@ -67,12 +80,30 @@ async function sendViaResend({ to, subject, html, text }) {
     });
 
     // Resend returns { data: { id }, error: null } on success
-    // or { data: null, error: { message, name } } on failure
+    // or { data: null, error: { message, name, statusCode } } on failure
     if (result.error) {
-      console.error('❌ Resend API error:', result.error);
+      const errObj = result.error;
+      console.error('❌ Resend API error:');
+      console.error('   name:', errObj.name);
+      console.error('   message:', errObj.message);
+      console.error('   statusCode:', errObj.statusCode);
+      console.error('   full error:', JSON.stringify(errObj));
+
+      // Friendly hint for the most common Resend mistake
+      let hint = '';
+      if (USING_TEST_SENDER) {
+        hint = ' [HINT: onboarding@resend.dev can only send to the Resend account owner\'s verified email. Verify a domain at resend.com/domains and set EMAIL_FROM.]';
+      } else if (/domain is not verified|not verified/i.test(errObj.message || '')) {
+        hint = ' [HINT: Your EMAIL_FROM domain is not verified at Resend. Verify it at resend.com/domains.]';
+      } else if (/invalid.*api.*key|api key/i.test(errObj.message || '')) {
+        hint = ' [HINT: RESEND_API_KEY looks invalid. Regenerate at resend.com/api-keys.]';
+      }
+
       return {
         success: false,
-        error: result.error.message || JSON.stringify(result.error),
+        error: (errObj.message || JSON.stringify(errObj)) + hint,
+        errorName: errObj.name,
+        statusCode: errObj.statusCode,
         timestamp: new Date().toISOString()
       };
     }
@@ -85,7 +116,8 @@ async function sendViaResend({ to, subject, html, text }) {
       timestamp: new Date().toISOString()
     };
   } catch (error) {
-    console.error('❌ Email sending error:', error.message);
+    console.error('❌ Email sending exception:', error.message);
+    console.error('   stack:', error.stack);
     return {
       success: false,
       error: error.message,

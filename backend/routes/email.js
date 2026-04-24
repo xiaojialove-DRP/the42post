@@ -246,4 +246,34 @@ router.post('/send-verification', async (req, res, next) => {
   }
 });
 
+/**
+ * GET /api/email/diagnostics
+ * Report whether email config env vars are present (without leaking the key).
+ * Use this to quickly verify Railway Variables are set correctly.
+ */
+router.get('/diagnostics', (req, res) => {
+  const apiKeyPresent = !!process.env.RESEND_API_KEY;
+  const apiKeyPrefix = apiKeyPresent
+    ? process.env.RESEND_API_KEY.slice(0, 6) + '...'
+    : null;
+  const emailFrom = process.env.EMAIL_FROM || 'onboarding@resend.dev';
+  const usingTestSender = emailFrom === 'onboarding@resend.dev';
+
+  res.json({
+    ok: true,
+    resend_api_key: {
+      present: apiKeyPresent,
+      prefix: apiKeyPrefix
+    },
+    email_from: emailFrom,
+    email_from_name: process.env.EMAIL_FROM_NAME || 'THE 42 POST',
+    using_test_sender: usingTestSender,
+    warning: usingTestSender
+      ? 'Using onboarding@resend.dev — can ONLY deliver to the Resend account owner\'s verified email. For production, verify a domain at https://resend.com/domains and set EMAIL_FROM.'
+      : null,
+    frontend_url: process.env.FRONTEND_URL || null,
+    ready: apiKeyPresent && !usingTestSender
+  });
+});
+
 export default router;
