@@ -5254,7 +5254,8 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
   .chat-bubble-wrap {
     max-width: 100%;
     border-radius: 16px;
-    padding: 16px 20px;
+    padding: 20px 16px;
+    min-height: 280px;
   }
   .chat-bubble-prompt {
     font-size: 14px;
@@ -5263,9 +5264,10 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
     font-size: 12px;
   }
   .chat-bubble-input {
-    font-size: 13px;
-    min-height: 50px;
-    padding: 10px 0;
+    font-size: 16px;
+    min-height: 90px;
+    padding: 16px 0;
+    line-height: 1.5;
   }
   .chat-bubble-footer {
     flex-direction: column;
@@ -5498,19 +5500,20 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
     font-size: 19px !important;
   }
 
-  /* Chat input — extra snug */
+  /* Chat input — optimized for small phones */
   .chat-bubble-wrap {
-    min-height: 200px !important;
-    padding: 16px !important;
+    min-height: 240px !important;
+    padding: 16px 14px !important;
     border-radius: 14px !important;
   }
   .chat-bubble-wrap::before {
-    left: 12px;
-    right: 12px;
+    left: 10px;
+    right: 10px;
   }
   .chat-bubble-input {
-    font-size: 14px !important;
-    min-height: 110px !important;
+    font-size: 16px !important;
+    min-height: 100px !important;
+    padding: 14px 0 !important;
   }
   .chat-bubble-invite {
     font-size: 13px !important;
