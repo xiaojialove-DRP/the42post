@@ -33,6 +33,7 @@
   --font-mono: 'JetBrains Mono', 'SF Mono', 'Consolas', monospace;
   --font-serif: 'Playfair Display', 'Georgia', serif;
   --font-serif-cn: 'Noto Serif SC', 'STSong', serif;
+  --font-sans-cn: 'Noto Sans SC', -apple-system, 'Helvetica Neue', sans-serif;
   --font-sans: -apple-system, 'Helvetica Neue', Arial, sans-serif;
   --gap: 20px;
   --section-pad: 40px 0;
@@ -5391,9 +5392,10 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
     /* OPTIMIZED size: 22px for tablet - more prominent invitation */
     font-size: 22px;
     letter-spacing: -0.02em;
-    margin-bottom: 10px;
+    margin-top: 12px;
+    margin-bottom: 12px;
     padding: 0 16px;
-    line-height: 1.35;
+    line-height: 1.4;
   }
   .section-rule {
     /* Balanced rule margin for visual separation */
@@ -5556,6 +5558,35 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 
 /* Small phones (≤480px) — aggressive compact mode */
 @media (max-width: 480px) {
+  /* FIX 1: Allow full-width header rules by removing overflow clipping */
+  body {
+    overflow-x: visible !important;
+  }
+
+  /* FIX 3: Improve Chinese typography on mobile — modern professional look */
+  /* Switch to modern sans-serif for Chinese text */
+  body[data-lang="cn"] {
+    --font-serif-cn: var(--font-sans-cn);
+  }
+
+  body[data-lang="cn"] .voices-header-text,
+  body[data-lang="cn"] .voice-text,
+  body[data-lang="cn"] .welcome-text,
+  body[data-lang="cn"] .section-rule,
+  body[data-lang="cn"] .forge-step-text,
+  body[data-lang="cn"] p {
+    font-family: var(--font-sans-cn);
+    font-weight: 400;
+  }
+
+  body[data-lang="cn"] .section-heading,
+  body[data-lang="cn"] h2,
+  body[data-lang="cn"] h3 {
+    font-family: var(--font-sans-cn);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+
   .global-header {
     max-width: 100vw !important;
     width: 100vw !important;
@@ -5603,11 +5634,13 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
   }
 
   /* Hero heading — PROMINENT SIZE for small screens */
+  /* FIX 2: Improved line spacing for main CTA — better breathing room */
   .section-headline .section-heading {
     font-size: 20px !important;
-    margin-bottom: 10px !important;
+    margin-top: 8px !important;
+    margin-bottom: 14px !important;
     padding: 0 12px !important;
-    line-height: 1.35;
+    line-height: 1.4;
     letter-spacing: -0.02em;
   }
   .headline-hero {
