@@ -1011,7 +1011,7 @@ const I18N = {
     forge_package_desc: '选择你的格式并下载锻造好的技能以进行集成。',
     forge_package_note: '所有格式都包含完整的五层技能架构。根据你的集成需求进行选择。',
     /* ── 档案库 / 品味档案库 ── */
-    archive_title: 'THE 42 POST · 品味档案库',
+    archive_title: 'THE 42 POST · 技能储藏室',
     archive_back_home: '← 返回首页',
     archive_most_starred: '最受赞的技能 42',
     archive_honor_subtitle: '社区排名 · 星光投票',
@@ -1019,7 +1019,7 @@ const I18N = {
     archive_readable_subtitle: '创意领域 · 社区策划',
     archive_footer: 'THE 42 POST · 智能体档案库 · Soul.MD 协议激活',
     /* ── 创意游乐场 / 品味竞技场 ── */
-    arena_bar_subtitle: '品味游乐场',
+    arena_bar_subtitle: '创意游乐场',
     arena_clear_all: '✕ 清除全部',
     arena_random_task: '↻ 随机任务',
     arena_back_home: '← 返回创意',
