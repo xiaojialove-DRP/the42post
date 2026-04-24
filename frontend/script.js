@@ -745,6 +745,32 @@ const I18N = {
     forge_label_when: 'WHEN TO USE',
     forge_label_refuse: 'WHEN NOT TO USE',
     forge_label_domain: 'DOMAIN',
+    forge_domain_safety: 'Safety',
+    forge_domain_science: 'Science',
+    forge_domain_narrative: 'Narrative',
+    forge_domain_design: 'Design',
+    forge_domain_visual: 'Visual',
+    forge_domain_experience: 'Experience',
+    forge_domain_sound: 'Sound',
+    forge_domain_ideas: 'Ideas',
+    forge_domain_history: 'History',
+    forge_domain_fun: 'Fun',
+    /* ── Export formats ── */
+    forge_export_markdown_name: 'Markdown',
+    forge_export_markdown_subtitle: 'Human-Readable Documentation',
+    forge_export_markdown_desc: 'Perfect for documentation, sharing, and reading. Standard SKILL.md format.',
+    forge_export_markdown_btn: '↓ Download Markdown (.md)',
+    forge_export_langchain_name: 'LangChain',
+    forge_export_langchain_subtitle: 'Python Developer Integration',
+    forge_export_langchain_desc: 'Python-friendly format for LangChain framework integration. Ready to use in your agent.',
+    forge_export_langchain_btn: '↓ Download LangChain (.py)',
+    forge_export_mcp_name: 'MCP Config',
+    forge_export_mcp_subtitle: 'System Deployment Configuration',
+    forge_export_mcp_desc: 'JSON configuration for Model Context Protocol deployment and system integration.',
+    forge_export_mcp_btn: '↓ Download MCP Config (.json)',
+    forge_package_title: 'INSTALL YOUR SKILL',
+    forge_package_desc: 'Choose your format and download your forged skill for integration.',
+    forge_package_note: 'All formats contain the complete five-layer skill architecture. Choose based on your integration needs.',
     forge_skill_name_ph: 'Skill name…',
     forge_skill_def_ph: 'Skill definition…',
     forge_regen_label: 'REGENERATE? (optional)',
@@ -778,6 +804,45 @@ const I18N = {
     forge_playground: '🎮  Playground',
     ethics_pass_msg: 'We heard you. Let\'s turn this idea into a Skill.',
     btn_enter_forge: 'Enter Skill Forge',
+    /* ── Arena / Playground ── */
+    arena_bar_subtitle: 'Taste Playground',
+    arena_clear_all: '✕ CLEAR ALL',
+    arena_random_task: '↻ RANDOM TASK',
+    arena_back_home: '← BACK TO POST',
+    arena_all_creations: 'ALL CREATIONS',
+    arena_canvas_empty_title: 'Your canvas awaits.',
+    arena_canvas_empty_hint: 'TAP A SKILL CARD BELOW TO SPAWN A TASK',
+    arena_taste_question: 'TASTE QUESTION',
+    arena_pick_skills: 'PICK 2 TASTE-SKILLS TO COMBINE',
+    arena_skill_a: 'SKILL A',
+    arena_skill_b: 'SKILL B',
+    arena_click_pick: 'click to pick',
+    arena_open_canvas: 'OPEN CANVAS ↓',
+    arena_close_canvas: 'CLOSE CANVAS ↑',
+    arena_submit_fusion: '⚔ SUBMIT FUSION',
+    arena_submit_placeholder: 'Write your answer. How would an AI with taste handle this situation?',
+    creations_title: 'My Creative Works',
+    creations_subtitle: 'Summary of all your creative answers',
+    /* ── Overlays: About & How It Works ── */
+    about_title: 'About',
+    howto_title: 'How It Works',
+    /* ── Forge Preview Modal ── */
+    preview_scenario_placeholder: 'Scenario will generate based on your input',
+    forge_begin_forging: 'Begin Forging →',
+    preview_full_skill: 'Full Skill Preview',
+    preview_basic_info: 'Basic Info',
+    preview_skill_name: 'Name',
+    preview_skill_def: 'Definition',
+    preview_five_layer: 'Five-Layer Structure',
+    preview_layer_1: 'DEFINING',
+    preview_layer_2: 'INSTANTIATING',
+    preview_layer_3: 'FENCING',
+    preview_layer_4: 'VALIDATING',
+    preview_layer_5: 'CONTEXTUALIZING',
+    preview_generating: 'Generating...',
+    preview_back: '← Back to Edit',
+    preview_regenerate: '🔄 Regenerate',
+    preview_confirm: '✓ Confirm Publish',
   },
   cn: {
     masthead_subtitle: 'AI 每天都在变得更聪明。<br>但它有让我们的生活更好吗？',
@@ -918,6 +983,80 @@ const I18N = {
     forge_playground: '🎮  探索广场',
     ethics_pass_msg: '我们听到你了。让我们一起把这个想法变成技能。',
     btn_enter_forge: '进入技能铸造',
+    /* ── 域名分类 ── */
+    forge_domain_safety: '安全',
+    forge_domain_science: '科学',
+    forge_domain_narrative: '叙述',
+    forge_domain_design: '设计',
+    forge_domain_visual: '视觉',
+    forge_domain_experience: '体验',
+    forge_domain_sound: '声音',
+    forge_domain_ideas: '观念',
+    forge_domain_history: '历史',
+    forge_domain_fun: '趣味',
+    /* ── 导出格式 ── */
+    forge_export_markdown_name: 'Markdown',
+    forge_export_markdown_subtitle: '人类可读文档',
+    forge_export_markdown_desc: '完美用于文档、分享和阅读。标准 SKILL.md 格式。',
+    forge_export_markdown_btn: '↓ 下载 Markdown (.md)',
+    forge_export_langchain_name: 'LangChain',
+    forge_export_langchain_subtitle: 'Python 开发者集成',
+    forge_export_langchain_desc: 'Python 友好的格式，可与 LangChain 框架集成。可直接在你的智能体中使用。',
+    forge_export_langchain_btn: '↓ 下载 LangChain (.py)',
+    forge_export_mcp_name: 'MCP 配置',
+    forge_export_mcp_subtitle: '系统部署配置',
+    forge_export_mcp_desc: '用于模型上下文协议部署和系统集成的 JSON 配置。',
+    forge_export_mcp_btn: '↓ 下载 MCP 配置 (.json)',
+    forge_package_title: '安装你的技能',
+    forge_package_desc: '选择你的格式并下载锻造好的技能以进行集成。',
+    forge_package_note: '所有格式都包含完整的五层技能架构。根据你的集成需求进行选择。',
+    /* ── 档案库 / 品味档案库 ── */
+    archive_title: 'THE 42 POST · 品味档案库',
+    archive_back_home: '← 返回首页',
+    archive_most_starred: '最受赞的技能 42',
+    archive_honor_subtitle: '社区排名 · 星光投票',
+    archive_readable_title: '智能体可读层',
+    archive_readable_subtitle: '创意领域 · 社区策划',
+    archive_footer: 'THE 42 POST · 智能体档案库 · Soul.MD 协议激活',
+    /* ── 创意游乐场 / 品味竞技场 ── */
+    arena_bar_subtitle: '品味游乐场',
+    arena_clear_all: '✕ 清除全部',
+    arena_random_task: '↻ 随机任务',
+    arena_back_home: '← 返回创意',
+    arena_all_creations: '全部创意',
+    arena_canvas_empty_title: '你的画布已准备好。',
+    arena_canvas_empty_hint: '轻点下方技能卡片以开启任务',
+    arena_taste_question: '品味问题',
+    arena_pick_skills: '选择2个品味技能',
+    arena_skill_a: '技能 A',
+    arena_skill_b: '技能 B',
+    arena_click_pick: '点击选择',
+    arena_open_canvas: '打开画布 ↓',
+    arena_close_canvas: '关闭画布 ↑',
+    arena_submit_fusion: '⚔ 提交创意',
+    arena_submit_placeholder: '写下你的答案。有品味的AI会如何处理这种情况？',
+    creations_title: '🎴 我的创意作品',
+    creations_subtitle: '我的所有创意答案汇总',
+    /* ── 信息框：关于 & 怎么玩 ── */
+    about_title: '关于',
+    howto_title: '怎么玩',
+    /* ── 锻造预览 Modal ── */
+    preview_scenario_placeholder: '场景将基于你的输入生成',
+    forge_begin_forging: '开始铸造',
+    preview_full_skill: '预览完整技能',
+    preview_basic_info: '基本信息',
+    preview_skill_name: '技能名称',
+    preview_skill_def: '技能定义',
+    preview_five_layer: '五层结构',
+    preview_layer_1: '定义',
+    preview_layer_2: '场景举例',
+    preview_layer_3: '边界定义',
+    preview_layer_4: '验证',
+    preview_layer_5: '文化适配',
+    preview_generating: '生成中...',
+    preview_back: '← 返回编辑',
+    preview_regenerate: '🔄 重新生成',
+    preview_confirm: '✓ 确认发布',
   }
 };
 
@@ -983,25 +1122,86 @@ const GUILD_ICONS = {
 // Combine SHARED_SKILLS with forged skills for the vibe grid
 // Initialize with SHARED_SKILLS, will be updated dynamically
 let SLOT_DATA = [];
+let DB_SKILLS = []; // 数据库中的 42 个技能
+
+// 从 API 加载数据库中的技能
+async function loadSkillsFromDB() {
+  try {
+    const response = await fetch(`${API_CONFIG.BASE_URL}/skills?limit=100`);
+    if (!response.ok) {
+      console.warn('Failed to load skills from API:', response.status);
+      return [];
+    }
+    const data = await response.json();
+    const skills = data.skills || [];
+    console.log(`✅ Loaded ${skills.length} skills from database`);
+
+    // 转换数据库技能格式以匹配 SHARED_SKILLS
+    return skills.map(skill => ({
+      id: skill.id,
+      title: skill.title,
+      titleCn: skill.title_cn || skill.title,
+      desc: skill.description || '',
+      descCn: skill.description_cn || skill.description || '',
+      agent: skill.source_agent_id || 'system',
+      starlight: skill.starlight_score || 0,
+      domain: skill.domain || 'ideas',
+      author: 'Community',
+      commercial: skill.commercial_use || 'authorized',
+      remix: skill.remix_allowed ? 'share-alike' : 'no',
+      five_layer: {
+        defining: skill.five_layer ? JSON.parse(skill.five_layer).defining : '',
+        instantiating: skill.five_layer ? JSON.parse(skill.five_layer).instantiating : '',
+        fencing: skill.five_layer ? JSON.parse(skill.five_layer).fencing : '',
+        validating: skill.five_layer ? JSON.parse(skill.five_layer).validating : [],
+        contextualizing: skill.five_layer ? JSON.parse(skill.five_layer).contextualizing : ''
+      }
+    }));
+  } catch (error) {
+    console.error('Error loading skills from database:', error);
+    return [];
+  }
+}
 
 // Helper function to get all skills (demo + forged) sorted by popularity
 const getAllSkillsForVibe = () => {
   try {
     const forgedSkills = (typeof getRecentForges === 'function') ? getRecentForges() : [];
-    const base = (typeof ALL_SKILLS !== 'undefined' ? ALL_SKILLS : SHARED_SKILLS) || [];
+    // 优先使用数据库中的技能，其次使用硬编码的技能
+    const base = (DB_SKILLS.length > 0 ? DB_SKILLS :
+                  (typeof ALL_SKILLS !== 'undefined' ? ALL_SKILLS : SHARED_SKILLS)) || [];
     const allSkills = [...base, ...forgedSkills];
     // Sort by starlight descending to show most popular skills first
     return allSkills.sort((a, b) => (b.starlight || 0) - (a.starlight || 0));
   } catch (e) {
     console.error('Error in getAllSkillsForVibe:', e);
-    return (typeof ALL_SKILLS !== 'undefined' ? ALL_SKILLS : SHARED_SKILLS) || [];
+    return (DB_SKILLS.length > 0 ? DB_SKILLS :
+            (typeof ALL_SKILLS !== 'undefined' ? ALL_SKILLS : SHARED_SKILLS)) || [];
   }
 };
 
-// Set initial SLOT_DATA
-if (typeof SHARED_SKILLS !== 'undefined') {
-  SLOT_DATA = getAllSkillsForVibe();
+// 初始化 SLOT_DATA 并加载数据库中的技能
+function initializeSlotData() {
+  if (typeof SHARED_SKILLS !== 'undefined') {
+    SLOT_DATA = getAllSkillsForVibe();
+  }
+
+  // 异步加载数据库中的技能
+  loadSkillsFromDB().then(dbSkills => {
+    if (dbSkills.length > 0) {
+      DB_SKILLS = dbSkills;
+      SLOT_DATA = getAllSkillsForVibe();
+      console.log('✅ Updated SLOT_DATA with database skills');
+      // 重新初始化 slot grid 以显示新的技能
+      if (typeof initSlotGrid === 'function') {
+        initSlotGrid();
+      }
+    }
+  });
 }
+
+// Set initial SLOT_DATA
+initializeSlotData();
 
 /* ═══ SLOT GRID WITH STARLIGHT ═══ */
   function escapeHtml(str) {

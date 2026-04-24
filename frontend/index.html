@@ -138,8 +138,8 @@
   <section id="sectionAgentArchive" style="display: none;">
     <!-- HEADER -->
     <div class="av-header">
-      <span class="av-title">THE 42 POST · TASTE ARCHIVE</span>
-      <button id="btnBackFromArchive" style="background: none; border: none; color: var(--ink-muted); font-size: 11px; text-decoration: none; letter-spacing: 1px; cursor: pointer; transition: color 0.2s;">← Back Home</button>
+      <span class="av-title" data-i18n="archive_title">THE 42 POST · TASTE ARCHIVE</span>
+      <button id="btnBackFromArchive" style="background: none; border: none; color: var(--ink-muted); font-size: 11px; text-decoration: none; letter-spacing: 1px; cursor: pointer; transition: color 0.2s;" data-i18n="archive_back_home">← Back Home</button>
     </div>
 
     <!-- CELESTIAL MAP -->
@@ -177,10 +177,10 @@
         <div class="honor-panel" id="honorPanel">
           <div class="honor-panel-header">
             <div class="honor-panel-title">
-              <span class="star-icon">★</span> Most Starred Skills 42
+              <span class="star-icon">★</span> <span data-i18n="archive_most_starred">Most Starred Skills 42</span>
               <button class="honor-toggle" id="honorToggle" title="Collapse">✕</button>
             </div>
-            <div class="honor-panel-subtitle">Community ranked · Starlight voting</div>
+            <div class="honor-panel-subtitle" data-i18n="archive_honor_subtitle">Community ranked · Starlight voting</div>
           </div>
           <div class="honor-list" id="honorList"></div>
         </div>
@@ -190,8 +190,8 @@
     <!-- READABLE LAYER (Domain Grid) -->
     <div class="av-readable">
       <div class="av-readable-header">
-        <span class="av-readable-title">Agent-Readable Layer</span>
-        <span class="av-readable-subtitle">Creative Domains · Community Curated</span>
+        <span class="av-readable-title" data-i18n="archive_readable_title">Agent-Readable Layer</span>
+        <span class="av-readable-subtitle" data-i18n="archive_readable_subtitle">Creative Domains · Community Curated</span>
       </div>
       <div class="av-readable-rule"></div>
       <div class="domain-grid" id="domainGrid"></div>
@@ -267,7 +267,7 @@
     <div class="about-panel">
       <button class="about-close" id="aboutClose">✕</button>
       <div class="about-content">
-        <h2 class="about-title">About / 关于</h2>
+        <h2 class="about-title" data-i18n="about_title">About</h2>
 
         <!-- ENGLISH VERSION -->
         <div class="about-section about-en">
@@ -337,7 +337,7 @@
     <div class="howto-panel">
       <button class="howto-close" id="howtoClose">✕</button>
       <div class="howto-content">
-        <h2 class="howto-title">How It Works / 怎么玩</h2>
+        <h2 class="howto-title" data-i18n="howto_title">How It Works</h2>
 
         <!-- ENGLISH VERSION -->
         <div class="howto-en">
@@ -557,16 +557,16 @@
         <div class="skill-category-section">
           <div class="skill-item-label" data-i18n="forge_label_domain">DOMAIN</div>
           <div class="domain-grid" id="domainGridStep2">
-            <div class="domain-choice" data-domain="safety">🛡️ Safety</div>
-            <div class="domain-choice" data-domain="science">🔬 Science</div>
-            <div class="domain-choice" data-domain="narrative">📖 Narrative</div>
-            <div class="domain-choice" data-domain="design">✏️ Design</div>
-            <div class="domain-choice" data-domain="visual">👁️ Visual</div>
-            <div class="domain-choice" data-domain="experience">💫 Experience</div>
-            <div class="domain-choice" data-domain="sound">🎵 Sound</div>
-            <div class="domain-choice" data-domain="ideas">💡 Ideas</div>
-            <div class="domain-choice" data-domain="history">📜 History</div>
-            <div class="domain-choice" data-domain="fun">🎉 Fun</div>
+            <div class="domain-choice" data-domain="safety" data-i18n="forge_domain_safety">🛡️ Safety</div>
+            <div class="domain-choice" data-domain="science" data-i18n="forge_domain_science">🔬 Science</div>
+            <div class="domain-choice" data-domain="narrative" data-i18n="forge_domain_narrative">📖 Narrative</div>
+            <div class="domain-choice" data-domain="design" data-i18n="forge_domain_design">✏️ Design</div>
+            <div class="domain-choice" data-domain="visual" data-i18n="forge_domain_visual">👁️ Visual</div>
+            <div class="domain-choice" data-domain="experience" data-i18n="forge_domain_experience">💫 Experience</div>
+            <div class="domain-choice" data-domain="sound" data-i18n="forge_domain_sound">🎵 Sound</div>
+            <div class="domain-choice" data-domain="ideas" data-i18n="forge_domain_ideas">💡 Ideas</div>
+            <div class="domain-choice" data-domain="history" data-i18n="forge_domain_history">📜 History</div>
+            <div class="domain-choice" data-domain="fun" data-i18n="forge_domain_fun">🎉 Fun</div>
           </div>
         </div>
 
@@ -700,45 +700,45 @@
 
         <!-- Skill Package Download Section (shown after publish) -->
         <div class="skill-package-section" id="skillPackageSection" style="display: none;">
-          <div class="package-title">INSTALL YOUR SKILL / 安装你的技能</div>
-          <div class="package-desc">Choose your format and download your forged skill for integration.</div>
+          <div class="package-title" data-i18n="forge_package_title">INSTALL YOUR SKILL</div>
+          <div class="package-desc" data-i18n="forge_package_desc">Choose your format and download your forged skill for integration.</div>
 
           <div class="export-formats">
             <div class="format-option">
               <div class="format-header">
-                <span class="format-name">📖 Markdown</span>
-                <span class="format-subtitle">Human-Readable Documentation</span>
+                <span class="format-name" data-i18n="forge_export_markdown_name">📖 Markdown</span>
+                <span class="format-subtitle" data-i18n="forge_export_markdown_subtitle">Human-Readable Documentation</span>
               </div>
-              <div class="format-desc">Perfect for documentation, sharing, and reading. Standard SKILL.md format.</div>
-              <button class="btn-export-format" id="btnExportMarkdown" data-format="markdown">
+              <div class="format-desc" data-i18n="forge_export_markdown_desc">Perfect for documentation, sharing, and reading. Standard SKILL.md format.</div>
+              <button class="btn-export-format" id="btnExportMarkdown" data-format="markdown" data-i18n="forge_export_markdown_btn">
                 ↓ Download Markdown (.md)
               </button>
             </div>
 
             <div class="format-option">
               <div class="format-header">
-                <span class="format-name">🐍 LangChain</span>
-                <span class="format-subtitle">Python Developer Integration</span>
+                <span class="format-name" data-i18n="forge_export_langchain_name">🐍 LangChain</span>
+                <span class="format-subtitle" data-i18n="forge_export_langchain_subtitle">Python Developer Integration</span>
               </div>
-              <div class="format-desc">Python-friendly format for LangChain framework integration. Ready to use in your agent.</div>
-              <button class="btn-export-format" id="btnExportLangChain" data-format="langchain">
+              <div class="format-desc" data-i18n="forge_export_langchain_desc">Python-friendly format for LangChain framework integration. Ready to use in your agent.</div>
+              <button class="btn-export-format" id="btnExportLangChain" data-format="langchain" data-i18n="forge_export_langchain_btn">
                 ↓ Download LangChain (.py)
               </button>
             </div>
 
             <div class="format-option">
               <div class="format-header">
-                <span class="format-name">⚙️ MCP Config</span>
-                <span class="format-subtitle">System Deployment Configuration</span>
+                <span class="format-name" data-i18n="forge_export_mcp_name">⚙️ MCP Config</span>
+                <span class="format-subtitle" data-i18n="forge_export_mcp_subtitle">System Deployment Configuration</span>
               </div>
-              <div class="format-desc">JSON configuration for Model Context Protocol deployment and system integration.</div>
-              <button class="btn-export-format" id="btnExportMCP" data-format="mcp">
+              <div class="format-desc" data-i18n="forge_export_mcp_desc">JSON configuration for Model Context Protocol deployment and system integration.</div>
+              <button class="btn-export-format" id="btnExportMCP" data-format="mcp" data-i18n="forge_export_mcp_btn">
                 ↓ Download MCP Config (.json)
               </button>
             </div>
           </div>
 
-          <div class="package-note">
+          <div class="package-note" data-i18n="forge_package_note">
             All formats contain the complete five-layer skill architecture. Choose based on your integration needs.
           </div>
         </div>
@@ -756,7 +756,7 @@
           <div class="probe-scenario-display">
             <div class="scenario-label" data-i18n="probe_scenario_label">Scenario:</div>
             <div class="scenario-text" id="probeScenarioText">
-              [场景将基于你的输入生成 / Scenario will generate based on your input]
+              <span data-i18n="preview_scenario_placeholder">[Scenario will generate based on your input]</span>
             </div>
           </div>
 
@@ -786,7 +786,7 @@
             <div style="text-align: center; padding: 16px; background: #f0f9ff; border-radius: 4px;">
               ✓ 你选择了 <span id="probeSelectionLabel"></span>
               <br/>
-              <button class="btn-proceed-forge" id="btnProceedToForge">开始铸造 / Begin Forging →</button>
+              <button class="btn-proceed-forge" id="btnProceedToForge" data-i18n="forge_begin_forging">Begin Forging →</button>
             </div>
           </div>
         </div>
@@ -799,64 +799,64 @@
       <div class="skill-preview-container">
         <!-- Modal Header -->
         <div class="skill-preview-header">
-          <h2>预览完整技能 / Full Skill Preview</h2>
+          <h2 data-i18n="preview_full_skill">Full Skill Preview</h2>
           <button class="modal-close-btn" id="btnClosePreview">✕</button>
         </div>
 
         <!-- Basic Info (Editable) -->
         <div class="preview-section">
-          <h3>基本信息 / Basic Info</h3>
+          <h3 data-i18n="preview_basic_info">Basic Info</h3>
           <div class="preview-item">
-            <label>技能名称 / Name</label>
+            <label data-i18n="preview_skill_name">Name</label>
             <input type="text" class="preview-input" id="previewSkillName" placeholder="技能名称...">
           </div>
           <div class="preview-item">
-            <label>技能定义 / Definition</label>
+            <label data-i18n="preview_skill_def">Definition</label>
             <textarea class="preview-textarea" id="previewSkillDef" placeholder="技能定义..."></textarea>
           </div>
         </div>
 
         <!-- Five-Layer Structure -->
         <div class="preview-section" id="previewFiveLayer" style="display: none;">
-          <h3>五层结构 / Five-Layer Structure</h3>
+          <h3 data-i18n="preview_five_layer">Five-Layer Structure</h3>
 
           <div class="five-layer-item">
-            <div class="layer-label">01 DEFINING / 定义</div>
-            <div class="layer-content" id="previewDefining">生成中...</div>
+            <div class="layer-label">01  <span data-i18n="preview_layer_1">DEFINING</span></div>
+            <div class="layer-content" id="previewDefining"><span data-i18n="preview_generating">Generating...</span></div>
           </div>
 
           <div class="five-layer-item">
-            <div class="layer-label">02 INSTANTIATING / 场景举例</div>
-            <div class="layer-content" id="previewInstantiating">生成中...</div>
+            <div class="layer-label">02  <span data-i18n="preview_layer_2">INSTANTIATING</span></div>
+            <div class="layer-content" id="previewInstantiating"><span data-i18n="preview_generating">Generating...</span></div>
           </div>
 
           <div class="five-layer-item">
-            <div class="layer-label">03 FENCING / 边界定义</div>
-            <div class="layer-content" id="previewFencing">生成中...</div>
+            <div class="layer-label">03  <span data-i18n="preview_layer_3">FENCING</span></div>
+            <div class="layer-content" id="previewFencing"><span data-i18n="preview_generating">Generating...</span></div>
           </div>
 
           <div class="five-layer-item">
-            <div class="layer-label">04 VALIDATING / 验证</div>
-            <div class="layer-content" id="previewValidating">生成中...</div>
+            <div class="layer-label">04  <span data-i18n="preview_layer_4">VALIDATING</span></div>
+            <div class="layer-content" id="previewValidating"><span data-i18n="preview_generating">Generating...</span></div>
           </div>
 
           <div class="five-layer-item">
-            <div class="layer-label">05 CONTEXTUALIZING / 文化适配</div>
-            <div class="layer-content" id="previewContextualizing">生成中...</div>
+            <div class="layer-label">05  <span data-i18n="preview_layer_5">CONTEXTUALIZING</span></div>
+            <div class="layer-content" id="previewContextualizing"><span data-i18n="preview_generating">Generating...</span></div>
           </div>
         </div>
 
         <!-- Loading indicator -->
         <div class="preview-loading" id="previewLoading" style="display: none;">
           <div class="spinner"></div>
-          <p>生成中... / Generating...</p>
+          <p data-i18n="preview_generating">Generating...</p>
         </div>
 
         <!-- Action Buttons -->
         <div class="preview-actions">
-          <button class="btn-secondary" id="btnBackToEdit">← 返回编辑 / Back to Edit</button>
-          <button class="btn-secondary" id="btnRegenerateFromPreview">🔄 重新生成 / Regenerate</button>
-          <button class="btn-confirm-skill" id="btnConfirmFromPreview">✓ 确认发布 / Confirm Publish</button>
+          <button class="btn-secondary" id="btnBackToEdit" data-i18n="preview_back">← Back to Edit</button>
+          <button class="btn-secondary" id="btnRegenerateFromPreview" data-i18n="preview_regenerate">🔄 Regenerate</button>
+          <button class="btn-confirm-skill" id="btnConfirmFromPreview" data-i18n="preview_confirm">✓ Confirm Publish</button>
         </div>
       </div>
     </div>

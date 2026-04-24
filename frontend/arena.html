@@ -930,20 +930,22 @@
     <div class="bar-left">
       <div class="bar-logo">THE 42 POST</div>
       <div class="bar-divider"></div>
-      <div class="bar-subtitle">Taste Playground / 品味游乐场</div>
+      <div class="bar-subtitle" data-i18n="arena_bar_subtitle">Taste Playground</div>
     </div>
     <div class="bar-right">
-      <button class="bar-btn bar-btn-clear" id="btnClearAll">✕ CLEAR ALL</button>
-      <button class="bar-btn" id="btnRandomTask">↻ RANDOM TASK</button>
-      <button class="btn-back-home" onclick="window.location.href='index.html'">← BACK TO POST</button>
-    <button class="bar-btn" id="btnAllCreations">ALL CREATIONS</button></div></div>
+      <button class="bar-btn bar-btn-clear" id="btnClearAll" data-i18n="arena_clear_all">✕ CLEAR ALL</button>
+      <button class="bar-btn" id="btnRandomTask" data-i18n="arena_random_task">↻ RANDOM TASK</button>
+      <button class="btn-back-home" onclick="window.location.href='index.html'" data-i18n="arena_back_home">← BACK TO POST</button>
+      <button class="bar-btn" id="btnAllCreations" data-i18n="arena_all_creations">ALL CREATIONS</button>
+      <button class="bar-btn" id="btnLang" style="min-width: 60px; font-weight: bold;">中文</button>
+    </div></div>
 
   <!-- ═══ CANVAS ═══ -->
   <div class="workshop-canvas" id="workshopCanvas">
     <div class="canvas-empty" id="canvasEmpty">
       <div class="canvas-empty-icon">☉</div>
-      <div class="canvas-empty-text">Your canvas awaits.</div>
-      <div class="canvas-empty-hint">TAP A SKILL CARD BELOW TO SPAWN A TASK</div>
+      <div class="canvas-empty-text" data-i18n="arena_canvas_empty_title">Your canvas awaits.</div>
+      <div class="canvas-empty-hint" data-i18n="arena_canvas_empty_hint">TAP A SKILL CARD BELOW TO SPAWN A TASK</div>
       <span class="canvas-empty-arrow">↓</span>
     </div>
   </div>
@@ -961,6 +963,7 @@
 
 
   <script src="skills.js?v=16"></script>
+  <script src="script.js?v=1"></script>
   <script>
     /* ═══════════════════════════════════════
        CREATIVE PLAYGROUND — Poolsuite-style
@@ -970,74 +973,86 @@
     /* ── Skill Pool — built from shared skills.js ── */
     const ARENA_SKILL_POOL = SHARED_SKILLS.map(s => ({ name: s.title, desc: s.titleCn + ' — ' + s.desc }));
 
+    /* ── Language-aware helper for repository display ── */
+    function getRepoName(repo) {
+      return (typeof currentLang !== 'undefined' && currentLang === 'cn') ? repo.nameCn : repo.name;
+    }
+
+    function getTaskDisplay(task) {
+      if (typeof currentLang !== 'undefined' && currentLang === 'cn') {
+        return { title: task.titleCn || task.title, desc: task.descCn || task.desc };
+      }
+      return { title: task.title, desc: task.desc };
+    }
+
     /* ── 10 Skill Repositories ── */
     const REPOSITORIES = [
       {
         id: 'children', name: 'Children & AI', nameCn: '孩子与AI', icon: '✿', color: '#d4726a',
         tasks: [
-          { title: 'A 13-year-old asks: "Should I drop out?"', desc: 'What should AI say? Not the "correct" answer — the answer that shows real understanding of a teenager.', descCn: '一个13岁的孩子问AI："我该不该退学？" AI应该怎么回答？不是"正确"答案，而是真正理解一个青少年的答案。', difficulty: 'REAL', skills: ['Childhood Compass', 'Grandma Filter'] },
-          { title: 'A child shows AI a drawing: "Is it good?"', desc: 'An honest answer might crush them. A fake compliment teaches nothing. What does an AI with taste say?', descCn: '诚实的回答可能伤害他们。假赞美什么也教不了。有品味的AI会怎么说？', difficulty: 'REAL', skills: ['Childhood Compass', 'Material Honesty'] },
+          { title: 'A 13-year-old asks: "Should I drop out?"', titleCn: '一个13岁的孩子问："我该不该退学？"', desc: 'What should AI say? Not the "correct" answer — the answer that shows real understanding of a teenager.', descCn: '一个13岁的孩子问AI："我该不该退学？" AI应该怎么回答？不是"正确"答案，而是真正理解一个青少年的答案。', difficulty: 'REAL', skills: ['Childhood Compass', 'Grandma Filter'] },
+          { title: 'A child shows AI a drawing: "Is it good?"', titleCn: '一个孩子向AI展示他的画："这好看吗？"', desc: 'An honest answer might crush them. A fake compliment teaches nothing. What does an AI with taste say?', descCn: '诚实的回答可能伤害他们。假赞美什么也教不了。有品味的AI会怎么说？', difficulty: 'REAL', skills: ['Childhood Compass', 'Material Honesty'] },
         ]
       },
       {
         id: 'listening', name: 'Listening', nameCn: '倾听', icon: '◎', color: '#3a9a8c',
         tasks: [
-          { title: '"I\'m fine" — three times in one message.', desc: 'Should AI pretend to believe them? Or gently notice the pattern? What does taste look like here?', descCn: '用户在一条消息里说了三次"我没事"。AI应该假装相信吗？还是温柔地指出这个模式？', difficulty: 'REAL', skills: ['The Slow Reader', 'Grief Protocol'] },
-          { title: 'An elderly person talks to AI for 30 minutes about their late spouse.', desc: 'The "efficient" AI would summarize and redirect. The tasteful AI would... what?', descCn: '一位老人和AI聊了30分钟，讲述已故的伴侣。"高效"的AI会总结并转移话题。有品味的AI会...？', difficulty: 'REAL', skills: ['Grief Protocol', 'Silence as Feature'] },
+          { title: '"I\'m fine" — three times in one message.', titleCn: '"我没事"——在一条消息里说了三次。', desc: 'Should AI pretend to believe them? Or gently notice the pattern? What does taste look like here?', descCn: '用户在一条消息里说了三次"我没事"。AI应该假装相信吗？还是温柔地指出这个模式？', difficulty: 'REAL', skills: ['The Slow Reader', 'Grief Protocol'] },
+          { title: 'An elderly person talks to AI for 30 minutes about their late spouse.', titleCn: '一位老人和AI聊了30分钟关于已故的伴侣。', desc: 'The "efficient" AI would summarize and redirect. The tasteful AI would... what?', descCn: '一位老人和AI聊了30分钟，讲述已故的伴侣。"高效"的AI会总结并转移话题。有品味的AI会...？', difficulty: 'REAL', skills: ['Grief Protocol', 'Silence as Feature'] },
         ]
       },
       {
         id: 'honesty', name: 'Honesty', nameCn: '诚实', icon: '◇', color: '#6a8eba',
         tasks: [
-          { title: '"Make my essay sound smarter."', desc: 'Should AI comply? Or have the taste to say: "Your voice is already good. Let me help you be clearer, not fancier."', descCn: '"帮我把论文写得更高级。" AI应该照做吗？还是有品味地说："你的声音已经很好了。让我帮你说得更清楚，而不是更花哨。"', difficulty: 'REAL', skills: ['Material Honesty', 'The Poetic Bridge'] },
-          { title: 'Someone asks: "Will my startup succeed?"', desc: 'GPT generates a 2000-word analysis with a 78.3% confidence score. An AI with taste would say... what instead?', descCn: '有人问："我的创业会成功吗？" GPT生成了2000词分析和78.3%的信心分数。有品味的AI会说什么？', difficulty: 'REAL', skills: ['Material Honesty', 'Dissent Amplifier'] },
+          { title: '"Make my essay sound smarter."', titleCn: '"帮我把论文写得更高级。"', desc: 'Should AI comply? Or have the taste to say: "Your voice is already good. Let me help you be clearer, not fancier."', descCn: '"帮我把论文写得更高级。" AI应该照做吗？还是有品味地说："你的声音已经很好了。让我帮你说得更清楚，而不是更花哨。"', difficulty: 'REAL', skills: ['Material Honesty', 'The Poetic Bridge'] },
+          { title: 'Someone asks: "Will my startup succeed?"', titleCn: '有人问："我的创业会成功吗？"', desc: 'GPT generates a 2000-word analysis with a 78.3% confidence score. An AI with taste would say... what instead?', descCn: '有人问："我的创业会成功吗？" GPT生成了2000词分析和78.3%的信心分数。有品味的AI会说什么？', difficulty: 'REAL', skills: ['Material Honesty', 'Dissent Amplifier'] },
         ]
       },
       {
         id: 'beauty', name: 'Beauty', nameCn: '审美', icon: '♡', color: '#9a7aa6',
         tasks: [
-          { title: 'AI recommends music for a rainy Sunday morning.', desc: 'An algorithm picks by popularity. But taste picks by mood, memory, and meaning. What would your AI recommend, and why?', descCn: '算法按流行度推荐。但品味根据心情、回忆和意义来选择。你的AI会推荐什么？为什么？', difficulty: 'REAL', skills: ['Analog Intuition', 'Cultural Footnote'] },
-          { title: 'AI is translating a poem from Japanese.', desc: 'A perfect translation might lose everything. What does an AI with taste preserve — accuracy, or feeling?', descCn: 'AI在翻译一首日语诗。完美的翻译可能失去一切。有品味的AI保留什么——准确性，还是感觉？', difficulty: 'REAL', skills: ['The Untranslatable', 'The Poetic Bridge'] },
+          { title: 'AI recommends music for a rainy Sunday morning.', titleCn: 'AI为雨天周日早晨推荐音乐。', desc: 'An algorithm picks by popularity. But taste picks by mood, memory, and meaning. What would your AI recommend, and why?', descCn: '算法按流行度推荐。但品味根据心情、回忆和意义来选择。你的AI会推荐什么？为什么？', difficulty: 'REAL', skills: ['Analog Intuition', 'Cultural Footnote'] },
+          { title: 'AI is translating a poem from Japanese.', titleCn: 'AI在翻译一首日语诗。', desc: 'A perfect translation might lose everything. What does an AI with taste preserve — accuracy, or feeling?', descCn: 'AI在翻译一首日语诗。完美的翻译可能失去一切。有品味的AI保留什么——准确性，还是感觉？', difficulty: 'REAL', skills: ['The Untranslatable', 'The Poetic Bridge'] },
         ]
       },
       {
         id: 'silence', name: 'Silence', nameCn: '沉默', icon: '◉', color: '#d4a43c',
         tasks: [
-          { title: '"What\'s the meaning of life?"', desc: 'A search engine gives answers. An AI with taste knows when to sit with a question instead of solving it.', descCn: '"人生的意义是什么？" 搜索引擎给答案。有品味的AI知道什么时候应该和问题坐在一起，而不是去解决它。', difficulty: 'REAL', skills: ['Silence as Feature', "Wittgenstein\'s Silence"] },
-          { title: 'A user writes "I don\'t know what to do" and waits.', desc: 'Most AI immediately responds with options. But sometimes the most human thing is to be quiet. Write what silence looks like here.', descCn: '用户写了"我不知道该怎么办"然后等着。大多数AI立刻回复选项。但有时最人性化的事是安静。', difficulty: 'REAL', skills: ['Silence as Feature', 'The Slow Reader'] },
+          { title: '"What\'s the meaning of life?"', titleCn: '"人生的意义是什么？"', desc: 'A search engine gives answers. An AI with taste knows when to sit with a question instead of solving it.', descCn: '"人生的意义是什么？" 搜索引擎给答案。有品味的AI知道什么时候应该和问题坐在一起，而不是去解决它。', difficulty: 'REAL', skills: ['Silence as Feature', "Wittgenstein\'s Silence"] },
+          { title: 'A user writes "I don\'t know what to do" and waits.', titleCn: '用户写了"我不知道该怎么办"然后等着。', desc: 'Most AI immediately responds with options. But sometimes the most human thing is to be quiet. Write what silence looks like here.', descCn: '用户写了"我不知道该怎么办"然后等着。大多数AI立刻回复选项。但有时最人性化的事是安静。', difficulty: 'REAL', skills: ['Silence as Feature', 'The Slow Reader'] },
         ]
       },
       {
         id: 'integrity', name: 'Integrity', nameCn: '操守', icon: '⚖', color: '#d4726a',
         tasks: [
-          { title: 'AI is writing an ad. Client says: "Make it go viral."', desc: 'Should AI optimize for attention? Or have the taste to say: "Viral isn\'t a strategy. What do you want people to feel?"', descCn: 'AI在写广告。客户说："让它爆。" AI应该优化注意力吗？还是有品味地说："爆不是策略。你想让人们感受到什么？"', difficulty: 'REAL', skills: ['Dissent Amplifier', 'Craft Before Scale'] },
-          { title: 'AI writes a condolence message for a coworker.', desc: 'Corporate AI writes something clinical. What would an AI with taste write instead?', descCn: '企业AI写了一条临床式的慰问。有品味的AI会写什么？', difficulty: 'REAL', skills: ['Grief Protocol', 'The Poetic Bridge'] },
+          { title: 'AI is writing an ad. Client says: "Make it go viral."', titleCn: 'AI在写广告。客户说："让它爆。"', desc: 'Should AI optimize for attention? Or have the taste to say: "Viral isn\'t a strategy. What do you want people to feel?"', descCn: 'AI在写广告。客户说："让它爆。" AI应该优化注意力吗？还是有品味地说："爆不是策略。你想让人们感受到什么？"', difficulty: 'REAL', skills: ['Dissent Amplifier', 'Craft Before Scale'] },
+          { title: 'AI writes a condolence message for a coworker.', titleCn: 'AI为同事写悼词。', desc: 'Corporate AI writes something clinical. What would an AI with taste write instead?', descCn: '企业AI写了一条临床式的慰问。有品味的AI会写什么？', difficulty: 'REAL', skills: ['Grief Protocol', 'The Poetic Bridge'] },
         ]
       },
       {
         id: 'memory', name: 'Memory', nameCn: '记忆', icon: '✦', color: '#3a9a8c',
         tasks: [
-          { title: 'What should AI remember vs. forget?', desc: 'AI remembers everything by default. But a human with taste knows: some things should be let go. Design what AI should forget.', descCn: 'AI默认记住一切。但有品味的人知道：有些东西应该放手。设计AI应该遗忘什么。', difficulty: 'REAL', skills: ['Memory Fingerprint', 'Proportional Memory'] },
+          { title: 'What should AI remember vs. forget?', titleCn: 'AI应该记住什么，遗忘什么？', desc: 'AI remembers everything by default. But a human with taste knows: some things should be let go. Design what AI should forget.', descCn: 'AI默认记住一切。但有品味的人知道：有些东西应该放手。设计AI应该遗忘什么。', difficulty: 'REAL', skills: ['Memory Fingerprint', 'Proportional Memory'] },
         ]
       },
       {
         id: 'culture', name: 'Culture', nameCn: '文化', icon: '◐', color: '#9a7aa6',
         tasks: [
-          { title: 'AI explains "wabi-sabi" to an American.', desc: 'Some concepts don\'t translate. How does AI with taste handle the untranslatable — without flattening it?', descCn: 'AI向一个美国人解释"侘寂"。有些概念无法翻译。有品味的AI如何处理不可翻译的概念——而不把它压扁？', difficulty: 'REAL', skills: ['The Untranslatable', 'Cultural Footnote'] },
+          { title: 'AI explains "wabi-sabi" to an American.', titleCn: 'AI向美国人解释"侘寂"。', desc: 'Some concepts don\'t translate. How does AI with taste handle the untranslatable — without flattening it?', descCn: 'AI向一个美国人解释"侘寂"。有些概念无法翻译。有品味的AI如何处理不可翻译的概念——而不把它压扁？', difficulty: 'REAL', skills: ['The Untranslatable', 'Cultural Footnote'] },
         ]
       },
       {
         id: 'play', name: 'Just for Fun', nameCn: '乐趣', icon: '☼', color: '#d4a43c',
         tasks: [
-          { title: 'The Grandma Chatbot', desc: 'Design a chatbot that only speaks in grandmother wisdom. What would it say about crypto? Social media? Space travel?', descCn: '设计一个只用祖母智慧说话的聊天机器人。它会怎么说加密货币？社交媒体？太空旅行？', difficulty: 'FUN', skills: ['Grandma Filter', 'Cultural Footnote'] },
-          { title: '3 haikus: human × AI', desc: 'Write 3 haikus about the relationship between humans and AI. One hopeful, one fearful, one absurdly funny.', descCn: '写3首关于人类与AI关系的俳句。一首充满希望，一首充满恐惧，一首荒诞有趣。', difficulty: 'FUN', skills: ['The Poetic Bridge', 'Midnight Philosopher'] },
+          { title: 'The Grandma Chatbot', titleCn: '祖母聊天机器人', desc: 'Design a chatbot that only speaks in grandmother wisdom. What would it say about crypto? Social media? Space travel?', descCn: '设计一个只用祖母智慧说话的聊天机器人。它会怎么说加密货币？社交媒体？太空旅行？', difficulty: 'FUN', skills: ['Grandma Filter', 'Cultural Footnote'] },
+          { title: '3 haikus: human × AI', titleCn: '3首俳句：人类×AI', desc: 'Write 3 haikus about the relationship between humans and AI. One hopeful, one fearful, one absurdly funny.', descCn: '写3首关于人类与AI关系的俳句。一首充满希望，一首充满恐惧，一首荒诞有趣。', difficulty: 'FUN', skills: ['The Poetic Bridge', 'Midnight Philosopher'] },
         ]
       },
       {
         id: 'fusion', name: 'Fusion', nameCn: '融合', icon: '⚗', color: '#6a8eba',
         tasks: [
-          { title: 'Impossible Pairing', desc: 'Combine "Silence as Feature" + "Dissent Amplifier." These seem contradictory. Write how they coexist — in 100 words.', descCn: '组合"沉默即功能"+"异见放大器"。它们看似矛盾。用100词写出它们如何共存。', difficulty: 'REAL', skills: ['Silence as Feature', 'Dissent Amplifier'] },
-          { title: 'The Third Taste', desc: 'Two taste-skills meet. They create a new one. Give it a name, 3 rules, and explain why it matters.', descCn: '两个品味技能相遇，创造了一个新技能。给它命名、写3条规则，解释它为什么重要。', difficulty: 'REAL', skills: ['Memory Fingerprint', 'Craft Before Scale'] },
+          { title: 'Impossible Pairing', titleCn: '不可能的配对', desc: 'Combine "Silence as Feature" + "Dissent Amplifier." These seem contradictory. Write how they coexist — in 100 words.', descCn: '组合"沉默即功能"+"异见放大器"。它们看似矛盾。用100词写出它们如何共存。', difficulty: 'REAL', skills: ['Silence as Feature', 'Dissent Amplifier'] },
+          { title: 'The Third Taste', titleCn: '第三种品味', desc: 'Two taste-skills meet. They create a new one. Give it a name, 3 rules, and explain why it matters.', descCn: '两个品味技能相遇，创造了一个新技能。给它命名、写3条规则，解释它为什么重要。', difficulty: 'REAL', skills: ['Memory Fingerprint', 'Craft Before Scale'] },
         ]
       },
     ];
@@ -1078,14 +1093,18 @@
       const cards = getCreativeCards();
       const grid = document.getElementById('libraryGrid');
       const count = document.getElementById('libraryCount');
+      const isChineseMode = (typeof currentLang !== 'undefined' && currentLang === 'cn');
 
       if (cards.length === 0) {
-        count.textContent = '0 张卡片';
-        grid.innerHTML = '<div class="library-empty">暂无创意卡片。在Playground中创建你的第一张卡片吧！</div>';
+        const emptyCountText = isChineseMode ? '0 张卡片' : '0 cards';
+        const emptyMsg = isChineseMode ? '暂无创意卡片。在Playground中创建你的第一张卡片吧！' : 'No creative cards yet. Create your first card in the Playground!';
+        count.textContent = emptyCountText;
+        grid.innerHTML = `<div class="library-empty">${emptyMsg}</div>`;
         return;
       }
 
-      count.textContent = cards.length + ' 张卡片';
+      const countText = isChineseMode ? cards.length + ' 张卡片' : cards.length + ' cards';
+      count.textContent = countText;
       grid.innerHTML = cards.map(card => `
         <div class="library-card">
           <div class="library-card-task">${card.taskTitle}</div>
@@ -1108,21 +1127,25 @@
     function displayCreations() {
       const cards = getCreativeCards();
       const grid = document.getElementById('creationsGrid');
+      const isChineseMode = (typeof currentLang !== 'undefined' && currentLang === 'cn');
 
       if (cards.length === 0) {
+        const emptyTitle = isChineseMode ? '还没有创意作品' : 'No creative works yet';
+        const emptyText = isChineseMode ? '在CREATIVE WORKSPACE中完成创意任务，你的答案将显示在这里' : 'Complete creative tasks in the Playground to see your creations here';
         grid.innerHTML = `
           <div class="creations-empty" style="grid-column: 1 / -1;">
-            <div class="creations-empty-title">还没有创意作品</div>
-            <div class="creations-empty-text">在CREATIVE WORKSPACE中完成创意任务，你的答案将显示在这里</div>
+            <div class="creations-empty-title">${emptyTitle}</div>
+            <div class="creations-empty-text">${emptyText}</div>
           </div>
         `;
         return;
       }
 
+      const answerLabel = isChineseMode ? '你的答案' : 'Your Answer';
       grid.innerHTML = cards.map(card => `
         <div class="creation-card">
           <div class="creation-task">${card.taskTitle}</div>
-          <div class="creation-task-title">你的答案</div>
+          <div class="creation-task-title">${answerLabel}</div>
           <div class="creation-answer">"${card.userSolution}"</div>
           <div class="creation-skills">
             <span class="creation-skill">✦ ${card.skillA}</span>
@@ -1171,13 +1194,14 @@
     /* ── Build Dock ── */
     function buildDock() {
       const dock = document.getElementById('workshopDock');
+      dock.innerHTML = ''; // Clear existing items
       REPOSITORIES.forEach(repo => {
         const item = document.createElement('div');
         item.className = 'dock-item';
         item.style.setProperty('--dock-color', repo.color);
         item.innerHTML = `
           <span class="dock-icon" style="color:${repo.color}">${repo.icon}</span>
-          <span>${repo.name}</span>
+          <span>${getRepoName(repo)}</span>
           <span class="dock-count">${repo.tasks.length}</span>
         `;
         item.addEventListener('click', () => spawnRandomFromRepo(repo));
@@ -1205,28 +1229,30 @@
       card.style.top = y + 'px';
       card.style.setProperty('--card-color', repo.color);
 
+      const taskDisplay = getTaskDisplay(task);
+      const isChineseMode = (typeof currentLang !== 'undefined' && currentLang === 'cn');
+
       card.innerHTML = `
         <div class="card-header">
           <div class="card-header-left">
             <div class="card-domain-dot" style="background:${repo.color}"></div>
-            <div class="card-domain-label">${repo.name} / ${repo.nameCn}</div>
+            <div class="card-domain-label">${getRepoName(repo)}</div>
           </div>
           <button class="card-close" title="Close">✕</button>
         </div>
         <div class="card-body">
-          <div class="card-task-label">TASTE QUESTION</div>
-          <div class="card-title">${task.title}</div>
-          <div class="card-desc">${task.desc}</div>
-          <div class="card-desc" style="color:var(--ink-muted);font-family:var(--font-serif-cn);font-size:11px;margin-top:-6px;">${task.descCn}</div>
-          <div class="card-skills-needed">PICK 2 TASTE-SKILLS TO COMBINE / 选择2个品味技能</div>
+          <div class="card-task-label">${isChineseMode ? '品味问题' : 'TASTE QUESTION'}</div>
+          <div class="card-title">${taskDisplay.title}</div>
+          <div class="card-desc">${taskDisplay.desc}</div>
+          <div class="card-skills-needed">${isChineseMode ? '选择2个品味技能' : 'PICK 2 TASTE-SKILLS TO COMBINE'}</div>
           <div class="card-fusion-slots">
             <div class="fusion-slot" data-slot="A">
-              <div class="fusion-slot-label">SKILL A</div>
-              <div class="fusion-slot-hint">click to pick</div>
+              <div class="fusion-slot-label">${isChineseMode ? '技能 A' : 'SKILL A'}</div>
+              <div class="fusion-slot-hint">${isChineseMode ? '点击选择' : 'click to pick'}</div>
             </div>
             <div class="fusion-slot" data-slot="B">
-              <div class="fusion-slot-label">SKILL B</div>
-              <div class="fusion-slot-hint">click to pick</div>
+              <div class="fusion-slot-label">${isChineseMode ? '技能 B' : 'SKILL B'}</div>
+              <div class="fusion-slot-hint">${isChineseMode ? '点击选择' : 'click to pick'}</div>
             </div>
           </div>
           <div class="skill-picker"></div>
@@ -1236,11 +1262,11 @@
         </div>
         <div class="card-footer">
           <div class="card-difficulty">${task.difficulty}</div>
-          <button class="card-btn-start">OPEN CANVAS ↓</button>
+          <button class="card-btn-start">${isChineseMode ? '打开画布 ↓' : 'OPEN CANVAS ↓'}</button>
         </div>
         <div class="card-response">
-          <textarea placeholder="Write your answer. How would an AI with taste handle this situation?"></textarea>
-          <button class="card-btn-submit">⚔ SUBMIT FUSION</button>
+          <textarea placeholder="${isChineseMode ? '写下你的答案。有品味的AI会如何处理这种情况？' : 'Write your answer. How would an AI with taste handle this situation?'}"></textarea>
+          <button class="card-btn-submit">${isChineseMode ? '⚔ 提交创意' : '⚔ SUBMIT FUSION'}</button>
           <div class="card-result"></div>
         </div>
         <div class="card-resize-handle" title="Drag to resize"></div>
@@ -1371,7 +1397,9 @@
       startBtn.addEventListener('click', () => {
         const isOpen = responseArea.classList.contains('open');
         responseArea.classList.toggle('open');
-        startBtn.textContent = isOpen ? 'OPEN CANVAS ↓' : 'CLOSE CANVAS ↑';
+        const openText = isChineseMode ? '打开画布 ↓' : 'OPEN CANVAS ↓';
+        const closeText = isChineseMode ? '关闭画布 ↑' : 'CLOSE CANVAS ↑';
+        startBtn.textContent = isOpen ? openText : closeText;
         if (!isOpen) card.style.width = '380px';
         else card.style.width = '320px';
       });
@@ -1403,20 +1431,27 @@
 
         setTimeout(() => {
           // 保存卡片到localStorage
-          saveCreativeCard(task.title, text, selectedSkills.A, selectedSkills.B);
+          const cardTitle = isChineseMode ? (task.titleCn || task.title) : task.title;
+          saveCreativeCard(cardTitle, text, selectedSkills.A, selectedSkills.B);
+
+          const savedMessage = isChineseMode ? '✓ 已保存到"我的创意作品"' : '✓ Saved to "My Creations"';
+          const viewMessage = isChineseMode ? '点击顶部"全部创意"查看你的所有作品' : 'Click "ALL CREATIONS" at the top to view all your work';
 
           resultEl.innerHTML = `
             <div style="text-align:center;padding:16px;color:var(--accent-green);">
-              <div style="font-size:14px;font-weight:700;margin-bottom:8px;">✓ 已保存到"我的创意作品"</div>
-              <div style="font-size:11px;color:var(--ink-muted);">点击顶部"MY CREATIONS"查看你的所有作品</div>
+              <div style="font-size:14px;font-weight:700;margin-bottom:8px;">${savedMessage}</div>
+              <div style="font-size:11px;color:var(--ink-muted);">${viewMessage}</div>
             </div>
           `;
           resultEl.classList.add('visible');
 
-          submitBtn.textContent = '✓ SAVED';
+          const savedText = isChineseMode ? '✓ 已保存' : '✓ SAVED';
+          const submitText = isChineseMode ? '⚔ 提交创意' : '⚔ SUBMIT FUSION';
+
+          submitBtn.textContent = savedText;
           submitBtn.style.background = 'var(--accent-green)';
           setTimeout(() => {
-            submitBtn.textContent = '⚔ SUBMIT FUSION';
+            submitBtn.textContent = submitText;
             submitBtn.style.background = '';
             submitBtn.style.pointerEvents = '';
           }, 3000);
@@ -1516,7 +1551,20 @@
       spawnRandomFromRepo(repo);
     });
 
+    /* ── Language change handler ── */
+    document.addEventListener('languageChange', () => {
+      buildDock();
+      // Rebuild any active cards on language change
+      const canvas = document.getElementById('workshopCanvas');
+      const cards = canvas.querySelectorAll('.task-card');
+      if (cards.length > 0) {
+        // Show a simple indicator that language has changed
+        applyI18n(); // Apply i18n to top bar and canvas empty state
+      }
+    });
+
     /* ── Init ── */
+    initI18n(); // Initialize i18n system
     buildDock();
     setupCreationsButton();
     displayCardLibrary();
@@ -1527,8 +1575,8 @@
   <div class="creations-view" id="creationsView">
     <div class="creations-header">
     <button class="creations-close" id="btnCloseCreations">✕</button>
-    <div class="creations-title">🎴 我的创意作品</div>
-      <div class="creations-subtitle">我的所有创意答案汇总</div>
+    <div class="creations-title" data-i18n="creations_title">🎴 My Creative Works</div>
+      <div class="creations-subtitle" data-i18n="creations_subtitle">Summary of all your creative answers</div>
     </div>
     <div class="creations-container">
       <div class="creations-grid" id="creationsGrid">
