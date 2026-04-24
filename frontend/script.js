@@ -6614,14 +6614,20 @@ async function initAgentArchiveView() {
       const x = cx + Math.cos(angle) * spiralR + (Math.random() - 0.5) * 30;
       const y = cy + Math.sin(angle) * spiralR * 0.65 + (Math.random() - 0.5) * 25;
       const color = DOMAIN_COLORS[mapDomain(s.domain)] || DOMAIN_COLORS.ideas;
+      // Normalize fields from DB (title_cn/description_cn) and local (titleCn/descCn)
+      const title = s.title || '';
+      const titleCn = s.title_cn || s.titleCn || s.title || '';
+      const desc = s.description || s.desc || '';
+      const descCn = s.description_cn || s.descCn || s.desc || '';
       return {
         x, y, baseX: x, baseY: y,
-        size: 3.5 + s.starlight * 0.2,
-        starlight: s.starlight,
-        title: s.title, titleCn: s.titleCn,
-        desc: s.desc, agent: s.agent,
+        size: 3.5 + (s.starlight || 5) * 0.2,
+        starlight: s.starlight || 5,
+        title, titleCn,
+        desc, descCn,
+        agent: s.agent || '',
         domain: s.domain, id: s.id,
-        hash: soulHash(s.id + s.title),
+        hash: soulHash(s.id + title),
         color, phase: Math.random() * Math.PI * 2,
       };
     });
@@ -6767,10 +6773,12 @@ async function initAgentArchiveView() {
     if (idx !== null) {
       const n = nodes[idx];
       const rect = canvasWrap.getBoundingClientRect();
-      document.getElementById('ttName').textContent = n.title;
-      document.getElementById('ttNameCn').textContent = n.titleCn;
-      document.getElementById('ttAgent').textContent = n.agent;
-      document.getElementById('ttDesc').textContent = n.desc;
+      // Display text according to current language (global currentLang)
+      const lang = (typeof currentLang !== 'undefined' ? currentLang : 'en');
+      document.getElementById('ttName').textContent = n.title || '';
+      document.getElementById('ttNameCn').textContent = n.titleCn || n.title || '';
+      document.getElementById('ttAgent').textContent = n.agent || '';
+      document.getElementById('ttDesc').textContent = lang === 'cn' ? (n.descCn || n.desc || '') : (n.desc || '');
       document.getElementById('ttHash').textContent = n.hash;
       document.getElementById('ttStarlight').textContent = '★ ' + n.starlight;
       document.getElementById('ttDomain').textContent = n.domain;
@@ -6857,10 +6865,11 @@ async function initAgentArchiveView() {
       if (idx !== null) {
         const n = nodes[idx];
         const rect = canvasWrap.getBoundingClientRect();
-        document.getElementById('ttName').textContent = n.title;
-        document.getElementById('ttNameCn').textContent = n.titleCn;
-        document.getElementById('ttAgent').textContent = n.agent;
-        document.getElementById('ttDesc').textContent = n.desc;
+        const lang = (typeof currentLang !== 'undefined' ? currentLang : 'en');
+        document.getElementById('ttName').textContent = n.title || '';
+        document.getElementById('ttNameCn').textContent = n.titleCn || n.title || '';
+        document.getElementById('ttAgent').textContent = n.agent || '';
+        document.getElementById('ttDesc').textContent = lang === 'cn' ? (n.descCn || n.desc || '') : (n.desc || '');
         document.getElementById('ttHash').textContent = n.hash;
         document.getElementById('ttStarlight').textContent = '★ ' + n.starlight;
         document.getElementById('ttDomain').textContent = n.domain;
@@ -6953,15 +6962,21 @@ async function initAgentArchiveView() {
         const hash = soulHash(s.id + s.title);
         const isStarred = starredSkills[s.id] === true;
         const canDownload = isStarred;
+        // Language-aware fields: use description_cn/title_cn from DB or fallbacks
+        const titleEn = s.title || s.titleEn || '';
+        const titleCn = s.title_cn || s.titleCn || s.title || '';
+        const descEn = s.description || s.desc || '';
+        const descCn = s.description_cn || s.descCn || s.desc || '';
         return `
           <div class="domain-skill" data-skill-id="${s.id}">
-            <div class="domain-skill-title">${s.title}</div>
-            <div class="domain-skill-title-cn">${s.titleCn}</div>
-            <div class="domain-skill-agent">${s.agent}</div>
-            <div class="domain-skill-desc">${s.desc}</div>
+            <div class="domain-skill-title text-en">${titleEn}</div>
+            <div class="domain-skill-title-cn text-cn">${titleCn}</div>
+            <div class="domain-skill-agent">${s.agent || ''}</div>
+            <div class="domain-skill-desc text-en">${descEn}</div>
+            <div class="domain-skill-desc text-cn">${descCn}</div>
             <div class="domain-skill-meta">
               <span class="hash-val">${hash}</span>
-              <span>★ ${s.starlight}</span>
+              <span>★ ${s.starlight || 0}</span>
             </div>
             <div class="domain-skill-actions">
               <button class="btn-skill-star" data-skill-id="${s.id}" title="Star this skill">
@@ -6975,18 +6990,20 @@ async function initAgentArchiveView() {
             </div>
           </div>`;
       }).join('');
-      
+
       for (let i = 0; i < openSeats; i++) {
         html += `
           <div class="domain-skill domain-open-seat">
-            <div class="domain-skill-title">Open Seat</div>
-            <div class="domain-skill-desc">Awaiting alignment contribution.</div>
+            <div class="domain-skill-title text-en">Open Seat</div>
+            <div class="domain-skill-title text-cn">虚位以待</div>
+            <div class="domain-skill-desc text-en">Awaiting alignment contribution.</div>
+            <div class="domain-skill-desc text-cn">等待对齐贡献。</div>
           </div>`;
       }
-      
+
       cell.innerHTML = `
-        <div class="domain-title">${dom.cn}</div>
-        <div class="domain-title-en">${dom.en}</div>
+        <div class="domain-title text-cn">${dom.cn}</div>
+        <div class="domain-title-en text-en">${dom.en}</div>
         ${html}
       `;
       grid.appendChild(cell);
@@ -7053,12 +7070,17 @@ function initTop42Grid() {
   gridEl.innerHTML = '';
   topSkills.forEach((skill, index) => {
     const rank = index + 1;
+    const titleEn = skill.title || '';
+    const titleCn = skill.title_cn || skill.titleCn || skill.title || '';
+    const descEn = skill.description || skill.desc || '';
+    const descCn = skill.description_cn || skill.descCn || skill.desc || '';
     const cellHTML = `
       <div class="top42-cell" data-skill-id="${skill.id}">
         <div class="top42-skill-rank">★ #${rank}</div>
-        <div class="top42-skill-title">${skill.title}</div>
-        <div class="top42-skill-title-cn">${skill.titleCn || ''}</div>
-        <div class="top42-skill-desc">${skill.desc}</div>
+        <div class="top42-skill-title text-en">${titleEn}</div>
+        <div class="top42-skill-title-cn text-cn">${titleCn}</div>
+        <div class="top42-skill-desc text-en">${descEn}</div>
+        <div class="top42-skill-desc text-cn">${descCn}</div>
         <div class="top42-skill-meta">
           <div class="top42-skill-meta-item">⭐ <span>${skill.starlight || 0}</span></div>
           <div class="top42-skill-meta-item">📥 <span>${skill.downloads || 0}</span></div>

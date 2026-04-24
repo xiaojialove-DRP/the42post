@@ -9632,6 +9632,45 @@ body[data-lang="en"] .howto-cn {
   display: block;
 }
 
+/* ═══════════════════════════════════════════════════════
+   GLOBAL LANGUAGE ISOLATION (Archive page & beyond)
+   Strict: English mode hides all .text-cn, Chinese mode hides all .text-en
+   ═══════════════════════════════════════════════════════ */
+
+/* Default (no data-lang set or English): hide Chinese, show English */
+.text-cn {
+  display: none !important;
+}
+.text-en {
+  display: block;
+}
+
+/* English mode: show English, hide Chinese */
+body[data-lang="en"] .text-en {
+  display: block !important;
+}
+body[data-lang="en"] .text-cn {
+  display: none !important;
+}
+
+/* Chinese mode: show Chinese, hide English */
+body[data-lang="cn"] .text-cn {
+  display: block !important;
+}
+body[data-lang="cn"] .text-en {
+  display: none !important;
+}
+
+/* Inline variants (for elements that need inline display) */
+body[data-lang="en"] span.text-en,
+body[data-lang="en"] .text-en-inline {
+  display: inline !important;
+}
+body[data-lang="cn"] span.text-cn,
+body[data-lang="cn"] .text-cn-inline {
+  display: inline !important;
+}
+
 /* Styling for list items in About/HowTo */
 .about-list,
 .howto-rule ol {
