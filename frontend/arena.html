@@ -238,9 +238,17 @@
       background: color-mix(in srgb, var(--card-color, #d4726a) 10%, #f8f4ee);
       border-bottom: 1px solid color-mix(in srgb, var(--card-color, #d4726a) 12%, #e8e0d8);
       cursor: grab;
+      user-select: none;
     }
 
     .card-header:active { cursor: grabbing; }
+
+    .card-body {
+      cursor: grab;
+      user-select: none;
+    }
+
+    .card-body:active { cursor: grabbing; }
 
     .card-header-left {
       display: flex;
@@ -424,6 +432,28 @@
     }
 
     .card-result.visible { display: block; }
+
+    /* ── Resize Handle ── */
+    .card-resize-handle {
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      width: 20px;
+      height: 20px;
+      cursor: nwse-resize;
+      background: linear-gradient(135deg, transparent 50%, var(--ink-muted) 50%);
+      opacity: 0.5;
+      transition: opacity 0.2s;
+    }
+
+    .card-resize-handle:hover {
+      opacity: 1;
+    }
+
+    .task-card.resizing {
+      box-shadow: 0 12px 40px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06);
+      transition: none;
+    }
 
     /* ── Skill Fusion Slots ── */
     .card-fusion-slots {
@@ -1176,7 +1206,7 @@
       card.style.setProperty('--card-color', repo.color);
 
       card.innerHTML = `
-        <div class="card-header" data-drag-handle>
+        <div class="card-header">
           <div class="card-header-left">
             <div class="card-domain-dot" style="background:${repo.color}"></div>
             <div class="card-domain-label">${repo.name} / ${repo.nameCn}</div>
@@ -1213,6 +1243,7 @@
           <button class="card-btn-submit">⚔ SUBMIT FUSION</button>
           <div class="card-result"></div>
         </div>
+        <div class="card-resize-handle" title="Drag to resize"></div>
       `;
 
       // ── Skill Fusion Picker ──
@@ -1264,14 +1295,19 @@
       });
 
       // Focus on click
-      card.addEventListener('mousedown', () => {
-        card.style.zIndex = ++highestZ;
+      card.addEventListener('mousedown', (e) => {
+        if (e.target.closest('.card-close')) return;
+        if (!e.target.closest('.card-resize-handle') && !e.target.closest('button') && !e.target.closest('textarea')) {
+          card.style.zIndex = ++highestZ;
+        }
       });
 
-      // Drag
-      const handle = card.querySelector('[data-drag-handle]');
-      handle.addEventListener('mousedown', (e) => {
-        if (e.target.closest('.card-close')) return;
+      // Drag - anywhere on the card except buttons, textarea, and close button
+      card.addEventListener('mousedown', (e) => {
+        // Don't drag from buttons, textarea, close button, or resize handle
+        if (e.target.closest('.card-close') || e.target.closest('button') ||
+            e.target.closest('textarea') || e.target.closest('.card-resize-handle')) return;
+
         e.preventDefault();
         card.classList.add('dragging');
         card.style.zIndex = ++highestZ;
@@ -1282,9 +1318,12 @@
         };
       });
 
-      // Touch drag
-      handle.addEventListener('touchstart', (e) => {
-        if (e.target.closest('.card-close')) return;
+      // Touch drag - anywhere on the card
+      card.addEventListener('touchstart', (e) => {
+        // Don't drag from buttons, textarea, close button, or resize handle
+        if (e.target.closest('.card-close') || e.target.closest('button') ||
+            e.target.closest('textarea') || e.target.closest('.card-resize-handle')) return;
+
         const touch = e.touches[0];
         card.classList.add('dragging');
         card.style.zIndex = ++highestZ;
@@ -1292,6 +1331,37 @@
           card,
           startX: touch.clientX - card.offsetLeft,
           startY: touch.clientY - card.offsetTop,
+        };
+      }, { passive: true });
+
+      // Resize handle - mouse
+      const resizeHandle = card.querySelector('.card-resize-handle');
+      resizeHandle.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        card.classList.add('resizing');
+        card.style.zIndex = ++highestZ;
+        dragState = {
+          card,
+          isResizing: true,
+          startX: e.clientX,
+          startY: e.clientY,
+          startWidth: card.offsetWidth,
+          startHeight: card.offsetHeight,
+        };
+      });
+
+      // Resize handle - touch
+      resizeHandle.addEventListener('touchstart', (e) => {
+        const touch = e.touches[0];
+        card.classList.add('resizing');
+        card.style.zIndex = ++highestZ;
+        dragState = {
+          card,
+          isResizing: true,
+          startX: touch.clientX,
+          startY: touch.clientY,
+          startWidth: card.offsetWidth,
+          startHeight: card.offsetHeight,
         };
       }, { passive: true });
 
@@ -1365,17 +1435,28 @@
       spawnCard(task, repo);
     }
 
-    /* ── Global drag handlers ── */
+    /* ── Global drag and resize handlers ── */
     document.addEventListener('mousemove', (e) => {
       if (!dragState) return;
-      const { card, startX, startY } = dragState;
-      card.style.left = (e.clientX - startX) + 'px';
-      card.style.top = (e.clientY - startY) + 'px';
+      const { card, startX, startY, isResizing, startWidth, startHeight } = dragState;
+
+      if (isResizing) {
+        const deltaX = e.clientX - startX;
+        const deltaY = e.clientY - startY;
+        const newWidth = Math.max(300, startWidth + deltaX);
+        const newHeight = Math.max(200, startHeight + deltaY);
+        card.style.width = newWidth + 'px';
+        card.style.height = newHeight + 'px';
+      } else {
+        card.style.left = (e.clientX - startX) + 'px';
+        card.style.top = (e.clientY - startY) + 'px';
+      }
     });
 
     document.addEventListener('mouseup', () => {
       if (dragState) {
         dragState.card.classList.remove('dragging');
+        dragState.card.classList.remove('resizing');
         dragState = null;
       }
     });
@@ -1383,14 +1464,25 @@
     document.addEventListener('touchmove', (e) => {
       if (!dragState) return;
       const touch = e.touches[0];
-      const { card, startX, startY } = dragState;
-      card.style.left = (touch.clientX - startX) + 'px';
-      card.style.top = (touch.clientY - startY) + 'px';
+      const { card, startX, startY, isResizing, startWidth, startHeight } = dragState;
+
+      if (isResizing) {
+        const deltaX = touch.clientX - startX;
+        const deltaY = touch.clientY - startY;
+        const newWidth = Math.max(300, startWidth + deltaX);
+        const newHeight = Math.max(200, startHeight + deltaY);
+        card.style.width = newWidth + 'px';
+        card.style.height = newHeight + 'px';
+      } else {
+        card.style.left = (touch.clientX - startX) + 'px';
+        card.style.top = (touch.clientY - startY) + 'px';
+      }
     }, { passive: true });
 
     document.addEventListener('touchend', () => {
       if (dragState) {
         dragState.card.classList.remove('dragging');
+        dragState.card.classList.remove('resizing');
         dragState = null;
       }
     });
