@@ -1,57 +1,86 @@
-# Changelog
+# CHANGELOG
 
-All notable changes to THE 42 POST project are documented here.
+All notable changes to THE 42 POST.
 
-## [1.0.0] - 2026-04-20
+## [1.0.0] — 2026-04-24
 
-### ✨ Added
+### 🎉 Launch
 
-- Email service system (utils/email.js)
-- Certificate HTML generation (utils/certificate.js)
-- Email API routes (/api/email/*)
-- Commemorative certificate card design
-- Frontend email integration
-- Certificate download functionality
-- Comprehensive documentation
-- Backend Express.js infrastructure
-- SQLite database with schema
-- JWT authentication system
-- All API endpoints (auth, skills, forge, search, agents, email)
-- Skill Forge multi-step workflow
-- Skill Arena for discovery
-- Responsive design (desktop, tablet, mobile)
-- Bilingual UI (English & Mandarin Chinese)
-- Docker containerization
-- Railway deployment support
+**Core Platform**
+- Skill Forge: 4-step workflow (IDEA → GENERATING → FORGE & EDIT → PUBLISHING)
+- Five-Layer Framework: DEFINING → INSTANTIATING → FENCING → VALIDATING → CONTEXTUALIZING
+- Skill Archive: Browse and search 100+ community-created skills
+- Creator Cards: Shareable proof of authorship (PNG/PDF)
+- Playground: Interactive canvas for exploring skill interactions
+- Shadow Agent: Test how skills guide AI behavior
 
-### 🔒 Security
+**User Experience**
+- Mobile-first responsive design (100% adapted for small screens)
+- Bilingual support: English + Simplified Chinese
+- Lightweight authentication: name + email (no registration burden)
+- Toast notifications system (replaced 44+ alert modals)
+- Full-width adaptive layouts
+- Smooth animations and visual feedback
 
-- JWT-based authentication with 24-hour expiry
-- CORS whitelist configuration
-- SMTP credential masking
-- Input validation on API endpoints
+**Developer Features**
+- REST API (`/api/skills`, `/api/search`, `/api/forge/*`)
+- Claude AI integration for skill generation
+- Email notifications (skill published, Creator Card delivery)
+- Playground drag-and-resize interactions
+- Data persistence: PostgreSQL/SQLite compatible
+- Docker containerization + Railway deployment
 
-### 🧪 Testing
+**Quality & Accessibility**
+- Semantic HTML
+- WCAG 2.1 AA compliant keyboard navigation
+- Cross-browser testing (Chrome, Safari, Firefox)
+- High-contrast options
+- Error validation and recovery
 
-- Comprehensive testing checklist
-- Email sending verification
-- API endpoint validation
-- Cross-browser testing guidelines
+### 🚀 Latest Updates (This Sprint)
+
+**Mobile Experience**
+- Fixed header lines to extend full-width on small screens
+- Improved line spacing around main CTA text
+- Single-column layout for Agent Archive
+- Optimized Chinese typography (Noto Sans SC font)
+
+**Interactions**
+- Unified language toggle (consistent black button styling)
+- Full-width card dragging in Playground
+- Resize handles with visual feedback
+- Touch support for all interactions
+
+**Internationalization**
+- Added i18n support for ethics pass messages
+- Consistent English/Chinese rendering
 
 ---
 
-## [Unreleased]
+## Roadmap
 
-### 🔜 Planned Features
+### Q2 2026 (In Progress)
+- [ ] User session management
+- [ ] Playground draft auto-save (cloud + local)
+- [ ] Skill versioning and history
+- [ ] MY CREATIONS page (published skills + drafts)
 
-- [ ] Impact Dashboard
-- [ ] Comment & Feedback System
-- [ ] Version History
-- [ ] Advanced Search
-- [ ] Real-time Notifications
-- [ ] Mobile Apps
-- [ ] Skill Marketplace
+### Q3 2026
+- [ ] Community feedback on skills
+- [ ] Skill recommendations engine
+- [ ] Advanced search (domain, difficulty, rating)
+- [ ] Skill collaboration (multiple creators)
+- [ ] Creator analytics dashboard
+
+### Q4 2026+
+- [ ] Offline mode support
+- [ ] Skill certification system
+- [ ] Multi-language expansion
+- [ ] Mobile apps (iOS/Android)
+- [ ] Research publication tools
 
 ---
 
-**Last Updated**: 2026-04-20
+**Status**: Production Ready ✅  
+**Version**: 1.0.0  
+**Last Updated**: 2026-04-24
