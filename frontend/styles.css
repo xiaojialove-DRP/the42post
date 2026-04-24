@@ -5343,42 +5343,50 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 /* Tablet & phone (≤768px) — overrides & additions */
 @media (max-width: 768px) {
   /* Homepage hero */
+  .section-headline {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
   .headline-hero {
-    padding: 24px 16px 16px;
+    padding: 24px 0 16px;
   }
   .section-headline .section-heading {
     font-size: 20px;
     letter-spacing: -0.01em;
     margin-bottom: 8px;
+    padding: 0 16px;
   }
   .community-section-wrap {
-    margin: 16px auto 0 !important;
+    margin: 0 !important;
+    padding: 16px 0 0;
   }
   .chat-bubble-section {
     margin-bottom: 0 !important;
-    min-height: calc(100vh - 140px);
+    min-height: calc(100vh - 120px);
   }
 
-  /* Chat input — maximize screen usage */
+  /* Chat input — fill full screen width */
   .chat-bubble-wrap {
-    min-height: 65vh !important;
-    padding: 16px 12px !important;
-    border-radius: 18px !important;
-    flex: 1 !important;
+    min-height: auto !important;
+    max-width: 100vw !important;
+    margin-left: calc(-50vw + 50%) !important;
+    margin-right: calc(-50vw + 50%) !important;
+    width: 100vw !important;
+    padding: 28px 20px !important;
+    border-radius: 0 !important;
+    flex: none !important;
     display: flex !important;
     flex-direction: column !important;
     justify-content: center !important;
   }
   .chat-bubble-wrap::before {
-    left: 12px;
-    right: 12px;
+    display: none !important;
   }
   .chat-bubble-input {
     font-size: 16px !important;
-    min-height: 150px !important;
-    max-height: 55vh !important;
-    padding: 18px 0 !important;
-    flex-grow: 1 !important;
+    min-height: 120px !important;
+    max-height: 40vh !important;
+    padding: 14px 0 !important;
     line-height: 1.6 !important;
   }
   .chat-bubble-invite {
@@ -5524,37 +5532,41 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
   .section-headline .section-heading {
     font-size: 18px !important;
     margin-bottom: 6px !important;
+    padding: 0 12px !important;
   }
 
-  /* Minimize margins for maximum input box height */
+  /* Full-width input container */
   .community-section-wrap {
-    margin: 12px auto 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
   }
   .chat-bubble-section {
     margin-bottom: 0 !important;
-    min-height: calc(100vh - 120px) !important;
+    padding: 0 !important;
   }
 
-  /* Chat input — optimized for small phones */
+  /* Chat input — full screen width */
   .chat-bubble-wrap {
-    min-height: 75vh !important;
-    padding: 14px 12px !important;
-    border-radius: 12px !important;
-    flex: 1 !important;
+    min-height: auto !important;
+    max-width: 100vw !important;
+    margin-left: calc(-50vw + 50%) !important;
+    margin-right: calc(-50vw + 50%) !important;
+    width: 100vw !important;
+    padding: 28px 16px !important;
+    border-radius: 0 !important;
+    flex: none !important;
     display: flex !important;
     flex-direction: column !important;
     justify-content: center !important;
   }
   .chat-bubble-wrap::before {
-    left: 8px;
-    right: 8px;
+    display: none !important;
   }
   .chat-bubble-input {
     font-size: 16px !important;
-    min-height: 150px !important;
-    max-height: 55vh !important;
-    padding: 16px 0 !important;
-    flex-grow: 1 !important;
+    min-height: 120px !important;
+    max-height: 40vh !important;
+    padding: 14px 0 !important;
   }
   .chat-bubble-invite {
     font-size: 13px !important;
