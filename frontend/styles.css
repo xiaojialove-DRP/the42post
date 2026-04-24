@@ -5225,6 +5225,12 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
     width: 100vw !important;
     margin-left: calc(-50vw + 50%) !important;
   }
+  .header-rule-top,
+  .header-rule-double,
+  .header-rule {
+    width: 100vw !important;
+    margin-left: calc(-50vw + 50%) !important;
+  }
   .section { padding-left: 0 !important; padding-right: 0 !important; }
   .skills-feed { grid-template-columns: 1fr; }
   .input-actions { flex-direction: column; align-items: flex-start; }
@@ -5547,6 +5553,12 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 @media (max-width: 480px) {
   .global-header {
     padding: 0 !important;
+    width: 100vw !important;
+    margin-left: calc(-50vw + 50%) !important;
+  }
+  .header-rule-top,
+  .header-rule-double,
+  .header-rule {
     width: 100vw !important;
     margin-left: calc(-50vw + 50%) !important;
   }
