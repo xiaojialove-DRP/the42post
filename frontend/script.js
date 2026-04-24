@@ -6463,6 +6463,37 @@ const ARCHIVE_DOMAINS = [
   { key: 'fun',        cn: '纯粹乐趣', en: 'Just for Fun' },
 ];
 
+// Map database domain keys to display colors
+function mapDomain(dbDomain) {
+  if (!dbDomain) return 'ideas';
+  
+  const domainMap = {
+    '01-narrative-language': 'narrative',
+    '02-logic-reasoning': 'science',
+    '03-ethics-values': 'design',
+    '04-history-tradition': 'history',
+    '05-science-systems': 'science',
+    '06-design-experience': 'design',
+    '07-culture-understanding': 'experience',
+    '08-time-life': 'history',
+    '09-silence-space': 'visual',
+    '10-labor-value': 'sound',
+    // Fallback for direct matches
+    'narrative': 'narrative',
+    'science': 'science',
+    'design': 'design',
+    'history': 'history',
+    'experience': 'experience',
+    'visual': 'visual',
+    'sound': 'sound',
+    'ideas': 'ideas',
+    'safety': 'safety',
+    'fun': 'fun',
+  };
+  
+  return domainMap[dbDomain] || 'ideas';
+}
+
 const DOMAIN_COLORS = {
   safety:     { r: 212, g: 114, b: 106, hex: '#d4726a' },
   science:    { r: 106, g: 142, b: 186, hex: '#6a8eba' },
@@ -6564,7 +6595,7 @@ async function initAgentArchiveView() {
       const spiralR = 80 + i * 13 + Math.sin(i * 2.1) * 50;
       const x = cx + Math.cos(angle) * spiralR + (Math.random() - 0.5) * 30;
       const y = cy + Math.sin(angle) * spiralR * 0.65 + (Math.random() - 0.5) * 25;
-      const color = DOMAIN_COLORS[s.domain] || DOMAIN_COLORS.ideas;
+      const color = DOMAIN_COLORS[mapDomain(s.domain)] || DOMAIN_COLORS.ideas;
       return {
         x, y, baseX: x, baseY: y,
         size: 3.5 + s.starlight * 0.2,
