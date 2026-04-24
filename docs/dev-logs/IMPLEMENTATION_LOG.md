@@ -240,7 +240,7 @@ console.log(localStorage.getItem('42post_anon_id'));
    - 查看 API 响应状态和内容
 
 4. **参考部署验证清单**
-   - 详见 DEPLOYMENT_VERIFICATION.md
+   - 详见 guides/DEPLOYMENT.md
 
 ---
 
