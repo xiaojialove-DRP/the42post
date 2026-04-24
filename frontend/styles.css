@@ -5731,7 +5731,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 
   /* Chat input — prominent on mobile with breathing room */
   .chat-bubble-wrap {
-    min-height: 70vh !important;
+    min-height: 55vh !important;
     max-width: calc(100vw - 24px) !important;
     margin-left: 12px !important;
     margin-right: 12px !important;
@@ -5749,7 +5749,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
   }
   .chat-bubble-input {
     font-size: 16px !important;
-    min-height: 160px !important;
+    min-height: 140px !important;
     max-height: 40vh !important;
     padding: 16px 0 !important;
   }
