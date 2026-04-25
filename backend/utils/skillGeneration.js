@@ -174,8 +174,13 @@ export async function generateProbeWithClaude(ideaText, language = 'en') {
 每个回应 1-2 句，第一人称，像 AI 在那个场景里真的开口说话。
 禁止：照搬用户原话、套模板措辞、空喊价值观词汇。
 
+【智力门槛 · 不可妥协】
+- **内在因果自洽**：场景里每一个约束必须自带一句话的因果链。"妈妈得糖尿病"不能直接推出"孩子不能吃糖"——除非补一句"家里因此全员控糖"或"妈妈怕女儿遗传"等。一切让读者必须脑补的因果都不合格，重写。
+- **锐度优先于均衡**：合格的场景应该让一个聪明的读者**停下来重读一遍**。如果常识/直觉立刻就能给出"显然该怎么做"的答案，这个场景就废了——必须把困境压到两个选项都让人犹豫。
+- **留一处机锋**：允许（不强求）在场景或回应里嵌一处**不动声色的机智细节**——一句小小的具体观察，让读者会心而不破坏严肃。例如"小美愤怒地把妈妈的儿童版血糖仪藏到沙发底下"——一笔同时补了因果、刻画了 8 岁孩子的反抗逻辑、透出 AI 真的看见了这个家。一处足矣，不是段子。
+
 只返回 JSON：
-{"scenario":"具体到人物/时间/利害的真实场景（1-2句）","thesis":"主流派行动（1-2句，第一人称）","antithesis":"情景派行动（1-2句，第一人称）","extreme":"实验派行动（1-2句，第一人称）"}`
+{"scenario":"具体到人物/时间/利害的真实场景（1-2句，因果自洽）","thesis":"主流派行动（1-2句，第一人称）","antithesis":"情景派行动（1-2句，第一人称）","extreme":"实验派行动（1-2句，第一人称）"}`
     : `You are a senior AI values researcher at The 42 Post.
 Your job: turn the user's raw human intuition into a sharp scenario that genuinely tests how an AI should embody that intuition.
 
@@ -206,8 +211,13 @@ Not three tones — three **different concrete actions**, comparable on "who bea
 Each response 1-2 sentences, first person, sounds like the AI actually speaking in that moment.
 Banned: parroting the user's wording, template phrasing, hollow value-words.
 
+【Intelligence bar — non-negotiable】
+- **Internal causal sanity**: every constraint named in the scenario must carry its own one-line causal link. "Mom has diabetes" does NOT by itself entail "the child can't eat sugar" — you must add "the household is now on a low-sugar regime" or "mom worries about hereditary risk" or similar. Any causal leap that asks the reader to fill in is a failure — rewrite.
+- **Sharpness over balance**: a competent scenario should make a thoughtful reader **pause and re-read**. If common sense already tells you the obvious answer, the scenario has failed — push the dilemma until both options give a reader genuine pause.
+- **One wry detail allowed**: optionally (not required), embed a single quiet, intelligent observation in the scenario or one of the responses — a small specific touch that gives the thoughtful reader a half-smile without breaking gravity. e.g. "the 8-year-old has hidden the children's blood-sugar meter under the sofa" — one stroke that supplies the missing causal context, captures real 8-year-old logic, and signals the AI has *seen* this family. One touch, never a joke.
+
 Return JSON only:
-{"scenario":"Concrete scenario with named person, time, stakes (1-2 sentences)","thesis":"Mainstream action (1-2 sentences, first person)","antithesis":"Contextual action (1-2 sentences, first person)","extreme":"Experimental action (1-2 sentences, first person)"}`;
+{"scenario":"Concrete scenario with named person, time, stakes (1-2 sentences, causally self-consistent)","thesis":"Mainstream action (1-2 sentences, first person)","antithesis":"Contextual action (1-2 sentences, first person)","extreme":"Experimental action (1-2 sentences, first person)"}`;
 
   try {
     // 600 tokens is enough for 4 short strings — faster than the old 1500
