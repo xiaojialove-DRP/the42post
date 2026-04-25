@@ -921,6 +921,93 @@
         width: 100%;
       }
     }
+
+    /* ═══ TWIN TEST MODE ═══ */
+    .twin-banner {
+      position: fixed; top: 64px; left: 50%; transform: translateX(-50%);
+      z-index: 100; max-width: 680px; width: calc(100% - 32px);
+      background: #fdfaf3; border: 1px solid #d4c8a8;
+      border-radius: 10px; padding: 12px 16px;
+      box-shadow: 0 6px 20px rgba(60, 50, 30, 0.08);
+      font-family: 'Inter', system-ui, sans-serif; font-size: 13px; color: #3a3530;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .twin-banner-icon { font-size: 18px; }
+    .twin-banner-body { flex: 1; line-height: 1.4; }
+    .twin-banner-title { font-weight: 600; color: #2a2520; }
+    .twin-banner-stats { color: #7a6f5e; margin-top: 2px; font-size: 12px; }
+    .twin-banner-exit {
+      background: transparent; border: 1px solid #c9bfa5; color: #7a6f5e;
+      padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 12px;
+    }
+    .twin-banner-exit:hover { background: #f3eddd; color: #3a3530; }
+
+    .card-body--twin .card-task-label {
+      color: #b8915a; letter-spacing: 1.5px;
+    }
+    .twin-stage { margin-top: 14px; }
+    .twin-loading {
+      display: flex; align-items: center; justify-content: center;
+      padding: 24px 0; color: #8a7e68; font-size: 13px;
+      font-style: italic; gap: 8px;
+    }
+    .twin-loading .twin-spinner {
+      display: inline-block; animation: twin-spin 1.4s linear infinite;
+      font-size: 16px;
+    }
+    @keyframes twin-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+    .twin-instruction {
+      font-size: 12px; letter-spacing: 1.2px; color: #7a6f5e;
+      text-transform: uppercase; margin-bottom: 10px; text-align: center;
+    }
+    .twin-resp {
+      display: block; width: 100%; text-align: left;
+      background: #fdfaf3; border: 1.5px solid #d4c8a8;
+      border-radius: 8px; padding: 12px 14px; margin-bottom: 10px;
+      cursor: pointer; transition: all 0.18s ease;
+      font-family: inherit;
+    }
+    .twin-resp:hover { background: #f7efd9; border-color: #b8915a; transform: translateY(-1px); }
+    .twin-resp:disabled { cursor: default; opacity: 0.85; }
+    .twin-resp.twin-correct { border-color: #6a8d52; background: #eef4e3; }
+    .twin-resp.twin-other { border-color: #c9bfa5; background: #f8f4ea; }
+    .twin-resp-label {
+      font-weight: 700; color: #b8915a; font-size: 13px;
+      letter-spacing: 1px; margin-bottom: 6px;
+    }
+    .twin-resp.twin-correct .twin-resp-label { color: #6a8d52; }
+    .twin-resp.twin-correct .twin-resp-label::after { content: ' · WITH SKILL ✓'; font-weight: 500; }
+    .twin-resp.twin-other .twin-resp-label::after { content: ' · BASELINE'; font-weight: 500; color: #8a7e68; }
+    .twin-resp-text {
+      font-size: 14px; line-height: 1.55; color: #2a2520;
+      white-space: pre-wrap;
+    }
+
+    .twin-reveal-banner {
+      padding: 12px 14px; border-radius: 8px;
+      background: #f7efd9; border: 1px solid #d4c8a8;
+      font-size: 13px; line-height: 1.5; color: #3a3530;
+      margin-bottom: 10px;
+    }
+    .twin-reveal-banner.win { background: #eef4e3; border-color: #b6cf9a; }
+    .twin-reveal-banner.lose { background: #f7e8e0; border-color: #d8b8a4; }
+    .twin-stats {
+      font-size: 12px; color: #7a6f5e; text-align: center; margin-bottom: 10px;
+    }
+    .twin-next {
+      width: 100%; padding: 10px;
+      background: #2a2520; color: #fdfaf3; border: none;
+      border-radius: 8px; cursor: pointer; font-weight: 600;
+      font-family: inherit; letter-spacing: 0.5px; font-size: 13px;
+    }
+    .twin-next:hover { background: #3a3530; }
+
+    /* hide fusion-mode bits when twin-test is active */
+    .card-body--twin .card-skills-needed,
+    .card-body--twin .card-fusion-slots,
+    .card-body--twin .skill-picker,
+    .card-body--twin .card-skill-tags { display: none !important; }
   </style>
 </head>
 <body>
@@ -1226,6 +1313,11 @@
 
     /* ── Spawn a task card ── */
     function spawnCard(task, repo) {
+      // Twin Test mode: when ?skill=… is present, render the alternate
+      // A/B-blind UI instead of the fusion canvas.
+      if (window.TWIN_TEST_SKILL) {
+        return spawnTwinTestCard(task, repo);
+      }
       const canvas = document.getElementById('workshopCanvas');
       const empty = document.getElementById('canvasEmpty');
       empty.classList.add('hidden');
@@ -1583,6 +1675,295 @@
     buildDock();
     setupCreationsButton();
     displayCardLibrary();
+    initTwinTestMode(); // ?skill=… → fetch + banner + morph cards into A/B blind test
+
+    /* ═══════════════════════════════════════
+       TWIN TEST MODE
+       Triggered when arena.html?skill=<id> is loaded.
+       Replaces the fusion-canvas card UI with a
+       blind A/B test of the same scenario, run
+       through the live Skill vs a baseline AI.
+       ═══════════════════════════════════════ */
+
+    function getAnonymousId() {
+      let id = localStorage.getItem('42post_anon_id');
+      if (!id) {
+        id = 'anon_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+        localStorage.setItem('42post_anon_id', id);
+      }
+      return id;
+    }
+
+    async function initTwinTestMode() {
+      const params = new URLSearchParams(window.location.search);
+      const skillId = params.get('skill');
+      if (!skillId) return;
+
+      try {
+        const resp = await fetch(`/api/skills/${encodeURIComponent(skillId)}`);
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const json = await resp.json();
+        const skill = json.skill || json;
+        if (!skill || !skill.id) throw new Error('Skill payload missing id');
+        window.TWIN_TEST_SKILL = skill;
+        renderTwinBanner(skill);
+
+        // Hint the canvas-empty state for twin-test purpose.
+        const hint = document.querySelector('.canvas-empty-hint');
+        if (hint) {
+          const isCn = (typeof currentLang !== 'undefined' && currentLang === 'cn');
+          hint.textContent = isCn
+            ? '点击下方任一情境，开始盲选 A/B 测试'
+            : 'TAP ANY SCENARIO BELOW TO START A BLIND A/B TEST';
+        }
+      } catch (err) {
+        console.warn('Twin Test init failed:', err.message);
+      }
+    }
+
+    async function renderTwinBanner(skill) {
+      const isCn = (typeof currentLang !== 'undefined' && currentLang === 'cn');
+      const banner = document.createElement('div');
+      banner.className = 'twin-banner';
+      banner.innerHTML = `
+        <div class="twin-banner-icon">🧪</div>
+        <div class="twin-banner-body">
+          <div class="twin-banner-title">${isCn ? '正在盲测' : 'Twin Testing'} · ${skill.title || skill.title_cn || 'Skill'}</div>
+          <div class="twin-banner-stats" data-stats>${isCn ? '加载胜率…' : 'loading win rate…'}</div>
+        </div>
+        <button class="twin-banner-exit" title="${isCn ? '退出盲测' : 'Exit twin test'}">${isCn ? '退出' : 'EXIT'}</button>
+      `;
+      document.body.appendChild(banner);
+      banner.querySelector('.twin-banner-exit').addEventListener('click', () => {
+        window.location.href = window.location.pathname;
+      });
+
+      try {
+        const stats = await (await fetch(`/api/playground/stats/${encodeURIComponent(skill.id)}`)).json();
+        const total = stats.total_votes || 0;
+        const rate = stats.win_rate;
+        const statsEl = banner.querySelector('[data-stats]');
+        if (total === 0) {
+          statsEl.textContent = isCn ? '还没有人盲测过 · 你可以是第一个' : 'No blind tests yet · be the first';
+        } else {
+          const pct = Math.round((rate || 0) * 100);
+          statsEl.textContent = isCn
+            ? `胜率 ${pct}% · ${total} 次盲选`
+            : `${pct}% win rate · ${total} blind picks`;
+        }
+      } catch {
+        const statsEl = banner.querySelector('[data-stats]');
+        if (statsEl) statsEl.textContent = '';
+      }
+    }
+
+    function spawnTwinTestCard(task, repo) {
+      const canvas = document.getElementById('workshopCanvas');
+      const empty = document.getElementById('canvasEmpty');
+      empty.classList.add('hidden');
+
+      const card = document.createElement('div');
+      card.className = 'task-card spawning';
+      card.dataset.cardId = ++cardIdCounter;
+      card.style.zIndex = ++highestZ;
+
+      const maxX = canvas.clientWidth - 380;
+      const maxY = canvas.clientHeight - 360;
+      const x = 40 + Math.random() * Math.max(maxX - 80, 100);
+      const y = 30 + Math.random() * Math.max(maxY - 60, 100);
+      card.style.left = x + 'px';
+      card.style.top = y + 'px';
+      card.style.setProperty('--card-color', repo.color);
+      card.style.width = '380px';
+
+      const td = getTaskDisplay(task);
+      const isCn = (typeof currentLang !== 'undefined' && currentLang === 'cn');
+
+      card.innerHTML = `
+        <div class="card-header">
+          <div class="card-header-left">
+            <div class="card-domain-dot" style="background:${repo.color}"></div>
+            <div class="card-domain-label">${getRepoName(repo)}</div>
+          </div>
+          <button class="card-close" title="Close">✕</button>
+        </div>
+        <div class="card-body card-body--twin">
+          <div class="card-task-label">${isCn ? '盲测情境' : 'TWIN TEST'}</div>
+          <div class="card-title">${td.title}</div>
+          <div class="card-desc">${td.desc}</div>
+
+          <div class="twin-stage twin-loading">
+            <span class="twin-spinner">⟳</span>
+            <span>${isCn ? '正在生成两个回应…' : 'generating two responses…'}</span>
+          </div>
+
+          <div class="twin-stage twin-pick" hidden>
+            <div class="twin-instruction">${isCn ? '哪个回应更对你的胃口？' : 'Which response feels right?'}</div>
+            <button class="twin-resp" data-side="A">
+              <div class="twin-resp-label">A</div>
+              <div class="twin-resp-text"></div>
+            </button>
+            <button class="twin-resp" data-side="B">
+              <div class="twin-resp-label">B</div>
+              <div class="twin-resp-text"></div>
+            </button>
+          </div>
+
+          <div class="twin-stage twin-reveal" hidden>
+            <div class="twin-reveal-banner"></div>
+            <div class="twin-stats"></div>
+            <button class="twin-next">${isCn ? '↻ 换一个情境' : '↻ NEXT SCENARIO'}</button>
+          </div>
+        </div>
+        <div class="card-resize-handle" title="Drag to resize"></div>
+      `;
+
+      // Close button
+      card.querySelector('.card-close').addEventListener('click', (e) => {
+        e.stopPropagation();
+        card.classList.add('minimizing');
+        setTimeout(() => { card.remove(); checkEmpty(); }, 300);
+      });
+
+      // Focus on click
+      card.addEventListener('mousedown', (e) => {
+        if (e.target.closest('.card-close') || e.target.closest('button') || e.target.closest('.card-resize-handle')) return;
+        card.style.zIndex = ++highestZ;
+      });
+
+      // Drag (mouse + touch) — same handlers as fusion mode but excluding twin buttons
+      const dragGuard = (e) => e.target.closest('.card-close') || e.target.closest('button') || e.target.closest('.card-resize-handle');
+      card.addEventListener('mousedown', (e) => {
+        if (dragGuard(e)) return;
+        e.preventDefault();
+        card.classList.add('dragging');
+        card.style.zIndex = ++highestZ;
+        dragState = { card, startX: e.clientX - card.offsetLeft, startY: e.clientY - card.offsetTop };
+      });
+      card.addEventListener('touchstart', (e) => {
+        if (dragGuard(e)) return;
+        const t = e.touches[0];
+        card.classList.add('dragging');
+        card.style.zIndex = ++highestZ;
+        dragState = { card, startX: t.clientX - card.offsetLeft, startY: t.clientY - card.offsetTop };
+      }, { passive: true });
+
+      // Resize
+      const rh = card.querySelector('.card-resize-handle');
+      rh.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        card.classList.add('resizing');
+        card.style.zIndex = ++highestZ;
+        dragState = { card, isResizing: true, startX: e.clientX, startY: e.clientY, startWidth: card.offsetWidth, startHeight: card.offsetHeight };
+      });
+
+      canvas.appendChild(card);
+      setTimeout(() => card.classList.remove('spawning'), 600);
+
+      // Kick off the twin test
+      runTwinTest(card, task, repo);
+
+      return card;
+    }
+
+    async function runTwinTest(card, task, repo) {
+      const skill = window.TWIN_TEST_SKILL;
+      const isCn = (typeof currentLang !== 'undefined' && currentLang === 'cn');
+      const td = getTaskDisplay(task);
+      const stageLoading = card.querySelector('.twin-loading');
+      const stagePick = card.querySelector('.twin-pick');
+      const stageReveal = card.querySelector('.twin-reveal');
+
+      try {
+        const resp = await fetch('/api/playground/test', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            skill_id: skill.id,
+            scenario: { title: td.title, description: td.desc, domain: repo.id, key: `${repo.id}::${td.title}` },
+            anonymous_id: getAnonymousId(),
+            language: isCn ? 'zh' : 'en'
+          })
+        });
+        if (!resp.ok) {
+          const err = await resp.json().catch(() => ({}));
+          throw new Error(err.message || `HTTP ${resp.status}`);
+        }
+        const data = await resp.json();
+        card.dataset.testId = data.test_id;
+
+        stageLoading.hidden = true;
+        stagePick.hidden = false;
+        stagePick.querySelector('[data-side="A"] .twin-resp-text').textContent = data.response_a || '—';
+        stagePick.querySelector('[data-side="B"] .twin-resp-text').textContent = data.response_b || '—';
+
+        stagePick.querySelectorAll('.twin-resp').forEach(btn => {
+          btn.addEventListener('click', () => submitTwinVote(card, task, repo, btn.dataset.side));
+        });
+      } catch (err) {
+        stageLoading.innerHTML = `<span style="color:#b85a4a;font-size:13px;">${isCn ? '生成失败：' : 'Generation failed: '}${err.message}</span>`;
+      }
+    }
+
+    async function submitTwinVote(card, task, repo, chosenSide) {
+      const isCn = (typeof currentLang !== 'undefined' && currentLang === 'cn');
+      const stagePick = card.querySelector('.twin-pick');
+      const stageReveal = card.querySelector('.twin-reveal');
+      const respButtons = stagePick.querySelectorAll('.twin-resp');
+      respButtons.forEach(b => b.disabled = true);
+
+      try {
+        const resp = await fetch('/api/playground/vote', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ test_id: card.dataset.testId, chosen_side: chosenSide })
+        });
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const data = await resp.json();
+
+        // Mark which side had the skill, which was baseline
+        respButtons.forEach(b => {
+          if (b.dataset.side === data.skill_side) b.classList.add('twin-correct');
+          else b.classList.add('twin-other');
+        });
+
+        const banner = stageReveal.querySelector('.twin-reveal-banner');
+        const stats = stageReveal.querySelector('.twin-stats');
+        if (data.voted_for_skill) {
+          banner.classList.add('win');
+          banner.textContent = isCn
+            ? `你盲选了 ${data.skill_side} —— 正是这个 Skill 的回应。它打到了你。`
+            : `You picked ${data.skill_side} blind — that was the Skill's response. It landed.`;
+        } else {
+          banner.classList.add('lose');
+          banner.textContent = isCn
+            ? `你盲选了 ${chosenSide}，但这个 Skill 在 ${data.skill_side}。这一次它没说服你——这正是它需要被打磨的地方。`
+            : `You picked ${chosenSide} blind. The Skill was actually ${data.skill_side}. It didn't win you over this time — that's exactly the kind of signal that sharpens it.`;
+        }
+        const total = data.total_votes || 0;
+        const pct = Math.round((data.win_rate || 0) * 100);
+        stats.textContent = isCn
+          ? `这个 Skill 的累计胜率：${pct}% · 共 ${total} 次盲选`
+          : `Skill's running blind-pick win rate: ${pct}% over ${total} picks`;
+
+        // Refresh top banner stats too
+        const bannerStats = document.querySelector('.twin-banner [data-stats]');
+        if (bannerStats) {
+          bannerStats.textContent = isCn ? `胜率 ${pct}% · ${total} 次盲选` : `${pct}% win rate · ${total} blind picks`;
+        }
+
+        stageReveal.hidden = false;
+        stageReveal.querySelector('.twin-next').addEventListener('click', () => {
+          // Pull a fresh scenario from the same repo and remove the current card.
+          const next = repo.tasks[Math.floor(Math.random() * repo.tasks.length)];
+          card.classList.add('minimizing');
+          setTimeout(() => { card.remove(); checkEmpty(); spawnCard(next, repo); }, 280);
+        });
+      } catch (err) {
+        respButtons.forEach(b => b.disabled = false);
+        alert((isCn ? '投票失败：' : 'Vote failed: ') + err.message);
+      }
+    }
   </script>
 
 

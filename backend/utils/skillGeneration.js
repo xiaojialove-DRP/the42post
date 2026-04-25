@@ -98,7 +98,7 @@ async function callDeepSeekSingle(modelName, prompt, maxTokens) {
 //   1. Try PRIMARY_MODEL up to 3 times with exponential backoff (0, 800ms, 1600ms)
 //   2. On persistent transient errors, walk through FALLBACK_MODELS once each
 //   3. Surface the last error so the caller's own fallback logic can kick in
-async function callLLMJSON(prompt, maxTokens = 1500) {
+export async function callLLMJSON(prompt, maxTokens = 1500) {
   const attempts = [
     { model: PRIMARY_MODEL, delay: 0 },
     { model: PRIMARY_MODEL, delay: 800 },

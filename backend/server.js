@@ -20,6 +20,7 @@ import searchRoutes from './routes/search.js';
 import agentRoutes from './routes/agents.js';
 import emailRoutes from './routes/email.js';
 import downloadsRoutes from './routes/downloads.js';
+import playgroundRoutes from './routes/playground.js';
 
 import { initDatabase } from './db/init.js';
 import { seedSkillsIfNeeded } from './db/seed-skills-on-startup.js';
@@ -123,6 +124,7 @@ app.use('/api/search', searchRoutes);
 app.use('/api/agents', agentRoutes);
 app.use('/api/email', emailRoutes);
 app.use('/api/download', downloadsRoutes);
+app.use('/api/playground', playgroundRoutes);
 
 // ═══ ERROR HANDLING ═══
 app.use((req, res) => {

@@ -161,6 +161,25 @@ export async function initDatabase() {
     await db.query(`CREATE INDEX IF NOT EXISTS idx_user_skill_interactions_skill ON user_skill_interactions(skill_id)`);
     await db.query(`CREATE INDEX IF NOT EXISTS idx_user_skill_interactions_starred ON user_skill_interactions(starred) WHERE starred = 1`);
 
+    // Twin Test (Playground A/B): a row is created at /api/playground/test
+    // (response_a, response_b, skill_side filled) and updated at /api/playground/vote
+    // (chosen_side, voted_for_skill, voted_at filled).
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS skill_test_votes (
+        id TEXT PRIMARY KEY,
+        skill_id TEXT NOT NULL REFERENCES skills(id) ON DELETE CASCADE,
+        scenario_key VARCHAR(255),
+        anonymous_id VARCHAR(255),
+        skill_side CHAR(1) NOT NULL,
+        chosen_side CHAR(1),
+        voted_for_skill INTEGER,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        voted_at TIMESTAMP
+      )
+    `);
+    await db.query(`CREATE INDEX IF NOT EXISTS idx_skill_test_votes_skill ON skill_test_votes(skill_id)`);
+    await db.query(`CREATE INDEX IF NOT EXISTS idx_skill_test_votes_voted ON skill_test_votes(skill_id, voted_for_skill)`);
+
     console.log('✓ All database tables initialized');
   } catch (error) {
     console.error('Database initialization failed:', error);
