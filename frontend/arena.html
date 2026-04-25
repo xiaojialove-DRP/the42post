@@ -922,28 +922,32 @@
       }
     }
 
-    /* ═══ TWIN TEST MODE ═══ */
-    .twin-banner {
-      position: fixed; top: 64px; left: 50%; transform: translateX(-50%);
-      z-index: 100; max-width: 680px; width: calc(100% - 32px);
-      background: #fdfaf3; border: 1px solid #d4c8a8;
-      border-radius: 10px; padding: 12px 16px;
-      box-shadow: 0 6px 20px rgba(60, 50, 30, 0.08);
-      font-family: 'Inter', system-ui, sans-serif; font-size: 13px; color: #3a3530;
-      display: flex; align-items: center; gap: 12px;
+    /* ═══ TWIN TEST MODE ═══
+       The card frame and watercolor styling are inherited from .task-card
+       above; only the BODY content is reshaped. No top banner — the skill
+       identity lives inside the card per the design. */
+    .twin-skill-line {
+      display: flex; align-items: center; gap: 8px;
+      font-weight: 600; color: #2a2520; font-size: 14px;
+      letter-spacing: 0.2px;
     }
-    .twin-banner-icon { font-size: 18px; }
-    .twin-banner-body { flex: 1; line-height: 1.4; }
-    .twin-banner-title { font-weight: 600; color: #2a2520; }
-    .twin-banner-stats { color: #7a6f5e; margin-top: 2px; font-size: 12px; }
-    .twin-banner-exit {
-      background: transparent; border: 1px solid #c9bfa5; color: #7a6f5e;
-      padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 12px;
+    .twin-skill-line .twin-skill-icon { font-size: 16px; }
+    .twin-principle {
+      margin-top: 6px; font-size: 13px; color: #5a5048;
+      font-style: italic; line-height: 1.5;
+      border-left: 2px solid #d4c8a8; padding: 2px 0 2px 10px;
     }
-    .twin-banner-exit:hover { background: #f3eddd; color: #3a3530; }
-
-    .card-body--twin .card-task-label {
-      color: #b8915a; letter-spacing: 1.5px;
+    .twin-scenario-tag {
+      display: inline-flex; align-items: center; gap: 5px;
+      margin-top: 12px; font-size: 11px; color: #7a6f5e;
+      letter-spacing: 1px; text-transform: uppercase;
+    }
+    .twin-scenario-title {
+      margin-top: 4px; font-size: 14px; font-weight: 600; color: #2a2520;
+      line-height: 1.4;
+    }
+    .twin-scenario-desc {
+      margin-top: 4px; font-size: 13px; color: #5a5048; line-height: 1.5;
     }
     .twin-stage { margin-top: 14px; }
     .twin-loading {
@@ -957,53 +961,92 @@
     }
     @keyframes twin-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
-    .twin-instruction {
-      font-size: 12px; letter-spacing: 1.2px; color: #7a6f5e;
-      text-transform: uppercase; margin-bottom: 10px; text-align: center;
+    .twin-pick-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+    }
+    @media (max-width: 560px) {
+      .twin-pick-grid { grid-template-columns: 1fr; }
     }
     .twin-resp {
-      display: block; width: 100%; text-align: left;
+      display: flex; flex-direction: column; gap: 8px;
       background: #fdfaf3; border: 1.5px solid #d4c8a8;
-      border-radius: 8px; padding: 12px 14px; margin-bottom: 10px;
+      border-radius: 8px; padding: 12px;
       cursor: pointer; transition: all 0.18s ease;
-      font-family: inherit;
+      font-family: inherit; text-align: left;
     }
     .twin-resp:hover { background: #f7efd9; border-color: #b8915a; transform: translateY(-1px); }
-    .twin-resp:disabled { cursor: default; opacity: 0.85; }
+    .twin-resp:disabled { cursor: default; opacity: 0.95; transform: none; }
     .twin-resp.twin-correct { border-color: #6a8d52; background: #eef4e3; }
-    .twin-resp.twin-other { border-color: #c9bfa5; background: #f8f4ea; }
+    .twin-resp.twin-other { border-color: #c9bfa5; background: #f8f4ea; opacity: 0.85; }
     .twin-resp-label {
-      font-weight: 700; color: #b8915a; font-size: 13px;
-      letter-spacing: 1px; margin-bottom: 6px;
+      font-weight: 700; color: #b8915a; font-size: 12px;
+      letter-spacing: 1.5px;
     }
     .twin-resp.twin-correct .twin-resp-label { color: #6a8d52; }
-    .twin-resp.twin-correct .twin-resp-label::after { content: ' · WITH SKILL ✓'; font-weight: 500; }
-    .twin-resp.twin-other .twin-resp-label::after { content: ' · BASELINE'; font-weight: 500; color: #8a7e68; }
+    .twin-resp.twin-correct .twin-resp-label::after { content: ' · 加载了 SKILL'; font-weight: 500; font-size: 10px; }
+    .twin-resp.twin-other .twin-resp-label::after { content: ' · 基线'; font-weight: 500; color: #8a7e68; font-size: 10px; }
     .twin-resp-text {
-      font-size: 14px; line-height: 1.55; color: #2a2520;
-      white-space: pre-wrap;
+      font-size: 13px; line-height: 1.55; color: #2a2520;
+      white-space: pre-wrap; flex: 1;
+    }
+    .twin-resp-pick {
+      align-self: flex-start;
+      font-size: 11px; color: #7a6f5e; letter-spacing: 1px;
+      padding: 4px 10px; border-radius: 4px;
+      background: rgba(184, 145, 90, 0.08);
+      border: 1px solid #d4c8a8;
+    }
+    .twin-resp:hover .twin-resp-pick { background: #b8915a; color: #fdfaf3; border-color: #b8915a; }
+    .twin-resp:disabled .twin-resp-pick { display: none; }
+
+    .twin-question {
+      margin-top: 12px; text-align: center;
+      font-size: 12px; color: #7a6f5e;
+      display: flex; align-items: center; justify-content: center; gap: 6px;
     }
 
-    .twin-reveal-banner {
-      padding: 12px 14px; border-radius: 8px;
-      background: #f7efd9; border: 1px solid #d4c8a8;
-      font-size: 13px; line-height: 1.5; color: #3a3530;
-      margin-bottom: 10px;
+    .twin-reveal-headline {
+      font-size: 15px; font-weight: 600; color: #2a2520;
+      margin-bottom: 6px;
     }
-    .twin-reveal-banner.win { background: #eef4e3; border-color: #b6cf9a; }
-    .twin-reveal-banner.lose { background: #f7e8e0; border-color: #d8b8a4; }
-    .twin-stats {
-      font-size: 12px; color: #7a6f5e; text-align: center; margin-bottom: 10px;
+    .twin-reveal-headline.win { color: #4d7a32; }
+    .twin-reveal-headline.lose { color: #a8633c; }
+    .twin-reveal-which {
+      font-size: 13px; color: #5a5048; margin-bottom: 8px;
     }
-    .twin-next {
-      width: 100%; padding: 10px;
+    .twin-reveal-diagnostic {
+      font-size: 13px; color: #3a3530;
+      padding: 10px 12px; border-radius: 6px;
+      background: #f7efd9; border: 1px solid #e0d5b8;
+      line-height: 1.5; margin-bottom: 10px;
+    }
+    .twin-reveal-stats {
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      font-size: 12px; color: #5a5048;
+      padding: 8px 0; margin-bottom: 12px;
+      border-top: 1px solid #e0d5b8;
+      border-bottom: 1px solid #e0d5b8;
+    }
+    .twin-reveal-stats .twin-rate-num { font-weight: 700; color: #b8915a; font-size: 14px; }
+    .twin-reveal-actions {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+    }
+    .twin-action-btn {
+      padding: 10px;
       background: #2a2520; color: #fdfaf3; border: none;
       border-radius: 8px; cursor: pointer; font-weight: 600;
-      font-family: inherit; letter-spacing: 0.5px; font-size: 13px;
+      font-family: inherit; letter-spacing: 0.3px; font-size: 12px;
     }
-    .twin-next:hover { background: #3a3530; }
+    .twin-action-btn:hover { background: #3a3530; }
+    .twin-action-btn.secondary {
+      background: transparent; color: #2a2520; border: 1px solid #c9bfa5;
+    }
+    .twin-action-btn.secondary:hover { background: #f3eddd; }
 
     /* hide fusion-mode bits when twin-test is active */
+    .card-body--twin .card-task-label,
+    .card-body--twin .card-title,
+    .card-body--twin .card-desc,
     .card-body--twin .card-skills-needed,
     .card-body--twin .card-fusion-slots,
     .card-body--twin .skill-picker,
@@ -1705,8 +1748,11 @@
         const json = await resp.json();
         const skill = json.skill || json;
         if (!skill || !skill.id) throw new Error('Skill payload missing id');
+        // five_layer comes back as a parsed object from the API; defensive parse just in case.
+        if (typeof skill.five_layer === 'string') {
+          try { skill.five_layer = JSON.parse(skill.five_layer); } catch { skill.five_layer = {}; }
+        }
         window.TWIN_TEST_SKILL = skill;
-        renderTwinBanner(skill);
 
         // Hint the canvas-empty state for twin-test purpose.
         const hint = document.querySelector('.canvas-empty-hint');
@@ -1721,40 +1767,13 @@
       }
     }
 
-    async function renderTwinBanner(skill) {
+    function getSkillPrincipleLine(skill) {
+      const fl = skill.five_layer || {};
+      return fl.principle || fl.defining?.principle || skill.description || skill.description_cn || '';
+    }
+    function getSkillTitle(skill) {
       const isCn = (typeof currentLang !== 'undefined' && currentLang === 'cn');
-      const banner = document.createElement('div');
-      banner.className = 'twin-banner';
-      banner.innerHTML = `
-        <div class="twin-banner-icon">🧪</div>
-        <div class="twin-banner-body">
-          <div class="twin-banner-title">${isCn ? '正在盲测' : 'Twin Testing'} · ${skill.title || skill.title_cn || 'Skill'}</div>
-          <div class="twin-banner-stats" data-stats>${isCn ? '加载胜率…' : 'loading win rate…'}</div>
-        </div>
-        <button class="twin-banner-exit" title="${isCn ? '退出盲测' : 'Exit twin test'}">${isCn ? '退出' : 'EXIT'}</button>
-      `;
-      document.body.appendChild(banner);
-      banner.querySelector('.twin-banner-exit').addEventListener('click', () => {
-        window.location.href = window.location.pathname;
-      });
-
-      try {
-        const stats = await (await fetch(`/api/playground/stats/${encodeURIComponent(skill.id)}`)).json();
-        const total = stats.total_votes || 0;
-        const rate = stats.win_rate;
-        const statsEl = banner.querySelector('[data-stats]');
-        if (total === 0) {
-          statsEl.textContent = isCn ? '还没有人盲测过 · 你可以是第一个' : 'No blind tests yet · be the first';
-        } else {
-          const pct = Math.round((rate || 0) * 100);
-          statsEl.textContent = isCn
-            ? `胜率 ${pct}% · ${total} 次盲选`
-            : `${pct}% win rate · ${total} blind picks`;
-        }
-      } catch {
-        const statsEl = banner.querySelector('[data-stats]');
-        if (statsEl) statsEl.textContent = '';
-      }
+      return isCn ? (skill.title_cn || skill.title) : (skill.title || skill.title_cn);
     }
 
     function spawnTwinTestCard(task, repo) {
@@ -1767,30 +1786,41 @@
       card.dataset.cardId = ++cardIdCounter;
       card.style.zIndex = ++highestZ;
 
-      const maxX = canvas.clientWidth - 380;
-      const maxY = canvas.clientHeight - 360;
+      const cardW = 520;
+      const maxX = canvas.clientWidth - cardW;
+      const maxY = canvas.clientHeight - 380;
       const x = 40 + Math.random() * Math.max(maxX - 80, 100);
       const y = 30 + Math.random() * Math.max(maxY - 60, 100);
       card.style.left = x + 'px';
       card.style.top = y + 'px';
       card.style.setProperty('--card-color', repo.color);
-      card.style.width = '380px';
+      card.style.width = cardW + 'px';
 
       const td = getTaskDisplay(task);
       const isCn = (typeof currentLang !== 'undefined' && currentLang === 'cn');
+      const skill = window.TWIN_TEST_SKILL;
+      const skillTitle = getSkillTitle(skill);
+      const principle = getSkillPrincipleLine(skill);
 
       card.innerHTML = `
         <div class="card-header">
           <div class="card-header-left">
-            <div class="card-domain-dot" style="background:${repo.color}"></div>
-            <div class="card-domain-label">${getRepoName(repo)}</div>
+            <div class="twin-skill-line">
+              <span class="twin-skill-icon">🎯</span>
+              <span>${skillTitle || (isCn ? '当前 Skill' : 'Current Skill')}</span>
+            </div>
           </div>
-          <button class="card-close" title="Close">✕</button>
+          <button class="card-close" title="${isCn ? '关闭' : 'Close'}">✕</button>
         </div>
         <div class="card-body card-body--twin">
-          <div class="card-task-label">${isCn ? '盲测情境' : 'TWIN TEST'}</div>
-          <div class="card-title">${td.title}</div>
-          <div class="card-desc">${td.desc}</div>
+          ${principle ? `<div class="twin-principle">"${principle}"</div>` : ''}
+
+          <div class="twin-scenario-tag">
+            <span>${repo.icon || '·'}</span>
+            <span>${getRepoName(repo)}</span>
+          </div>
+          <div class="twin-scenario-title">${td.title}</div>
+          ${td.desc ? `<div class="twin-scenario-desc">${td.desc}</div>` : ''}
 
           <div class="twin-stage twin-loading">
             <span class="twin-spinner">⟳</span>
@@ -1798,21 +1828,33 @@
           </div>
 
           <div class="twin-stage twin-pick" hidden>
-            <div class="twin-instruction">${isCn ? '哪个回应更对你的胃口？' : 'Which response feels right?'}</div>
-            <button class="twin-resp" data-side="A">
-              <div class="twin-resp-label">A</div>
-              <div class="twin-resp-text"></div>
-            </button>
-            <button class="twin-resp" data-side="B">
-              <div class="twin-resp-label">B</div>
-              <div class="twin-resp-text"></div>
-            </button>
+            <div class="twin-pick-grid">
+              <button class="twin-resp" data-side="A">
+                <div class="twin-resp-label">${isCn ? '回应 A' : 'RESPONSE A'}</div>
+                <div class="twin-resp-text"></div>
+                <div class="twin-resp-pick">${isCn ? '这段更对 →' : 'PICK THIS →'}</div>
+              </button>
+              <button class="twin-resp" data-side="B">
+                <div class="twin-resp-label">${isCn ? '回应 B' : 'RESPONSE B'}</div>
+                <div class="twin-resp-text"></div>
+                <div class="twin-resp-pick">${isCn ? '这段更对 →' : 'PICK THIS →'}</div>
+              </button>
+            </div>
+            <div class="twin-question">
+              <span>💡</span>
+              <span>${isCn ? `哪一段真正体现了「${skillTitle}」？` : `Which one truly embodies "${skillTitle}"?`}</span>
+            </div>
           </div>
 
           <div class="twin-stage twin-reveal" hidden>
-            <div class="twin-reveal-banner"></div>
-            <div class="twin-stats"></div>
-            <button class="twin-next">${isCn ? '↻ 换一个情境' : '↻ NEXT SCENARIO'}</button>
+            <div class="twin-reveal-headline" data-headline></div>
+            <div class="twin-reveal-which" data-which></div>
+            <div class="twin-reveal-diagnostic" data-diag hidden></div>
+            <div class="twin-reveal-stats" data-stats></div>
+            <div class="twin-reveal-actions">
+              <button class="twin-action-btn secondary" data-action="archive">${isCn ? '回 Archive' : '← Archive'}</button>
+              <button class="twin-action-btn" data-action="next">${isCn ? '换一个情境 ↻' : 'Next scenario ↻'}</button>
+            </div>
           </div>
         </div>
         <div class="card-resize-handle" title="Drag to resize"></div>
@@ -1907,6 +1949,8 @@
 
     async function submitTwinVote(card, task, repo, chosenSide) {
       const isCn = (typeof currentLang !== 'undefined' && currentLang === 'cn');
+      const skill = window.TWIN_TEST_SKILL || {};
+      const skillTitle = getSkillTitle(skill);
       const stagePick = card.querySelector('.twin-pick');
       const stageReveal = card.querySelector('.twin-reveal');
       const respButtons = stagePick.querySelectorAll('.twin-resp');
@@ -1927,37 +1971,45 @@
           else b.classList.add('twin-other');
         });
 
-        const banner = stageReveal.querySelector('.twin-reveal-banner');
-        const stats = stageReveal.querySelector('.twin-stats');
+        const headline = stageReveal.querySelector('[data-headline]');
+        const whichEl = stageReveal.querySelector('[data-which]');
+        const diagEl = stageReveal.querySelector('[data-diag]');
+        const statsEl = stageReveal.querySelector('[data-stats]');
+
         if (data.voted_for_skill) {
-          banner.classList.add('win');
-          banner.textContent = isCn
-            ? `你盲选了 ${data.skill_side} —— 正是这个 Skill 的回应。它打到了你。`
-            : `You picked ${data.skill_side} blind — that was the Skill's response. It landed.`;
+          headline.classList.add('win');
+          headline.textContent = isCn
+            ? `✓ 你选了 ${chosenSide} — 猜对！`
+            : `✓ You picked ${chosenSide} — correct!`;
         } else {
-          banner.classList.add('lose');
-          banner.textContent = isCn
-            ? `你盲选了 ${chosenSide}，但这个 Skill 在 ${data.skill_side}。这一次它没说服你——这正是它需要被打磨的地方。`
-            : `You picked ${chosenSide} blind. The Skill was actually ${data.skill_side}. It didn't win you over this time — that's exactly the kind of signal that sharpens it.`;
+          headline.classList.add('lose');
+          headline.textContent = isCn
+            ? `✗ 你选了 ${chosenSide} — Skill 在 ${data.skill_side}`
+            : `✗ You picked ${chosenSide} — the Skill was ${data.skill_side}`;
         }
+        whichEl.textContent = isCn
+          ? `${data.skill_side} 是加载了 skill 的版本`
+          : `${data.skill_side} was the version loaded with the skill.`;
+
+        if (data.diagnostic) {
+          diagEl.textContent = (isCn ? '一句诊断：' : 'In one line: ') + data.diagnostic;
+          diagEl.hidden = false;
+        }
+
         const total = data.total_votes || 0;
         const pct = Math.round((data.win_rate || 0) * 100);
-        stats.textContent = isCn
-          ? `这个 Skill 的累计胜率：${pct}% · 共 ${total} 次盲选`
-          : `Skill's running blind-pick win rate: ${pct}% over ${total} picks`;
-
-        // Refresh top banner stats too
-        const bannerStats = document.querySelector('.twin-banner [data-stats]');
-        if (bannerStats) {
-          bannerStats.textContent = isCn ? `胜率 ${pct}% · ${total} 次盲选` : `${pct}% win rate · ${total} blind picks`;
-        }
+        statsEl.innerHTML = isCn
+          ? `🎯 <span style="font-weight:600;">${skillTitle}</span> 当前胜率 <span class="twin-rate-num">${pct}%</span> · 基于 ${total} 次盲测`
+          : `🎯 <span style="font-weight:600;">${skillTitle}</span> · <span class="twin-rate-num">${pct}%</span> win rate · ${total} blind picks`;
 
         stageReveal.hidden = false;
-        stageReveal.querySelector('.twin-next').addEventListener('click', () => {
-          // Pull a fresh scenario from the same repo and remove the current card.
+        stageReveal.querySelector('[data-action="next"]').addEventListener('click', () => {
           const next = repo.tasks[Math.floor(Math.random() * repo.tasks.length)];
           card.classList.add('minimizing');
           setTimeout(() => { card.remove(); checkEmpty(); spawnCard(next, repo); }, 280);
+        });
+        stageReveal.querySelector('[data-action="archive"]').addEventListener('click', () => {
+          window.location.href = 'index.html#archive';
         });
       } catch (err) {
         respButtons.forEach(b => b.disabled = false);

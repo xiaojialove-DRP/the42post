@@ -4705,6 +4705,12 @@ function initAgentView() {
       showMainPage();
     });
   }
+
+  // Deep-link: arena.html sends users back via index.html#archive after a
+  // Twin Test reveal. Auto-open the archive view when that hash is present.
+  if (window.location.hash === '#archive') {
+    showAgentArchive();
+  }
 }
 
 /* ═══ FORGE TAGS ═══ */

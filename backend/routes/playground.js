@@ -73,7 +73,31 @@ ${scenarioText}
 
 Return JSON only: {"response":"your reply (2-4 sentences, first person, no preamble, no commentary)"}`;
 
-  return { withSkillPrompt, withoutSkillPrompt };
+  return { withSkillPrompt, withoutSkillPrompt, isCn };
+}
+
+// ─── Build the one-line diagnostic prompt ───
+// Asks the LLM to compare the two responses and produce a single short
+// sentence of the form "A 先承接情绪再讲事实，B 直接辩驳" — used in the
+// Twin Test reveal step. Kept tiny (~80 tokens) so the extra call is cheap.
+function buildDiagnosticPrompt(scenarioText, withText, withoutText, skillSide, isCn) {
+  const A = skillSide === 'A' ? withText : withoutText;
+  const B = skillSide === 'A' ? withoutText : withText;
+  return isCn
+    ? `下面是同一个情境下两段 AI 回应。请用一句话（≤30 字）总结它们最关键的行为差异，不评价好坏。
+
+情境：${scenarioText}
+A：${A}
+B：${B}
+
+只返回 JSON：{"diagnostic":"A …，B …"}`
+    : `Two AI responses to the same scenario. Summarize the key behavioural difference in ONE sentence (≤20 words), no judgement.
+
+Scenario: ${scenarioText}
+A: ${A}
+B: ${B}
+
+Return JSON only: {"diagnostic":"A …, B …"}`;
 }
 
 // ═══ POST /test — generate Twin Test responses ═══
@@ -106,7 +130,7 @@ router.post('/test', async (req, res, next) => {
     }
     const skill = { ...skillRow, five_layer: fiveLayer };
 
-    const { withSkillPrompt, withoutSkillPrompt } = buildPrompts(scenario, skill, language);
+    const { withSkillPrompt, withoutSkillPrompt, isCn } = buildPrompts(scenario, skill, language);
 
     // Call DeepSeek twice in parallel.
     const [withResp, withoutResp] = await Promise.all([
@@ -134,14 +158,26 @@ router.post('/test', async (req, res, next) => {
     const responseB = skillIsA ? withoutText : withText;
     const skillSide = skillIsA ? 'A' : 'B';
 
+    // Generate a short comparative diagnostic (kept on the server, returned
+    // only via /vote so it doesn't spoil the blind pick).
+    const scenarioText = [scenario.title, scenario.description].filter(Boolean).join(' — ');
+    const diagPrompt = buildDiagnosticPrompt(scenarioText, withText, withoutText, skillSide, isCn);
+    let diagnostic = '';
+    try {
+      const diagResp = await callLLMJSON(diagPrompt, 200);
+      diagnostic = (diagResp.data?.diagnostic || '').trim();
+    } catch (e) {
+      console.warn('Diagnostic generation skipped:', e.message);
+    }
+
     // Persist the test so /vote can reveal & score it later.
     const testId = uuidv4();
     const scenarioKey = scenario.key || scenario.title || `${scenario.domain || ''}-unknown`;
     try {
       await db.query(
-        `INSERT INTO skill_test_votes (id, skill_id, scenario_key, anonymous_id, skill_side)
-         VALUES ($1, $2, $3, $4, $5)`,
-        [testId, skill_id, String(scenarioKey).slice(0, 250), anonymous_id || null, skillSide]
+        `INSERT INTO skill_test_votes (id, skill_id, scenario_key, anonymous_id, skill_side, diagnostic)
+         VALUES ($1, $2, $3, $4, $5, $6)`,
+        [testId, skill_id, String(scenarioKey).slice(0, 250), anonymous_id || null, skillSide, diagnostic || null]
       );
     } catch (dbErr) {
       console.warn('skill_test_votes insert failed (non-fatal):', dbErr.message);
@@ -176,7 +212,7 @@ router.post('/vote', async (req, res, next) => {
     }
 
     const row = (await db.query(
-      `SELECT id, skill_id, skill_side, chosen_side FROM skill_test_votes WHERE id = $1`,
+      `SELECT id, skill_id, skill_side, chosen_side, diagnostic FROM skill_test_votes WHERE id = $1`,
       [test_id]
     )).rows?.[0];
 
@@ -213,6 +249,7 @@ router.post('/vote', async (req, res, next) => {
       success: true,
       skill_side: row.skill_side,
       voted_for_skill: chosen_side === row.skill_side,
+      diagnostic: row.diagnostic || '',
       total_votes: total,
       wins,
       win_rate: winRate
