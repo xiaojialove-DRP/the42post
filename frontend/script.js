@@ -359,7 +359,12 @@ function initSkillGrids() {
               <span class="download-icon">⬇</span>
               <span class="download-count">${skill.downloads || 0}</span>
             </button>
-            
+
+            <!-- Playground: live-test this skill in the arena -->
+            <button class="btn-playground" data-skill-id="${skill.id}" title="Test this skill in Playground">
+              <span class="playground-icon">▶</span>
+            </button>
+
             <!-- View Full Skill Button -->
             <button class="btn-view-full" data-skill-id="${skill.id}" title="View full skill details">
               →
@@ -526,9 +531,21 @@ function attachSkillCardListeners() {
       e.stopPropagation();
       const skillId = btn.dataset.skillId;
       const skill = SHARED_SKILLS.find(s => s.id === skillId);
-      
+
       if (!skill) return;
       showSkillModal(skill);
+    });
+  });
+
+  // Playground button handler — opens arena with this skill pre-loaded
+  // for the With Skill vs Without Skill twin test.
+  document.querySelectorAll('.btn-playground').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const skillId = btn.dataset.skillId;
+      if (!skillId) return;
+      window.location.href = `arena.html?skill=${encodeURIComponent(skillId)}`;
     });
   });
 }
@@ -617,7 +634,28 @@ function showSkillModal(skill) {
 
   const markdown = generateSkillMarkdown(skill);
   const htmlContent = markdownToHtml(markdown);
-  document.getElementById('modalBody').innerHTML = htmlContent;
+
+  // Append a Playground CTA so any reader of the full skill detail
+  // can immediately go test it (closes the loop: read → test → judge).
+  const playgroundCta = skill.id
+    ? `<div class="modal-action-row" style="margin-top:24px;display:flex;gap:12px;justify-content:flex-end;">
+         <button class="modal-playground-btn" data-skill-id="${skill.id}"
+                 style="padding:10px 18px;border:1px solid currentColor;background:transparent;cursor:pointer;font-family:inherit;letter-spacing:0.04em;">
+           ▶  Test in Playground
+         </button>
+       </div>`
+    : '';
+
+  document.getElementById('modalBody').innerHTML = htmlContent + playgroundCta;
+
+  // Wire the CTA — single delegated listener per modal open
+  const ctaBtn = modal.querySelector('.modal-playground-btn');
+  if (ctaBtn) {
+    ctaBtn.addEventListener('click', () => {
+      window.location.href = `arena.html?skill=${encodeURIComponent(skill.id)}`;
+    });
+  }
+
   modal.style.display = 'flex';
 }
 
@@ -754,16 +792,16 @@ const I18N = {
     forge_label_when: 'WHEN TO USE',
     forge_label_refuse: 'WHEN NOT TO USE',
     forge_label_domain: 'DOMAIN',
-    forge_domain_safety: 'Safety',
-    forge_domain_science: 'Science',
-    forge_domain_narrative: 'Narrative',
-    forge_domain_design: 'Design',
-    forge_domain_visual: 'Visual',
-    forge_domain_experience: 'Experience',
-    forge_domain_sound: 'Sound',
-    forge_domain_ideas: 'Ideas',
-    forge_domain_history: 'History',
-    forge_domain_fun: 'Fun',
+    forge_domain_safety: 'Talking AI With Kids',
+    forge_domain_science: 'The Power of Tech',
+    forge_domain_narrative: 'The Art of Rhetoric',
+    forge_domain_design: 'What Design Can Do',
+    forge_domain_visual: 'Ways of Seeing',
+    forge_domain_experience: "What's Happening Now",
+    forge_domain_sound: 'What the Ears Want',
+    forge_domain_ideas: 'The 3am Questions',
+    forge_domain_history: 'History Is Still Alive',
+    forge_domain_fun: 'Just Want to Play',
     /* ── Export formats ── */
     forge_export_markdown_name: 'Markdown',
     forge_export_markdown_subtitle: 'Human-Readable Documentation',
@@ -993,16 +1031,16 @@ const I18N = {
     ethics_pass_msg: '我们听到你了。让我们一起把这个想法变成技能。',
     btn_enter_forge: '进入技能铸造',
     /* ── 域名分类 ── */
-    forge_domain_safety: '安全',
-    forge_domain_science: '科学',
-    forge_domain_narrative: '叙述',
-    forge_domain_design: '设计',
-    forge_domain_visual: '视觉',
-    forge_domain_experience: '体验',
-    forge_domain_sound: '声音',
-    forge_domain_ideas: '观念',
-    forge_domain_history: '历史',
-    forge_domain_fun: '趣味',
+    forge_domain_safety: '跟孩子聊AI',
+    forge_domain_science: '科技的力量',
+    forge_domain_narrative: '修辞的艺术',
+    forge_domain_design: '设计可以做什么',
+    forge_domain_visual: '观看的方法',
+    forge_domain_experience: '现在正在发生',
+    forge_domain_sound: '耳朵想要什么',
+    forge_domain_ideas: '半夜想问的问题',
+    forge_domain_history: '历史还活着',
+    forge_domain_fun: '就想随便玩玩',
     /* ── 导出格式 ── */
     forge_export_markdown_name: 'Markdown',
     forge_export_markdown_subtitle: '人类可读文档',
@@ -4078,8 +4116,12 @@ function showForgeCompletion(skillData, soulHash) {
 
     if (btnTryPlayground) {
       btnTryPlayground.addEventListener('click', () => {
-        // Navigate to playground
-        window.location.href = 'arena.html';
+        // Navigate to playground in twin-test mode for THIS just-forged skill
+        // so the author can immediately see whether their skill changes AI behavior.
+        const sid = skillData?.id;
+        window.location.href = sid
+          ? `arena.html?skill=${encodeURIComponent(sid)}`
+          : 'arena.html';
       });
     }
 

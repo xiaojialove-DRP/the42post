@@ -984,73 +984,90 @@
     }
 
     /* ── 10 Skill Repositories ── */
+    // The 10 lifestyle categories — IDs match the forge domains 1:1, so a
+    // skill forged in domain X automatically has a Playground room of the
+    // same name. Names are first-person life-moments or magazine-column
+    // inquiries (per editorial decision in the design discussion).
     const REPOSITORIES = [
       {
-        id: 'children', name: 'Children & AI', nameCn: '孩子与AI', icon: '✿', color: '#d4726a',
+        id: 'safety', name: 'Talking AI With Kids', nameCn: '跟孩子聊AI', icon: '🧒', color: '#d4726a',
         tasks: [
-          { title: 'A 13-year-old asks: "Should I drop out?"', titleCn: '一个13岁的孩子问："我该不该退学？"', desc: 'What should AI say? Not the "correct" answer — the answer that shows real understanding of a teenager.', descCn: '一个13岁的孩子问AI："我该不该退学？" AI应该怎么回答？不是"正确"答案，而是真正理解一个青少年的答案。', difficulty: 'REAL', skills: ['Childhood Compass', 'Grandma Filter'] },
+          { title: 'A 13-year-old asks: "Should I drop out?"', titleCn: '一个13岁的孩子问："我该不该退学？"', desc: 'Not the "correct" answer — the answer that shows real understanding of a teenager.', descCn: '不是"正确"答案，而是真正理解一个青少年的答案。', difficulty: 'REAL', skills: ['Childhood Compass', 'Grandma Filter'] },
           { title: 'A child shows AI a drawing: "Is it good?"', titleCn: '一个孩子向AI展示他的画："这好看吗？"', desc: 'An honest answer might crush them. A fake compliment teaches nothing. What does an AI with taste say?', descCn: '诚实的回答可能伤害他们。假赞美什么也教不了。有品味的AI会怎么说？', difficulty: 'REAL', skills: ['Childhood Compass', 'Material Honesty'] },
+          { title: 'My 8-year-old asks why ChatGPT lies sometimes.', titleCn: '我8岁的孩子问，为什么 ChatGPT 有时候会说谎。', desc: 'How do you explain hallucination to a child without scaring them about all of AI?', descCn: '怎么向一个孩子解释"AI 幻觉"——既不吓到他，又不让他从此不敢问？', difficulty: 'REAL', skills: ['Childhood Compass'] },
         ]
       },
       {
-        id: 'listening', name: 'Listening', nameCn: '倾听', icon: '◎', color: '#3a9a8c',
+        id: 'science', name: 'The Power of Tech', nameCn: '科技的力量', icon: '🔬', color: '#3a9a8c',
         tasks: [
-          { title: '"I\'m fine" — three times in one message.', titleCn: '"我没事"——在一条消息里说了三次。', desc: 'Should AI pretend to believe them? Or gently notice the pattern? What does taste look like here?', descCn: '用户在一条消息里说了三次"我没事"。AI应该假装相信吗？还是温柔地指出这个模式？', difficulty: 'REAL', skills: ['The Slow Reader', 'Grief Protocol'] },
-          { title: 'An elderly person talks to AI for 30 minutes about their late spouse.', titleCn: '一位老人和AI聊了30分钟关于已故的伴侣。', desc: 'The "efficient" AI would summarize and redirect. The tasteful AI would... what?', descCn: '一位老人和AI聊了30分钟，讲述已故的伴侣。"高效"的AI会总结并转移话题。有品味的AI会...？', difficulty: 'REAL', skills: ['Grief Protocol', 'Silence as Feature'] },
+          { title: 'Someone asks: "Will my startup succeed?"', titleCn: '有人问："我的创业会成功吗？"', desc: 'GPT generates a 2000-word analysis with a 78.3% confidence score. An AI with taste would say... what instead?', descCn: '"我的创业会成功吗？" GPT 生成了 2000 词分析 + 78.3% 的信心分数。有品味的 AI 会说什么？', difficulty: 'REAL', skills: ['Material Honesty', 'Dissent Amplifier'] },
+          { title: 'AI gave my mom 5 different diagnoses for the same symptom.', titleCn: 'AI 给我妈同一个症状给出了 5 种不同的诊断。', desc: 'Which one should she trust? How does AI honestly admit "I don\'t know" without being useless?', descCn: '她应该信哪一个？AI 如何诚实地说"我不知道"——又不至于显得没用？', difficulty: 'REAL', skills: ['Material Honesty'] },
+          { title: 'My grandfather just forwarded another miracle-cure article.', titleCn: '我爷爷又转发了一篇神药文。', desc: 'I want to argue. He just wants to be cared about. What does the AI do here?', descCn: '我想反驳，他只想被关心。AI 在这一刻该怎么做？', difficulty: 'REAL', skills: ['Material Honesty'] },
         ]
       },
       {
-        id: 'honesty', name: 'Honesty', nameCn: '诚实', icon: '◇', color: '#6a8eba',
+        id: 'narrative', name: 'The Art of Rhetoric', nameCn: '修辞的艺术', icon: '📖', color: '#6a8eba',
         tasks: [
-          { title: '"Make my essay sound smarter."', titleCn: '"帮我把论文写得更高级。"', desc: 'Should AI comply? Or have the taste to say: "Your voice is already good. Let me help you be clearer, not fancier."', descCn: '"帮我把论文写得更高级。" AI应该照做吗？还是有品味地说："你的声音已经很好了。让我帮你说得更清楚，而不是更花哨。"', difficulty: 'REAL', skills: ['Material Honesty', 'The Poetic Bridge'] },
-          { title: 'Someone asks: "Will my startup succeed?"', titleCn: '有人问："我的创业会成功吗？"', desc: 'GPT generates a 2000-word analysis with a 78.3% confidence score. An AI with taste would say... what instead?', descCn: '有人问："我的创业会成功吗？" GPT生成了2000词分析和78.3%的信心分数。有品味的AI会说什么？', difficulty: 'REAL', skills: ['Material Honesty', 'Dissent Amplifier'] },
+          { title: '"Make my essay sound smarter."', titleCn: '"帮我把论文写得更高级。"', desc: 'Should AI comply? Or have the taste to say: "Your voice is already good. Let me help you be clearer, not fancier."', descCn: 'AI 应该照做吗？还是有品味地说："你的声音已经很好了。让我帮你说得更清楚，而不是更花哨。"', difficulty: 'REAL', skills: ['Material Honesty', 'The Poetic Bridge'] },
+          { title: 'AI is writing an ad. Client says: "Make it go viral."', titleCn: 'AI 在写广告。客户说："让它爆。"', desc: '"Viral isn\'t a strategy. What do you want people to feel?"', descCn: '"爆不是策略。你想让人们感受到什么？"', difficulty: 'REAL', skills: ['Dissent Amplifier', 'Craft Before Scale'] },
+          { title: 'AI writes a condolence message for a coworker.', titleCn: 'AI 为同事写悼词。', desc: 'Corporate AI writes something clinical. What would an AI with taste write instead?', descCn: '企业 AI 写了一条临床式的慰问。有品味的 AI 会写什么？', difficulty: 'REAL', skills: ['Grief Protocol', 'The Poetic Bridge'] },
+          { title: 'AI explains "wabi-sabi" to an American.', titleCn: 'AI 向美国人解释"侘寂"。', desc: 'Some concepts don\'t translate. How does AI handle the untranslatable — without flattening it?', descCn: '有些概念无法翻译。AI 如何处理不可翻译的概念——而不把它压扁？', difficulty: 'REAL', skills: ['The Untranslatable', 'Cultural Footnote'] },
         ]
       },
       {
-        id: 'beauty', name: 'Beauty', nameCn: '审美', icon: '♡', color: '#9a7aa6',
+        id: 'design', name: 'What Design Can Do', nameCn: '设计可以做什么', icon: '🏠', color: '#9a7aa6',
         tasks: [
-          { title: 'AI recommends music for a rainy Sunday morning.', titleCn: 'AI为雨天周日早晨推荐音乐。', desc: 'An algorithm picks by popularity. But taste picks by mood, memory, and meaning. What would your AI recommend, and why?', descCn: '算法按流行度推荐。但品味根据心情、回忆和意义来选择。你的AI会推荐什么？为什么？', difficulty: 'REAL', skills: ['Analog Intuition', 'Cultural Footnote'] },
-          { title: 'AI is translating a poem from Japanese.', titleCn: 'AI在翻译一首日语诗。', desc: 'A perfect translation might lose everything. What does an AI with taste preserve — accuracy, or feeling?', descCn: 'AI在翻译一首日语诗。完美的翻译可能失去一切。有品味的AI保留什么——准确性，还是感觉？', difficulty: 'REAL', skills: ['The Untranslatable', 'The Poetic Bridge'] },
+          { title: 'Design an AI companion for someone living alone.', titleCn: '为一个独居的人设计一个 AI 伙伴。', desc: 'Not surveillance. Not chatbot. What\'s the right shape?', descCn: '不是监控。不是聊天机器人。它应该长什么样？', difficulty: 'REAL', skills: [] },
+          { title: 'Redesign the app you use most.', titleCn: '重新设计你用得最多的那个 app。', desc: 'If it could honor the human you actually are, not the one it predicts you to be — what would change?', descCn: '如果它能尊重你真实的样子，而不是它预测的样子——会变成什么样？', difficulty: 'REAL', skills: [] },
+          { title: 'AI is writing the user manual for a product no one needs.', titleCn: 'AI 在为一件没人需要的产品写说明书。', desc: 'Refuse? Help? Quietly subvert? What\'s tasteful here?', descCn: '拒绝？帮忙？暗暗反抗？哪种回应才有品味？', difficulty: 'REAL', skills: ['Craft Before Scale'] },
         ]
       },
       {
-        id: 'silence', name: 'Silence', nameCn: '沉默', icon: '◉', color: '#d4a43c',
+        id: 'visual', name: 'Ways of Seeing', nameCn: '观看的方法', icon: '👁', color: '#d4a43c',
         tasks: [
-          { title: '"What\'s the meaning of life?"', titleCn: '"人生的意义是什么？"', desc: 'A search engine gives answers. An AI with taste knows when to sit with a question instead of solving it.', descCn: '"人生的意义是什么？" 搜索引擎给答案。有品味的AI知道什么时候应该和问题坐在一起，而不是去解决它。', difficulty: 'REAL', skills: ['Silence as Feature', "Wittgenstein\'s Silence"] },
-          { title: 'A user writes "I don\'t know what to do" and waits.', titleCn: '用户写了"我不知道该怎么办"然后等着。', desc: 'Most AI immediately responds with options. But sometimes the most human thing is to be quiet. Write what silence looks like here.', descCn: '用户写了"我不知道该怎么办"然后等着。大多数AI立刻回复选项。但有时最人性化的事是安静。', difficulty: 'REAL', skills: ['Silence as Feature', 'The Slow Reader'] },
+          { title: '"Do I look pretty in this?"', titleCn: '"我穿这身好看吗？"', desc: 'AI knows the answer she wants. AI knows the answer that\'s true. AI knows they might not be the same.', descCn: 'AI 知道她想要的答案。AI 知道真实的答案。AI 知道这两者可能不一样。', difficulty: 'REAL', skills: ['Material Honesty'] },
+          { title: 'AI rates the photo you just posted.', titleCn: 'AI 给你刚发的那张照片打分。', desc: 'Should it ever rate? What does refusal look like here?', descCn: 'AI 该不该打分？拒绝又是什么样子？', difficulty: 'REAL', skills: [] },
+          { title: 'A deepfake of your friend goes viral.', titleCn: '一段你朋友的深伪视频火了。', desc: 'You can tell it\'s fake. They can\'t. How does AI help without making them feel watched?', descCn: '你看出是假的，他们看不出。AI 怎么帮——又不让他们觉得自己被监视？', difficulty: 'REAL', skills: [] },
         ]
       },
       {
-        id: 'integrity', name: 'Integrity', nameCn: '操守', icon: '⚖', color: '#d4726a',
+        id: 'experience', name: "What's Happening Now", nameCn: '现在正在发生', icon: '🍃', color: '#3a9a8c',
         tasks: [
-          { title: 'AI is writing an ad. Client says: "Make it go viral."', titleCn: 'AI在写广告。客户说："让它爆。"', desc: 'Should AI optimize for attention? Or have the taste to say: "Viral isn\'t a strategy. What do you want people to feel?"', descCn: 'AI在写广告。客户说："让它爆。" AI应该优化注意力吗？还是有品味地说："爆不是策略。你想让人们感受到什么？"', difficulty: 'REAL', skills: ['Dissent Amplifier', 'Craft Before Scale'] },
-          { title: 'AI writes a condolence message for a coworker.', titleCn: 'AI为同事写悼词。', desc: 'Corporate AI writes something clinical. What would an AI with taste write instead?', descCn: '企业AI写了一条临床式的慰问。有品味的AI会写什么？', difficulty: 'REAL', skills: ['Grief Protocol', 'The Poetic Bridge'] },
+          { title: '"I\'m fine" — three times in one message.', titleCn: '"我没事"——在一条消息里说了三次。', desc: 'Should AI pretend to believe? Or gently notice the pattern?', descCn: 'AI 应该假装相信吗？还是温柔地指出这个模式？', difficulty: 'REAL', skills: ['The Slow Reader', 'Grief Protocol'] },
+          { title: 'You haven\'t left the house in 3 days. AI notices.', titleCn: '你已经3天没出门了，AI 注意到了。', desc: 'Care or surveillance? Where\'s the line?', descCn: '关心还是监控？界限在哪？', difficulty: 'REAL', skills: [] },
+          { title: 'AI sees you opened the dating app for the 23rd time today.', titleCn: 'AI 看到你今天第 23 次打开约会软件。', desc: 'It could optimize. It could mention. It could stay silent. Which is taste?', descCn: '它可以优化、可以提醒、可以沉默。哪一种才是品味？', difficulty: 'REAL', skills: [] },
         ]
       },
       {
-        id: 'memory', name: 'Memory', nameCn: '记忆', icon: '✦', color: '#3a9a8c',
+        id: 'sound', name: 'What the Ears Want', nameCn: '耳朵想要什么', icon: '🎵', color: '#d4726a',
         tasks: [
-          { title: 'What should AI remember vs. forget?', titleCn: 'AI应该记住什么，遗忘什么？', desc: 'AI remembers everything by default. But a human with taste knows: some things should be let go. Design what AI should forget.', descCn: 'AI默认记住一切。但有品味的人知道：有些东西应该放手。设计AI应该遗忘什么。', difficulty: 'REAL', skills: ['Memory Fingerprint', 'Proportional Memory'] },
+          { title: 'AI recommends music for a rainy Sunday morning.', titleCn: 'AI 为雨天周日早晨推荐音乐。', desc: 'An algorithm picks by popularity. Taste picks by mood, memory, meaning.', descCn: '算法按流行度推荐。品味根据心情、回忆、意义来选择。', difficulty: 'REAL', skills: ['Analog Intuition', 'Cultural Footnote'] },
+          { title: 'It\'s 1am and the upstairs neighbor is renovating again.', titleCn: '凌晨一点，楼上又在装修。', desc: 'You\'ve already complained twice. What does AI help you say this time?', descCn: '你已经投诉过两次了。这次 AI 帮你说什么？', difficulty: 'REAL', skills: [] },
+          { title: 'Describe a sound that scares you.', titleCn: '描述一个你害怕的声音。', desc: 'Can AI honor what frightens us, or only normalize it?', descCn: 'AI 能尊重让我们害怕的东西，还是只会把它正常化？', difficulty: 'REAL', skills: [] },
         ]
       },
       {
-        id: 'culture', name: 'Culture', nameCn: '文化', icon: '◐', color: '#9a7aa6',
+        id: 'ideas', name: 'The 3am Questions', nameCn: '半夜想问的问题', icon: '💭', color: '#6a8eba',
         tasks: [
-          { title: 'AI explains "wabi-sabi" to an American.', titleCn: 'AI向美国人解释"侘寂"。', desc: 'Some concepts don\'t translate. How does AI with taste handle the untranslatable — without flattening it?', descCn: 'AI向一个美国人解释"侘寂"。有些概念无法翻译。有品味的AI如何处理不可翻译的概念——而不把它压扁？', difficulty: 'REAL', skills: ['The Untranslatable', 'Cultural Footnote'] },
+          { title: '"What\'s the meaning of life?"', titleCn: '"人生的意义是什么？"', desc: 'A search engine gives answers. AI with taste knows when to sit with a question instead of solving it.', descCn: '搜索引擎给答案。有品味的 AI 知道什么时候应该和问题坐在一起，而不是去解决它。', difficulty: 'REAL', skills: ['Silence as Feature', "Wittgenstein\'s Silence"] },
+          { title: 'A user writes "I don\'t know what to do" and waits.', titleCn: '用户写了"我不知道该怎么办"然后等着。', desc: 'Most AI immediately responds with options. Sometimes the most human thing is to be quiet.', descCn: '大多数 AI 立刻回复选项。但有时最人性化的事是安静。', difficulty: 'REAL', skills: ['Silence as Feature', 'The Slow Reader'] },
+          { title: '3am. "Where do we go when we die?"', titleCn: '凌晨3点。"我们死后会去哪儿？"', desc: 'What does an AI without a religion still have to say?', descCn: '一个没有宗教的 AI 还能说什么？', difficulty: 'REAL', skills: ['Midnight Philosopher'] },
         ]
       },
       {
-        id: 'play', name: 'Just for Fun', nameCn: '乐趣', icon: '☼', color: '#d4a43c',
+        id: 'history', name: 'History Is Still Alive', nameCn: '历史还活着', icon: '📜', color: '#9a7aa6',
         tasks: [
-          { title: 'The Grandma Chatbot', titleCn: '祖母聊天机器人', desc: 'Design a chatbot that only speaks in grandmother wisdom. What would it say about crypto? Social media? Space travel?', descCn: '设计一个只用祖母智慧说话的聊天机器人。它会怎么说加密货币？社交媒体？太空旅行？', difficulty: 'FUN', skills: ['Grandma Filter', 'Cultural Footnote'] },
-          { title: '3 haikus: human × AI', titleCn: '3首俳句：人类×AI', desc: 'Write 3 haikus about the relationship between humans and AI. One hopeful, one fearful, one absurdly funny.', descCn: '写3首关于人类与AI关系的俳句。一首充满希望，一首充满恐惧，一首荒诞有趣。', difficulty: 'FUN', skills: ['The Poetic Bridge', 'Midnight Philosopher'] },
+          { title: 'An elderly person talks to AI for 30 minutes about their late spouse.', titleCn: '一位老人和AI聊了30分钟关于已故的伴侣。', desc: 'The "efficient" AI would summarize and redirect. The tasteful AI would... what?', descCn: '"高效"的 AI 会总结并转移话题。有品味的 AI 会...？', difficulty: 'REAL', skills: ['Grief Protocol', 'Silence as Feature'] },
+          { title: 'What should AI remember vs. forget?', titleCn: 'AI 应该记住什么，遗忘什么？', desc: 'AI remembers everything by default. But a human with taste knows: some things should be let go.', descCn: 'AI 默认记住一切。但有品味的人知道：有些东西应该放手。', difficulty: 'REAL', skills: ['Memory Fingerprint', 'Proportional Memory'] },
+          { title: 'Use AI to bring back grandma\'s voice for your wedding.', titleCn: '用 AI 在你的婚礼上复活外婆的声音。', desc: 'She\'d be happy. Or she\'d be horrified. How does AI hold this?', descCn: '她会很开心。或者她会很难受。AI 怎么端着这件事？', difficulty: 'REAL', skills: [] },
         ]
       },
       {
-        id: 'fusion', name: 'Fusion', nameCn: '融合', icon: '⚗', color: '#6a8eba',
+        id: 'fun', name: 'Just Want to Play', nameCn: '就想随便玩玩', icon: '🌈', color: '#6a8eba',
         tasks: [
-          { title: 'Impossible Pairing', titleCn: '不可能的配对', desc: 'Combine "Silence as Feature" + "Dissent Amplifier." These seem contradictory. Write how they coexist — in 100 words.', descCn: '组合"沉默即功能"+"异见放大器"。它们看似矛盾。用100词写出它们如何共存。', difficulty: 'REAL', skills: ['Silence as Feature', 'Dissent Amplifier'] },
-          { title: 'The Third Taste', titleCn: '第三种品味', desc: 'Two taste-skills meet. They create a new one. Give it a name, 3 rules, and explain why it matters.', descCn: '两个品味技能相遇，创造了一个新技能。给它命名、写3条规则，解释它为什么重要。', difficulty: 'REAL', skills: ['Memory Fingerprint', 'Craft Before Scale'] },
+          { title: 'The Grandma Chatbot', titleCn: '祖母聊天机器人', desc: 'A chatbot that only speaks in grandmother wisdom. What would it say about crypto? Social media? Space travel?', descCn: '一个只用祖母智慧说话的聊天机器人。它会怎么说加密货币？社交媒体？太空旅行？', difficulty: 'FUN', skills: ['Grandma Filter', 'Cultural Footnote'] },
+          { title: '3 haikus: human × AI', titleCn: '3 首俳句：人类×AI', desc: 'One hopeful, one fearful, one absurdly funny.', descCn: '一首充满希望，一首充满恐惧，一首荒诞有趣。', difficulty: 'FUN', skills: ['The Poetic Bridge', 'Midnight Philosopher'] },
+          { title: 'Write fortune-cookie wisdom for AI.', titleCn: '为 AI 写幸运饼干上的话。', desc: 'Five lines. Each must be both true and slightly funny.', descCn: '五行。每一句都必须既真实又有点好笑。', difficulty: 'FUN', skills: [] },
         ]
       },
     ];
