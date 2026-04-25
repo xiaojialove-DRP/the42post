@@ -97,19 +97,19 @@ router.get('/:skillId', async (req, res, next) => {
     switch (format) {
       case 'markdown':
         content = generateSkillMarkdown(skillData);
-        filename = `${skill.title.replace(/\s+/g, '_')}_SKILL.md`;
+        filename = `The42Post_${skill.title.replace(/\s+/g, '_')}.md`;
         contentType = 'text/markdown';
         break;
 
       case 'langchain':
         content = generateAgentSkillFormat(skillData);
-        filename = `${skill.title.replace(/\s+/g, '_')}_agent.py`;
+        filename = `The42Post_${skill.title.replace(/\s+/g, '_')}.py`;
         contentType = 'text/plain';
         break;
 
       case 'mcp':
         content = generateMCPConfigFormat(skillData);
-        filename = `${skill.title.replace(/\s+/g, '_')}_mcp.json`;
+        filename = `The42Post_${skill.title.replace(/\s+/g, '_')}.json`;
         contentType = 'application/json';
         break;
 

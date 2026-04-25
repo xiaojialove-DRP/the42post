@@ -487,7 +487,7 @@ function attachSkillCardListeners() {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `${skill.title.replace(/\s+/g, '-')}.md`;
+        a.download = `The42Post_${skill.title.replace(/\s+/g, '_')}.md`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
@@ -6369,7 +6369,7 @@ function downloadSkillPackage(skillData) {
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
-  link.download = `${skillData.title.replace(/\s+/g, '_')}_SKILL.md`;
+  link.download = `The42Post_${skillData.title.replace(/\s+/g, '_')}.md`;
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
@@ -6457,7 +6457,7 @@ function downloadMarkdownSkill(skillData) {
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
-  link.download = `${skillData.title.replace(/\s+/g, '_')}_SKILL.md`;
+  link.download = `The42Post_${skillData.title.replace(/\s+/g, '_')}.md`;
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
@@ -6470,7 +6470,7 @@ function downloadLangChainSkill(skillData) {
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
-  link.download = `${skillData.title.replace(/\s+/g, '_')}_skill.py`;
+  link.download = `The42Post_${skillData.title.replace(/\s+/g, '_')}.py`;
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
@@ -6483,7 +6483,7 @@ function downloadMCPConfigSkill(skillData) {
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
-  link.download = `${skillData.title.replace(/\s+/g, '_')}.skill.json`;
+  link.download = `The42Post_${skillData.title.replace(/\s+/g, '_')}.json`;
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
@@ -7376,7 +7376,7 @@ function attachDomainSkillListeners() {
           const url = window.URL.createObjectURL(blob);
           const link = document.createElement('a');
           link.href = url;
-          link.download = `${skill.title.replace(/\s+/g, '_')}_SKILL.md`;
+          link.download = `The42Post_${skill.title.replace(/\s+/g, '_')}.md`;
           document.body.appendChild(link);
           link.click();
           document.body.removeChild(link);
