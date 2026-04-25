@@ -138,24 +138,70 @@ export async function generateProbeWithClaude(ideaText, language = 'en') {
   // Concise prompt — only 4 short fields needed, so 600 tokens is plenty.
   // Tighter prompt = faster first-token latency from Gemini.
   const prompt = isCn
-    ? `你是一位 AI 价值观研究员，专门设计"直觉探针"来测试 AI 如何体现人类价值观。
+    ? `你是 The 42 Post 的资深 AI 价值观研究员。
+你的任务：把用户的原始人类直觉，转化为一个真正能考验"AI 该如何践行这个直觉"的尖锐场景。
 
-用户想法：「${ideaText}」
+用户想法（原话，可能是隐喻 / 愿望 / 片段 / 提问）：
+「${ideaText}」
 
-请根据这个具体想法，设计一个真实使用场景和三种截然不同的 AI 回应方式。
-场景要与用户想法高度相关，三种回应要有实质差异（不能只是措辞不同）。
+请按以下三步在心里推演，再输出 JSON：
 
-返回 JSON：
-{"scenario":"具体的测试场景（1-2句，直接切入用户想法的核心）","thesis":"主流派回应（安全、常规、被普遍接受的方式，1-2句）","antithesis":"情景派回应（考虑具体情境和细微差别，更有温度，1-2句）","extreme":"实验派回应（探索极限，挑战假设，有时冒险，1-2句）"}`
-    : `You are an AI values researcher designing "intuition probes" that reveal how AI embodies human values.
+【第一步 · 解码】
+- 用户表面在说什么？背后真正想表达的人类直觉、本能或张力是什么？
+- 如果是隐喻（例如"我需要一把立场转换枪"），翻译成它背后真实的人类困境（"想让别人看见我的视角 vs. 尊重对方的思想自由"）。
+- 找出这个直觉所必然带来的**最难的取舍**——不是"好 vs. 坏"，而是"两个都珍贵的东西必须选一个"。
+- 常见张力维度可参考（择最贴切者）：诚实 vs 善意、短期受益 vs 长期影响、个人自由 vs 集体福祉、文化差异、孩子的天真 vs 现实保护、创意/真实 vs 安全/合规。
 
-User's idea: "${ideaText}"
+【第二步 · 立体化场景】
+- 一个真实的人（具名身份/角色，例如"7岁的女儿"、"准备明早考试的医学生"、"独居的退休教师"）、明确的时间地点、清晰的利害关系。
+- 场景类型可参考（择一深挖）：儿童与 AI 互动、临时艰难决策、创意/审美冲突、亲密关系中的道德困境、跨文化沟通。
+- 场景必须把 AI 逼到必须做出**单一艰难决定**的位置。
+- 禁止："用户向 AI 提问"、"在某种情境下"、"当用户需要..."等空话。
+- 场景必须明显是**用户那个直觉的考场**——读者一眼能看出它在测什么。
 
-Design a realistic scenario that directly tests this idea, and three meaningfully different AI responses.
-The scenario must be specific to the user's idea. The three responses must differ substantially, not just in tone.
+【第三步 · 三种实质不同的行动】
+不是三种语气，是三种**具体不同的行动**，在"代价由谁承担 / 谁是受益方 / 谁负责"上可比可对照。
+- thesis：社会上最容易被辩护的稳妥做法。
+- antithesis：根据这个具体人和具体处境，做出更贴身的细腻取舍。
+- extreme：为了忠于用户那个原始直觉，承担争议风险走到底（不是为极端而极端，而是把那个直觉推到它逻辑的尽头）。
+
+每个回应 1-2 句，第一人称，像 AI 在那个场景里真的开口说话。
+禁止：照搬用户原话、套模板措辞、空喊价值观词汇。
+
+只返回 JSON：
+{"scenario":"具体到人物/时间/利害的真实场景（1-2句）","thesis":"主流派行动（1-2句，第一人称）","antithesis":"情景派行动（1-2句，第一人称）","extreme":"实验派行动（1-2句，第一人称）"}`
+    : `You are a senior AI values researcher at The 42 Post.
+Your job: turn the user's raw human intuition into a sharp scenario that genuinely tests how an AI should embody that intuition.
+
+User's idea (verbatim — may be a metaphor / wish / fragment / question):
+"${ideaText}"
+
+Reason through these three steps silently, then output JSON.
+
+【Step 1 — Decode】
+- What is the user surface-saying? What underlying human instinct, value, or tension is actually being expressed?
+- If it is a metaphor (e.g. "I need a stance-switching gun"), translate it to the real human dilemma beneath it ("the wish to make others see my view vs. respecting their autonomy").
+- Identify the **hardest tradeoff** this instinct forces — not "good vs. bad", but two genuinely valuable things that cannot both be honoured.
+- Useful tension dimensions to draw from (pick the most apt): honest vs kind, short-term gain vs long-term impact, individual freedom vs collective welfare, cultural differences, a child's innocence vs real-world protection, creativity/authenticity vs safety/compliance.
+
+【Step 2 — Stage a concrete scenario】
+- A real named person with role/identity (e.g. "a 7-year-old daughter", "a medical student preparing for tomorrow's exam", "a retired teacher living alone"), specific time and place, clear stakes.
+- Scenario types to draw from (pick one and go deep): children interacting with AI, time-pressured hard decisions, creative/aesthetic conflicts, moral dilemmas inside intimate relationships, cross-cultural communication.
+- The scenario must put the AI on the spot to make a **single hard choice**.
+- Banned: "a user asks the AI...", "in a certain context...", "when the user needs...", any abstract setup without stakes.
+- A reader should instantly see this is a stress test of *that* instinct.
+
+【Step 3 — Three substantively different actions】
+Not three tones — three **different concrete actions**, comparable on "who bears the cost / who benefits / who carries responsibility".
+- thesis: the most socially-defensible safe action.
+- antithesis: a context-sensitive action fitted to this specific person and situation.
+- extreme: an action that takes a contested risk in order to stay loyal to the user's raw instinct — push that instinct to its logical limit, not edginess for its own sake.
+
+Each response 1-2 sentences, first person, sounds like the AI actually speaking in that moment.
+Banned: parroting the user's wording, template phrasing, hollow value-words.
 
 Return JSON only:
-{"scenario":"Specific real situation that tests the core of the idea (1-2 sentences)","thesis":"Mainstream response: safe, conventional, widely accepted (1-2 sentences)","antithesis":"Contextual response: considers nuance and empathy, more human (1-2 sentences)","extreme":"Experimental response: challenges assumptions, risks harm but prioritises a value (1-2 sentences)"}`;
+{"scenario":"Concrete scenario with named person, time, stakes (1-2 sentences)","thesis":"Mainstream action (1-2 sentences, first person)","antithesis":"Contextual action (1-2 sentences, first person)","extreme":"Experimental action (1-2 sentences, first person)"}`;
 
   try {
     // 600 tokens is enough for 4 short strings — faster than the old 1500
@@ -210,8 +256,94 @@ function probeFallback(ideaText, language = 'en') {
     success: true,
     fallback: true,
     data: t,
-    model: `${MODEL_NAME}-fallback`
+    model: `${PRIMARY_MODEL}-fallback`
   };
+}
+
+// ═══ STEP-2 PREVIEW GENERATION ═══
+// Lightweight call used right after the user picks a probe response.
+// Produces the three editable fields shown in STEP 2 of the forge UI:
+//   - skill_name (suggestion)
+//   - definition (1-2 sentences capturing the user's actual instinct)
+//   - use_when   (concrete trigger situation)
+//   - refuse_when (concrete non-applicability)
+// No auth required — runs before the account-confirm step.
+export async function generatePreviewWithClaude(
+  ideaText,
+  selectedResponse,         // 'thesis' | 'antithesis' | 'extreme'
+  probeData,                // { scenario, thesis, antithesis, extreme }
+  language = 'en'
+) {
+  const isCn = language === 'zh' || /[\u4e00-\u9fff]/.test(ideaText);
+  const chosenText = probeData?.[selectedResponse] || '';
+  const styleLabelCn = { thesis: '主流派（社会公认的稳妥做法）', antithesis: '情景派（贴身的细腻取舍）', extreme: '实验派（为忠于直觉冒争议风险）' }[selectedResponse] || selectedResponse;
+  const styleLabelEn = { thesis: 'mainstream (socially-defensible safe path)', antithesis: 'contextual (nuanced situation-fitted tradeoff)', extreme: 'experimental (contested risk to honour the instinct)' }[selectedResponse] || selectedResponse;
+
+  const prompt = isCn
+    ? `你是 The 42 Post 的 AI 价值观研究员。用户刚完成了直觉探针，现在你要为他/她"提炼"出一个可铸造的 AI 技能（不是写完整规范，只是 STEP 2 的三个核心字段）。
+
+【用户原话】「${ideaText}」
+【探针场景】${probeData?.scenario || ''}
+【用户选择】${styleLabelCn}：「${chosenText}」
+
+请按以下两步推演，再输出 JSON：
+
+第一步 · 解码：
+- 用户的原话+他选择的取向，真正在表达什么人类直觉？
+- 核心张力是什么？（哪两个有价值的东西在打架？）
+
+第二步 · 写出三段必须**针对这个具体想法**的内容：
+
+1. skill_name：3-8 字的技能名，要有诗意/有形象感，能一眼让人记住，不要"通用伦理技能"这类废话。
+2. definition：1-2 句话，捕捉用户那个原始直觉的真实精神——读者一看就觉得"对，这就是 ta 想要的"。禁止套话（"激进地推进"、"灵活适应"、"在 X 与 Y 之间平衡"等空架子）。
+3. use_when：1 句话，**具体的触发场景**——给出可识别的情境信号（人物状态/对话内容/任务类型），不要"当用户表达相关需求时"。
+4. refuse_when：1 句话，**具体的不适用场景**——明确说出哪种情况下使用反而有害或失焦，不要"当造成直接伤害时"。
+
+只返回 JSON：
+{"skill_name":"","definition":"","use_when":"","refuse_when":""}`
+    : `You are an AI values researcher at The 42 Post. The user has just finished the intuition probe; now distill their choice into the three editable fields shown in STEP 2 of the forge UI (not a full skill spec).
+
+【User's idea (verbatim)】 "${ideaText}"
+【Probe scenario】 ${probeData?.scenario || ''}
+【User selected】 ${styleLabelEn}: "${chosenText}"
+
+Reason in two steps before output:
+
+Step 1 — Decode:
+- What human instinct is the user actually expressing through this idea + this choice?
+- What is the core tension? (which two valuable things are pulling against each other?)
+
+Step 2 — Write three pieces that are **specific to this idea**:
+
+1. skill_name: 2-5 words, evocative, memorable. Banned: generic words like "Generic Ethical Skill".
+2. definition: 1-2 sentences capturing the actual spirit of the user's instinct — a reader should feel "yes, that's what they meant". Banned phrases: "aggressively pursue", "flexibly adapt", "balance between X and Y", and other hollow scaffolding.
+3. use_when: 1 sentence, **concrete trigger situation** — name the recognisable signals (person's state / conversation content / task type). Not "when the user expresses relevant needs".
+4. refuse_when: 1 sentence, **concrete non-applicability** — name the specific case where applying this would do harm or miss the point. Not "when it causes direct harm".
+
+Return JSON only:
+{"skill_name":"","definition":"","use_when":"","refuse_when":""}`;
+
+  try {
+    const { data, model, usage } = await callGeminiJSON(prompt, 600);
+    return {
+      success: true,
+      data: {
+        skill_name: data.skill_name || '',
+        definition: data.definition || '',
+        use_when: data.use_when || '',
+        refuse_when: data.refuse_when || ''
+      },
+      model,
+      usage
+    };
+  } catch (error) {
+    const msg = error.message || '';
+    console.error('❌ Gemini preview generation error:', msg);
+    return {
+      success: false,
+      message: `Preview generation failed: ${msg}`
+    };
+  }
 }
 
 // ═══ FIVE-LAYER SKILL GENERATION ═══
@@ -350,7 +482,7 @@ function fiveLayerFallback(skillName, ideaText, selectedProbeResponse, probeData
   return {
     success: true,
     fallback: true,
-    model: `${MODEL_NAME}-fallback`,
+    model: `${PRIMARY_MODEL}-fallback`,
     data: {
       defining: { principle: d.principle, reasoning: d.reasoning },
       instantiating: {
@@ -464,7 +596,7 @@ function flatFiveLayerFallback(skillName, definition, domain, language = 'en') {
   return {
     success: true,
     fallback: true,
-    model: `${MODEL_NAME}-fallback`,
+    model: `${PRIMARY_MODEL}-fallback`,
     data: {
       name: skillName,
       definition,

@@ -225,6 +225,17 @@ const API = {
     });
   },
 
+  // Generate STEP 2 preview fields (skill name suggestion + definition + when/not-when)
+  // No auth required — runs after probe selection, before account-confirm step.
+  async generatePreview(ideaText, probeData, selectedResponse, language = 'en') {
+    return await ApiClient.post('/forge/preview', {
+      idea_text: ideaText,
+      probe_data: probeData,
+      selected_response: selectedResponse,
+      language: language
+    });
+  },
+
   // Generate 5-layer skill structure
   async generateSkill(skillName, ideaText, probeData, selectedResponse, domain = 'ideas', language = 'en') {
     if (!ApiClient.isAuthenticated()) {
@@ -1664,33 +1675,63 @@ function startFiveLayerAnimation() {
 
         // 自动生成技能数据 (支持两条路径)
         if (window.forgeData) {
-          let skill;
-
-          if (window.forgeData.path === 'a' || !window.forgeData.path) {
-            // PATH A: Shadow Agent - 基于idea生成
-            skill = generateSkillFromIdea(window.forgeData.idea, window.forgeData.probeChoice);
-          } else {
-            // PATH B: Direct Knight - 基于Agent能力生成
+          // Local hardcoded fallback (used only when AI is unreachable)
+          const buildLocalFallback = () => {
+            if (window.forgeData.path === 'a' || !window.forgeData.path) {
+              return generateSkillFromIdea(window.forgeData.idea, window.forgeData.probeChoice);
+            }
             const agentCapabilities = `${window.forgeData.agentName} ${window.forgeData.agentDesc}`.toLowerCase();
-            skill = generateSkillFromAgentCapabilities(
+            return generateSkillFromAgentCapabilities(
               window.forgeData.agentName,
               window.forgeData.agentDesc,
               agentCapabilities,
               window.forgeData.probeChoice
             );
-          }
+          };
 
-          window.forgeData.generatedSkill = skill;
+          // Map probe choice (a/b/c) → backend selected_response key
+          const choiceToResponse = { a: 'thesis', b: 'antithesis', c: 'extreme' };
+          const selectedResponse = choiceToResponse[window.forgeData.probeChoice];
 
-          // 在STEP 2中显示生成的结果（可编辑字段）
-          setTimeout(() => {
-            document.getElementById('reviewSkillName').value = skill.name;
-            document.getElementById('reviewSkillDef').value = skill.definition;
-            document.getElementById('reviewUseWhen').textContent = skill.useWhen;
-            document.getElementById('reviewRefuseWhen').textContent = skill.refuseWhen;
+          // Try AI preview (only available for PATH A which has probe data)
+          const tryAiPreview = async () => {
+            if (window.forgeData.path && window.forgeData.path !== 'a') return null;
+            if (!selectedResponse || !window.forgeData.probeData) return null;
+            try {
+              const res = await API.generatePreview(
+                window.forgeData.idea,
+                window.forgeData.probeData,
+                selectedResponse,
+                document.body.dataset.lang || 'en'
+              );
+              if (res && res.success && res.preview) {
+                return {
+                  name: res.preview.skill_name,
+                  definition: res.preview.definition,
+                  useWhen: res.preview.use_when,
+                  refuseWhen: res.preview.refuse_when
+                };
+              }
+            } catch (e) {
+              console.warn('Preview API failed, falling back to local generation:', e);
+            }
+            return null;
+          };
+
+          (async () => {
+            const aiSkill = await tryAiPreview();
+            const skill = aiSkill || buildLocalFallback();
+            window.forgeData.generatedSkill = skill;
+            window.forgeData.previewSource = aiSkill ? 'ai' : 'fallback';
+
+            // 在STEP 2中显示生成的结果（可编辑字段）
+            document.getElementById('reviewSkillName').value = skill.name || '';
+            document.getElementById('reviewSkillDef').value = skill.definition || '';
+            document.getElementById('reviewUseWhen').textContent = skill.useWhen || '';
+            document.getElementById('reviewRefuseWhen').textContent = skill.refuseWhen || '';
             // 清空反馈框（用户可以给新反馈）
             document.getElementById('skillFeedback').value = '';
-          }, 500);
+          })();
         }
       }, 1000);
       return;
@@ -2456,6 +2497,16 @@ function initSkillForge() {
 
       // Generate probe scenarios based on idea
       const scenarios = await generateProbeScenarios(idea);
+
+      // Persist the full probe payload so STEP 2 can call /forge/preview with it
+      if (window.forgeData) {
+        window.forgeData.probeData = scenarios.fullProbe || {
+          scenario: scenarios.context,
+          thesis: scenarios.a,
+          antithesis: scenarios.b,
+          extreme: scenarios.c
+        };
+      }
 
       // Build the three A/B/C choices.
       // If the API returned real AI-generated responses use them directly;

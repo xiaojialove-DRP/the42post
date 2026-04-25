@@ -8,6 +8,7 @@ import { db } from '../server.js';
 import { requireAuth } from '../utils/auth.js';
 import {
   generateProbeWithClaude,
+  generatePreviewWithClaude,
   generateFiveLayerWithClaude,
   generateFlatFiveLayerWithClaude,
   generateSoulHash
@@ -58,6 +59,44 @@ router.post('/probe', async (req, res, next) => {
       probe: probeResult.data,
       model: probeResult.model,
       usage: probeResult.usage
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// ═══ GENERATE STEP-2 PREVIEW (skill name + definition + when to use / not use) ═══
+// No auth required — runs after probe selection, before account confirm.
+router.post('/preview', async (req, res, next) => {
+  try {
+    const { idea_text, probe_data, selected_response, language } = req.body;
+
+    if (!idea_text || !idea_text.trim()) {
+      return res.status(400).json({ error: 'Missing input', message: 'idea_text is required' });
+    }
+    if (!probe_data || !probe_data.scenario) {
+      return res.status(400).json({ error: 'Missing input', message: 'probe_data with scenario is required' });
+    }
+    if (!['thesis', 'antithesis', 'extreme'].includes(selected_response)) {
+      return res.status(400).json({ error: 'Invalid input', message: 'selected_response must be thesis | antithesis | extreme' });
+    }
+
+    const result = await generatePreviewWithClaude(
+      idea_text.trim(),
+      selected_response,
+      probe_data,
+      language || 'en'
+    );
+
+    if (!result.success) {
+      return res.status(500).json({ error: 'Preview generation failed', message: result.message });
+    }
+
+    res.json({
+      success: true,
+      preview: result.data,
+      model: result.model,
+      usage: result.usage
     });
   } catch (error) {
     next(error);
