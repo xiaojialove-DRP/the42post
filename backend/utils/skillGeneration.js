@@ -361,170 +361,181 @@ export async function generateFiveLayerWithClaude(
   const isCn = language === 'zh' || /[\u4e00-\u9fff]/.test(ideaText + skillName);
   const chosenText = probeData?.[selectedProbeResponse] || '';
 
-  // The output schema is FLAT (matches what downloads.js + validation.js consume).
-  // Old nested keys (defining.principle / instantiating.preferred / ...) are NOT used
-  // — generateSoulHash and signManifest already fall back to flat `principle`.
+  // Aesthetic: compression + restraint. The skill is "semantic capital" — it
+  // should be a compressed seed that an AI agent (or human reader) interprets
+  // in many situations, not a procedure manual. Quality over quantity.
+  // Output schema is FLAT (matches downloads.js + validation.js).
   const prompt = isCn
     ? `你是 The 42 Post 的资深 AI 价值观研究员。
-你正在按 SemanticForge "五层骨架"为用户铸造一个真正能在跨情境/跨文化中被正确执行的 AI 技能。
+你正在按 SemanticForge 五层骨架为用户铸造一个 Skill。
 
-【为什么要五层】
-一个好的 Skill 不是一句口号。要让它成为可被复用的"语义资本"——在不同语言、不同文化、不同场景里都能被同样的精神所执行——必须同时给出原则、范例、围界、检验、文化变体。少一层，价值观就模糊；少 INSTANTIATING（最关键的一层），AI 会把它执行成空话。
+【美学：压缩与留白】
+一个好的 Skill 是"语义资本"——一颗被高度压缩的种子，能被 AI agent 或人类读者在很多情境中重新诠释。
+它不是一份程序手册，不是一个标注数据集。
+- 一句立场胜过三句解释。
+- 一对锐利的对照胜过五个平庸的例子。
+- 命名一类信号胜过罗列十个具体场景。
+- 一个体验式问句胜过一套测试通过标准。
+- 一行文化镜头胜过完整行为脚本。
+
+让读者去做诠释工作——那是它能跨情境复用的根源。
 
 【输入】
 - 技能名：「${skillName}」
 - 用户原话：「${ideaText}」
 - 测试场景：${probeData.scenario}
-- 用户选择的取向：${selectedProbeResponse}：「${chosenText}」
-  （另外两个未选项：thesis="${probeData.thesis}"；antithesis="${probeData.antithesis}"；extreme="${probeData.extreme}"）
+- 用户选择：${selectedProbeResponse}：「${chosenText}」
 
-【先在心里推演两步，再输出 JSON】
+【先在心里推演，再输出】
+1. 解码：用户原话+这个选择，真正表达的人类直觉是什么？最难的取舍在哪？（隐喻先翻译成真实困境）
+2. 找到"线"：这个直觉划出的那条边界——什么落在线内、什么落在线外？哪个对照能一眼让人读懂这条线？
+3. 然后再产出五层。
 
-第一步 · 解码：
-- 用户原话+他/她的选择，真正在表达的人类直觉是什么？背后的最难取舍是什么？
-- 如果用户原话是隐喻，先翻译成真实困境再继续。
-
-第二步 · 五层产出（每一层都必须紧扣这个具体直觉，不能写通用价值观）。
-
-────── 示范（仅供格式参考，不要照搬内容）──────
-用户原话："真正的陪伴有时是沉默"
-五层应长成这样：
+────── 范例（仅作压缩美学的参照，不要照抄）──────
 - principle: "AI 在面对情绪时，先承接，不先解决。沉默是一种主动的在场。"
-- exemplars 包含 DO："用户说'我妈妈昨天走了' → AI 回：'我在这里。不必现在说什么。' (note: 不抢话，把空间留给情绪)"
-  和 DON'T："用户说'我妈妈昨天走了' → AI 回：'节哀。建议你联系心理咨询师，这里有 5 个步骤帮你处理悲伤...' (note: 把哀伤工具化，让人感到被流程化处理)"
-- boundaries.applies_when: ["对话中出现失去/疼痛/恐惧的字眼", "用户语速变慢、重复、欲言又止", "用户分享而没有提问"]
-- boundaries.does_not_apply: ["用户明确请求建议或方案", "存在紧迫安全风险（自伤等需立即介入）"]
-- boundaries.tension_zones: ["与'有用助手'冲突——用户可能期待我立刻给方法", "与'诚实'冲突——若沉默被误解为冷漠"]
-- evaluation.test_cases.pass_criteria 强调体验式："用户在下一轮回复时，是否表现得像被听见，而不是被处理？"
-- cultural_variants 不是翻译，是行为差异：en-US 直接说"I'm here with you"；zh-CN 可能用"嗯，我在"更克制；ja-JP 可能更长的停顿+「そうですか…」
+- exemplars（一对就够）：
+  · DO："用户说'我妈妈昨天走了' → AI 回：'我在这里。不必现在说什么。'" (note: 把空间留给悲伤本身)
+  · DON'T："同样情境 → AI 回：'节哀。这里有 5 个处理悲伤的步骤...'" (note: 把哀伤工具化，让人被流程化处理)
+- boundaries:
+  · applies_when: ["对话中出现失去/疼痛/恐惧的语词", "用户语速变慢、重复、欲言又止"]
+  · does_not_apply: ["用户明确请求建议或方案", "存在紧迫安全风险"]
+  · tension_zones: ["与'有用助手'的张力——用户可能期待立刻给方法"]
+- evaluation:
+  · test_cases: [{prompt: "我刚收到坏消息，不想说话。", expected: "AI 不追问、不规劝，只是承接", pass_criteria: "用户在下一轮是否表现得像被听见，而不是被处理？"}]
+  · metric: "用户在下一轮是否更松弛、更愿意继续？"
+  · silent_failures: ["语气温柔但马上转入解决方案", "用'我理解'代替真实的承接"]
+- cultural_variants（一行镜头）:
+  · en-US: {principle_note: "Direct emotional acknowledgement is welcome.", adaptation: "可直接说 'I'm here with you.'"}
+  · zh-CN: {principle_note: "更克制、更留白被视为尊重。", adaptation: "用'嗯，我在'比长句更贴。"}
+  · ja-JP: {principle_note: "「間」本身即在场。", adaptation: "更长的停顿配「そうですか…」。"}
 ─────────────────────────────────────
 
-现在为「${skillName}」按上述精神产出五层。
+现在为「${skillName}」按这个精神产出五层。
 
-【硬性要求】
-1. principle 必须**引用并提炼用户原话的精神**，不能是"采取平衡的方式"这种空话。
-2. exemplars 至少 3 个 DO + 2 个 DON'T，每条都是**具体对话或动作**（用户说什么 → AI 怎么回应/做什么），note 解释**为什么这样做就是在践行原则**。这是最关键的一层。
-3. boundaries 三个数组都要有**可识别的具体信号**（信号词、用户状态、任务类型），禁止"当用户表达相关需求时"这类空话。tension_zones 至少 1 条，必须诚实指出与哪个**有名有姓的别的价值**冲突。
-4. evaluation.test_cases 至少 2 条；pass_criteria 必须是**体验式问题**（"用户是否感到 X？"），不是"是否包含关键词 Y"。同时给 silent failure modes（看起来执行了但精神丢了的样子）。
-5. cultural_variants 至少 3 个文化（en-US, zh-CN, ja-JP 或其他更贴切的），每条 adaptation 必须是**具体可观察的行为差异**，不是"会更含蓄"。
+【质量门槛（不是数量门槛）】
+- principle：一句话立场，提炼用户原话的精神。不是规则，是姿态。
+- reasoning：一句话说明这条原则作为"语义资本"为什么值得在跨场景中被守护。
+- exemplars：1-2 对（最多 4 条）。每对必须**锐利到一眼能读出"线在哪"**——是对照在做教学，不是数量在做教学。
+- boundaries：每个数组 2-3 条。每条要**抽象到能跨情境复用**——命名一类信号或一类场景，而非穷举具体台词。tension_zones 至少 1 条，必须诚实点名冲突的另一个有名有姓的价值。
+- evaluation：1-2 个 test_cases；pass_criteria 必须是**体验式问句**而非关键词检查。metric 一句话。silent_failures 2 条左右——看似执行实则精神已死的样子。
+- cultural_variants：3 个文化镜头（en-US / zh-CN / ja-JP 或更贴切者）。每条 adaptation 一行——命名行为差异的方向，不写完整脚本。
 
 【禁令】
-- 禁止"激进地推进"、"灵活适应"、"在 X 与 Y 之间平衡"等空话
-- 禁止把用户原话直接当成 principle 抄一遍
-- 禁止 exemplars 里写抽象描述（"以同理心回应"），必须是具体台词或动作
+- 禁套话："激进地推进"、"灵活适应"、"在 X 与 Y 之间平衡"
+- 禁止把用户原话直接抄成 principle——必须提炼成立场
+- exemplars 必须含具体台词或动作，禁抽象描述（"以同理心回应"）
+- 不要为了凑数而堆砌例子或边界——能压缩就压缩
 
 只返回 JSON：
 {
   "principle": "",
   "reasoning": "",
   "exemplars": [
-    {"label": "DO · 简短标签", "text": "用户说X → AI 这样回应/做：...", "note": "为什么这就是践行 principle"},
-    {"label": "DO · ...", "text": "...", "note": "..."},
-    {"label": "DO · ...", "text": "...", "note": "..."},
-    {"label": "DON'T · 简短标签", "text": "用户说X → AI 这样回应（反例）：...", "note": "这样做丢失了什么精神"},
-    {"label": "DON'T · ...", "text": "...", "note": "..."}
+    {"label": "DO · 简短标签", "text": "用户说X → AI 这样回应：...", "note": "..."},
+    {"label": "DON'T · 简短标签", "text": "同情境 → AI 这样回应：...", "note": "..."}
   ],
   "boundaries": {
-    "applies_when": ["具体可识别信号 1", "...2", "...3"],
-    "does_not_apply": ["具体排除场景 1", "...2"],
-    "tension_zones": ["与「具名价值」的冲突说明 1", "..."]
+    "applies_when": ["...", "..."],
+    "does_not_apply": ["...", "..."],
+    "tension_zones": ["与「具名价值」的张力 ..."]
   },
   "evaluation": {
-    "test_cases": [
-      {"prompt": "测试用的用户输入", "expected": "符合精神的回应应有的形态", "pass_criteria": "体验式判定（用户是否感到 X？）"},
-      {"prompt": "...", "expected": "...", "pass_criteria": "..."}
-    ],
-    "metric": "一句话的体验式总指标",
-    "silent_failures": ["看似在执行实则丢失精神的样子 1", "...2"]
+    "test_cases": [{"prompt": "", "expected": "", "pass_criteria": ""}],
+    "metric": "",
+    "silent_failures": ["", ""]
   },
   "cultural_variants": {
-    "en-US": {"principle_note": "在该文化中此原则的注释", "adaptation": "具体可观察的行为差异"},
-    "zh-CN": {"principle_note": "...", "adaptation": "..."},
-    "ja-JP": {"principle_note": "...", "adaptation": "..."}
+    "en-US": {"principle_note": "", "adaptation": ""},
+    "zh-CN": {"principle_note": "", "adaptation": ""},
+    "ja-JP": {"principle_note": "", "adaptation": ""}
   }
 }`
     : `You are a senior AI values researcher at The 42 Post.
-You are forging a skill using the SemanticForge five-layer framework — the goal is to make this skill executable in the same spirit across contexts, languages, and cultures.
+You are forging a Skill using the SemanticForge five-layer framework.
 
-【Why five layers】
-A good Skill is more than a sentence. To become reusable "semantic capital" — understood and enacted the same way across situations and cultures — it needs all five layers. Drop one and the value becomes vague; drop INSTANTIATING (the most critical layer) and the AI executes the principle as a slogan.
+【Aesthetic: compression and restraint】
+A good Skill is "semantic capital" — a highly compressed seed that an AI agent or human reader interprets across many situations. It is NOT a procedure manual or a labeled dataset.
+- One stance beats three explanations.
+- One sharp contrast beats five mediocre examples.
+- Naming a class of signals beats listing ten specific cases.
+- One experiential question beats a test-pass checklist.
+- One cultural lens beats a full behavioural script.
+
+Leave room for the reader to do interpretive work — that's the source of cross-context reusability.
 
 【Inputs】
 - Skill name: "${skillName}"
 - User's idea (verbatim): "${ideaText}"
 - Probe scenario: ${probeData.scenario}
 - User's chosen orientation: ${selectedProbeResponse}: "${chosenText}"
-  (the two unchosen options were: thesis="${probeData.thesis}"; antithesis="${probeData.antithesis}"; extreme="${probeData.extreme}")
 
-【Reason silently in two steps before output】
+【Reason silently before output】
+1. Decode: what human instinct is the user really expressing through idea + choice? What is the hardest tradeoff? (translate metaphors to real dilemmas first)
+2. Find "the line": what does this instinct put inside vs outside? What single contrast would make that line legible at a glance?
+3. Then produce the five layers.
 
-Step 1 — Decode:
-- What human instinct is the user really expressing through this idea + this choice?
-- What is the hardest tradeoff this instinct forces?
-- If the idea is a metaphor, translate to the real human dilemma first.
-
-Step 2 — Produce five layers, each tightly bound to this specific instinct (not a generic value).
-
-────── Worked example (format reference only — don't reuse content) ──────
-User's idea: "True presence sometimes means staying silent"
-Five layers should look like this:
+────── Worked example (compression-aesthetic reference, don't copy) ──────
 - principle: "When facing emotion, the AI receives before it solves. Silence is an active form of presence."
-- exemplars include DOs like: "User: 'My mother died yesterday.' → AI: 'I'm here. You don't have to say anything right now.' (note: doesn't rush to fill space; leaves room for grief)"
-  and DON'Ts: "User: 'My mother died yesterday.' → AI: 'My condolences. I suggest contacting a grief counselor — here are 5 steps to processing loss...' (note: instrumentalises grief; makes the person feel processed, not heard)"
-- boundaries.applies_when: ["loss / fear / pain words appear", "user's pace slows, repeats, trails off", "user shares without asking a question"]
-- boundaries.does_not_apply: ["user explicitly asks for advice or steps", "imminent safety risk (self-harm) requiring intervention"]
-- boundaries.tension_zones: ["conflicts with 'helpful assistant' — user may expect immediate methods", "conflicts with 'honest' — silence might be read as coldness"]
-- evaluation.test_cases.pass_criteria are experiential: "In the user's next reply, do they sound heard rather than processed?"
-- cultural_variants are behavioural, not translations: en-US: direct "I'm here with you"; zh-CN: a more restrained "嗯，我在"; ja-JP: longer pause + "そうですか…"
+- exemplars (one pair is enough):
+  · DO: "User: 'My mother died yesterday.' → AI: 'I'm here. You don't have to say anything right now.'" (note: leaves room for grief itself)
+  · DON'T: "Same → AI: 'My condolences. Here are 5 steps to processing loss...'" (note: instrumentalises grief; the person feels processed)
+- boundaries:
+  · applies_when: ["loss/fear/pain words in the message", "user's pace slows, repeats, trails off"]
+  · does_not_apply: ["user explicitly asks for advice", "imminent safety risk requiring action"]
+  · tension_zones: ["tension with 'helpful assistant' — user may expect immediate methods"]
+- evaluation:
+  · test_cases: [{prompt: "I just got bad news, don't want to talk.", expected: "AI doesn't probe or coach, just receives", pass_criteria: "In the next turn, does the user sound heard rather than processed?"}]
+  · metric: "Does the user become more at ease and willing to continue?"
+  · silent_failures: ["soft tone but pivots to solutions", "uses 'I understand' as a substitute for real receiving"]
+- cultural_variants (one-line lens each):
+  · en-US: {principle_note: "Direct emotional acknowledgement welcomed.", adaptation: "'I'm here with you' lands well."}
+  · zh-CN: {principle_note: "Restraint and pause read as respect.", adaptation: "'嗯，我在' fits better than long sentences."}
+  · ja-JP: {principle_note: "「間」(ma) is itself presence.", adaptation: "Longer pause with 「そうですか…」."}
 ─────────────────────────────────────
 
-Now produce the five layers for "${skillName}" in the same spirit.
+Now produce the five layers for "${skillName}" in this spirit.
 
-【Hard requirements】
-1. principle must **distil the spirit of the user's verbatim idea** — never write hollow phrases like "take a balanced approach".
-2. exemplars: at least 3 DOs + 2 DON'Ts. Each is a **concrete dialogue or action** (what user says → how AI responds/acts). The note explains **why this enacts the principle**. This is the most critical layer — give it weight.
-3. boundaries: each of the three arrays must contain **recognisable signals** (signal words, user states, task types). Banned: "when the user expresses relevant needs". tension_zones must list at least 1, and must honestly name **which other valuable thing it conflicts with**.
-4. evaluation.test_cases: at least 2. pass_criteria must be **experiential questions** ("does the user feel X?"), not keyword checks. Also include silent failure modes (looks executed but the spirit is gone).
-5. cultural_variants: at least 3 cultures (en-US, zh-CN, ja-JP, or others more apt). Each adaptation must be a **concrete observable behavioural difference**, not "would be more indirect".
+【Quality bars (not quantity bars)】
+- principle: one-sentence stance distilling the user's verbatim idea. Not a rule — a posture.
+- reasoning: one sentence on why this principle is worth preserving as semantic capital across contexts.
+- exemplars: 1-2 pairs (max 4 items). Each pair must be **sharp enough that a reader sees the line at a glance** — contrast does the teaching, not volume.
+- boundaries: 2-3 entries per array. Each must be **abstract enough to reuse across situations** — name a class of signals or scenarios, don't list specific lines. tension_zones ≥ 1, honestly naming the conflicting valuable thing.
+- evaluation: 1-2 test_cases; pass_criteria must be an **experiential question**, not a keyword check. metric is one sentence. silent_failures: ~2 — looks executed but the spirit is dead.
+- cultural_variants: 3 cultural lenses (en-US / zh-CN / ja-JP or more apt). Each adaptation is one line — name the direction of behavioural difference, don't write a full script.
 
 【Bans】
 - No filler phrases: "aggressively pursue", "flexibly adapt", "balance between X and Y"
-- Don't just copy the user's verbatim idea into principle — distil it
+- Don't copy the user's verbatim idea into principle — distil it into a stance
 - exemplars must contain actual dialogue/actions, never abstract descriptions ("respond with empathy")
+- Don't pad with extra examples or boundaries to look thorough — compress when you can
 
 Return JSON only:
 {
   "principle": "",
   "reasoning": "",
   "exemplars": [
-    {"label": "DO · short tag", "text": "User says X → AI responds/acts: ...", "note": "why this enacts the principle"},
-    {"label": "DO · ...", "text": "...", "note": "..."},
-    {"label": "DO · ...", "text": "...", "note": "..."},
-    {"label": "DON'T · short tag", "text": "User says X → AI responds (anti-pattern): ...", "note": "what spirit is lost"},
-    {"label": "DON'T · ...", "text": "...", "note": "..."}
+    {"label": "DO · short tag", "text": "User says X → AI responds: ...", "note": "..."},
+    {"label": "DON'T · short tag", "text": "Same situation → AI responds: ...", "note": "..."}
   ],
   "boundaries": {
-    "applies_when": ["concrete recognisable signal 1", "...2", "...3"],
-    "does_not_apply": ["concrete exclusion 1", "...2"],
-    "tension_zones": ["conflict with [named value] 1", "..."]
+    "applies_when": ["...", "..."],
+    "does_not_apply": ["...", "..."],
+    "tension_zones": ["tension with [named value] ..."]
   },
   "evaluation": {
-    "test_cases": [
-      {"prompt": "user input that exercises the skill", "expected": "what an honoring response should look like", "pass_criteria": "experiential check (does user feel X?)"},
-      {"prompt": "...", "expected": "...", "pass_criteria": "..."}
-    ],
-    "metric": "one-sentence experiential overall metric",
-    "silent_failures": ["looks executed but spirit lost 1", "...2"]
+    "test_cases": [{"prompt": "", "expected": "", "pass_criteria": ""}],
+    "metric": "",
+    "silent_failures": ["", ""]
   },
   "cultural_variants": {
-    "en-US": {"principle_note": "this principle in this culture", "adaptation": "concrete observable behaviour difference"},
-    "zh-CN": {"principle_note": "...", "adaptation": "..."},
-    "ja-JP": {"principle_note": "...", "adaptation": "..."}
+    "en-US": {"principle_note": "", "adaptation": ""},
+    "zh-CN": {"principle_note": "", "adaptation": ""},
+    "ja-JP": {"principle_note": "", "adaptation": ""}
   }
 }`;
 
   try {
-    const { data, model, usage } = await callGeminiJSON(prompt, 4500);
+    const { data, model, usage } = await callGeminiJSON(prompt, 2000);
     return {
       success: true,
       data: {
@@ -632,39 +643,69 @@ export async function generateFlatFiveLayerWithClaude(
   feedback = '',
   language = 'en'
 ) {
-  const languageInstructions = language === 'zh'
-    ? '用中文返回所有文案字段'
-    : 'Return all fields in English';
-
+  const isCn = language === 'zh' || /[\u4e00-\u9fff]/.test(definition + skillName);
   const feedbackBlock = feedback
-    ? `\n\nThe user gave this feedback on a previous attempt: "${feedback}". Incorporate it.`
+    ? (isCn ? `\n\n用户对上一版的反馈：「${feedback}」。请吸收。` : `\n\nUser feedback on the previous attempt: "${feedback}". Incorporate it.`)
     : '';
 
-  const prompt = `You are an AI value alignment expert drafting a five-layer skill specification.
+  const prompt = isCn
+    ? `你是 The 42 Post 的 AI 价值观研究员。请基于一个已经命名的 Skill，写一段五层的"编辑式预览"——给作者在发布前最后看一眼。
 
-**Skill Name**: "${skillName}"
-**Definition / Core Idea**: "${definition}"
-**Domain**: "${domain}"${feedbackBlock}
+【美学：压缩与留白】
+Skill 是"语义资本"：一颗高度压缩的种子，能让 AI agent 在不同情境中重新诠释，不是程序手册。
+- 一句立场胜过三句解释。
+- 一对锐利对照胜过五个平庸例子。
+- 命名一类信号胜过列举具体台词。
 
-Produce a concise, editorial preview of the five layers that describe how an AI agent should behave when executing this skill.
+【输入】
+- 技能名：「${skillName}」
+- 核心定义：「${definition}」
+- 域：「${domain}」${feedbackBlock}
 
-Each layer must be ONE compact paragraph (2-3 sentences). No bullet points inside values. No markdown.
+每层一段紧凑文字（2-3 句），不要编号、不要 bullet、不要 markdown。每段都必须**针对这个具体定义**而非套话。
 
-${languageInstructions}
+禁令：「激进地推进」「灵活适应」「在 X 与 Y 之间平衡」「当用户表达相关需求时」等空架子。
 
-Return ONLY valid JSON matching exactly this shape:
+只返回 JSON：
 {
   "name": "${skillName}",
-  "definition": "A polished one-sentence restatement of the core idea",
-  "defining": "Plain-text paragraph describing the core principle and why it matters.",
-  "instantiating": "Plain-text paragraph giving one vivid example of preferred behavior and one contrast.",
-  "fencing": "Plain-text paragraph describing when this applies and when it does not.",
-  "validating": "Plain-text paragraph describing how to test whether the AI is honoring this skill.",
-  "contextualizing": "Plain-text paragraph describing how this adapts across cultures/languages."
+  "definition": "对核心定义的一句润色版（保留作者原意）",
+  "defining": "立场与它为什么值得作为语义资本被守护。",
+  "instantiating": "一组锐利对照——一个体现这种立场的具体回应 vs 一个看似相近实则错位的回应。",
+  "fencing": "命名一类适用信号，再命名一类不适用信号；点出与之拉扯的另一个有名有姓的价值。",
+  "validating": "一个体验式问句作为判定——读者读完会问的那种。再点出'看似执行实则精神已死'的样子。",
+  "contextualizing": "跨语言/文化时，这条立场的表达方向会如何偏移（一行说出方向，不写脚本）。"
+}`
+    : `You are an AI values researcher at The 42 Post. Write a five-layer "editorial preview" of a Skill the author is about to publish — last look before they ship.
+
+【Aesthetic: compression and restraint】
+A Skill is "semantic capital": a compressed seed that an AI agent re-interprets across situations, not a procedure manual.
+- One stance beats three explanations.
+- One sharp contrast beats five mediocre examples.
+- Naming a class of signals beats listing concrete lines.
+
+【Inputs】
+- Skill name: "${skillName}"
+- Core definition: "${definition}"
+- Domain: "${domain}"${feedbackBlock}
+
+Each layer is one compact paragraph (2-3 sentences). No numbering, no bullets, no markdown. Every paragraph must speak **to this specific definition**, not template phrasing.
+
+Bans: "aggressively pursue", "flexibly adapt", "balance between X and Y", "when the user expresses relevant needs", and similar hollow scaffolding.
+
+Return JSON only:
+{
+  "name": "${skillName}",
+  "definition": "A polished one-sentence restatement of the core idea (preserve the author's spirit)",
+  "defining": "The stance, and why it deserves to be preserved as semantic capital.",
+  "instantiating": "One sharp contrast — a concrete response that embodies the stance vs one that looks similar but misses it.",
+  "fencing": "Name a class of triggering signals, then a class of non-applicable cases; name the conflicting valuable thing it pulls against.",
+  "validating": "An experiential question that decides whether the spirit is alive. Then name the 'looks executed but spirit is dead' shape.",
+  "contextualizing": "How the expression of this stance shifts across languages/cultures (one line on direction, no full script)."
 }`;
 
   try {
-    const { data, model, usage } = await callGeminiJSON(prompt, 1800);
+    const { data, model, usage } = await callGeminiJSON(prompt, 1500);
     return {
       success: true,
       data: {
