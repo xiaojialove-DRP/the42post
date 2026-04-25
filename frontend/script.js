@@ -2364,6 +2364,29 @@ function initSkillForge() {
   }  if (!overlay) return;
 
   function openForge() {
+    // ─── Reset all in-memory forge state so re-entry always starts fresh ───
+    // Without this, a user who finished a forge and returns to the homepage
+    // would re-enter the wizard with their previous probe choice / generated
+    // five-layer / idea text still in window globals, which made the wizard
+    // appear to "resume" mid-flow instead of starting at STEP 1.
+    window.forgeData = null;
+    window.probeChoice = null;
+    window.homepageIdea = null;
+    window.agent42StructuredData = null;
+
+    // Reset visible inputs so the user sees a clean slate, not stale text.
+    // Both possible idea inputs are cleared (homepage hero + wizard step 1)
+    // along with the creator name field if present.
+    ['ideaInput', 'forgeSkillIdea', 'creatorName'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = '';
+    });
+
+    // Clear any rendered probe selection / preview content from the prior run
+    const probeSelectedEl = document.getElementById('probeSelected');
+    if (probeSelectedEl) probeSelectedEl.classList.remove('has-selection');
+    document.querySelectorAll('.probe-btn.selected').forEach(b => b.classList.remove('selected'));
+
     overlay.classList.add('active');
     if (knightCardSection) knightCardSection.classList.remove('visible');
     document.querySelectorAll('.forge-page').forEach(p => p.classList.remove('active'));
