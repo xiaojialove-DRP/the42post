@@ -228,7 +228,7 @@ const API = {
   // Generate STEP 2 preview fields (skill name suggestion + definition + when/not-when)
   // No auth required — runs after probe selection, before account-confirm step.
   async generatePreview(ideaText, probeData, selectedResponse, language = 'en') {
-    return await ApiClient.post('/forge/preview', {
+    return await ApiClient.post('/forge/preview-from-probe', {
       idea_text: ideaText,
       probe_data: probeData,
       selected_response: selectedResponse,

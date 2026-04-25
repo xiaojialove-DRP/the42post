@@ -67,7 +67,9 @@ router.post('/probe', async (req, res, next) => {
 
 // ═══ GENERATE STEP-2 PREVIEW (skill name + definition + when to use / not use) ═══
 // No auth required — runs after probe selection, before account confirm.
-router.post('/preview', async (req, res, next) => {
+// NOTE: distinct from the auth-gated /preview below, which regenerates a
+// flat plaintext five-layer preview from name+definition for the review modal.
+router.post('/preview-from-probe', async (req, res, next) => {
   try {
     const { idea_text, probe_data, selected_response, language } = req.body;
 

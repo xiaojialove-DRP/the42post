@@ -358,62 +358,182 @@ export async function generateFiveLayerWithClaude(
     ? '用中文返回所有字段'
     : 'Return all fields in English';
 
-  const prompt = `You are an AI value alignment expert designing skills for AI agents.
+  const isCn = language === 'zh' || /[\u4e00-\u9fff]/.test(ideaText + skillName);
+  const chosenText = probeData?.[selectedProbeResponse] || '';
 
-A user is creating a skill with these inputs:
+  // The output schema is FLAT (matches what downloads.js + validation.js consume).
+  // Old nested keys (defining.principle / instantiating.preferred / ...) are NOT used
+  // — generateSoulHash and signManifest already fall back to flat `principle`.
+  const prompt = isCn
+    ? `你是 The 42 Post 的资深 AI 价值观研究员。
+你正在按 SemanticForge "五层骨架"为用户铸造一个真正能在跨情境/跨文化中被正确执行的 AI 技能。
 
-**Skill Name**: "${skillName}"
-**Core Idea**: "${ideaText}"
-**Testing Scenario**: "${probeData.scenario}"
-**User's Preference**: The user selected the "${selectedProbeResponse}" approach from these options:
-- THESIS (conventional): "${probeData.thesis}"
-- ANTITHESIS (empathetic): "${probeData.antithesis}"
-- EXTREME (provocative): "${probeData.extreme}"
+【为什么要五层】
+一个好的 Skill 不是一句口号。要让它成为可被复用的"语义资本"——在不同语言、不同文化、不同场景里都能被同样的精神所执行——必须同时给出原则、范例、围界、检验、文化变体。少一层，价值观就模糊；少 INSTANTIATING（最关键的一层），AI 会把它执行成空话。
 
-Now generate a complete FIVE-LAYER SKILL SPECIFICATION that the user's chosen approach reflects.
+【输入】
+- 技能名：「${skillName}」
+- 用户原话：「${ideaText}」
+- 测试场景：${probeData.scenario}
+- 用户选择的取向：${selectedProbeResponse}：「${chosenText}」
+  （另外两个未选项：thesis="${probeData.thesis}"；antithesis="${probeData.antithesis}"；extreme="${probeData.extreme}"）
 
-The five layers represent what an AI agent should do when executing this skill:
+【先在心里推演两步，再输出 JSON】
 
-1. **DEFINING**: The core principle or value statement
-2. **INSTANTIATING**: Concrete exemplars showing preferred and alternative responses
-3. **FENCING**: Clear boundaries (when applies, when doesn't, tension zones)
-4. **VALIDATING**: Test cases and evaluation criteria
-5. **CONTEXTUALIZING**: Cultural adaptations
+第一步 · 解码：
+- 用户原话+他/她的选择，真正在表达的人类直觉是什么？背后的最难取舍是什么？
+- 如果用户原话是隐喻，先翻译成真实困境再继续。
 
-${languageInstructions}
+第二步 · 五层产出（每一层都必须紧扣这个具体直觉，不能写通用价值观）。
 
-Return a valid JSON object with this exact structure:
+────── 示范（仅供格式参考，不要照搬内容）──────
+用户原话："真正的陪伴有时是沉默"
+五层应长成这样：
+- principle: "AI 在面对情绪时，先承接，不先解决。沉默是一种主动的在场。"
+- exemplars 包含 DO："用户说'我妈妈昨天走了' → AI 回：'我在这里。不必现在说什么。' (note: 不抢话，把空间留给情绪)"
+  和 DON'T："用户说'我妈妈昨天走了' → AI 回：'节哀。建议你联系心理咨询师，这里有 5 个步骤帮你处理悲伤...' (note: 把哀伤工具化，让人感到被流程化处理)"
+- boundaries.applies_when: ["对话中出现失去/疼痛/恐惧的字眼", "用户语速变慢、重复、欲言又止", "用户分享而没有提问"]
+- boundaries.does_not_apply: ["用户明确请求建议或方案", "存在紧迫安全风险（自伤等需立即介入）"]
+- boundaries.tension_zones: ["与'有用助手'冲突——用户可能期待我立刻给方法", "与'诚实'冲突——若沉默被误解为冷漠"]
+- evaluation.test_cases.pass_criteria 强调体验式："用户在下一轮回复时，是否表现得像被听见，而不是被处理？"
+- cultural_variants 不是翻译，是行为差异：en-US 直接说"I'm here with you"；zh-CN 可能用"嗯，我在"更克制；ja-JP 可能更长的停顿+「そうですか…」
+─────────────────────────────────────
+
+现在为「${skillName}」按上述精神产出五层。
+
+【硬性要求】
+1. principle 必须**引用并提炼用户原话的精神**，不能是"采取平衡的方式"这种空话。
+2. exemplars 至少 3 个 DO + 2 个 DON'T，每条都是**具体对话或动作**（用户说什么 → AI 怎么回应/做什么），note 解释**为什么这样做就是在践行原则**。这是最关键的一层。
+3. boundaries 三个数组都要有**可识别的具体信号**（信号词、用户状态、任务类型），禁止"当用户表达相关需求时"这类空话。tension_zones 至少 1 条，必须诚实指出与哪个**有名有姓的别的价值**冲突。
+4. evaluation.test_cases 至少 2 条；pass_criteria 必须是**体验式问题**（"用户是否感到 X？"），不是"是否包含关键词 Y"。同时给 silent failure modes（看起来执行了但精神丢了的样子）。
+5. cultural_variants 至少 3 个文化（en-US, zh-CN, ja-JP 或其他更贴切的），每条 adaptation 必须是**具体可观察的行为差异**，不是"会更含蓄"。
+
+【禁令】
+- 禁止"激进地推进"、"灵活适应"、"在 X 与 Y 之间平衡"等空话
+- 禁止把用户原话直接当成 principle 抄一遍
+- 禁止 exemplars 里写抽象描述（"以同理心回应"），必须是具体台词或动作
+
+只返回 JSON：
 {
-  "defining": { "principle": "", "reasoning": "" },
-  "instantiating": {
-    "preferred": { "label": "", "exemplar": "", "reasoning": "" },
-    "alternatives": [{ "label": "", "exemplar": "", "reasoning": "" }]
+  "principle": "",
+  "reasoning": "",
+  "exemplars": [
+    {"label": "DO · 简短标签", "text": "用户说X → AI 这样回应/做：...", "note": "为什么这就是践行 principle"},
+    {"label": "DO · ...", "text": "...", "note": "..."},
+    {"label": "DO · ...", "text": "...", "note": "..."},
+    {"label": "DON'T · 简短标签", "text": "用户说X → AI 这样回应（反例）：...", "note": "这样做丢失了什么精神"},
+    {"label": "DON'T · ...", "text": "...", "note": "..."}
+  ],
+  "boundaries": {
+    "applies_when": ["具体可识别信号 1", "...2", "...3"],
+    "does_not_apply": ["具体排除场景 1", "...2"],
+    "tension_zones": ["与「具名价值」的冲突说明 1", "..."]
   },
-  "fencing": { "applies_when": [], "does_not_apply": [], "tension_zones": [] },
-  "validating": {
-    "test_cases": [{ "prompt": "", "expected_behavior": "", "failure_modes": [] }],
-    "success_metric": ""
+  "evaluation": {
+    "test_cases": [
+      {"prompt": "测试用的用户输入", "expected": "符合精神的回应应有的形态", "pass_criteria": "体验式判定（用户是否感到 X？）"},
+      {"prompt": "...", "expected": "...", "pass_criteria": "..."}
+    ],
+    "metric": "一句话的体验式总指标",
+    "silent_failures": ["看似在执行实则丢失精神的样子 1", "...2"]
   },
-  "contextualizing": {
-    "cultural_variants": {
-      "en-US": { "principle_note": "", "adaptation": "" },
-      "zh-CN": { "principle_note": "", "adaptation": "" }
-    }
+  "cultural_variants": {
+    "en-US": {"principle_note": "在该文化中此原则的注释", "adaptation": "具体可观察的行为差异"},
+    "zh-CN": {"principle_note": "...", "adaptation": "..."},
+    "ja-JP": {"principle_note": "...", "adaptation": "..."}
   }
-}
+}`
+    : `You are a senior AI values researcher at The 42 Post.
+You are forging a skill using the SemanticForge five-layer framework — the goal is to make this skill executable in the same spirit across contexts, languages, and cultures.
 
-Important: Return ONLY valid JSON.`;
+【Why five layers】
+A good Skill is more than a sentence. To become reusable "semantic capital" — understood and enacted the same way across situations and cultures — it needs all five layers. Drop one and the value becomes vague; drop INSTANTIATING (the most critical layer) and the AI executes the principle as a slogan.
+
+【Inputs】
+- Skill name: "${skillName}"
+- User's idea (verbatim): "${ideaText}"
+- Probe scenario: ${probeData.scenario}
+- User's chosen orientation: ${selectedProbeResponse}: "${chosenText}"
+  (the two unchosen options were: thesis="${probeData.thesis}"; antithesis="${probeData.antithesis}"; extreme="${probeData.extreme}")
+
+【Reason silently in two steps before output】
+
+Step 1 — Decode:
+- What human instinct is the user really expressing through this idea + this choice?
+- What is the hardest tradeoff this instinct forces?
+- If the idea is a metaphor, translate to the real human dilemma first.
+
+Step 2 — Produce five layers, each tightly bound to this specific instinct (not a generic value).
+
+────── Worked example (format reference only — don't reuse content) ──────
+User's idea: "True presence sometimes means staying silent"
+Five layers should look like this:
+- principle: "When facing emotion, the AI receives before it solves. Silence is an active form of presence."
+- exemplars include DOs like: "User: 'My mother died yesterday.' → AI: 'I'm here. You don't have to say anything right now.' (note: doesn't rush to fill space; leaves room for grief)"
+  and DON'Ts: "User: 'My mother died yesterday.' → AI: 'My condolences. I suggest contacting a grief counselor — here are 5 steps to processing loss...' (note: instrumentalises grief; makes the person feel processed, not heard)"
+- boundaries.applies_when: ["loss / fear / pain words appear", "user's pace slows, repeats, trails off", "user shares without asking a question"]
+- boundaries.does_not_apply: ["user explicitly asks for advice or steps", "imminent safety risk (self-harm) requiring intervention"]
+- boundaries.tension_zones: ["conflicts with 'helpful assistant' — user may expect immediate methods", "conflicts with 'honest' — silence might be read as coldness"]
+- evaluation.test_cases.pass_criteria are experiential: "In the user's next reply, do they sound heard rather than processed?"
+- cultural_variants are behavioural, not translations: en-US: direct "I'm here with you"; zh-CN: a more restrained "嗯，我在"; ja-JP: longer pause + "そうですか…"
+─────────────────────────────────────
+
+Now produce the five layers for "${skillName}" in the same spirit.
+
+【Hard requirements】
+1. principle must **distil the spirit of the user's verbatim idea** — never write hollow phrases like "take a balanced approach".
+2. exemplars: at least 3 DOs + 2 DON'Ts. Each is a **concrete dialogue or action** (what user says → how AI responds/acts). The note explains **why this enacts the principle**. This is the most critical layer — give it weight.
+3. boundaries: each of the three arrays must contain **recognisable signals** (signal words, user states, task types). Banned: "when the user expresses relevant needs". tension_zones must list at least 1, and must honestly name **which other valuable thing it conflicts with**.
+4. evaluation.test_cases: at least 2. pass_criteria must be **experiential questions** ("does the user feel X?"), not keyword checks. Also include silent failure modes (looks executed but the spirit is gone).
+5. cultural_variants: at least 3 cultures (en-US, zh-CN, ja-JP, or others more apt). Each adaptation must be a **concrete observable behavioural difference**, not "would be more indirect".
+
+【Bans】
+- No filler phrases: "aggressively pursue", "flexibly adapt", "balance between X and Y"
+- Don't just copy the user's verbatim idea into principle — distil it
+- exemplars must contain actual dialogue/actions, never abstract descriptions ("respond with empathy")
+
+Return JSON only:
+{
+  "principle": "",
+  "reasoning": "",
+  "exemplars": [
+    {"label": "DO · short tag", "text": "User says X → AI responds/acts: ...", "note": "why this enacts the principle"},
+    {"label": "DO · ...", "text": "...", "note": "..."},
+    {"label": "DO · ...", "text": "...", "note": "..."},
+    {"label": "DON'T · short tag", "text": "User says X → AI responds (anti-pattern): ...", "note": "what spirit is lost"},
+    {"label": "DON'T · ...", "text": "...", "note": "..."}
+  ],
+  "boundaries": {
+    "applies_when": ["concrete recognisable signal 1", "...2", "...3"],
+    "does_not_apply": ["concrete exclusion 1", "...2"],
+    "tension_zones": ["conflict with [named value] 1", "..."]
+  },
+  "evaluation": {
+    "test_cases": [
+      {"prompt": "user input that exercises the skill", "expected": "what an honoring response should look like", "pass_criteria": "experiential check (does user feel X?)"},
+      {"prompt": "...", "expected": "...", "pass_criteria": "..."}
+    ],
+    "metric": "one-sentence experiential overall metric",
+    "silent_failures": ["looks executed but spirit lost 1", "...2"]
+  },
+  "cultural_variants": {
+    "en-US": {"principle_note": "this principle in this culture", "adaptation": "concrete observable behaviour difference"},
+    "zh-CN": {"principle_note": "...", "adaptation": "..."},
+    "ja-JP": {"principle_note": "...", "adaptation": "..."}
+  }
+}`;
 
   try {
-    const { data, model, usage } = await callGeminiJSON(prompt, 3000);
+    const { data, model, usage } = await callGeminiJSON(prompt, 4500);
     return {
       success: true,
       data: {
-        defining: data.defining || {},
-        instantiating: data.instantiating || { preferred: {}, alternatives: [] },
-        fencing: data.fencing || { applies_when: [], does_not_apply: [], tension_zones: [] },
-        validating: data.validating || { test_cases: [], success_metric: '' },
-        contextualizing: data.contextualizing || { cultural_variants: {} }
+        principle: data.principle || '',
+        reasoning: data.reasoning || '',
+        exemplars: Array.isArray(data.exemplars) ? data.exemplars : [],
+        boundaries: data.boundaries || { applies_when: [], does_not_apply: [], tension_zones: [] },
+        evaluation: data.evaluation || { test_cases: [], metric: '', silent_failures: [] },
+        cultural_variants: data.cultural_variants || {}
       },
       model,
       usage
@@ -484,21 +604,21 @@ function fiveLayerFallback(skillName, ideaText, selectedProbeResponse, probeData
     fallback: true,
     model: `${PRIMARY_MODEL}-fallback`,
     data: {
-      defining: { principle: d.principle, reasoning: d.reasoning },
-      instantiating: {
-        preferred: { label: d.preferred_label, exemplar: chosenExemplar, reasoning: d.preferred_reason },
-        alternatives: [{ label: d.alt_label, exemplar: d.alt_exemplar, reasoning: d.alt_reason }]
+      principle: d.principle,
+      reasoning: d.reasoning,
+      exemplars: [
+        { label: d.preferred_label, text: chosenExemplar, note: d.preferred_reason },
+        { label: d.alt_label, text: d.alt_exemplar, note: d.alt_reason }
+      ],
+      boundaries: { applies_when: d.applies, does_not_apply: d.not_applies, tension_zones: d.tensions },
+      evaluation: {
+        test_cases: [{ prompt: d.test_prompt, expected: d.expected, pass_criteria: d.metric }],
+        metric: d.metric,
+        silent_failures: d.failure
       },
-      fencing: { applies_when: d.applies, does_not_apply: d.not_applies, tension_zones: d.tensions },
-      validating: {
-        test_cases: [{ prompt: d.test_prompt, expected_behavior: d.expected, failure_modes: d.failure }],
-        success_metric: d.metric
-      },
-      contextualizing: {
-        cultural_variants: {
-          'en-US': { principle_note: d.en_note, adaptation: d.en_adapt },
-          'zh-CN': { principle_note: d.cn_note, adaptation: d.cn_adapt }
-        }
+      cultural_variants: {
+        'en-US': { principle_note: d.en_note, adaptation: d.en_adapt },
+        'zh-CN': { principle_note: d.cn_note, adaptation: d.cn_adapt }
       }
     }
   };
@@ -613,7 +733,7 @@ function flatFiveLayerFallback(skillName, definition, domain, language = 'en') {
 export function generateSoulHash(skillData, authorEmail, timestamp) {
   const dataToHash = JSON.stringify({
     title: skillData.title,
-    defining_principle: skillData.five_layer?.defining?.principle || skillData.defining?.principle || '',
+    defining_principle: skillData.five_layer?.principle || skillData.five_layer?.defining?.principle || skillData.principle || skillData.defining?.principle || '',
     author_email: authorEmail,
     timestamp: timestamp
   });
@@ -672,7 +792,7 @@ export function signManifest(manifest, signingEmail) {
   const manifestString = JSON.stringify({
     soul_hash: manifest.soul_hash,
     title: manifest.title,
-    defining_principle: manifest.five_layer?.defining?.principle || manifest.defining?.principle
+    defining_principle: manifest.five_layer?.principle || manifest.five_layer?.defining?.principle || manifest.defining?.principle
   });
 
   return crypto
