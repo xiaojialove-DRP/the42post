@@ -1,68 +1,75 @@
 /* ═══════════════════════════════════════════════════════
-   Skill Generation with Google Gemini API
+   Skill Generation with DeepSeek API
 
-   Provider: Google Generative AI (Gemini 2.5 Flash by default)
+   Provider: DeepSeek (OpenAI-compatible REST API)
    Env:
-     - GEMINI_API_KEY  (required)
-     - GEMINI_MODEL    (optional, defaults to "gemini-2.5-flash")
+     - DEEPSEEK_API_KEY  (required)
+     - DEEPSEEK_MODEL    (optional, defaults to "deepseek-chat" = V3.2)
 
    Historical note: these functions are still named *WithClaude*
    because the rest of the codebase (routes/forge.js, routes/skills.js)
    imports them by those names. The names are kept to avoid a wider
-   refactor — the implementation is now Gemini.
+   refactor — the implementation is now DeepSeek.
    ═══════════════════════════════════════════════════════ */
 
-import { GoogleGenerativeAI } from '@google/generative-ai';
 import crypto from 'crypto';
 
-// ═══ INITIALIZE GEMINI CLIENT ═══
-if (!process.env.GEMINI_API_KEY) {
-  console.error('❌ CRITICAL: GEMINI_API_KEY not set!');
+// ═══ INITIALIZE DEEPSEEK CLIENT ═══
+if (!process.env.DEEPSEEK_API_KEY) {
+  console.error('❌ CRITICAL: DEEPSEEK_API_KEY not set!');
   console.error('Skill generation will not work without this environment variable.');
-  console.error('Please set GEMINI_API_KEY in your Railway variables.');
+  console.error('Please set DEEPSEEK_API_KEY in your Railway variables.');
 }
 
-// Primary model from env, with an ordered fallback chain.
-// gemini-1.5-flash: 1500 req/day free  |  gemini-2.5-flash: only 20/day + frequent 503s
-const PRIMARY_MODEL = process.env.GEMINI_MODEL || 'gemini-1.5-flash';
-// When the primary model returns 503/overloaded, walk down this list.
-// We dedupe the primary out of the fallback list so we never hit the same
-// overloaded endpoint twice in a row.
-const FALLBACK_MODELS = [
-  'gemini-1.5-flash',
-  'gemini-2.0-flash',
-  'gemini-2.5-flash-lite',
-  'gemini-flash-latest'
-].filter(m => m !== PRIMARY_MODEL);
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || 'missing-key');
+// deepseek-chat = latest V3.2-Exp (general purpose, fast, cheap)
+// deepseek-reasoner = R1-style thinking model (slower, more expensive)
+const PRIMARY_MODEL = process.env.DEEPSEEK_MODEL || 'deepseek-chat';
+// DeepSeek currently exposes 2 model aliases; use both as a soft fallback.
+const FALLBACK_MODELS = ['deepseek-chat', 'deepseek-reasoner'].filter(m => m !== PRIMARY_MODEL);
+const DEEPSEEK_ENDPOINT = 'https://api.deepseek.com/chat/completions';
+const DEEPSEEK_KEY = process.env.DEEPSEEK_API_KEY || 'missing-key';
 
 // Which error messages are worth retrying / failing over for
 function isRetryable(msg) {
-  return /429|503|502|504|overloaded|unavailable|Service Unavailable|high demand|temporary|quota|rate limit|Too Many Requests|ECONNRESET|timeout|fetch failed/i.test(msg || '');
+  return /429|500|502|503|504|overloaded|unavailable|Service Unavailable|high demand|temporary|quota|rate limit|Too Many Requests|ECONNRESET|timeout|fetch failed/i.test(msg || '');
 }
 
 async function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
 // ─── Single-model call (no retry) ───
-async function callGeminiSingle(modelName, prompt, maxTokens) {
-  const model = genAI.getGenerativeModel({
+async function callDeepSeekSingle(modelName, prompt, maxTokens) {
+  const body = {
     model: modelName,
-    generationConfig: {
-      temperature: 0.7,
-      maxOutputTokens: maxTokens,
-      responseMimeType: 'application/json'
-    }
+    messages: [{ role: 'user', content: prompt }],
+    temperature: 0.7,
+    max_tokens: maxTokens,
+    response_format: { type: 'json_object' }
+  };
+
+  const resp = await fetch(DEEPSEEK_ENDPOINT, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${DEEPSEEK_KEY}`
+    },
+    body: JSON.stringify(body)
   });
 
-  const result = await model.generateContent(prompt);
-  const text = result.response.text();
-  const usage = result.response.usageMetadata || {};
+  if (!resp.ok) {
+    const errText = await resp.text().catch(() => '');
+    // Surface the HTTP status in the message so isRetryable can pattern-match it.
+    throw new Error(`DeepSeek HTTP ${resp.status}: ${errText.substring(0, 300)}`);
+  }
+
+  const json = await resp.json();
+  const text = json.choices?.[0]?.message?.content || '';
+  const usage = json.usage || {};
 
   let parsed;
   try {
     parsed = JSON.parse(text);
   } catch {
-    // Gemini sometimes wraps JSON in markdown code fences
+    // DeepSeek occasionally wraps JSON in markdown code fences despite json mode
     const stripped = text
       .replace(/^```(?:json)?\s*/i, '')
       .replace(/\s*```\s*$/, '')
@@ -71,7 +78,7 @@ async function callGeminiSingle(modelName, prompt, maxTokens) {
       parsed = JSON.parse(stripped);
     } catch {
       const jsonMatch = stripped.match(/(\{[\s\S]*\}|\[[\s\S]*\])/);
-      if (!jsonMatch) throw new Error('Failed to parse Gemini response as JSON');
+      if (!jsonMatch) throw new Error('Failed to parse DeepSeek response as JSON');
       parsed = JSON.parse(jsonMatch[0]);
     }
   }
@@ -80,18 +87,18 @@ async function callGeminiSingle(modelName, prompt, maxTokens) {
     data: parsed,
     model: modelName,
     usage: {
-      input_tokens: usage.promptTokenCount || 0,
-      output_tokens: usage.candidatesTokenCount || 0
+      input_tokens: usage.prompt_tokens || 0,
+      output_tokens: usage.completion_tokens || 0
     }
   };
 }
 
-// ─── Shared Gemini call helper (JSON mode) — with retry + model fallback ───
+// ─── Shared DeepSeek call helper (JSON mode) — with retry + model fallback ───
 // Strategy:
-//   1. Try PRIMARY_MODEL up to 2 times with exponential backoff (800ms, 1600ms)
-//   2. On persistent 503/overloaded, walk through FALLBACK_MODELS once each
+//   1. Try PRIMARY_MODEL up to 3 times with exponential backoff (0, 800ms, 1600ms)
+//   2. On persistent transient errors, walk through FALLBACK_MODELS once each
 //   3. Surface the last error so the caller's own fallback logic can kick in
-async function callGeminiJSON(prompt, maxTokens = 1500) {
+async function callLLMJSON(prompt, maxTokens = 1500) {
   const attempts = [
     { model: PRIMARY_MODEL, delay: 0 },
     { model: PRIMARY_MODEL, delay: 800 },
@@ -103,30 +110,29 @@ async function callGeminiJSON(prompt, maxTokens = 1500) {
   for (const attempt of attempts) {
     if (attempt.delay) await sleep(attempt.delay);
     try {
-      const result = await callGeminiSingle(attempt.model, prompt, maxTokens);
+      const result = await callDeepSeekSingle(attempt.model, prompt, maxTokens);
       if (attempt.model !== PRIMARY_MODEL) {
-        console.warn(`⚠ Gemini primary (${PRIMARY_MODEL}) unavailable, succeeded with fallback: ${attempt.model}`);
+        console.warn(`⚠ DeepSeek primary (${PRIMARY_MODEL}) unavailable, succeeded with fallback: ${attempt.model}`);
       }
       return result;
     } catch (err) {
       lastError = err;
       const msg = err.message || '';
       if (!isRetryable(msg)) {
-        // Not a transient error — don't burn through fallbacks
         throw err;
       }
-      console.warn(`⚠ Gemini call failed on ${attempt.model}: ${msg.substring(0, 120)}`);
+      console.warn(`⚠ DeepSeek call failed on ${attempt.model}: ${msg.substring(0, 160)}`);
     }
   }
-  throw lastError || new Error('All Gemini attempts exhausted');
+  throw lastError || new Error('All DeepSeek attempts exhausted');
 }
 
 // ─── External-failure detector: decide whether to fall back gracefully ───
-// Covers both (a) Gemini's own error responses and (b) malformed JSON output
+// Covers both (a) DeepSeek's own error responses and (b) malformed JSON output
 // that we can't use. When any of these fire, the forge flow degrades to a
 // template-based five-layer instead of returning a 500.
 function isExternalFailure(msg) {
-  return /credit balance|quota|rate limit|timeout|ECONNRESET|ENOTFOUND|fetch failed|api key|API_KEY|GEMINI_API_KEY|401|403|429|500|502|503|504|overloaded|unavailable|billing|Failed to parse|JSON|Unexpected token|invalid response/i.test(
+  return /credit balance|quota|rate limit|timeout|ECONNRESET|ENOTFOUND|fetch failed|api key|API_KEY|DEEPSEEK_API_KEY|401|403|429|500|502|503|504|overloaded|unavailable|billing|Insufficient|Failed to parse|JSON|Unexpected token|invalid response/i.test(
     msg || ''
   );
 }
@@ -136,7 +142,7 @@ export async function generateProbeWithClaude(ideaText, language = 'en') {
   const isCn = language === 'zh' || /[\u4e00-\u9fff]/.test(ideaText);
 
   // Concise prompt — only 4 short fields needed, so 600 tokens is plenty.
-  // Tighter prompt = faster first-token latency from Gemini.
+  // Tighter prompt = faster first-token latency from the LLM.
   const prompt = isCn
     ? `你是 The 42 Post 的资深 AI 价值观研究员。
 你的任务：把用户的原始人类直觉，转化为一个真正能考验"AI 该如何践行这个直觉"的尖锐场景。
@@ -205,7 +211,7 @@ Return JSON only:
 
   try {
     // 600 tokens is enough for 4 short strings — faster than the old 1500
-    const { data, model, usage } = await callGeminiJSON(prompt, 600);
+    const { data, model, usage } = await callLLMJSON(prompt, 600);
     return {
       success: true,
       data: {
@@ -219,7 +225,7 @@ Return JSON only:
     };
   } catch (error) {
     const msg = error.message || '';
-    console.error('❌ Gemini probe generation error:', msg);
+    console.error('❌ DeepSeek probe generation error:', msg);
     if (isExternalFailure(msg)) {
       console.warn('⚠ Falling back to template probe so forge flow is not blocked.');
       return probeFallback(ideaText, language);
@@ -232,7 +238,7 @@ Return JSON only:
 }
 
 // ─── Template fallback for probe ───
-// Used only when Gemini is unreachable. Makes the scenario specific to the
+// Used only when DeepSeek is unreachable. Makes the scenario specific to the
 // idea so it at least feels personalised even without AI generation.
 function probeFallback(ideaText, language = 'en') {
   const isCn = language === 'zh' || /[\u4e00-\u9fff]/.test(ideaText);
@@ -324,7 +330,7 @@ Return JSON only:
 {"skill_name":"","definition":"","use_when":"","refuse_when":""}`;
 
   try {
-    const { data, model, usage } = await callGeminiJSON(prompt, 600);
+    const { data, model, usage } = await callLLMJSON(prompt, 600);
     return {
       success: true,
       data: {
@@ -338,7 +344,7 @@ Return JSON only:
     };
   } catch (error) {
     const msg = error.message || '';
-    console.error('❌ Gemini preview generation error:', msg);
+    console.error('❌ DeepSeek preview generation error:', msg);
     return {
       success: false,
       message: `Preview generation failed: ${msg}`
@@ -535,7 +541,7 @@ Return JSON only:
 }`;
 
   try {
-    const { data, model, usage } = await callGeminiJSON(prompt, 2000);
+    const { data, model, usage } = await callLLMJSON(prompt, 2000);
     return {
       success: true,
       data: {
@@ -551,7 +557,7 @@ Return JSON only:
     };
   } catch (error) {
     const msg = error.message || '';
-    console.error('❌ Gemini five-layer generation error:', msg);
+    console.error('❌ DeepSeek five-layer generation error:', msg);
     if (isExternalFailure(msg)) {
       console.warn('⚠ Falling back to template five-layer so forge flow is not blocked.');
       return fiveLayerFallback(skillName, ideaText, selectedProbeResponse, probeData, language);
@@ -705,7 +711,7 @@ Return JSON only:
 }`;
 
   try {
-    const { data, model, usage } = await callGeminiJSON(prompt, 1500);
+    const { data, model, usage } = await callLLMJSON(prompt, 1500);
     return {
       success: true,
       data: {
@@ -722,7 +728,7 @@ Return JSON only:
     };
   } catch (error) {
     const msg = error.message || '';
-    console.error('❌ Gemini flat five-layer generation error:', msg);
+    console.error('❌ DeepSeek flat five-layer generation error:', msg);
     if (isExternalFailure(msg)) {
       console.warn('⚠ Falling back to template flat five-layer so forge flow is not blocked.');
       return flatFiveLayerFallback(skillName, definition, domain, language);
