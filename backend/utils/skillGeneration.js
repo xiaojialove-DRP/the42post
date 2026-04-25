@@ -38,7 +38,7 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || 'missing-key'
 
 // Which error messages are worth retrying / failing over for
 function isRetryable(msg) {
-  return /503|502|504|overloaded|unavailable|Service Unavailable|high demand|temporary|ECONNRESET|timeout|fetch failed/i.test(msg || '');
+  return /429|503|502|504|overloaded|unavailable|Service Unavailable|high demand|temporary|quota|rate limit|Too Many Requests|ECONNRESET|timeout|fetch failed/i.test(msg || '');
 }
 
 async function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
