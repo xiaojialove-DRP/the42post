@@ -998,6 +998,24 @@
     }
     @keyframes twin-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
+    /* Expand animation for large screens (>560px) */
+    @keyframes twin-expand {
+      from { max-height: 120px; opacity: 0; }
+      to { max-height: 800px; opacity: 1; }
+    }
+    .twin-stage.expand-animation {
+      animation: twin-expand 0.4s ease-out forwards;
+    }
+
+    /* Fade-in animation for small screens (≤480px) */
+    @keyframes twin-fadein {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    .twin-stage.fade-animation {
+      animation: twin-fadein 0.25s ease-out forwards;
+    }
+
     .twin-pick-grid {
       display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
     }
@@ -2172,6 +2190,14 @@
       const stageReveal = card.querySelector('.twin-reveal');
       stageLoading.hidden = false;
 
+      // Apply responsive animation: expand on large screens, fade on small
+      const isSmallScreen = window.innerWidth <= 480;
+      if (isSmallScreen) {
+        stageLoading.classList.add('fade-animation');
+      } else {
+        stageLoading.classList.add('expand-animation');
+      }
+
       const anonId = getAnonymousId();
       console.log('🚀 Twin Test starting:', { skill_id: skill.id, scenario: td.title, anonId });
 
@@ -2206,6 +2232,14 @@
         card.dataset.testId = data.test_id;
         stageLoading.hidden = true;
         stagePick.hidden = false;
+
+        // Continue animation for pick stage
+        const isSmallScreen = window.innerWidth <= 480;
+        if (isSmallScreen) {
+          stagePick.classList.add('fade-animation');
+        } else {
+          stagePick.classList.add('expand-animation');
+        }
 
         stagePick.querySelector('[data-side="A"] .twin-resp-text').textContent = data.response_a;
         stagePick.querySelector('[data-side="B"] .twin-resp-text').textContent = data.response_b;
