@@ -2052,6 +2052,11 @@
       const stage = card.querySelector('.twin-trigger');
       const statsLine = stage.querySelector('[data-trigger-stats]');
       const btn = stage.querySelector('[data-trigger-btn]');
+
+      // Hide skill picker stage
+      const pickskillStage = card.querySelector('.twin-pickskill');
+      if (pickskillStage) pickskillStage.hidden = true;
+
       stage.hidden = false;
 
       // Provisional copy while stats fetch resolves.
@@ -2134,7 +2139,8 @@
           select.appendChild(opt);
         });
 
-        select.addEventListener('change', () => {
+        // Use 'once' to prevent duplicate event listeners if this is called again
+        select.addEventListener('change', function handleSelectChange() {
           const skillId = select.value;
           if (!skillId) return;
           const skillJson = select.querySelector(`option[value="${skillId}"]`).dataset.skill;
@@ -2147,6 +2153,9 @@
           stage.hidden = true;
           applyTwinSkillToCard(card, skill);
           showTwinTestTrigger(card, task, repo);
+
+          // Remove this listener to prevent duplicate triggers
+          select.removeEventListener('change', handleSelectChange);
         });
       } catch (err) {
         console.error('Skill picker error:', err);
