@@ -1926,10 +1926,10 @@
 
           <div class="twin-stage twin-pickskill" hidden>
             <div class="twin-pickskill-label">${isCn ? '挑一个热门 Skill 来测' : 'Pick a hot Skill to test'}</div>
-            <div class="twin-pickskill-list" data-skill-list>
-              <div style="text-align:center;padding:14px;color:#7a6f5e;font-size:12px;font-style:italic;">${isCn ? '加载中…' : 'loading…'}</div>
-            </div>
-            <a class="twin-pickskill-archive-link" href="index.html#archive">${isCn ? '在 Archive 浏览全部 →' : 'Browse all in Archive →'}</a>
+            <select class="twin-skill-select" data-skill-select style="width:100%;padding:10px 12px;border:1.5px solid #d4c8a8;border-radius:6px;background:#fdfaf3;font-family:inherit;font-size:13px;color:#1a1a1a;cursor:pointer;">
+              <option value="" disabled selected>${isCn ? '— 选择 —' : '— Select —'}</option>
+            </select>
+            <a class="twin-pickskill-archive-link" href="index.html#archive" style="display:block;margin-top:10px;">${isCn ? '或在 Archive 浏览全部 →' : 'Or browse all in Archive →'}</a>
           </div>
 
           <div class="twin-stage twin-trigger" hidden>
@@ -2099,38 +2099,42 @@
     async function showSkillPickerInCard(card, task, repo) {
       const isCn = (typeof currentLang !== 'undefined' && currentLang === 'cn');
       const stage = card.querySelector('.twin-pickskill');
-      const list = stage.querySelector('[data-skill-list]');
+      const select = stage.querySelector('[data-skill-select]');
       stage.hidden = false;
 
       try {
         const skills = await fetchHotSkills(7);
         if (skills.length === 0) {
-          list.innerHTML = `<div style="text-align:center;padding:14px;color:#7a6f5e;font-size:12px;">${isCn ? '还没有 Skill — ' : 'No Skills yet — '}<a href="index.html" style="color:#b8915a;">${isCn ? '先去铸造一个' : 'forge one first'}</a></div>`;
+          select.innerHTML = `<option disabled>${isCn ? '还没有 Skill' : 'No Skills yet'}</option>`;
           return;
         }
-        list.innerHTML = skills.map(s => `
-          <button class="twin-pickskill-item" data-skill-id="${s.id}">
-            <div class="twin-pickskill-item-name">${getSkillTitle(s)}</div>
-            <div class="twin-pickskill-item-meta">⭐ ${s.starlight_score || 0} · ${s.domain || '·'}</div>
-          </button>
-        `).join('');
 
-        list.querySelectorAll('.twin-pickskill-item').forEach(btn => {
-          btn.addEventListener('click', () => {
-            const skill = skills.find(s => s.id === btn.dataset.skillId);
-            if (!skill) return;
-            if (typeof skill.five_layer === 'string') {
-              try { skill.five_layer = JSON.parse(skill.five_layer); } catch { skill.five_layer = {}; }
-            }
-            // Sticky: set globally so subsequent cards skip the picker.
-            window.TWIN_TEST_SKILL = skill;
-            stage.hidden = true;
-            applyTwinSkillToCard(card, skill);
-            showTwinTestTrigger(card, task, repo);
-          });
+        // Populate dropdown
+        skills.forEach(s => {
+          const opt = document.createElement('option');
+          opt.value = s.id;
+          opt.textContent = `${getSkillTitle(s)} · ${s.domain || '—'} (⭐${s.starlight_score || 0})`;
+          opt.dataset.skill = JSON.stringify(s);
+          select.appendChild(opt);
+        });
+
+        select.addEventListener('change', () => {
+          const skillId = select.value;
+          if (!skillId) return;
+          const skillJson = select.querySelector(`option[value="${skillId}"]`).dataset.skill;
+          const skill = JSON.parse(skillJson);
+
+          if (typeof skill.five_layer === 'string') {
+            try { skill.five_layer = JSON.parse(skill.five_layer); } catch { skill.five_layer = {}; }
+          }
+          window.TWIN_TEST_SKILL = skill;
+          stage.hidden = true;
+          applyTwinSkillToCard(card, skill);
+          showTwinTestTrigger(card, task, repo);
         });
       } catch (err) {
-        list.innerHTML = `<div style="text-align:center;padding:10px;color:#b85a4a;font-size:12px;">${isCn ? '加载失败：' : 'Failed: '}${err.message}</div>`;
+        console.error('Skill picker error:', err);
+        select.innerHTML = `<option disabled>${isCn ? '加载失败' : 'Load failed'}</option>`;
       }
     }
 
@@ -2143,34 +2147,54 @@
       const stageReveal = card.querySelector('.twin-reveal');
       stageLoading.hidden = false;
 
+      const anonId = getAnonymousId();
+      console.log('🚀 Twin Test starting:', { skill_id: skill.id, scenario: td.title, anonId });
+
       try {
+        const payload = {
+          skill_id: skill.id,
+          scenario: { title: td.title, description: td.desc, domain: repo.id, key: `${repo.id}::${td.title}` },
+          anonymous_id: anonId,
+          language: isCn ? 'zh' : 'en'
+        };
+
         const resp = await fetch('/api/playground/test', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            skill_id: skill.id,
-            scenario: { title: td.title, description: td.desc, domain: repo.id, key: `${repo.id}::${td.title}` },
-            anonymous_id: getAnonymousId(),
-            language: isCn ? 'zh' : 'en'
-          })
+          body: JSON.stringify(payload)
         });
-        if (!resp.ok) {
-          const err = await resp.json().catch(() => ({}));
-          throw new Error(err.message || `HTTP ${resp.status}`);
-        }
-        const data = await resp.json();
-        card.dataset.testId = data.test_id;
 
+        console.log('📡 API response status:', resp.status);
+
+        if (!resp.ok) {
+          const err = await resp.json().catch(() => ({ message: `HTTP ${resp.status}` }));
+          throw new Error(err.message || `API error ${resp.status}`);
+        }
+
+        const data = await resp.json();
+        console.log('✅ API response:', { test_id: data.test_id, response_a_len: data.response_a?.length, response_b_len: data.response_b?.length });
+
+        if (!data.response_a || !data.response_b) {
+          throw new Error('API returned empty responses');
+        }
+
+        card.dataset.testId = data.test_id;
         stageLoading.hidden = true;
         stagePick.hidden = false;
-        stagePick.querySelector('[data-side="A"] .twin-resp-text').textContent = data.response_a || '—';
-        stagePick.querySelector('[data-side="B"] .twin-resp-text').textContent = data.response_b || '—';
+
+        stagePick.querySelector('[data-side="A"] .twin-resp-text').textContent = data.response_a;
+        stagePick.querySelector('[data-side="B"] .twin-resp-text').textContent = data.response_b;
 
         stagePick.querySelectorAll('.twin-resp').forEach(btn => {
           btn.addEventListener('click', () => submitTwinVote(card, task, repo, btn.dataset.side));
         });
       } catch (err) {
-        stageLoading.innerHTML = `<span style="color:#b85a4a;font-size:13px;">${isCn ? '生成失败：' : 'Generation failed: '}${err.message}</span>`;
+        console.error('❌ Twin Test error:', err);
+        stageLoading.innerHTML = `<div style="color:#b85a4a;font-size:12px;line-height:1.5;">
+          <strong>${isCn ? '生成失败' : 'Generation failed'}</strong><br/>
+          ${err.message}<br/>
+          <span style="font-size:11px;color:#8a7a6e;">${isCn ? '(查看浏览器控制台了解更多)' : '(check browser console)'}</span>
+        </div>`;
       }
     }
 
