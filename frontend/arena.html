@@ -963,17 +963,22 @@
       border-left: 2px solid #d4c8a8; padding: 2px 0 2px 10px;
     }
     .twin-scenario-tag {
-      display: inline-flex; align-items: center; gap: 6px;
-      margin-top: 14px; font-size: 11px; color: #7a6f5e;
+      display: inline-flex; align-items: center; gap: 8px;
+      margin-top: 0; font-size: 11px; color: #7a6f5e;
       letter-spacing: 1px; text-transform: uppercase;
       font-weight: 500;
+      margin-bottom: 12px;
+    }
+    .twin-tag-dot {
+      font-size: 8px; color: #b8915a; display: inline-block;
     }
     .twin-scenario-title {
-      margin-top: 8px; font-size: 18px; font-weight: 600; color: #2a2520;
+      margin-top: 0; font-size: 18px; font-weight: 600; color: #2a2520;
       line-height: 1.4;
+      margin-bottom: 10px;
     }
     .twin-scenario-desc {
-      margin-top: 10px; font-size: 14px; color: #5a5048; line-height: 1.6;
+      margin-top: 0; font-size: 14px; color: #5a5048; line-height: 1.6;
     }
     .twin-stage { margin-top: 18px; }
     .twin-loading {
@@ -1923,7 +1928,7 @@
           <div class="twin-principle" data-principle hidden></div>
 
           <div class="twin-scenario-tag">
-            <span>${repo.icon || '·'}</span>
+            <span class="twin-tag-dot">●</span>
             <span>${getRepoName(repo)}</span>
           </div>
           <div class="twin-scenario-title">${td.title}</div>
