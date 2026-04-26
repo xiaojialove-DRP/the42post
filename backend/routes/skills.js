@@ -105,6 +105,45 @@ router.get('/:skill_id/stats', async (req, res, next) => {
     // 计算每日下载速率
     const dailyDownloadRate = daysSincePublish > 0 ? (stats.download_count / daysSincePublish).toFixed(2) : stats.download_count;
 
+    // Fetch author_id for this skill
+    const skillResult = await db.query(
+      `SELECT author_id FROM skills WHERE id = $1`,
+      [skill_id]
+    );
+    const authorId = skillResult.rows?.[0]?.author_id;
+
+    // My Skill Journey: 该作者所有已发布 skill 的总下载数
+    let mySkillJourneyDownloads = 0;
+    if (authorId) {
+      const authorStats = await db.query(
+        `SELECT COALESCE(SUM(CAST(CASE WHEN sul.outcome = 'download_success' THEN 1 ELSE 0 END AS INTEGER)), 0) as total_downloads
+         FROM skills s
+         LEFT JOIN skill_usage_logs sul ON s.id = sul.skill_id
+         WHERE s.author_id = $1 AND s.published = 1`,
+        [authorId]
+      );
+      mySkillJourneyDownloads = parseInt(authorStats.rows?.[0]?.total_downloads) || 0;
+    }
+
+    // Skills Forged: 社群已发布 skill 总数
+    const communityStats = await db.query(
+      `SELECT COUNT(*) as total_skills FROM skills WHERE published = 1`
+    );
+    const skillsForgedCount = parseInt(communityStats.rows?.[0]?.total_skills) || 0;
+
+    // Human Resonance: 这个 skill 的点赞数
+    const starsResult = await db.query(
+      `SELECT COUNT(*) as star_count FROM user_skill_interactions WHERE skill_id = $1 AND starred = 1`,
+      [skill_id]
+    );
+    const humanResonanceCount = parseInt(starsResult.rows?.[0]?.star_count) || 0;
+
+    // Total Interactions: 社群 Twin Test 的唯一参与者数
+    const interactionsResult = await db.query(
+      `SELECT COUNT(DISTINCT anonymous_id) as unique_participants FROM skill_test_votes WHERE voted_for_skill IS NOT NULL`
+    );
+    const totalInteractionsCount = parseInt(interactionsResult.rows?.[0]?.unique_participants) || 0;
+
     res.json({
       success: true,
       skill: {
@@ -117,7 +156,11 @@ router.get('/:skill_id/stats', async (req, res, next) => {
         downloads: parseInt(stats.download_count) || 0,
         uniqueDownloaders: parseInt(stats.unique_downloaders) || 0,
         daysSincePublish: daysSincePublish,
-        dailyDownloadRate: parseFloat(dailyDownloadRate)
+        dailyDownloadRate: parseFloat(dailyDownloadRate),
+        mySkillJourney: mySkillJourneyDownloads,
+        skillsForged: skillsForgedCount,
+        humanResonance: humanResonanceCount,
+        totalInteractions: totalInteractionsCount
       }
     });
   } catch (error) {

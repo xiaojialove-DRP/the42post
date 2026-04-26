@@ -4290,35 +4290,35 @@ function showImpactDashboard(stats, skillData) {
       </div>
 
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 24px;">
-        <!-- Skills Forged Card -->
+        <!-- My Skill Journey Card (Authors total downloads) -->
         <div style="background: white; padding: 18px; border: 1px solid #d4c8bc; border-radius: 8px; text-align: center; transition: all 0.2s;">
-          <div style="font-size: 36px; font-weight: 700; color: #c4a455; font-family: 'Playfair Display', serif;">${stats.downloads}</div>
-          <div style="font-size: 11px; color: #8a7a6e; margin-top: 6px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.5px; text-transform: uppercase;">Skills Forged</div>
-        </div>
-
-        <!-- Human Resonance Card -->
-        <div style="background: white; padding: 18px; border: 1px solid #d4c8bc; border-radius: 8px; text-align: center; transition: all 0.2s;">
-          <div style="font-size: 36px; font-weight: 700; color: #8a7a6e; font-family: 'Playfair Display', serif;">${stats.uniqueDownloaders}</div>
-          <div style="font-size: 11px; color: #8a7a6e; margin-top: 6px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.5px; text-transform: uppercase;">Human Resonance</div>
-        </div>
-
-        <!-- My Skill Journey Card -->
-        <div style="background: white; padding: 18px; border: 1px solid #d4c8bc; border-radius: 8px; text-align: center; transition: all 0.2s;">
-          <div style="font-size: 36px; font-weight: 700; color: #d4a43c; font-family: 'Playfair Display', serif;">${stats.daysSincePublish}</div>
+          <div style="font-size: 36px; font-weight: 700; color: #d4a43c; font-family: 'Playfair Display', serif;">${stats.mySkillJourney || 0}</div>
           <div style="font-size: 11px; color: #8a7a6e; margin-top: 6px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.5px; text-transform: uppercase;">My Skill Journey</div>
         </div>
 
-        <!-- Total Interactions Card -->
+        <!-- Skills Forged Card (Community total) -->
         <div style="background: white; padding: 18px; border: 1px solid #d4c8bc; border-radius: 8px; text-align: center; transition: all 0.2s;">
-          <div style="font-size: 36px; font-weight: 700; color: #c4a455; font-family: 'Playfair Display', serif;">${stats.dailyDownloadRate}</div>
+          <div style="font-size: 36px; font-weight: 700; color: #c4a455; font-family: 'Playfair Display', serif;">${stats.skillsForged || 0}</div>
+          <div style="font-size: 11px; color: #8a7a6e; margin-top: 6px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.5px; text-transform: uppercase;">Skills Forged</div>
+        </div>
+
+        <!-- Human Resonance Card (Stars) -->
+        <div style="background: white; padding: 18px; border: 1px solid #d4c8bc; border-radius: 8px; text-align: center; transition: all 0.2s;">
+          <div style="font-size: 36px; font-weight: 700; color: #8a7a6e; font-family: 'Playfair Display', serif;">${stats.humanResonance || 0}</div>
+          <div style="font-size: 11px; color: #8a7a6e; margin-top: 6px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.5px; text-transform: uppercase;">Human Resonance</div>
+        </div>
+
+        <!-- Total Interactions Card (Twin Test participants) -->
+        <div style="background: white; padding: 18px; border: 1px solid #d4c8bc; border-radius: 8px; text-align: center; transition: all 0.2s;">
+          <div style="font-size: 36px; font-weight: 700; color: #c4a455; font-family: 'Playfair Display', serif;">${stats.totalInteractions || 0}</div>
           <div style="font-size: 11px; color: #8a7a6e; margin-top: 6px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.5px; text-transform: uppercase;">Total Interactions</div>
         </div>
       </div>
 
       <div style="background: rgba(212, 200, 188, 0.2); padding: 16px; border-radius: 8px; border-left: 3px solid #d4a43c;">
         <div style="font-size: 13px; color: #1a1a1a; line-height: 1.6; font-family: 'Playfair Display', serif;">
-          <p style="margin: 0 0 6px 0;"><strong>Community is Growing</strong></p>
-          <p style="margin: 0; color: #8a7a6e;">Real humans are discovering your voice. Each interaction shapes the community signal.</p>
+          <p style="margin: 0 0 6px 0;"><strong>Your Voice in the Community</strong></p>
+          <p style="margin: 0; color: #8a7a6e;">Your journey is woven into the larger tapestry. The community resonates with authenticity—not bots, but real humans testing and validating.</p>
         </div>
       </div>
     </div>
