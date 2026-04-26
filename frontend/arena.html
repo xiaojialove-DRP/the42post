@@ -1432,7 +1432,6 @@
         item.style.setProperty('--dock-color', repo.color);
         item.innerHTML = `
           <span class="dock-icon" style="color:${repo.color}">${repo.icon}</span>
-          <span>${getRepoName(repo)}</span>
           <span class="dock-count">${repo.tasks.length}</span>
         `;
         item.addEventListener('click', () => spawnRandomFromRepo(repo));
