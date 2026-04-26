@@ -3933,6 +3933,9 @@ function initSkillForge() {
         // Save to localStorage (local storage)
         saveForgedSkill(forgedSkillData);
 
+        // Invalidate hot-skills cache so newly published skill appears in Playground picker
+        window.__hotSkillsCache = null;
+
         // Refresh the skills feed and vibe grid
         initSkillsFeed();
         initSlotGrid();
