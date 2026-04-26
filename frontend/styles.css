@@ -1664,7 +1664,7 @@ body[data-lang="cn"] .voices-header-text {
 }
 
 .voice-skill-name {
-  color: var(--teal);
+  color: #5cb85c;
   font-style: italic;
   font-weight: 600;
 }
@@ -1749,14 +1749,14 @@ body[data-lang="cn"] .voices-header-text {
   font-size: 14px;
   padding: 12px 28px;
   border-radius: 8px;
-  background: #5cb85c;
-  box-shadow: 0 2px 8px rgba(92, 184, 92, 0.2);
+  background: #6b9d5c;
+  box-shadow: 0 2px 8px rgba(107, 157, 92, 0.2);
   transition: background 0.25s ease, transform 0.2s ease, box-shadow 0.25s ease;
 }
 
 .btn-chat-send:hover {
-  background: #4aa550;
-  box-shadow: 0 4px 16px rgba(92, 184, 92, 0.3);
+  background: #5a8b4d;
+  box-shadow: 0 4px 16px rgba(107, 157, 92, 0.3);
   transform: translateY(-2px);
 }
 

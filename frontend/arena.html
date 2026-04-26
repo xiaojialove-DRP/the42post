@@ -2016,14 +2016,22 @@
         setTimeout(() => { card.remove(); checkEmpty(); }, 300);
       });
 
+      // Interactive elements that must keep their default behaviour
+      // (select dropdown opening, link navigation, text input focus, etc.).
+      // The drag handler calls preventDefault, so anything not listed here
+      // would have its native click/open behaviour swallowed.
+      const isInteractive = (el) => !!el.closest(
+        '.card-close, button, .card-resize-handle, select, option, input, textarea, a, label'
+      );
+
       // Focus on click
       card.addEventListener('mousedown', (e) => {
-        if (e.target.closest('.card-close') || e.target.closest('button') || e.target.closest('.card-resize-handle')) return;
+        if (isInteractive(e.target)) return;
         card.style.zIndex = ++highestZ;
       });
 
       // Drag (mouse + touch) — same handlers as fusion mode but excluding twin buttons
-      const dragGuard = (e) => e.target.closest('.card-close') || e.target.closest('button') || e.target.closest('.card-resize-handle');
+      const dragGuard = (e) => isInteractive(e.target);
       card.addEventListener('mousedown', (e) => {
         if (dragGuard(e)) return;
         e.preventDefault();
