@@ -254,6 +254,7 @@
       display: flex;
       align-items: center;
       gap: 6px;
+      flex: 1;
     }
 
     .card-domain-dot {
@@ -951,6 +952,10 @@
        The card frame and watercolor styling are inherited from .task-card
        above; only the BODY content is reshaped. No top banner — the skill
        identity lives inside the card per the design. */
+    .twin-header-dot {
+      font-size: 8px; color: #b8915a; display: inline-block;
+      margin-right: 6px;
+    }
     .twin-skill-line {
       display: flex; align-items: center; gap: 8px;
       font-weight: 600; color: #2a2520; font-size: 14px;
@@ -969,8 +974,9 @@
       font-weight: 500;
       margin-bottom: 12px;
     }
-    .twin-tag-dot {
-      font-size: 8px; color: #b8915a; display: inline-block;
+    .twin-tag-symbol {
+      font-size: 14px; color: #b8915a; display: inline-block;
+      margin-right: 2px;
     }
     .twin-scenario-title {
       margin-top: 0; font-size: 18px; font-weight: 600; color: #2a2520;
@@ -1918,17 +1924,18 @@
       card.innerHTML = `
         <div class="card-header">
           <div class="card-header-left">
+            <span class="twin-header-dot">●</span>
             <div class="twin-skill-line" data-skill-line>
-              <span class="twin-skill-placeholder">${isCn ? '在下方挑一个 Skill' : 'Pick a Skill below'}</span>
+              <span class="twin-skill-placeholder">${isCn ? '挑一个热门 Skill 来测' : 'Pick a Hot Skill to Test'}</span>
             </div>
-            <button class="card-close" title="${isCn ? '关闭' : 'Close'}" style="align-self:flex-start;background:none;border:none;color:#8a7a6e;font-size:16px;cursor:pointer;padding:4px;margin-top:4px;">✕</button>
           </div>
+          <button class="card-close" title="${isCn ? '关闭' : 'Close'}" style="background:none;border:none;color:#8a7a6e;font-size:16px;cursor:pointer;padding:4px;">✕</button>
         </div>
         <div class="card-body card-body--twin">
           <div class="twin-principle" data-principle hidden></div>
 
           <div class="twin-scenario-tag">
-            <span class="twin-tag-dot">●</span>
+            <span class="twin-tag-symbol">${repo.icon || '·'}</span>
             <span>${getRepoName(repo)}</span>
           </div>
           <div class="twin-scenario-title">${td.title}</div>
