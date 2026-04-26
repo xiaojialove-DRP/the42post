@@ -1051,6 +1051,23 @@
     .card-body--twin .card-fusion-slots,
     .card-body--twin .skill-picker,
     .card-body--twin .card-skill-tags { display: none !important; }
+
+    /* Empty-state CTA when arena is opened without ?skill= */
+    .canvas-empty-cta {
+      display: inline-block; margin-top: 18px;
+      padding: 12px 20px; background: #2a2520; color: #fdfaf3;
+      text-decoration: none; border-radius: 8px;
+      font-family: 'Inter', system-ui, sans-serif; font-size: 13px;
+      font-weight: 600; letter-spacing: 0.5px;
+      transition: background 0.18s ease, transform 0.18s ease;
+    }
+    .canvas-empty-cta:hover { background: #3a3530; transform: translateY(-1px); }
+    .canvas-empty-cta-secondary {
+      display: inline-block; margin-top: 8px; margin-left: 12px;
+      color: #7a6f5e; text-decoration: none; font-size: 12px;
+      letter-spacing: 0.5px;
+    }
+    .canvas-empty-cta-secondary:hover { color: #2a2520; text-decoration: underline; }
   </style>
 </head>
 <body>
@@ -1356,11 +1373,22 @@
 
     /* ── Spawn a task card ── */
     function spawnCard(task, repo) {
-      // Twin Test mode: when ?skill=… is present, render the alternate
-      // A/B-blind UI instead of the fusion canvas.
+      // Twin Test is the only mode now. With a skill loaded, render A/B blind
+      // card. Without one, redirect users to Archive to pick one — fusion-
+      // mode card below is kept as dead code in case we restore it later.
       if (window.TWIN_TEST_SKILL) {
         return spawnTwinTestCard(task, repo);
       }
+      const isCn = (typeof currentLang !== 'undefined' && currentLang === 'cn');
+      // A direct hop is friendlier than a confirm() dialog. Empty-state CTA
+      // already explains the requirement; this just fast-paths users who
+      // tapped a dock category before reading it.
+      window.location.href = 'index.html#archive';
+      return;
+    }
+
+    /* ── Old fusion-mode spawnCard (unused, retained for safety) ── */
+    function spawnCard__legacyFusion(task, repo) {
       const canvas = document.getElementById('workshopCanvas');
       const empty = document.getElementById('canvasEmpty');
       empty.classList.add('hidden');
@@ -1737,10 +1765,35 @@
       return id;
     }
 
+    function showSelectSkillCTA(message) {
+      const empty = document.getElementById('canvasEmpty');
+      if (!empty) return;
+      const isCn = (typeof currentLang !== 'undefined' && currentLang === 'cn');
+      empty.classList.remove('hidden');
+      empty.innerHTML = `
+        <div class="canvas-empty-icon">🎯</div>
+        <div class="canvas-empty-text">${isCn ? '先选一个 Skill 来盲测' : 'Pick a Skill to twin-test'}</div>
+        <div class="canvas-empty-hint">${
+          message ||
+          (isCn
+            ? 'Twin Test 把这个 Skill 的回应和基线 AI 并排盲选，看它真的"立得住"吗'
+            : 'Twin Test runs this Skill\'s response side-by-side against a baseline AI — pick blind, see which lands')
+        }</div>
+        <div>
+          <a class="canvas-empty-cta" href="index.html#archive">${isCn ? '→ 去 Taste Archive 挑一个' : '→ Browse Taste Archive'}</a>
+          <a class="canvas-empty-cta-secondary" href="index.html">${isCn ? '或先去铸造一个' : 'or forge a new one'}</a>
+        </div>
+      `;
+    }
+
     async function initTwinTestMode() {
       const params = new URLSearchParams(window.location.search);
       const skillId = params.get('skill');
-      if (!skillId) return;
+      if (!skillId) {
+        // No skill in URL — Twin Test is the only mode now, so guide the user to pick one.
+        showSelectSkillCTA();
+        return;
+      }
 
       try {
         const resp = await fetch(`/api/skills/${encodeURIComponent(skillId)}`);
@@ -1764,6 +1817,10 @@
         }
       } catch (err) {
         console.warn('Twin Test init failed:', err.message);
+        const isCn = (typeof currentLang !== 'undefined' && currentLang === 'cn');
+        showSelectSkillCTA(isCn
+          ? `这个 Skill 加载失败 (${err.message})。换一个试试 →`
+          : `Failed to load this Skill (${err.message}). Try another →`);
       }
     }
 
