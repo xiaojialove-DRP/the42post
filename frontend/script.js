@@ -351,11 +351,10 @@ function initSkillGrids() {
               <span class="star-count">${skill.stars || 0}</span>
             </button>
 
-            <!-- Download Button (disabled until fully implemented) -->
+            <!-- Download Button (star first to enable) -->
             <button class="btn-download"
                     data-skill-id="${skill.id}"
-                    disabled
-                    title="Download coming soon">
+                    title="Star first to download">
               <span class="download-icon">⬇</span>
               <span class="download-count">${skill.downloads || 0}</span>
             </button>
