@@ -26,8 +26,8 @@
   --moss: var(--teal);
   --ochre: var(--marigold);
   --accent: var(--coral);
-  --accent-green: var(--teal);
-  --accent-green-light: #5abaa0;
+  --accent-green: #6b9d5c;
+  --accent-green-light: #8ab57a;
   /* Typography — DIE ZEIT editorial serif */
   --font-head: 'Playfair Display', 'Georgia', serif;
   --font-mono: 'JetBrains Mono', 'SF Mono', 'Consolas', monospace;
@@ -1571,7 +1571,7 @@ body[data-lang="cn"] .voices-header-text {
 }
 
 .btn-chat-send {
-  background: #5cb85c;
+  background: #6b9d5c;
   border: none;
   color: #fff;
   font-family: var(--font-serif);
@@ -1586,7 +1586,7 @@ body[data-lang="cn"] .voices-header-text {
 }
 
 .btn-chat-send:hover {
-  background: #4aa550;
+  background: #5a8b4d;
   transform: translateY(-2px);
 }
 
@@ -1664,7 +1664,7 @@ body[data-lang="cn"] .voices-header-text {
 }
 
 .voice-skill-name {
-  color: #5cb85c;
+  color: #6b9d5c;
   font-style: italic;
   font-weight: 600;
 }
@@ -1963,7 +1963,7 @@ body[data-lang="cn"] .voices-header-text {
   flex-shrink: 0;
 }
 
-.ethics-pass .ethics-icon { color: #5cb85c; }
+.ethics-pass .ethics-icon { color: #6b9d5c; }
 .ethics-fail .ethics-icon { color: var(--coral); }
 
 .ethics-msg {
@@ -1975,8 +1975,8 @@ body[data-lang="cn"] .voices-header-text {
 }
 
 .btn-enter-forge {
-  background: #5cb85c;
-  border: 1px solid #5cb85c;
+  background: #6b9d5c;
+  border: 1px solid #6b9d5c;
   color: #fff;
   font-family: var(--font-serif);
   font-size: 14px;
@@ -1991,8 +1991,8 @@ body[data-lang="cn"] .voices-header-text {
 }
 
 .btn-enter-forge:hover {
-  background: #4aa550;
-  border-color: #4aa550;
+  background: #5a8b4d;
+  border-color: #5a8b4d;
   transform: translateY(-2px);
 }
 
@@ -2293,7 +2293,7 @@ body[data-lang="cn"] .voices-header-text {
   font-family: var(--font-mono);
   font-size: 10px;
   font-weight: 700;
-  color: var(--teal);
+  color: #6b9d5c;
   flex-shrink: 0;
 }
 
