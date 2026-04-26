@@ -514,8 +514,11 @@ function attachSkillCardListeners() {
 
         showSuccess('Skill downloaded! 📥');
       } catch (error) {
-        console.error('Error downloading skill:', error);
-        showError('Failed to download. Please try again.');
+        console.error('Download error:', { skillId, error: error.message, status: error.status });
+        const msg = error.message === 'Download error: 404'
+          ? 'Skill not found or not published'
+          : 'Download failed. Check console for details.';
+        showError(msg);
       } finally {
         btn.textContent = originalText;
         btn.disabled = false;
@@ -538,15 +541,22 @@ function attachSkillCardListeners() {
 
   // Playground button handler — opens arena with this skill pre-loaded
   // for the With Skill vs Without Skill twin test.
-  document.querySelectorAll('.btn-playground').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      const skillId = btn.dataset.skillId;
-      if (!skillId) return;
-      window.location.href = `arena.html?skill=${encodeURIComponent(skillId)}`;
+  function attachPlaygroundHandlers() {
+    document.querySelectorAll('.btn-playground').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const skillId = btn.dataset.skillId;
+        if (!skillId) {
+          console.warn('No skill ID on playground button');
+          return;
+        }
+        console.log('Opening Playground with skill:', skillId);
+        window.location.href = `arena.html?skill=${encodeURIComponent(skillId)}`;
+      });
     });
-  });
+  }
+  attachPlaygroundHandlers();
 }
 
 /* ═══ GENERATE MARKDOWN ═══ */
