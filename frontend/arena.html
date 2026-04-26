@@ -1089,6 +1089,29 @@
     .twin-skill-line .twin-skill-placeholder {
       color: #7a6f5e; font-weight: 500;
     }
+
+    /* Trigger stage — shown after a Skill is loaded but before the test runs.
+       Prevents auto-fire (so users read the scenario first + saves API tokens),
+       and primes attention with the current win rate as a challenge invitation. */
+    .twin-trigger {
+      margin-top: 16px; padding: 14px 12px;
+      background: #f7efd9; border: 1px solid #e0d5b8;
+      border-radius: 8px; text-align: center;
+    }
+    .twin-trigger-stats {
+      font-size: 12px; color: #5a5048; line-height: 1.5;
+      margin-bottom: 12px;
+    }
+    .twin-trigger-stats strong { color: #b8915a; font-size: 14px; font-weight: 700; }
+    .twin-trigger-btn {
+      padding: 10px 28px;
+      background: #2a2520; color: #fdfaf3; border: none;
+      border-radius: 8px; cursor: pointer;
+      font-family: inherit; font-size: 13px; font-weight: 600;
+      letter-spacing: 1px;
+      transition: background 0.18s ease, transform 0.18s ease;
+    }
+    .twin-trigger-btn:hover { background: #3a3530; transform: translateY(-1px); }
   </style>
 </head>
 <body>
@@ -1884,6 +1907,11 @@
             <a class="twin-pickskill-archive-link" href="index.html#archive">${isCn ? '在 Archive 浏览全部 →' : 'Browse all in Archive →'}</a>
           </div>
 
+          <div class="twin-stage twin-trigger" hidden>
+            <div class="twin-trigger-stats" data-trigger-stats></div>
+            <button class="twin-trigger-btn" data-trigger-btn>${isCn ? '▶ 开始盲测' : '▶ START BLIND TEST'}</button>
+          </div>
+
           <div class="twin-stage twin-loading" hidden>
             <span class="twin-spinner">⟳</span>
             <span>${isCn ? '正在生成两个回应…' : 'generating two responses…'}</span>
@@ -1964,15 +1992,53 @@
       canvas.appendChild(card);
       setTimeout(() => card.classList.remove('spawning'), 600);
 
-      // Branch: skill already loaded → straight to A/B; otherwise → in-card picker.
+      // Branch: skill already loaded → trigger stage; otherwise → in-card picker.
+      // Trigger stage shows current win-rate + ▶ button so users read the
+      // scenario first and the test is intentional (and we save API tokens).
       if (window.TWIN_TEST_SKILL) {
         applyTwinSkillToCard(card, window.TWIN_TEST_SKILL);
-        runTwinTest(card, task, repo);
+        showTwinTestTrigger(card, task, repo);
       } else {
         showSkillPickerInCard(card, task, repo);
       }
 
       return card;
+    }
+
+    async function showTwinTestTrigger(card, task, repo) {
+      const isCn = (typeof currentLang !== 'undefined' && currentLang === 'cn');
+      const skill = window.TWIN_TEST_SKILL;
+      const stage = card.querySelector('.twin-trigger');
+      const statsLine = stage.querySelector('[data-trigger-stats]');
+      const btn = stage.querySelector('[data-trigger-btn]');
+      stage.hidden = false;
+
+      // Provisional copy while stats fetch resolves.
+      statsLine.textContent = isCn ? '加载胜率…' : 'loading win rate…';
+
+      try {
+        const stats = await (await fetch(`/api/playground/stats/${encodeURIComponent(skill.id)}`)).json();
+        const total = stats.total_votes || 0;
+        const skillTitle = getSkillTitle(skill);
+        if (total === 0) {
+          statsLine.innerHTML = isCn
+            ? `🎯 <strong>${skillTitle}</strong> · 还没人盲测过 — 你来开第一枪`
+            : `🎯 <strong>${skillTitle}</strong> · No blind picks yet — be the first`;
+        } else {
+          const pct = Math.round((stats.win_rate || 0) * 100);
+          statsLine.innerHTML = isCn
+            ? `🎯 <strong>${skillTitle}</strong> · 当前胜率 <strong>${pct}%</strong>（${total} 次盲选）· 你能识破吗？`
+            : `🎯 <strong>${skillTitle}</strong> · <strong>${pct}%</strong> win rate (${total} blind picks) · can you spot it?`;
+        }
+      } catch {
+        // Non-fatal — keep the trigger button usable even if stats fetch fails.
+        statsLine.textContent = '';
+      }
+
+      btn.addEventListener('click', () => {
+        stage.hidden = true;
+        runTwinTest(card, task, repo);
+      });
     }
 
     function applyTwinSkillToCard(card, skill) {
@@ -2035,7 +2101,7 @@
             window.TWIN_TEST_SKILL = skill;
             stage.hidden = true;
             applyTwinSkillToCard(card, skill);
-            runTwinTest(card, task, repo);
+            showTwinTestTrigger(card, task, repo);
           });
         });
       } catch (err) {
