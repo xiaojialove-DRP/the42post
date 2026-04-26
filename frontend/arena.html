@@ -2078,7 +2078,7 @@
       stage.hidden = false;
 
       try {
-        const skills = await fetchHotSkills(8);
+        const skills = await fetchHotSkills(7);
         if (skills.length === 0) {
           list.innerHTML = `<div style="text-align:center;padding:14px;color:#7a6f5e;font-size:12px;">${isCn ? '还没有 Skill — ' : 'No Skills yet — '}<a href="index.html" style="color:#b8915a;">${isCn ? '先去铸造一个' : 'forge one first'}</a></div>`;
           return;
