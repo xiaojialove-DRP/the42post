@@ -953,8 +953,8 @@
        above; only the BODY content is reshaped. No top banner — the skill
        identity lives inside the card per the design. */
     .twin-header-dot {
-      font-size: 8px; color: #b8915a; display: inline-block;
-      margin-right: 6px;
+      font-size: 12px; color: #b8915a; display: inline-block;
+      margin-right: 8px;
     }
     .twin-skill-line {
       display: flex; align-items: center; gap: 8px;
@@ -1929,13 +1929,12 @@
               <span class="twin-skill-placeholder">${isCn ? '挑一个热门 Skill 来测' : 'Pick a Hot Skill to Test'}</span>
             </div>
           </div>
-          <button class="card-close" title="${isCn ? '关闭' : 'Close'}" style="background:none;border:none;outline:none;color:#8a7a6e;font-size:16px;cursor:pointer;padding:0;line-height:1;">✕</button>
+          <button class="card-close" title="${isCn ? '关闭' : 'Close'}" style="font-size:14px;cursor:pointer;">✕</button>
         </div>
         <div class="card-body card-body--twin">
           <div class="twin-principle" data-principle hidden></div>
 
           <div class="twin-scenario-tag">
-            <span class="twin-tag-symbol">${repo.icon || '·'}</span>
             <span>${getRepoName(repo)}</span>
           </div>
           <div class="twin-scenario-title">${td.title}</div>
