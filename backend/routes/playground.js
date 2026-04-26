@@ -132,10 +132,10 @@ router.post('/test', async (req, res, next) => {
 
     const { withSkillPrompt, withoutSkillPrompt, isCn } = buildPrompts(scenario, skill, language);
 
-    // Call DeepSeek twice in parallel.
+    // Call DeepSeek twice in parallel (reduced max_tokens for faster generation).
     const [withResp, withoutResp] = await Promise.all([
-      callLLMJSON(withSkillPrompt, 600).catch(e => ({ error: e.message })),
-      callLLMJSON(withoutSkillPrompt, 600).catch(e => ({ error: e.message }))
+      callLLMJSON(withSkillPrompt, 400).catch(e => ({ error: e.message })),
+      callLLMJSON(withoutSkillPrompt, 400).catch(e => ({ error: e.message }))
     ]);
 
     if (withResp.error || withoutResp.error) {
@@ -164,7 +164,7 @@ router.post('/test', async (req, res, next) => {
     const diagPrompt = buildDiagnosticPrompt(scenarioText, withText, withoutText, skillSide, isCn);
     let diagnostic = '';
     try {
-      const diagResp = await callLLMJSON(diagPrompt, 200);
+      const diagResp = await callLLMJSON(diagPrompt, 150);
       diagnostic = (diagResp.data?.diagnostic || '').trim();
     } catch (e) {
       console.warn('Diagnostic generation skipped:', e.message);
