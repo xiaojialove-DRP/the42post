@@ -339,7 +339,7 @@ function initSkillGrids() {
         <!-- Footer with interactions -->
         <div class="skill-card-footer">
           <div class="skill-card-meta">
-            <span class="skill-author">by ${skill.author}</span>
+            <span class="skill-author">${skill.author}</span>
             <span class="skill-domain">${skill.domain}</span>
           </div>
           
@@ -1208,26 +1208,41 @@ async function loadSkillsFromDB() {
     console.log(`✅ Loaded ${skills.length} skills from database`);
 
     // 转换数据库技能格式以匹配 SHARED_SKILLS
-    return skills.map(skill => ({
-      id: skill.id,
-      title: skill.title,
-      titleCn: skill.title_cn || skill.title,
-      desc: skill.description || '',
-      descCn: skill.description_cn || skill.description || '',
-      agent: skill.source_agent_id || 'system',
-      starlight: skill.starlight_score || 0,
-      domain: skill.domain || 'ideas',
-      author: 'Community',
-      commercial: skill.commercial_use || 'authorized',
-      remix: skill.remix_allowed ? 'share-alike' : 'no',
-      five_layer: {
-        defining: skill.five_layer ? JSON.parse(skill.five_layer).defining : '',
-        instantiating: skill.five_layer ? JSON.parse(skill.five_layer).instantiating : '',
-        fencing: skill.five_layer ? JSON.parse(skill.five_layer).fencing : '',
-        validating: skill.five_layer ? JSON.parse(skill.five_layer).validating : [],
-        contextualizing: skill.five_layer ? JSON.parse(skill.five_layer).contextualizing : ''
-      }
-    }));
+    return skills.map(skill => {
+      // Attribution comes from the name the user typed at forge time
+      // (stored as users.username via forge-session). The legacy
+      // `source_agent_id` was a confusing "agent_42"-style label that
+      // made every skill look like it was authored by a bot. We now
+      // surface "creator_<name>" everywhere — both the Archive grid
+      // (formerly the .domain-skill-agent slot) and skill cards.
+      const rawName = (skill.creator_name && skill.creator_name !== 'Anonymous' && skill.creator_name !== 'System')
+        ? skill.creator_name
+        : 'anonymous';
+      const creatorLabel = `creator_${rawName}`;
+
+      return {
+        id: skill.id,
+        title: skill.title,
+        titleCn: skill.title_cn || skill.title,
+        desc: skill.description || '',
+        descCn: skill.description_cn || skill.description || '',
+        agent: creatorLabel,
+        creator: creatorLabel,
+        creatorName: rawName,
+        starlight: skill.starlight_score || 0,
+        domain: skill.domain || 'ideas',
+        author: creatorLabel,
+        commercial: skill.commercial_use || 'authorized',
+        remix: skill.remix_allowed ? 'share-alike' : 'no',
+        five_layer: {
+          defining: skill.five_layer ? JSON.parse(skill.five_layer).defining : '',
+          instantiating: skill.five_layer ? JSON.parse(skill.five_layer).instantiating : '',
+          fencing: skill.five_layer ? JSON.parse(skill.five_layer).fencing : '',
+          validating: skill.five_layer ? JSON.parse(skill.five_layer).validating : [],
+          contextualizing: skill.five_layer ? JSON.parse(skill.five_layer).contextualizing : ''
+        }
+      };
+    });
   } catch (error) {
     console.error('Error loading skills from database:', error);
     return [];
@@ -3847,12 +3862,19 @@ function initSkillForge() {
         const useCasesValue = useCasesEl ? useCasesEl.value : '';
         const disallowedUsesValue = disallowedUsesEl ? disallowedUsesEl.value : '';
 
-        // Get agent info
+        // Get agent info (legacy — only used when binding to a third-party
+        // agent in mode B, kept for the manifest's source_agent_id field).
         let agentName = 'agent_42';
         if (selectedMode === 'b') {
           const agentIdEl = document.getElementById('forgeAgentId');
           agentName = agentIdEl ? agentIdEl.value : 'agent_unknown';
         }
+
+        // Display attribution comes from the *creator's* name (the username
+        // the user typed at forge time), not the agent. Fall back to a
+        // generic "anonymous" only when nothing was entered.
+        const creatorRawName = (usernameValue && usernameValue.trim()) || 'anonymous';
+        const creatorLabel = `creator_${creatorRawName}`;
 
         // Prepare skill data
         const forgedSkillData = {
@@ -3862,8 +3884,10 @@ function initSkillForge() {
           descCn: skillDesc,
           domain: selectedDomain || 'ideas',
           soulHash: hash,
-          agent: agentName,
-          author: usernameValue || 'Anonymous',
+          agent: creatorLabel,
+          creator: creatorLabel,
+          creatorName: creatorRawName,
+          author: creatorLabel,
           email: emailValue,
           commercial: commercialValue,
           remix: remixValue,
@@ -6818,6 +6842,19 @@ async function initAgentArchiveView() {
     console.warn('⚠️ No skills available from API or fallback, using SHARED_SKILLS');
     baseSkills = (typeof SHARED_SKILLS !== 'undefined' ? SHARED_SKILLS : []);
   }
+
+  // Normalize attribution: API rows expose creator_name (from users JOIN),
+  // hardcoded fallbacks already use `agent`. Surface a single
+  // "creator_<name>" label on every skill so the Archive grid no longer
+  // shows the legacy "agent_<id>" string.
+  baseSkills = baseSkills.map(s => {
+    if (s.agent && /^creator_/.test(s.agent)) return s;
+    const rawName = s.creator_name && s.creator_name !== 'Anonymous' && s.creator_name !== 'System'
+      ? s.creator_name
+      : (typeof s.agent === 'string' && s.agent && !/^agent_/i.test(s.agent) ? s.agent : 'anonymous');
+    const creatorLabel = `creator_${rawName}`;
+    return { ...s, agent: creatorLabel, creator: creatorLabel, creatorName: rawName };
+  });
 
   // Combine published skills with forged skills from localStorage
   const forgedSkills = getRecentForges();

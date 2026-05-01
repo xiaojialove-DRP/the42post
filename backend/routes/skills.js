@@ -22,34 +22,41 @@ router.get('/', async (req, res, next) => {
     const { page = 1, limit = 20, domain, author, search } = req.query;
     const offset = (page - 1) * limit;
 
-    let query = 'SELECT * FROM skills WHERE published = true AND deleted_at IS NULL';
-    let countQuery = 'SELECT COUNT(*) FROM skills WHERE published = true AND deleted_at IS NULL';
+    // JOIN users so the response carries the real creator_name the user
+    // typed at forge time (stored as users.username via forge-session
+    // auto-provision). Frontend uses this for the "creator_<name>" badge
+    // on Archive cards instead of the legacy "agent_<id>" display.
+    let query = `SELECT s.*, u.username AS creator_name
+                 FROM skills s
+                 LEFT JOIN users u ON s.author_id = u.id
+                 WHERE s.published = true AND s.deleted_at IS NULL`;
+    let countQuery = 'SELECT COUNT(*) FROM skills s WHERE s.published = true AND s.deleted_at IS NULL';
     const params = [];
     let paramIndex = 1;
 
     if (domain) {
-      query += ` AND domain = $${paramIndex}`;
-      countQuery += ` AND domain = $${paramIndex}`;
+      query += ` AND s.domain = $${paramIndex}`;
+      countQuery += ` AND s.domain = $${paramIndex}`;
       params.push(domain);
       paramIndex++;
     }
 
     if (author) {
-      query += ` AND author_id = (SELECT id FROM users WHERE username = $${paramIndex})`;
-      countQuery += ` AND author_id = (SELECT id FROM users WHERE username = $${paramIndex})`;
+      query += ` AND s.author_id = (SELECT id FROM users WHERE username = $${paramIndex})`;
+      countQuery += ` AND s.author_id = (SELECT id FROM users WHERE username = $${paramIndex})`;
       params.push(author);
       paramIndex++;
     }
 
     if (search) {
-      query += ` AND (title ILIKE $${paramIndex} OR description ILIKE $${paramIndex})`;
-      countQuery += ` AND (title ILIKE $${paramIndex} OR description ILIKE $${paramIndex})`;
+      query += ` AND (s.title ILIKE $${paramIndex} OR s.description ILIKE $${paramIndex})`;
+      countQuery += ` AND (s.title ILIKE $${paramIndex} OR s.description ILIKE $${paramIndex})`;
       const searchTerm = `%${search}%`;
       params.push(searchTerm, searchTerm);
       paramIndex += 2;
     }
 
-    query += ` ORDER BY published_at DESC LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
+    query += ` ORDER BY s.published_at DESC LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
     params.push(limit, offset);
 
     const [skillsResult, countResult] = await Promise.all([
