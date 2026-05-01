@@ -4,7 +4,13 @@
 
 import express from 'express';
 import { db } from '../server.js';
-import { requireAuth } from '../utils/auth.js';
+import { requireAuth, optionalAuth } from '../utils/auth.js';
+
+// Sentinel author for anonymous community forges. The skills.author_id FK
+// still resolves, but the *real* per-user identity lives in
+// skills.creator_anonymous_id (set from the request body / X-Anonymous-Id
+// header). See backend/db/init.js for where this row is created.
+const ANONYMOUS_AUTHOR_ID = 'anonymous-user-001';
 import { createManifest, addCovenantSignature } from '../utils/skillGeneration.js';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -215,9 +221,8 @@ router.get('/:skill_id', async (req, res, next) => {
 });
 
 // ═══ CREATE & PUBLISH SKILL ═══
-router.post('/', requireAuth, async (req, res, next) => {
+router.post('/', optionalAuth, async (req, res, next) => {
   try {
-    const userId = req.user.userId;
     const {
       title,
       title_cn,
@@ -230,8 +235,19 @@ router.post('/', requireAuth, async (req, res, next) => {
       commercial_use,
       remix_allowed,
       applicable_when,
-      disallowed_uses
+      disallowed_uses,
+      ready_to_use_prompt,
+      anonymous_id: bodyAnonymousId
     } = req.body;
+
+    // Logged-in users author with their real id; anonymous community forges
+    // attach to the sentinel anonymous user. The anonymous_id is recorded
+    // regardless of auth state — it identifies the *device* that created
+    // the skill, so the Playground can put "your latest forge" first even
+    // when the user later signs in or out.
+    const userId = req.user?.userId || ANONYMOUS_AUTHOR_ID;
+    const isAnonymous = !req.user;
+    const anonymousId = bodyAnonymousId || req.headers['x-anonymous-id'] || null;
 
     // Validation
     if (!title || !title.trim()) {
@@ -255,7 +271,8 @@ router.post('/', requireAuth, async (req, res, next) => {
       });
     }
 
-    // Get user info for manifest creation
+    // Get user info for manifest creation. For anonymous forges this
+    // resolves to the sentinel row inserted by initDatabase().
     const userResult = await db.query(
       'SELECT id, email, username, account_type FROM users WHERE id = $1',
       [userId]
@@ -263,7 +280,10 @@ router.post('/', requireAuth, async (req, res, next) => {
 
     if (userResult.rows.length === 0) {
       return res.status(404).json({
-        error: 'User not found'
+        error: 'User not found',
+        message: isAnonymous
+          ? 'Anonymous author sentinel missing — server not fully initialised'
+          : 'Authenticated user not found'
       });
     }
 
@@ -297,15 +317,19 @@ router.post('/', requireAuth, async (req, res, next) => {
         `INSERT INTO skills (
           id, author_id, title, title_cn, description, description_cn, domain,
           soul_hash, five_layer, forge_mode, source_agent_id, commercial_use,
-          remix_allowed, applicable_when, disallowed_uses, published, published_at
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, 1, CURRENT_TIMESTAMP)`,
+          remix_allowed, applicable_when, disallowed_uses,
+          creator_anonymous_id, ready_to_use_prompt,
+          published, published_at
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, 1, CURRENT_TIMESTAMP)`,
         [
           skillId, userId, title.trim(), title_cn || null, description || null, description_cn || null,
           domain || 'ideas', soul_hash, JSON.stringify(five_layer),
           forge_mode, source_agent_id || null, commercial_use || 'authorized',
           remix_allowed === false ? 0 : 1,
           applicable_when || null,
-          disallowed_uses || null
+          disallowed_uses || null,
+          anonymousId,
+          ready_to_use_prompt || null
         ]
       );
 

@@ -3904,15 +3904,26 @@ function initSkillForge() {
             commercial_use: commercialValue,
             remix_allowed: remixValue === 'yes',
             applicable_when: useCasesValue,
-            disallowed_uses: disallowedUsesValue
+            disallowed_uses: disallowedUsesValue,
+            // anonymous_id ties the new skill back to this device so the
+            // Playground can put "your latest forge" first in the picker.
+            anonymous_id: getAnonymousId(),
+            // ready_to_use_prompt is generated server-side at PUBLISH time
+            // when missing from the payload, so we send through whatever the
+            // user may have edited in the publish review.
+            ready_to_use_prompt: window.agent42ReadyToUsePrompt || null
           };
+
+          // Build headers — only attach a Bearer when a real token exists,
+          // otherwise the empty "Bearer " line tripped strict auth parsers.
+          const skillsHeaders = { 'Content-Type': 'application/json' };
+          const _tk = ApiClient.getToken();
+          if (_tk) skillsHeaders['Authorization'] = `Bearer ${_tk}`;
+          skillsHeaders['X-Anonymous-Id'] = getAnonymousId();
 
           const response = await fetch(`${window.location.origin}/api/skills`, {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${ApiClient.getToken() || ''}`
-            },
+            headers: skillsHeaders,
             body: JSON.stringify(backendPayload)
           });
 

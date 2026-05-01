@@ -71,3 +71,28 @@ export function requireAuth(req, res, next) {
     });
   }
 }
+
+// ═══ OPTIONAL AUTHENTICATION ═══
+// Decodes the JWT if a valid Bearer token is present and attaches req.user.
+// Otherwise leaves req.user = null and lets the request through. Anonymous
+// users (no token, or empty token) reach the route handler — which is then
+// responsible for falling back to anonymous_id from the body / header.
+export function optionalAuth(req, res, next) {
+  const authHeader = req.headers.authorization;
+  req.user = null;
+
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return next();
+  }
+
+  const token = authHeader.substring(7).trim();
+  if (!token) return next();
+
+  try {
+    req.user = verifyToken(token);
+  } catch {
+    // Invalid token → treat as anonymous, do not block the request.
+    req.user = null;
+  }
+  next();
+}

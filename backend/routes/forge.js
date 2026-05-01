@@ -5,7 +5,7 @@
 import express from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import { db } from '../server.js';
-import { requireAuth } from '../utils/auth.js';
+import { requireAuth, optionalAuth } from '../utils/auth.js';
 import {
   generateProbeWithClaude,
   generatePreviewWithClaude,
@@ -106,10 +106,12 @@ router.post('/preview-from-probe', async (req, res, next) => {
 });
 
 // ═══ GENERATE FIVE-LAYER SKILL ═══
-router.post('/generate', requireAuth, async (req, res, next) => {
+// optionalAuth: anonymous community forges are allowed; userId is only used
+// for logging/seeding context, not stored on the request itself.
+router.post('/generate', optionalAuth, async (req, res, next) => {
   try {
     const { skill_name, idea_text, probe_data, selected_response, domain, language } = req.body;
-    const userId = req.user.userId;
+    const userId = req.user?.userId || null;
 
     // Validation
     if (!skill_name || !skill_name.trim()) {
@@ -183,7 +185,8 @@ router.post('/generate', requireAuth, async (req, res, next) => {
 });
 
 // ═══ SIMPLIFIED PREVIEW (from name + definition; used by the review/preview modals) ═══
-router.post('/preview', requireAuth, async (req, res, next) => {
+// optionalAuth: same rationale as /generate above.
+router.post('/preview', optionalAuth, async (req, res, next) => {
   try {
     const { name, definition, domain, feedback, language } = req.body || {};
 
