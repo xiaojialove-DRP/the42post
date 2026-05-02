@@ -169,97 +169,161 @@ function generateSkillMarkdown(skillData) {
   const timestamp = now.toISOString().split('T')[0];
   const fiveLayer = skillData.fiveLayerSkill || null;
 
-  let md = `# SKILL: ${skillData.title}
+  // ═══ QUICK COPY-PASTE PROMPT FIRST ═══
+  let md = `# 🚀 READY TO PROMPT
 
-## Metadata
-- **Soul-Hash**: ${skillData.soulHash}
-- **Author**: ${skillData.author}
-- **Domain**: ${skillData.domain}
-- **Version**: 1.0.0
-- **Created**: ${timestamp}
-- **Protocol**: THE 42 POST · Five-Layer Skill Architecture v0.1
-- **License**: Creator Reserved
+Copy the content below and paste directly into your AI assistant:
+
+\`\`\`
+${fiveLayer && fiveLayer.principle ? fiveLayer.principle : (skillData.desc || 'A skill forged in The 42 Post')}
+\`\`\`
 
 ---
 
-## Layer 1 · DEFINING / 定义
+# 📖 ABOUT THIS SKILL
+
+This is **not just a prompt** — it's a complete **Semantic Capital Skill** from THE 42 POST.
+
+- **What it is**: A structured framework for AI behavior aligned with human values
+- **What you get**:
+  1. A ready-to-use principle (copy above)
+  2. Real examples showing how it works
+  3. Clear boundaries (when to use, when to stop)
+  4. Test cases to verify effectiveness
+  5. Cultural adaptations for different contexts
+
+📚 **See "COMPLETE FRAMEWORK" section below** for the full five-layer architecture that agents and developers use.
+
+---
+
+# 📋 SKILL METADATA
+
+| Property | Value |
+|----------|-------|
+| **Title** | ${skillData.title} |
+| **Soul-Hash** | \`${skillData.soulHash}\` |
+| **Author** | ${skillData.author} |
+| **Domain** | ${skillData.domain} |
+| **Created** | ${timestamp} |
+| **Protocol** | THE 42 POST v0.1 |
+| **License** | ${skillData.commercial === 'allowed' ? '✅ Commercial' : skillData.commercial === 'authorized' ? '⚠️ Auth Required' : '❌ Non-commercial'} · ${skillData.remix === 'yes' ? '✅ Remixable' : '⚠️ Share-alike'} |
+
+---
+
+# ✨ COMPLETE FRAMEWORK
+
+> **For AI agents, LLM systems, and developers who need the full structure**
+
+---
+
+## 🎯 Layer 1 · PRINCIPLE / 核心原则
+
+**Why this skill exists — the philosophy behind it:**
+
 ${fiveLayer ? fiveLayer.principle : (skillData.desc || 'A skill forged in The 42 Post')}
 
 ---
 
-## Layer 2 · INSTANTIATING / 实例化
+## 📌 Layer 2 · EXEMPLARS / 实例演示
+
+**Before/after examples showing this skill in action:**
 `;
 
   if (fiveLayer && fiveLayer.exemplars && fiveLayer.exemplars.length > 0) {
     fiveLayer.exemplars.forEach((ex, i) => {
-      md += `\n### ${ex.label}
-> ${ex.text}
+      md += `\n### Example ${i + 1}: ${ex.label}
 
-*→ ${ex.note}*
+**Input / User says:**
+\`${ex.input || 'N/A'}\`
+
+**With this skill:**
+\`\`\`
+${ex.with_skill || 'Response with skill applied'}
+\`\`\`
+
+**Without this skill:**
+\`\`\`
+${ex.without_skill || 'Standard response without skill'}
+\`\`\`
+
+*Why this matters:* ${ex.note || 'Shows the skill in action'}
 `;
     });
   } else {
-    md += `*No exemplars generated — complete the Intuition Probe to generate comparative examples.*\n`;
+    md += `\n*No exemplars generated yet — complete the Intuition Probe to generate comparative examples.*\n`;
   }
 
-  md += `\n---\n\n## Layer 3 · FENCING / 围界\n`;
+  md += `\n---\n\n## 🚧 Layer 3 · BOUNDARIES / 应用边界\n\n**When to use this, when not to, and the gray areas:**\n`;
 
   if (fiveLayer && fiveLayer.boundaries) {
     const b = fiveLayer.boundaries;
     if (b.applies_when && b.applies_when.length) {
-      md += `\n### Applies when:
-`;
-      b.applies_when.forEach(t => { md += `- ✓ ${t}\n`; });
+      md += `\n### ✅ Apply this skill when:\n`;
+      b.applies_when.forEach(t => { md += `- ${t}\n`; });
     }
     if (b.does_not_apply && b.does_not_apply.length) {
-      md += `\n### Does not apply:
-`;
-      b.does_not_apply.forEach(t => { md += `- ✕ ${t}\n`; });
+      md += `\n### ❌ Do NOT apply when:\n`;
+      b.does_not_apply.forEach(t => { md += `- ${t}\n`; });
     }
     if (b.tension_zones && b.tension_zones.length) {
-      md += `\n### Tension zones (gray areas requiring judgment):
-`;
-      b.tension_zones.forEach(t => { md += `- ⚠ ${t}\n`; });
+      md += `\n### ⚠️ TENSION ZONES (requires judgment):\n`;
+      b.tension_zones.forEach(t => { md += `- **Gray area:** ${t}\n`; });
     }
   } else {
     md += `**Allowed use cases:** ${skillData.useCases || 'General creative and professional applications'}\n`;
     md += `**Disallowed uses:** ${skillData.disallowedUses || 'Harmful, illegal, or deceptive purposes'}\n`;
   }
 
-  md += `\n---\n\n## Layer 4 · VALIDATING / 验证\n`;
+  md += `\n---\n\n## ✔️ Layer 4 · EVALUATION / 验证标准\n\n**How to know if this skill is working:**\n`;
 
   if (fiveLayer && fiveLayer.evaluation && fiveLayer.evaluation.test_cases) {
     fiveLayer.evaluation.test_cases.forEach((tc, i) => {
-      md += `\n### Test Case ${i + 1}
-- **Prompt:** ${tc.prompt.substring(0, 200)}
-- **Expected:** ${tc.expected}
-- **Pass criteria:** ${tc.pass_criteria}
-`;
+      md += `\n### Test Case ${i + 1}\n`;
+      md += `**Prompt to test:** \n\`${tc.prompt}\`\n\n`;
+      md += `**Expected behavior:** \n${tc.pass_criteria}\n\n`;
+      if (tc.expected) {
+        md += `**Reference output:** \n\`\`\`\n${tc.expected}\n\`\`\`\n`;
+      }
     });
-    md += `\n**Metric:** \`${fiveLayer.evaluation.metric}\`\n`;
+    md += `\n**Success metric:** \`${fiveLayer.evaluation.metric || 'quality_score'}\`\n`;
   } else {
-    md += `*No evaluation test cases — complete the Intuition Probe to auto-generate.*\n`;
+    md += `\n*No evaluation test cases generated yet — complete the Intuition Probe to auto-generate.*\n`;
   }
 
-  md += `\n---\n\n## Layer 5 · CONTEXTUALIZING / 情境化\n`;
+  md += `\n---\n\n## 🌍 Layer 5 · CULTURAL VARIANTS / 文化适配\n\n**Localized versions for different languages and cultures:**\n`;
 
   if (fiveLayer && fiveLayer.cultural_variants) {
     for (const [locale, variant] of Object.entries(fiveLayer.cultural_variants)) {
-      md += `\n### ${locale}
-- **Note:** ${variant.principle_note}
-- **Adaptation:** ${variant.adaptation}
-`;
+      const localeLabel = locale === 'zh-CN' ? '🇨🇳 Chinese' : locale === 'en-US' ? '🇺🇸 English' : locale === 'ja-JP' ? '🇯🇵 Japanese' : locale;
+      md += `\n### ${localeLabel} (\`${locale}\`)\n`;
+      md += `**Cultural context:** ${variant.principle_note || variant.note || 'N/A'}\n\n`;
+      md += `**Adaptation for this locale:**\n${variant.adaptation || 'N/A'}\n`;
     }
   } else {
-    md += `*Cultural adaptation pending — will be generated based on probe responses.*\n`;
+    md += `\n*Cultural adaptations pending — will be generated based on usage patterns.*\n`;
   }
 
-  md += `\n---\n\n## Creator Rights
-- **Commercial Use**: ${skillData.commercial === 'allowed' ? 'Allowed' : skillData.commercial === 'authorized' ? 'Authorization Required' : 'Prohibited'}
-- **Remix**: ${skillData.remix === 'yes' ? 'Allowed' : skillData.remix === 'share-alike' ? 'Share-alike Required' : 'Not Allowed'}
+  md += `\n---\n\n## ⚖️ CREATOR RIGHTS & LICENSING
+
+| Right | Status |
+|-------|--------|
+| **Commercial Use** | ${skillData.commercial === 'allowed' ? '✅ Free to use commercially' : skillData.commercial === 'authorized' ? '⚠️ Requires permission' : '❌ Non-commercial only'} |
+| **Remixing** | ${skillData.remix === 'yes' ? '✅ Full remix allowed' : skillData.remix === 'share-alike' ? '⚠️ Share-alike (derivatives must share same rights)' : '❌ No derivatives'} |
+| **Creator** | ${skillData.author} ${skillData.email ? `(${skillData.email})` : ''} |
 
 ---
-*Forged with THE 42 POST · Human Semantic Capital Protocol*
+
+## 📚 USING THIS SKILL
+
+1. **For immediate use:** Copy the "READY TO PROMPT" section at the top
+2. **For integration:** Use the complete five-layer framework above
+3. **For agents:** Pass this entire file to your agent/LLM system
+4. **For modification:** Respect the licensing terms above
+
+---
+
+*Forged with ❤️ via THE 42 POST · Human Semantic Capital Protocol*
+*Protocol Version: v0.1 | Generated: ${timestamp}*
 `;
 
   return md;
