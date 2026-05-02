@@ -964,30 +964,36 @@
     }
     .twin-skill-line .twin-skill-icon { font-size: 16px; }
     .twin-principle {
-      margin-top: 6px; font-size: 13px; color: #5a5048;
-      font-style: italic; line-height: 1.5;
-      border-left: 2px solid #d4c8a8; padding: 2px 0 2px 10px;
+      margin-top: 8px; margin-bottom: 14px;
+      font-size: 14px; color: #2a2520; font-weight: 500;
+      line-height: 1.7; letter-spacing: 0.3px;
+      border-left: 3px solid var(--coral); padding: 8px 0 8px 12px;
+      background: rgba(212, 114, 106, 0.06);
+      border-radius: 2px;
     }
     .twin-scenario-tag {
       display: inline-flex; align-items: center; gap: 8px;
-      margin-top: 0; font-size: 11px; color: #7a6f5e;
+      margin-top: 0; font-size: 10px; color: #7a6f5e;
       letter-spacing: 1px; text-transform: uppercase;
-      font-weight: 500;
-      margin-bottom: 12px;
+      font-weight: 600;
+      margin-bottom: 14px;
     }
     .twin-tag-symbol {
-      font-size: 14px; color: #b8915a; display: inline-block;
+      font-size: 14px; color: var(--coral); display: inline-block;
       margin-right: 2px;
     }
     .twin-scenario-title {
-      margin-top: 0; font-size: 18px; font-weight: 600; color: #2a2520;
-      line-height: 1.4;
-      margin-bottom: 10px;
+      margin-top: 0; font-size: 18px; font-weight: 700; color: #2a2520;
+      line-height: 1.5;
+      margin-bottom: 12px;
+      letter-spacing: 0.2px;
+      font-family: var(--font-serif-cn-heading);
     }
     .twin-scenario-desc {
-      margin-top: 0; font-size: 14px; color: #5a5048; line-height: 1.6;
+      margin-top: 0; font-size: 14px; color: #5a5048; line-height: 1.7;
+      letter-spacing: 0.2px;
     }
-    .twin-stage { margin-top: 18px; }
+    .twin-stage { margin-top: 20px; }
     /* CRITICAL: ensure the [hidden] attribute always wins over a stage's
        own display rule. Without this, .twin-loading's `display: flex`
        overrode `[hidden] { display: none }` and the spinner+caption
@@ -1097,13 +1103,14 @@
       display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
     }
     .twin-action-btn {
-      padding: 12px;
-      background: #2a2520; color: #fdfaf3; border: none;
+      padding: 13px 20px;
+      background: var(--teal); color: #fdfaf3; border: none;
       border-radius: 8px; cursor: pointer; font-weight: 600;
-      font-family: inherit; letter-spacing: 0.3px; font-size: 13px;
-      transition: all 0.15s ease;
+      font-family: inherit; letter-spacing: 0.5px; font-size: 14px;
+      transition: all 0.18s ease;
+      box-shadow: 0 3px 10px rgba(58, 154, 140, 0.18);
     }
-    .twin-action-btn:hover { background: #3a3530; transform: translateY(-1px); }
+    .twin-action-btn:hover { background: #2a8676; transform: translateY(-2px); box-shadow: 0 5px 14px rgba(58, 154, 140, 0.25); }
     .twin-action-btn.secondary {
       background: transparent; color: #2a2520; border: 1px solid #c9bfa5;
     }
@@ -1171,14 +1178,15 @@
     }
     .twin-trigger-stats strong { color: #b8915a; font-size: 15px; font-weight: 700; }
     .twin-trigger-btn {
-      padding: 12px 32px;
-      background: #2a2520; color: #fdfaf3; border: none;
+      padding: 14px 36px;
+      background: var(--teal); color: #fdfaf3; border: none;
       border-radius: 8px; cursor: pointer;
-      font-family: inherit; font-size: 13px; font-weight: 600;
-      letter-spacing: 1px;
-      transition: background 0.18s ease, transform 0.18s ease;
+      font-family: inherit; font-size: 14px; font-weight: 600;
+      letter-spacing: 0.8px;
+      transition: background 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
+      box-shadow: 0 4px 12px rgba(58, 154, 140, 0.2);
     }
-    .twin-trigger-btn:hover { background: #3a3530; transform: translateY(-1px); }
+    .twin-trigger-btn:hover { background: #2a8676; transform: translateY(-2px); box-shadow: 0 6px 16px rgba(58, 154, 140, 0.3); }
     /* Quiet "swap default skill" link below the START button. Sits as
        a third-tier action in the visual hierarchy so the eye lands on
        Start first; only users who actually want to change it notice
@@ -1190,28 +1198,32 @@
        one-line diagnostic, the rating prompt, three reaction buttons,
        and an optional 140-char comment box. */
     .twin-rate-grid {
-      display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+      display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
     }
     @media (max-width: 520px) {
       .twin-rate-grid { grid-template-columns: 1fr; }
     }
     .twin-rate-card {
       display: flex; flex-direction: column;
-      padding: 12px 13px;
-      background: #fdfaf3; border: 1.5px solid #e0d5b8;
-      border-radius: 8px;
-      min-width: 0; /* lets long words wrap inside the grid cell */
-      transition: background 0.2s ease, border-color 0.2s ease;
+      padding: 14px 16px;
+      background: #fdfaf3; border: 1px solid #d4c8a8;
+      border-radius: 10px;
+      min-width: 0;
+      transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
     }
-    /* The skill-side card is "the curated one" — marked the way a
-       printer would highlight a chosen plate: a thin marigold left
-       rule and the lightest warm wash. Reads as honoured, not
-       different-coloured. */
+    .twin-rate-card:hover {
+      border-color: #c0b395;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
     .twin-rate-card.twin-rate-skill {
       background: #faf3df;
-      border-color: #e0d5b8;
-      border-left: 3px solid #d4a43c;
-      box-shadow: 0 2px 10px rgba(212, 164, 60, 0.12);
+      border-color: #d4a43c;
+      border-left: 4px solid var(--marigold);
+      box-shadow: 0 3px 12px rgba(212, 164, 60, 0.15);
+    }
+    .twin-rate-card.twin-rate-skill:hover {
+      box-shadow: 0 5px 16px rgba(212, 164, 60, 0.2);
     }
     .twin-rate-label {
       display: flex; align-items: center; gap: 6px;
@@ -1248,9 +1260,11 @@
       font-size: 12px; color: #5a5048; line-height: 1.5; font-style: italic;
     }
     .twin-rate-question {
-      margin-top: 18px; margin-bottom: 10px;
-      font-size: 14px; font-weight: 600; color: #2a2520;
+      margin-top: 20px; margin-bottom: 14px;
+      font-size: 15px; font-weight: 700; color: #2a2520;
       text-align: center;
+      letter-spacing: 0.3px;
+      font-family: var(--font-serif-cn-heading);
     }
     .twin-rate-buttons {
       display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px;
@@ -1317,20 +1331,19 @@
     /* ─── Thank-you stage ──────────────────────────────────────────
        Warm closer + two "keep playing" actions. */
     .twin-thanks {
-      padding: 22px 18px; text-align: center;
+      padding: 28px 20px; text-align: center;
     }
     .twin-thanks-headline {
-      font-size: 16px; font-weight: 600; color: #2a2520;
-      margin-bottom: 10px;
+      font-size: 18px; font-weight: 700; color: #2a2520;
+      letter-spacing: 0.3px;
+      margin-bottom: 14px;
+      font-family: var(--font-serif-cn-heading);
     }
     .twin-thanks-stats {
-      font-size: 12px; color: #5a5048; line-height: 1.5;
-      margin-bottom: 18px;
+      font-size: 13px; color: #5a5048; line-height: 1.7;
+      margin-bottom: 20px;
     }
-    /* Marigold for the "X% said it was clearly better" highlight —
-       the warm gem-glow of a positive result, in the same family as
-       the skill-side card's left rule. */
-    .twin-thanks-stats strong { color: #b8851e; }
+    .twin-thanks-stats strong { color: var(--marigold); font-weight: 700; }
     .twin-thanks-actions {
       display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;
     }
@@ -2149,8 +2162,13 @@
     }
 
     function getSkillPrincipleLine(skill) {
+      const isCn = (typeof currentLang !== 'undefined' && currentLang === 'cn');
       const fl = skill.five_layer || {};
-      return fl.principle || fl.defining?.principle || skill.description || skill.description_cn || '';
+      // Only show Chinese principle for card display
+      if (isCn) {
+        return fl.principle_cn || skill.description_cn || '';
+      }
+      return fl.principle || fl.defining?.principle || skill.description || '';
     }
     function getSkillTitle(skill) {
       const isCn = (typeof currentLang !== 'undefined' && currentLang === 'cn');
@@ -2208,7 +2226,7 @@
               <option value="" disabled>${isCn ? '— 选择 —' : '— Select —'}</option>
             </select>
             <button class="twin-pickskill-confirm" data-skill-confirm
-                    style="width:100%;margin-top:14px;padding:12px;background:#2a2520;color:#fdfaf3;border:none;border-radius:6px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;transition:background 0.18s ease;"
+                    style="width:100%;margin-top:14px;padding:12px;background:#3a9a8c;color:#fdfaf3;border:none;border-radius:6px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;transition:background 0.18s ease;"
                     disabled>
               ${isCn ? '使用这个 Skill →' : 'Use this Skill →'}
             </button>
