@@ -1104,13 +1104,12 @@
     }
     .twin-action-btn {
       padding: 13px 20px;
-      background: var(--teal); color: #fdfaf3; border: none;
+      background: #2a2520; color: #fdfaf3; border: none;
       border-radius: 8px; cursor: pointer; font-weight: 600;
       font-family: inherit; letter-spacing: 0.5px; font-size: 14px;
       transition: all 0.18s ease;
-      box-shadow: 0 3px 10px rgba(58, 154, 140, 0.18);
     }
-    .twin-action-btn:hover { background: #2a8676; transform: translateY(-2px); box-shadow: 0 5px 14px rgba(58, 154, 140, 0.25); }
+    .twin-action-btn:hover { background: #3a3530; transform: translateY(-2px); }
     .twin-action-btn.secondary {
       background: transparent; color: #2a2520; border: 1px solid #c9bfa5;
     }
@@ -1179,14 +1178,13 @@
     .twin-trigger-stats strong { color: #b8915a; font-size: 15px; font-weight: 700; }
     .twin-trigger-btn {
       padding: 14px 36px;
-      background: var(--teal); color: #fdfaf3; border: none;
+      background: #2a2520; color: #fdfaf3; border: none;
       border-radius: 8px; cursor: pointer;
       font-family: inherit; font-size: 14px; font-weight: 600;
       letter-spacing: 0.8px;
-      transition: background 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
-      box-shadow: 0 4px 12px rgba(58, 154, 140, 0.2);
+      transition: background 0.18s ease, transform 0.18s ease;
     }
-    .twin-trigger-btn:hover { background: #2a8676; transform: translateY(-2px); box-shadow: 0 6px 16px rgba(58, 154, 140, 0.3); }
+    .twin-trigger-btn:hover { background: #3a3530; transform: translateY(-2px); }
     /* Quiet "swap default skill" link below the START button. Sits as
        a third-tier action in the visual hierarchy so the eye lands on
        Start first; only users who actually want to change it notice
@@ -1404,8 +1402,6 @@
   <!-- ═══ TOP BAR ═══ -->
   <div class="workshop-bar">
     <div class="bar-left">
-      <div class="bar-logo">THE 42 POST</div>
-      <div class="bar-divider"></div>
       <div class="bar-subtitle" data-i18n="arena_bar_subtitle">Taste Playground</div>
     </div>
     <div class="bar-right">
@@ -2226,7 +2222,7 @@
               <option value="" disabled>${isCn ? '— 选择 —' : '— Select —'}</option>
             </select>
             <button class="twin-pickskill-confirm" data-skill-confirm
-                    style="width:100%;margin-top:14px;padding:12px;background:#3a9a8c;color:#fdfaf3;border:none;border-radius:6px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;transition:background 0.18s ease;"
+                    style="width:100%;margin-top:14px;padding:12px;background:#2a2520;color:#fdfaf3;border:none;border-radius:6px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;transition:background 0.18s ease;"
                     disabled>
               ${isCn ? '使用这个 Skill →' : 'Use this Skill →'}
             </button>
