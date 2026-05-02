@@ -28,6 +28,16 @@
   --accent: var(--coral);
   --accent-green: #6b9d5c;
   --accent-green-light: #8ab57a;
+  /* Button color system */
+  --btn-dark: #2a2520;
+  --btn-dark-hover: #1a1510;
+  --btn-charcoal: #3c3028;
+  --btn-charcoal-hover: #2c2218;
+  /* Spacing scale */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 12px;
+  --spacing-lg: 16px;
   /* Typography — DIE ZEIT editorial serif */
   --font-head: 'Playfair Display', 'Georgia', serif;
   --font-mono: 'JetBrains Mono', 'SF Mono', 'Consolas', monospace;
@@ -1572,7 +1582,7 @@ body[data-lang="cn"] .voices-header-text {
 }
 
 .btn-chat-send {
-  background: #2a2520;
+  background: var(--btn-dark);
   border: none;
   color: #fff;
   font-family: var(--font-serif);
@@ -1587,17 +1597,16 @@ body[data-lang="cn"] .voices-header-text {
 }
 
 .btn-chat-send:hover {
-  background: #1a1510;
+  background: var(--btn-dark-hover);
   transform: translateY(-2px);
 }
 
-/* Share button success state — turns green after submission */
 .btn-chat-send.success {
-  background: #6b9d5c;
+  background: var(--accent-green);
 }
 
 .btn-chat-send.success:hover {
-  background: #5a8b4d;
+  background: var(--accent-green-light);
 }
 
 .btn-chat-send:active {
@@ -1755,29 +1764,28 @@ body[data-lang="cn"] .voices-header-text {
   padding: 12px 0;
 }
 
+/* Share button base styles (avatar context) */
 .btn-chat-send {
   font-size: 14px;
   padding: 12px 28px;
   border-radius: 8px;
-  background: #2a2520;
+  background: var(--btn-dark);
   box-shadow: 0 2px 8px rgba(42, 37, 32, 0.15);
-  transition: background 0.25s ease, transform 0.2s ease, box-shadow 0.25s ease;
+  transition: background 0.25s ease, transform 0.2s ease;
 }
 
 .btn-chat-send:hover {
-  background: #1a1510;
-  box-shadow: 0 4px 16px rgba(42, 37, 32, 0.2);
+  background: var(--btn-dark-hover);
   transform: translateY(-2px);
 }
 
-/* Share button turns green after submission */
 .btn-chat-send.success {
-  background: #6b9d5c;
+  background: var(--accent-green);
   box-shadow: 0 2px 8px rgba(107, 157, 92, 0.2);
 }
 
 .btn-chat-send.success:hover {
-  background: #5a8b4d;
+  background: var(--accent-green-light);
   box-shadow: 0 4px 16px rgba(107, 157, 92, 0.3);
 }
 
@@ -6281,9 +6289,9 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 .domain-skill-actions {
   display: flex;
   align-items: center;
-  gap: 4px;
-  margin-top: 8px;
-  padding-top: 8px;
+  gap: var(--spacing-xs);
+  margin-top: var(--spacing-sm);
+  padding-top: var(--spacing-sm);
   border-top: 1px solid rgba(212, 200, 188, 0.4);
 }
 
@@ -6294,8 +6302,8 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 4px;
-  padding: 5px 6px;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-xs) var(--spacing-sm);
   background: transparent;
   border: 1px solid #d4c8bc;
   border-radius: 5px;
@@ -6329,15 +6337,15 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
    so the eye lands on it as the primary "do something with this skill"
    move. Star/Download stay quieter as supporting actions. */
 .btn-skill-play {
-  background: #3c3028;
-  border-color: #3c3028;
+  background: var(--btn-charcoal);
+  border-color: var(--btn-charcoal);
   color: #fff;
   font-weight: 600;
 }
 
 .btn-skill-play:hover {
-  background: #2c2218;
-  border-color: #2c2218;
+  background: var(--btn-charcoal-hover);
+  border-color: var(--btn-charcoal-hover);
   transform: translateY(-1px);
 }
 
@@ -8995,7 +9003,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 
 /* Download button */
 #btnDownloadCertificate {
-  background: #3c3028 !important;
+  background: var(--btn-charcoal) !important;
   color: var(--wc-cream) !important;
   padding: 11px 28px !important;
   border-radius: 24px !important;
@@ -9007,7 +9015,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
   transition: all 0.25s !important;
 }
 #btnDownloadCertificate:hover {
-  background: #2c2218 !important;
+  background: var(--btn-charcoal-hover) !important;
   transform: translateY(-1px) !important;
   box-shadow: 0 4px 18px rgba(42,32,24,0.24) !important;
 }

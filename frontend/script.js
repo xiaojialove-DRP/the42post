@@ -5547,11 +5547,12 @@ function initHeadlineHero() {
         ethicsFail.classList.remove('visible');
         ethicsPass.classList.add('visible');
 
-        // Change button color to green after successful share
-        testBtn.classList.add('success');
-        testBtn.textContent = '✓ 已分享';
+        // Transition button to success state
+        if (!testBtn.classList.contains('success')) {
+          testBtn.classList.add('success');
+          testBtn.textContent = '✓ 已分享';
+        }
 
-        // Store the idea for when user clicks the button
         window.shareIdea = text;
       }, 600);
     });

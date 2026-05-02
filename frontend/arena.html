@@ -2491,23 +2491,13 @@
           select.appendChild(opt);
         });
 
-        // Auto-select the skill — priority:
-        // 1. If coming from Archive (?skill=xxx), pre-select that skill
-        // 2. Otherwise select the first option (user's own or top community)
-        // The dedicated confirm button avoids the awkward "change event
-        // doesn't fire on the already-selected first option" trap.
         const confirmBtn = stage.querySelector('[data-skill-confirm]');
         if (skills.length > 0) {
-          let selectedSkillId = skills[0].id;
-
-          // If TWIN_TEST_SKILL was pre-loaded from ?skill= parameter,
-          // try to select it from the dropdown
-          if (window.TWIN_TEST_SKILL && window.TWIN_TEST_SKILL.id) {
-            const skillInList = skills.find(s => s.id === window.TWIN_TEST_SKILL.id);
-            if (skillInList) {
-              selectedSkillId = window.TWIN_TEST_SKILL.id;
-            }
-          }
+          // Auto-select: prioritize Archive-sourced skill, fallback to first
+          const preloadedSkillId = window.TWIN_TEST_SKILL?.id;
+          const selectedSkillId = preloadedSkillId && skills.some(s => s.id === preloadedSkillId)
+            ? preloadedSkillId
+            : skills[0].id;
 
           select.value = selectedSkillId;
           confirmBtn.disabled = false;
