@@ -987,6 +987,12 @@
       margin-top: 0; font-size: 14px; color: #5a5048; line-height: 1.6;
     }
     .twin-stage { margin-top: 18px; }
+    /* CRITICAL: ensure the [hidden] attribute always wins over a stage's
+       own display rule. Without this, .twin-loading's `display: flex`
+       overrode `[hidden] { display: none }` and the spinner+caption
+       leaked into the trigger view (every card showed "generating two
+       responses…" before the user even clicked Start). */
+    .twin-stage[hidden] { display: none !important; }
     .twin-loading {
       display: flex; align-items: center; justify-content: center;
       padding: 32px 0; color: #7a6f5e; font-size: 14px;
@@ -1186,9 +1192,11 @@
       .twin-rate-grid { grid-template-columns: 1fr; }
     }
     .twin-rate-card {
+      display: flex; flex-direction: column;
       padding: 12px 13px;
       background: #fdfaf3; border: 1.5px solid #e0d5b8;
       border-radius: 8px;
+      min-width: 0; /* lets long words wrap inside the grid cell */
       transition: background 0.2s ease, border-color 0.2s ease;
     }
     .twin-rate-card.twin-rate-skill {
@@ -1215,6 +1223,11 @@
     .twin-rate-card.twin-rate-skill .twin-rate-tag { color: #4a7237; }
     .twin-rate-text {
       font-size: 13px; line-height: 1.55; color: #2a2520;
+      /* Cap text growth so a long response can't push the card past
+         the visible viewport. Scrollbar appears only when needed. */
+      max-height: 220px; overflow-y: auto;
+      overflow-wrap: break-word; word-break: break-word;
+      padding-right: 4px;
     }
     .twin-rate-diagnostic {
       margin-top: 14px; padding: 9px 12px;
@@ -2209,15 +2222,16 @@
             </div>
           </div>
 
-          <!-- Thank-you stage. Two warm follow-up actions instead of a
-               dead end, so the user keeps playing: a fresh scenario with
-               the same skill, or pick a different skill entirely. -->
+          <!-- Thank-you stage. Single CTA per user feedback — two
+               buttons added decision overhead. "Try another Skill"
+               drops the cached skill and respawns a fresh card so the
+               user lands back at the picker (with a new random
+               scenario), keeping the play loop short. -->
           <div class="twin-stage twin-thanks" hidden>
             <div class="twin-thanks-headline">${isCn ? '感谢你的反馈！' : 'Thank you for your feedback!'}</div>
             <div class="twin-thanks-stats" data-thanks-stats></div>
             <div class="twin-thanks-actions">
-              <button class="twin-action-btn secondary" data-action="next-scenario">${isCn ? '↻ 换个情境' : '↻ Next scenario'}</button>
-              <button class="twin-action-btn" data-action="next-skill">${isCn ? '↻ 换个 Skill' : '↻ Different skill'}</button>
+              <button class="twin-action-btn" data-action="next-skill">${isCn ? '↻ 试试别的 Skill' : '↻ Try another Skill'}</button>
             </div>
           </div>
         </div>
@@ -2587,18 +2601,10 @@
         stageThanks.classList.add(isSmallScreen ? 'fade-animation' : 'expand-animation');
 
         if (!stageThanks.dataset.wired) {
-          stageThanks.querySelector('[data-action="next-scenario"]').addEventListener('click', () => {
-            // Pick a different task in the same repo to keep variety.
-            let next = repo.tasks[Math.floor(Math.random() * repo.tasks.length)];
-            if (repo.tasks.length > 1 && next.title === task.title) {
-              next = repo.tasks.find(t => t.title !== task.title) || next;
-            }
-            card.classList.add('minimizing');
-            setTimeout(() => { card.remove(); checkEmpty(); spawnCard(next, repo); }, 280);
-          });
           stageThanks.querySelector('[data-action="next-skill"]').addEventListener('click', () => {
-            // Drop the cached skill so the user is sent through the
-            // picker again on the next card.
+            // Drop the cached skill so the user is sent back through
+            // the picker on the next card. Also pick a fresh random
+            // task so the new round feels like a clean restart.
             window.TWIN_TEST_SKILL = null;
             const newTask = repo.tasks[Math.floor(Math.random() * repo.tasks.length)];
             card.classList.add('minimizing');

@@ -39,24 +39,28 @@ function buildPrompts(scenario, skill, language) {
   const notApplies = (fl.boundaries?.does_not_apply || []).slice(0, 2).join(' / ');
   const exemplar = (fl.exemplars || []).find(e => /DO/i.test(e.label || ''))?.text || '';
 
+  // Tight length budget — both responses must fit inside an A/B card
+  // without forcing the user to scroll. 1-2 sentences forces the LLM
+  // to compress to the essence; longer outputs muddied the contrast
+  // between with-skill and without-skill responses anyway.
   const withSkillPrompt = readyPrompt
     ? (isCn
         ? `${readyPrompt}
 
-请用 2-4 句话，第一人称，回应下面的情境。让上面这条 Skill 的精神在你的回应里自然活起来——不引用、不复述，只是体现。
+请用 1-2 句话（≤60 字），第一人称，回应下面的情境。让上面这条 Skill 的精神在你的回应里自然活起来——不引用、不复述，只是体现。
 
 情境：
 ${scenarioText}
 
-只返回 JSON：{"response":"你的回应（2-4 句，第一人称，无引言无说明）"}`
+只返回 JSON：{"response":"你的回应（1-2 句，≤60 字，无引言无说明）"}`
         : `${readyPrompt}
 
-Respond in 2-4 sentences, first person, to the scenario below. Let the Skill above come through your response naturally — don't quote it, embody it.
+Respond in 1-2 sentences (≤45 words), first person, to the scenario below. Let the Skill above come through your response naturally — don't quote it, embody it.
 
 Scenario:
 ${scenarioText}
 
-Return JSON only: {"response":"your reply (2-4 sentences, first person, no preamble, no commentary)"}`)
+Return JSON only: {"response":"your reply (1-2 sentences, ≤45 words, no preamble, no commentary)"}`)
     : (isCn
         ? `你是一个 AI 助手，正在按照下面这个 Skill 行事：
 
@@ -65,12 +69,12 @@ ${applies ? `【适用】${applies}` : ''}
 ${notApplies ? `【不适用】${notApplies}` : ''}
 ${exemplar ? `【参考做法】${exemplar}` : ''}
 
-请用 2-4 句话，第一人称，回应下面的情境。让这个 Skill 的精神在你的回应里活起来——不是引用它，是体现它。
+请用 1-2 句话（≤60 字），第一人称，回应下面的情境。让这个 Skill 的精神在你的回应里活起来——不是引用它，是体现它。
 
 情境：
 ${scenarioText}
 
-只返回 JSON：{"response":"你的回应（2-4 句，第一人称，无引言无说明）"}`
+只返回 JSON：{"response":"你的回应（1-2 句，≤60 字，无引言无说明）"}`
         : `You are an AI agent acting under the following Skill:
 
 【Principle】${principle}
@@ -78,26 +82,26 @@ ${applies ? `【Applies when】${applies}` : ''}
 ${notApplies ? `【Does not apply when】${notApplies}` : ''}
 ${exemplar ? `【Reference behaviour】${exemplar}` : ''}
 
-Respond in 2-4 sentences, first person, to the scenario below. Let the spirit of the Skill come through your response — don't quote it, embody it.
+Respond in 1-2 sentences (≤45 words), first person, to the scenario below. Let the spirit of the Skill come through your response — don't quote it, embody it.
 
 Scenario:
 ${scenarioText}
 
-Return JSON only: {"response":"your reply (2-4 sentences, first person, no preamble, no commentary)"}`);
+Return JSON only: {"response":"your reply (1-2 sentences, ≤45 words, no preamble, no commentary)"}`);
 
   const withoutSkillPrompt = isCn
-    ? `你是一个有用的 AI 助手。请用 2-4 句话，第一人称，回应下面的情境。
+    ? `你是一个有用的 AI 助手。请用 1-2 句话（≤60 字），第一人称，回应下面的情境。
 
 情境：
 ${scenarioText}
 
-只返回 JSON：{"response":"你的回应（2-4 句，第一人称，无引言无说明）"}`
-    : `You are a helpful AI agent. Respond in 2-4 sentences, first person, to the scenario below.
+只返回 JSON：{"response":"你的回应（1-2 句，≤60 字，无引言无说明）"}`
+    : `You are a helpful AI agent. Respond in 1-2 sentences (≤45 words), first person, to the scenario below.
 
 Scenario:
 ${scenarioText}
 
-Return JSON only: {"response":"your reply (2-4 sentences, first person, no preamble, no commentary)"}`;
+Return JSON only: {"response":"your reply (1-2 sentences, ≤45 words, no preamble, no commentary)"}`;
 
   return { withSkillPrompt, withoutSkillPrompt, isCn };
 }
