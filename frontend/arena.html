@@ -1182,14 +1182,6 @@
        a third-tier action in the visual hierarchy so the eye lands on
        Start first; only users who actually want to change it notice
        the link. */
-    .twin-trigger-swap {
-      display: inline-block; margin-top: 12px;
-      color: #8a7a6e; font-size: 11px; letter-spacing: 0.5px;
-      text-decoration: none; cursor: pointer;
-      transition: color 0.15s ease;
-    }
-    .twin-trigger-swap:hover { color: #2a2520; text-decoration: underline; }
-
     /* ─── Reveal-mode rating stage ─────────────────────────────────
        A/B sit side-by-side. The skill side gets a green-tinted card +
        🔥 tag so the user sees which response was generated under the
@@ -2192,12 +2184,6 @@
           <div class="twin-stage twin-trigger" hidden>
             <div class="twin-trigger-stats" data-trigger-stats></div>
             <button class="twin-trigger-btn" data-trigger-btn>${isCn ? '▶ 开始测试' : '▶ START TEST'}</button>
-            <!-- Quiet escape hatch: the auto-loaded default skill won't
-                 always be what the user wants. Tapping this re-opens
-                 the picker stage so they can swap before starting. -->
-            <a class="twin-trigger-swap" data-trigger-swap href="#" role="button">
-              ${isCn ? '↻ 换个 Skill' : '↻ change skill'}
-            </a>
           </div>
 
           <div class="twin-stage twin-loading" hidden>
@@ -2256,7 +2242,7 @@
             <textarea class="twin-rate-comment"
                       data-comment
                       maxlength="140"
-                      rows="1"
+                      rows="4"
                       placeholder="${isCn ? '💭 有其他想法？（可选，140字以内）' : '💭 Anything else? (optional, 140 chars)'}"></textarea>
             <span class="twin-rate-counter" data-comment-counter>0 / 140</span>
           </div>
@@ -2391,26 +2377,12 @@
         ? `🎯 <strong>${skillTitle}</strong> — 一键生成两个回应，看看这个 Skill 让 AI 怎样不一样`
         : `🎯 <strong>${skillTitle}</strong> — one click, two responses, see how this Skill changes the AI`;
 
-      // Wire the START + swap actions exactly once per card (the
-       // trigger stage can be re-shown when the user swaps a skill).
+      // Wire the START action exactly once per card.
       if (!stage.dataset.wired) {
         btn.addEventListener('click', () => {
           stage.hidden = true;
           runTwinTest(card, task, repo);
         });
-        const swap = stage.querySelector('[data-trigger-swap]');
-        if (swap) {
-          swap.addEventListener('click', (e) => {
-            e.preventDefault();
-            // Drop the cached skill so the picker opens cleanly, then
-            // hand control back to showSkillPickerInCard which already
-            // knows how to populate + advance to the trigger stage on
-            // confirm.
-            window.TWIN_TEST_SKILL = null;
-            stage.hidden = true;
-            showSkillPickerInCard(card, task, repo);
-          });
-        }
         stage.dataset.wired = '1';
       }
     }
@@ -2687,11 +2659,24 @@
         stageThanks.classList.add(isSmallScreen ? 'fade-animation' : 'expand-animation');
 
         if (!stageThanks.dataset.wired) {
-          stageThanks.querySelector('[data-action="next-skill"]').addEventListener('click', () => {
-            // Drop the cached skill so the user is sent back through
-            // the picker on the next card. Also pick a fresh random
-            // task so the new round feels like a clean restart.
-            window.TWIN_TEST_SKILL = null;
+          stageThanks.querySelector('[data-action="next-skill"]').addEventListener('click', async () => {
+            // Load a fresh skill (most popular) and spawn a new card
+            // with a fresh scenario. No picker UI — drops straight into
+            // the next test with a new skill + scenario combo.
+            try {
+              const skills = await fetchHotSkills(1);
+              if (skills && skills.length > 0) {
+                const newSkill = skills[0];
+                if (typeof newSkill.five_layer === 'string') {
+                  try { newSkill.five_layer = JSON.parse(newSkill.five_layer); } catch { newSkill.five_layer = {}; }
+                }
+                window.TWIN_TEST_SKILL = newSkill;
+              }
+            } catch (e) {
+              console.warn('Failed to fetch new skill:', e);
+              // Continue without a new skill; card will auto-load default
+            }
+
             const newTask = repo.tasks[Math.floor(Math.random() * repo.tasks.length)];
             card.classList.add('minimizing');
             setTimeout(() => { card.remove(); checkEmpty(); spawnCard(newTask, repo); }, 280);
