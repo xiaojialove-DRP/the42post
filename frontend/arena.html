@@ -1253,16 +1253,13 @@
       text-align: center;
     }
     .twin-rate-buttons {
-      display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;
-    }
-    @media (max-width: 380px) {
-      .twin-rate-buttons { grid-template-columns: 1fr; }
+      display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px;
     }
     .twin-rate-btn {
-      display: flex; flex-direction: column; align-items: center; gap: 4px;
-      padding: 12px 8px;
+      display: flex; flex-direction: column; align-items: center; gap: 2px;
+      padding: 8px 4px;
       background: #fdfaf3; border: 1.5px solid #d4c8a8;
-      border-radius: 8px; cursor: pointer;
+      border-radius: 6px; cursor: pointer;
       font-family: inherit;
       transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
     }
@@ -1283,10 +1280,10 @@
        choice register, not a dimmed ghost. */
     .twin-rate-btn:disabled { opacity: 0.45; cursor: default; }
     .twin-rate-btn.selected:disabled { opacity: 1; }
-    .twin-rate-emoji { font-size: 22px; line-height: 1; }
+    .twin-rate-emoji { font-size: 18px; line-height: 1; }
     .twin-rate-word {
-      font-size: 11px; color: #2a2520; font-weight: 500;
-      letter-spacing: 0.3px;
+      font-size: 9px; color: #2a2520; font-weight: 500;
+      letter-spacing: 0.2px;
     }
     /* Always-visible optional note. Sits at minimum visual weight
        under the rating buttons — single line tall by default, with a
@@ -2191,7 +2188,10 @@
               <span class="twin-skill-placeholder">${isCn ? '挑一个热门 Skill 来测' : 'Pick a Hot Skill to Test'}</span>
             </div>
           </div>
-          <button class="card-close" title="${isCn ? '关闭' : 'Close'}" style="font-size:14px;cursor:pointer;">✕</button>
+          <div class="card-header-right" style="display:flex;gap:12px;align-items:center;">
+            <span class="twin-vote-counter" data-vote-counter style="font-size:12px;color:#777;font-family:var(--font-mono);"></span>
+            <button class="card-close" title="${isCn ? '关闭' : 'Close'}" style="font-size:14px;cursor:pointer;">✕</button>
+          </div>
         </div>
         <div class="card-body card-body--twin">
           <div class="twin-principle" data-principle hidden></div>
@@ -2347,21 +2347,9 @@
       canvas.appendChild(card);
       setTimeout(() => card.classList.remove('spawning'), 600);
 
-      // Branch order:
-      //   1. window.TWIN_TEST_SKILL preset (came from Archive's ▶Play
-      //      button or a previous round of this session) → trigger.
-      //   2. No preset → auto-load the picker's first option (the
-      //      user's own latest forge if any, otherwise the top
-      //      community skill) and go straight to trigger. The user
-      //      can swap via the small "↻ change skill" link rendered
-      //      on the trigger stage. This kills the extra picker tap
-      //      on first open without removing user choice.
-      if (window.TWIN_TEST_SKILL) {
-        applyTwinSkillToCard(card, window.TWIN_TEST_SKILL);
-        showTwinTestTrigger(card, task, repo);
-      } else {
-        autoLoadDefaultSkill(card, task, repo);
-      }
+      // Always show skill picker first — user selects a skill (or uses default)
+      // then confirms with "Use this Skill" button to enter the test flow.
+      showSkillPickerInCard(card, task, repo);
 
       return card;
     }
@@ -2421,6 +2409,20 @@
       }
     }
 
+    function updateVoteCounter(card) {
+      const isCn = (typeof currentLang !== 'undefined' && currentLang === 'cn');
+      const todayKey = 'votedSkillsToday_' + new Date().toISOString().split('T')[0];
+      const votedSkills = JSON.parse(localStorage.getItem(todayKey) || '[]');
+      const counter = card.querySelector('[data-vote-counter]');
+      if (counter) {
+        if (votedSkills.length > 0) {
+          counter.textContent = isCn ? `投票 #${votedSkills.length}` : `Vote #${votedSkills.length}`;
+        } else {
+          counter.textContent = '';
+        }
+      }
+    }
+
     function applyTwinSkillToCard(card, skill) {
       const isCn = (typeof currentLang !== 'undefined' && currentLang === 'cn');
       const skillTitle = getSkillTitle(skill);
@@ -2449,6 +2451,9 @@
           ? `哪一段真正体现了「${skillTitle}」？`
           : `Which one truly embodies "${skillTitle}"?`;
       }
+
+      // Update vote counter
+      updateVoteCounter(card);
     }
 
     async function showSkillPickerInCard(card, task, repo) {
@@ -2694,22 +2699,32 @@
 
         if (!stageThanks.dataset.wired) {
           stageThanks.querySelector('[data-action="next-skill"]').addEventListener('click', async () => {
-            // Load a fresh skill (most popular) and spawn a new card
-            // with a fresh scenario. No picker UI — drops straight into
-            // the next test with a new skill + scenario combo.
-            try {
-              const skills = await fetchHotSkills(1);
-              if (skills && skills.length > 0) {
-                const newSkill = skills[0];
-                if (typeof newSkill.five_layer === 'string') {
-                  try { newSkill.five_layer = JSON.parse(newSkill.five_layer); } catch { newSkill.five_layer = {}; }
-                }
-                window.TWIN_TEST_SKILL = newSkill;
-              }
-            } catch (e) {
-              console.warn('Failed to fetch new skill:', e);
-              // Continue without a new skill; card will auto-load default
+            // Check vote limit (max 3 skills per day)
+            const todayKey = 'votedSkillsToday_' + new Date().toISOString().split('T')[0];
+            let votedSkills = JSON.parse(localStorage.getItem(todayKey) || '[]');
+
+            // Only count votes for skills NOT created by this anonymous user
+            const currentAnonId = getAnonymousId();
+            const currentSkill = window.TWIN_TEST_SKILL;
+            const isOwnSkill = currentSkill && currentSkill.creator_anonymous_id === currentAnonId;
+
+            if (!isOwnSkill && currentSkill?.id && !votedSkills.includes(currentSkill.id)) {
+              votedSkills.push(currentSkill.id);
+              localStorage.setItem(todayKey, JSON.stringify(votedSkills));
             }
+
+            // If reached limit (3 skills) and all are non-own skills, show limit message
+            if (votedSkills.length >= 3) {
+              const isCn = (typeof currentLang !== 'undefined' && currentLang === 'cn');
+              alert(isCn
+                ? '今天的 Skill 评估已达上限，明天再来吧 😊'
+                : "Today's Skill evaluations have reached the limit. Come back tomorrow! 😊"
+              );
+              return;
+            }
+
+            // Clear the preset skill so the new card shows skill picker
+            window.TWIN_TEST_SKILL = null;
 
             const newTask = repo.tasks[Math.floor(Math.random() * repo.tasks.length)];
             card.classList.add('minimizing');

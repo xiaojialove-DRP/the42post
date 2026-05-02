@@ -391,9 +391,10 @@ router.post('/vote', async (req, res, next) => {
 // at the top so the user's freshly forged skill is the first option in
 // the dropdown. The remaining slots are filled by community-hot skills
 // ordered by starlight_score, deduplicated against the user's own.
+// Optional: ?exclude_domain=DOMAIN — skips skills from that domain (used for "try another" flow)
 router.get('/picker', async (req, res, next) => {
   try {
-    const { anonymous_id } = req.query;
+    const { anonymous_id, exclude_domain } = req.query;
     const limit = Math.min(parseInt(req.query.limit, 10) || 8, 30);
 
     let mySkills = [];
@@ -412,15 +413,21 @@ router.get('/picker', async (req, res, next) => {
     }
 
     // Fetch a generous pool for hot — we'll dedupe locally.
-    const hotSkills = (await db.query(
-      `SELECT s.*, u.username AS creator_name
+    let hotQuery = `
+      SELECT s.*, u.username AS creator_name
        FROM skills s
        LEFT JOIN users u ON s.author_id = u.id
        WHERE s.published = true AND s.deleted_at IS NULL
-       ORDER BY COALESCE(s.starlight_score, 0) DESC, s.published_at DESC
-       LIMIT $1`,
-      [limit + mySkills.length + 10]
-    )).rows || [];
+    `;
+    let hotParams = [];
+    if (exclude_domain && typeof exclude_domain === 'string') {
+      hotQuery += ` AND (s.domain IS NULL OR s.domain != $1)`;
+      hotParams.push(exclude_domain);
+    }
+    hotQuery += ` ORDER BY COALESCE(s.starlight_score, 0) DESC, s.published_at DESC LIMIT $${hotParams.length + 1}`;
+    hotParams.push(limit + mySkills.length + 10);
+
+    const hotSkills = (await db.query(hotQuery, hotParams)).rows || [];
 
     const seen = new Set(mySkills.map(s => s.id));
     const merged = [...mySkills];

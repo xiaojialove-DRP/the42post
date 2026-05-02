@@ -180,7 +180,7 @@ Copy the content below and paste directly into your AI assistant as a System Pro
 
 \`\`\`
 ${readyPrompt}
-\`\`\``
+\`\`\`
 
 ---
 
