@@ -39,28 +39,30 @@ function buildPrompts(scenario, skill, language) {
   const notApplies = (fl.boundaries?.does_not_apply || []).slice(0, 2).join(' / ');
   const exemplar = (fl.exemplars || []).find(e => /DO/i.test(e.label || ''))?.text || '';
 
-  // Tight length budget — both responses must fit inside an A/B card
-  // without forcing the user to scroll. 1-2 sentences forces the LLM
-  // to compress to the essence; longer outputs muddied the contrast
-  // between with-skill and without-skill responses anyway.
+  // Length budget tuned for A/B differentiation. 1-2 sentences was
+  // too compressed — the with-skill and without-skill replies often
+  // collapsed to near-identical one-liners. 2-3 sentences (≤80 字 /
+  // ≤60 words) gives the model enough room to show its tone, pacing
+  // and stance while still fitting inside the rate-card without
+  // forcing a scroll.
   const withSkillPrompt = readyPrompt
     ? (isCn
         ? `${readyPrompt}
 
-请用 1-2 句话（≤60 字），第一人称，回应下面的情境。让上面这条 Skill 的精神在你的回应里自然活起来——不引用、不复述，只是体现。
+请用 2-3 句话（≤80 字），第一人称，回应下面的情境。让上面这条 Skill 的精神在你的回应里自然活起来——不引用、不复述，只是体现。
 
 情境：
 ${scenarioText}
 
-只返回 JSON：{"response":"你的回应（1-2 句，≤60 字，无引言无说明）"}`
+只返回 JSON：{"response":"你的回应（2-3 句，≤80 字，无引言无说明）"}`
         : `${readyPrompt}
 
-Respond in 1-2 sentences (≤45 words), first person, to the scenario below. Let the Skill above come through your response naturally — don't quote it, embody it.
+Respond in 2-3 sentences (≤60 words), first person, to the scenario below. Let the Skill above come through your response naturally — don't quote it, embody it.
 
 Scenario:
 ${scenarioText}
 
-Return JSON only: {"response":"your reply (1-2 sentences, ≤45 words, no preamble, no commentary)"}`)
+Return JSON only: {"response":"your reply (2-3 sentences, ≤60 words, no preamble, no commentary)"}`)
     : (isCn
         ? `你是一个 AI 助手，正在按照下面这个 Skill 行事：
 
@@ -69,12 +71,12 @@ ${applies ? `【适用】${applies}` : ''}
 ${notApplies ? `【不适用】${notApplies}` : ''}
 ${exemplar ? `【参考做法】${exemplar}` : ''}
 
-请用 1-2 句话（≤60 字），第一人称，回应下面的情境。让这个 Skill 的精神在你的回应里活起来——不是引用它，是体现它。
+请用 2-3 句话（≤80 字），第一人称，回应下面的情境。让这个 Skill 的精神在你的回应里活起来——不是引用它，是体现它。
 
 情境：
 ${scenarioText}
 
-只返回 JSON：{"response":"你的回应（1-2 句，≤60 字，无引言无说明）"}`
+只返回 JSON：{"response":"你的回应（2-3 句，≤80 字，无引言无说明）"}`
         : `You are an AI agent acting under the following Skill:
 
 【Principle】${principle}
@@ -82,26 +84,26 @@ ${applies ? `【Applies when】${applies}` : ''}
 ${notApplies ? `【Does not apply when】${notApplies}` : ''}
 ${exemplar ? `【Reference behaviour】${exemplar}` : ''}
 
-Respond in 1-2 sentences (≤45 words), first person, to the scenario below. Let the spirit of the Skill come through your response — don't quote it, embody it.
+Respond in 2-3 sentences (≤60 words), first person, to the scenario below. Let the spirit of the Skill come through your response — don't quote it, embody it.
 
 Scenario:
 ${scenarioText}
 
-Return JSON only: {"response":"your reply (1-2 sentences, ≤45 words, no preamble, no commentary)"}`);
+Return JSON only: {"response":"your reply (2-3 sentences, ≤60 words, no preamble, no commentary)"}`);
 
   const withoutSkillPrompt = isCn
-    ? `你是一个有用的 AI 助手。请用 1-2 句话（≤60 字），第一人称，回应下面的情境。
+    ? `你是一个有用的 AI 助手。请用 2-3 句话（≤80 字），第一人称，回应下面的情境。
 
 情境：
 ${scenarioText}
 
-只返回 JSON：{"response":"你的回应（1-2 句，≤60 字，无引言无说明）"}`
-    : `You are a helpful AI agent. Respond in 1-2 sentences (≤45 words), first person, to the scenario below.
+只返回 JSON：{"response":"你的回应（2-3 句，≤80 字，无引言无说明）"}`
+    : `You are a helpful AI agent. Respond in 2-3 sentences (≤60 words), first person, to the scenario below.
 
 Scenario:
 ${scenarioText}
 
-Return JSON only: {"response":"your reply (1-2 sentences, ≤45 words, no preamble, no commentary)"}`;
+Return JSON only: {"response":"your reply (2-3 sentences, ≤60 words, no preamble, no commentary)"}`;
 
   return { withSkillPrompt, withoutSkillPrompt, isCn };
 }
@@ -238,9 +240,14 @@ router.post('/test', async (req, res, next) => {
 // ═══ POST /feedback — record reveal-mode rating + optional comment ═══
 // Replaces the blind /vote semantics. Users see which response was the
 // skill BEFORE rating, so we collect a 3-level reaction
-// (better / neutral / no_diff) plus a free-text note instead of a side
-// pick. Stored in skill_feedback (created in db/init.js).
-const FEEDBACK_RATINGS = new Set(['better', 'neutral', 'no_diff']);
+// (better / worse / no_diff) plus a free-text note instead of a side
+// pick. The middle option used to be "neutral" (just OK) — flipped to
+// "worse" so the schema includes a real negative signal, which the
+// research side needs to spot skills that are actively making the AI
+// less useful. Legacy "neutral" rows from the first cut stay in the
+// DB but are no longer accepted from the client and not included in
+// the percentage calculations below.
+const FEEDBACK_RATINGS = new Set(['better', 'worse', 'no_diff']);
 router.post('/feedback', async (req, res, next) => {
   try {
     const { test_id, rating, comment, anonymous_id } = req.body || {};
@@ -295,12 +302,16 @@ router.post('/feedback', async (req, res, next) => {
       [testRow.skill_id]
     )).rows || [];
 
-    const counts = { better: 0, neutral: 0, no_diff: 0 };
+    // Only count rows whose rating is in the current schema so the
+    // displayed percentage isn't diluted by legacy 'neutral' rows.
+    const counts = { better: 0, worse: 0, no_diff: 0 };
     let total = 0;
     for (const row of stats) {
       const n = Number(row.n) || 0;
-      if (counts[row.rating] !== undefined) counts[row.rating] = n;
-      total += n;
+      if (counts[row.rating] !== undefined) {
+        counts[row.rating] = n;
+        total += n;
+      }
     }
 
     res.json({

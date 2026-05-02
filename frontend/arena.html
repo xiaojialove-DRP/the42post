@@ -1230,9 +1230,10 @@
     .twin-rate-card.twin-rate-skill .twin-rate-tag { color: #b8851e; }
     .twin-rate-text {
       font-size: 13px; line-height: 1.55; color: #2a2520;
-      /* Cap text growth so a long response can't push the card past
-         the visible viewport. Scrollbar appears only when needed. */
-      max-height: 220px; overflow-y: auto;
+      /* Sized for the 2-3 sentence (≤80字 / ≤60 words) budget the
+         backend asks the LLM for. Scrollbar appears only on edge
+         cases where the model overshoots. */
+      max-height: 260px; overflow-y: auto;
       overflow-wrap: break-word; word-break: break-word;
       padding-right: 4px;
     }
@@ -2219,9 +2220,12 @@
                 <span class="twin-rate-emoji">🔥</span>
                 <span class="twin-rate-word">${isCn ? '明显更好' : 'Clearly better'}</span>
               </button>
-              <button class="twin-rate-btn" data-rating="neutral">
-                <span class="twin-rate-emoji">😐</span>
-                <span class="twin-rate-word">${isCn ? '一般' : 'Just OK'}</span>
+              <!-- Negative slot is "worse" rather than the original
+                   "neutral" — the research side needs a real negative
+                   signal to detect skills that hurt rather than help. -->
+              <button class="twin-rate-btn" data-rating="worse">
+                <span class="twin-rate-emoji">😕</span>
+                <span class="twin-rate-word">${isCn ? '不大好' : 'Not great'}</span>
               </button>
               <button class="twin-rate-btn" data-rating="no_diff">
                 <span class="twin-rate-emoji">🤔</span>
