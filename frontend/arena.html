@@ -1295,36 +1295,33 @@
       font-size: 11px; color: #2a2520; font-weight: 500;
       letter-spacing: 0.3px;
     }
-    /* Optional comment is collapsed by default behind a quiet link.
-       Tapping the link reveals the textarea inline. The form stays
-       visually light — most users tap a reaction and never see this. */
-    .twin-rate-note-toggle {
-      display: inline-block; margin-top: 12px;
-      color: #8a7a6e; font-size: 11px; letter-spacing: 0.3px;
-      text-decoration: none; cursor: pointer;
-      transition: color 0.15s ease;
-    }
-    .twin-rate-note-toggle:hover { color: #2a2520; }
-    .twin-rate-note-toggle.open { color: #2a2520; }
-    .twin-rate-note-wrap {
-      margin-top: 8px;
-    }
+    /* Always-visible optional note. Sits at minimum visual weight
+       under the rating buttons — single line tall by default, with a
+       paper-thin underline rather than a heavy border so it reads as
+       "an inviting whisper" rather than "another required field".
+       Grows up to 4 lines as the user types. */
     .twin-rate-comment {
-      width: 100%;
-      padding: 10px 12px;
-      background: #fdfaf3; border: 1.5px solid #d4c8a8;
-      border-radius: 6px;
+      width: 100%; margin-top: 12px;
+      padding: 8px 0;
+      background: transparent;
+      border: none;
+      border-bottom: 1px solid #d4c8a8;
+      border-radius: 0;
       font-family: inherit; font-size: 13px; color: #2a2520;
-      line-height: 1.5; resize: vertical;
+      line-height: 1.5;
+      resize: none;
+      max-height: 110px;
       transition: border-color 0.15s ease;
     }
+    .twin-rate-comment::placeholder {
+      color: #a89a85; font-style: italic;
+    }
     .twin-rate-comment:focus {
-      outline: none; border-color: #2a2520;
-      box-shadow: 0 0 0 3px rgba(42, 37, 32, 0.06);
+      outline: none; border-bottom-color: #2a2520;
     }
     .twin-rate-counter {
       display: block; margin-top: 4px; text-align: right;
-      font-size: 11px; color: #8a7a6e; font-family: 'JetBrains Mono', monospace;
+      font-size: 10px; color: #a89a85; font-family: 'JetBrains Mono', monospace;
     }
 
     /* ─── Thank-you stage ──────────────────────────────────────────
@@ -2250,21 +2247,18 @@
                 <span class="twin-rate-word">${isCn ? '没感觉到区别' : "Can't tell"}</span>
               </button>
             </div>
-            <!-- Tap-to-submit model: choosing a reaction immediately
-                 sends the feedback. The comment is now an optional
-                 expandable note under a quiet link, so the form stays
-                 visually light and a single tap closes the loop. -->
-            <a class="twin-rate-note-toggle" data-note-toggle href="#" role="button">
-              ${isCn ? '💭 加句话？（可选）' : '💭 Add a note? (optional)'}
-            </a>
-            <div class="twin-rate-note-wrap" data-note-wrap hidden>
-              <textarea class="twin-rate-comment"
-                        data-comment
-                        maxlength="140"
-                        rows="2"
-                        placeholder="${isCn ? '想说点什么吗？140字以内' : '140 chars max'}"></textarea>
-              <span class="twin-rate-counter" data-comment-counter>0 / 140</span>
-            </div>
+            <!-- Always-visible optional note. The textarea sits in
+                 the flow at minimal weight (one line tall, paper
+                 background, no border drama) so it doesn't compete
+                 with the rating buttons. Whatever's typed when the
+                 user taps a rating is sent with the feedback; if
+                 they tap without typing, no note is recorded. -->
+            <textarea class="twin-rate-comment"
+                      data-comment
+                      maxlength="140"
+                      rows="1"
+                      placeholder="${isCn ? '💭 有其他想法？（可选，140字以内）' : '💭 Anything else? (optional, 140 chars)'}"></textarea>
+            <span class="twin-rate-counter" data-comment-counter>0 / 140</span>
           </div>
 
           <!-- Thank-you stage. Single CTA per user feedback — two
@@ -2607,11 +2601,6 @@
         stageRate.querySelector('[data-comment-counter]').textContent = '0 / 140';
         delete stageRate.dataset.rating;
         delete stageRate.dataset.submitting;
-        // Collapse the optional note panel back to the link state.
-        const noteWrap = stageRate.querySelector('[data-note-wrap]');
-        const noteToggle = stageRate.querySelector('[data-note-toggle]');
-        if (noteWrap) noteWrap.hidden = true;
-        if (noteToggle) noteToggle.classList.remove('open');
 
         stageLoading.hidden = true;
         stageRate.hidden = false;
@@ -2626,18 +2615,15 @@
       }
     }
 
-    /* One-time wiring for the rate stage's interactive bits. We bind
+    /* One-time wiring for the rate stage's interactive bits. Bound
        once per card. Tap-to-submit model: clicking a reaction button
-       immediately fires submitTwinFeedback (no separate Submit). The
-       optional note expands inline only if the user actually wants
-       to leave one, and is read off the DOM at submit time. */
+       immediately fires submitTwinFeedback. The optional note
+       textarea is always visible underneath; whatever's typed at the
+       moment of tap goes along with the feedback. */
     function wireTwinRateStage(card, task, repo) {
-      const isCn = (typeof currentLang !== 'undefined' && currentLang === 'cn');
       const stageRate = card.querySelector('.twin-rate');
       const commentEl = stageRate.querySelector('[data-comment]');
       const counterEl = stageRate.querySelector('[data-comment-counter]');
-      const noteToggle = stageRate.querySelector('[data-note-toggle]');
-      const noteWrap = stageRate.querySelector('[data-note-wrap]');
 
       stageRate.querySelectorAll('.twin-rate-btn').forEach(btn => {
         btn.addEventListener('click', async () => {
@@ -2659,16 +2645,6 @@
       commentEl.addEventListener('input', () => {
         counterEl.textContent = `${commentEl.value.length} / 140`;
       });
-
-      if (noteToggle) {
-        noteToggle.addEventListener('click', (e) => {
-          e.preventDefault();
-          const opening = noteWrap.hasAttribute('hidden');
-          noteWrap.hidden = !opening;
-          noteToggle.classList.toggle('open', opening);
-          if (opening) commentEl.focus();
-        });
-      }
     }
 
     async function submitTwinFeedback(card, task, repo, rating, comment) {
