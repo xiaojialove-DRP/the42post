@@ -6252,6 +6252,78 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 
 .domain-open-seat { opacity: 0.3; }
 
+/* ─── Archive card action row (Star · Download · Play) ────────────────
+   Three peer actions sharing a single visual language. Star is the
+   prerequisite for Download (download is disabled until starred). Play
+   is always available — it routes to arena.html?skill=<id>, which the
+   Twin Test card auto-detects to skip the picker. */
+.domain-skill-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(212, 200, 188, 0.4);
+}
+
+.btn-skill-star,
+.btn-skill-download,
+.btn-skill-play {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 6px 8px;
+  background: transparent;
+  border: 1px solid #d4c8bc;
+  border-radius: 5px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.5px;
+  color: #6b5c4e;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
+  white-space: nowrap;
+}
+
+.btn-skill-star:hover {
+  background: rgba(212, 164, 60, 0.08);
+  border-color: #d4a43c;
+  color: #b58a2e;
+}
+
+.btn-skill-download:hover:not([disabled]) {
+  background: rgba(58, 154, 140, 0.08);
+  border-color: #3a9a8c;
+  color: #2d7a6e;
+}
+
+.btn-skill-download[disabled] {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* The Play button is the call-to-action — it gets the Benson green so
+   the eye lands on it as the primary "do something with this skill"
+   move. Star/Download stay quieter as supporting actions. */
+.btn-skill-play {
+  background: #6b9d5c;
+  border-color: #6b9d5c;
+  color: #fff;
+  font-weight: 600;
+}
+
+.btn-skill-play:hover {
+  background: #5a8b4d;
+  border-color: #5a8b4d;
+  transform: translateY(-1px);
+}
+
+.btn-skill-play:active {
+  transform: scale(0.97);
+}
+
 /* ═══ FOOTER ═══ */
 .av-footer {
   max-width: var(--max-w);

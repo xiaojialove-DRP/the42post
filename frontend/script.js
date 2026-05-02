@@ -7368,6 +7368,15 @@ async function initAgentArchiveView() {
                       title="${canDownload ? 'Download' : 'Star first'}">
                 📥 ${s.downloads || 0}
               </button>
+              <!-- One-click jump into the Playground with this skill
+                   pre-selected. arena.html?skill=<id> reads the param on
+                   load and auto-spawns a Twin Test card with this skill,
+                   skipping the picker. -->
+              <button class="btn-skill-play" data-skill-id="${s.id}"
+                      title="Play this skill in the Playground"
+                      onclick="event.stopPropagation(); window.location.href='arena.html?skill=${encodeURIComponent(s.id)}'">
+                <span class="text-en">▶ Play</span><span class="text-cn">▶ 试玩</span>
+              </button>
             </div>
           </div>`;
       }).join('');

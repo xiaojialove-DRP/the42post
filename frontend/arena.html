@@ -1889,6 +1889,18 @@
           try { skill.five_layer = JSON.parse(skill.five_layer); } catch { skill.five_layer = {}; }
         }
         window.TWIN_TEST_SKILL = skill;
+
+        // Coming from Archive's "▶ Play" — drop the user straight into a
+        // ready-to-test card. We pick a domain that matches the skill if
+        // possible, then a random scenario from it. The dock is still
+        // visible so the user can keep playing other categories.
+        const skillDomain = (skill.domain || '').toLowerCase();
+        const matchedRepo =
+          REPOSITORIES.find(r => r.id === skillDomain) ||
+          REPOSITORIES[Math.floor(Math.random() * REPOSITORIES.length)];
+        const task = matchedRepo.tasks[Math.floor(Math.random() * matchedRepo.tasks.length)];
+        // Defer one frame so the canvas has finished its first layout pass.
+        requestAnimationFrame(() => spawnCard(task, matchedRepo));
       } catch (err) {
         console.warn('Twin Test init failed (proceeding without preset skill):', err.message);
       }
