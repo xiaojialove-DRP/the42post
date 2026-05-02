@@ -843,10 +843,8 @@ export function createManifest(skillData, author, timestamp) {
     title_cn: skillData.title_cn,
     author: {
       username: author.username,
-      email: author.email,
-      account_type: author.account_type
-    },
-    forge_mode: skillData.forge_mode,
+      email: author.email,    // account_type removed from skill payload
+    },    // forge_mode removed - agents are no longer part of the product
     five_layer: skillData.five_layer,
     rights: {
       commercial_use: skillData.commercial_use || 'authorized',

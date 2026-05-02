@@ -22,7 +22,7 @@ const VALIDATION_SCHEMAS = {
       email: { type: 'string', required: true, minLength: 5, maxLength: 254 },
       username: { type: 'string', required: true, minLength: 3, maxLength: 32 },
       password: { type: 'string', required: true, minLength: 8, maxLength: 128 },
-      account_type: { type: 'string', required: true, enum: ['shadow_agent', 'direct_knight'] }
+      // account_type removed - agents are no longer part of the product
     }
   },
 
@@ -61,7 +61,7 @@ const VALIDATION_SCHEMAS = {
       description: { type: 'string', required: false, maxLength: 1000 },
       domain: { type: 'string', required: false, minLength: 3, maxLength: 50 },
       five_layer: { type: 'object', required: true },
-      forge_mode: { type: 'string', required: true, enum: ['shadow_agent', 'direct_knight'] },
+      // forge_mode removed - agents are no longer part of the product
       commercial_use: { type: 'string', required: false },
       remix_allowed: { type: 'boolean', required: false }
     }

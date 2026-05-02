@@ -2339,7 +2339,6 @@ function initSkillForge() {
   const closeBtn = document.getElementById('forgeClose');
   const knightCardSection = document.getElementById('knightCardSection');
   let selectedDomain = null;
-  let selectedMode = null; // 'a' for Individual Forge, 'b' for Agent Forge
 
   // Homepage Idea to Forge Pipeline
   const btnStartForging = document.getElementById("btnStartForging");
@@ -2408,7 +2407,6 @@ function initSkillForge() {
   }
         return;
       }
-      selectedMode = "a";
       window.homepageIdea = { text: ideaInput.value, creatorName: creatorNameInput ? creatorNameInput.value : "" };
       overlay.classList.add("active");
       document.querySelectorAll(".forge-page").forEach(p => p.classList.remove("active"));
@@ -2464,7 +2462,6 @@ function initSkillForge() {
     const page0 = document.getElementById('forgePage0');
     if (page0) page0.classList.add('active');
     selectedDomain = null;
-    selectedMode = null;
     document.querySelectorAll('.forge-domain').forEach(d => d.classList.remove('selected'));
   }
 
@@ -3202,34 +3199,11 @@ function initSkillForge() {
       const isPage1 = parent.id === 'forgePage1';
 
       if (isPage0) {
-        // Path selection in forgePage0 -> go to Step 1
-        selectedMode = path.dataset.path;
+        // Path selection removed - go directly to Step 1
         goToStep(1);
       } else if (isPage1) {
-        // Mode selection in forgePage1 -> show binding UI
-        selectedMode = path.dataset.path;
-
-        const bindingA = document.getElementById('bindingMode-a');
-        const bindingB = document.getElementById('bindingMode-b');
-
-        if (selectedMode === 'a') {
-          if (bindingA) bindingA.style.display = 'block';
-          if (bindingB) bindingB.style.display = 'none';
-        } else if (selectedMode === 'b') {
-          if (bindingA) bindingA.style.display = 'none';
-          if (bindingB) bindingB.style.display = 'block';
-        }
-
-        // Update border styling
-        parent.querySelectorAll('.forge-path').forEach(p => {
-          if (selectedMode === 'a') {
-            p.style.borderColor = p.dataset.path === 'a' ? '#3a9a8c' : '#e0e0e0';
-            p.style.background = p.dataset.path === 'a' ? '#f0fdfb' : 'transparent';
-          } else if (selectedMode === 'b') {
-            p.style.borderColor = p.dataset.path === 'b' ? '#d4a43c' : '#e0e0e0';
-            p.style.background = p.dataset.path === 'b' ? '#fffef5' : 'transparent';
-          }
-        });
+        // Mode selection removed - continue with forging
+        goToStep(2);
       }
     });
   });
@@ -3911,37 +3885,17 @@ function initSkillForge() {
           username: usernameValue
         };
 
-        // Collect data based on selected mode
-        if (selectedMode === 'a') {
-          const nativeText = document.getElementById('forgeNativeText');
-          skillDesc = nativeText ? nativeText.value : '';
-          const skillOverview = document.getElementById('forgeSkillOverview');
-          sourceData = {
-            mode: 'natural_text',
-            nativeText: skillDesc,
-            refineText: skillOverview ? skillOverview.value : '',
-            structuredBy: 'agent_42',
-            bindingAgent: 'agent_42'
-          };
-        } else if (selectedMode === 'b') {
-          if (!agentVerified) {
-            alert('Please verify your agent binding first');
-            publishBtn.textContent = '⚔ PUBLISH & FORGE';
-            publishBtn.style.pointerEvents = 'auto';
-            return;
-          }
-
-          const agentId = document.getElementById('forgeAgentId').value;
-          const skillFile = document.getElementById('forgeSkillFile');
-
-          skillDesc = agentId || 'Agent Skill';
-          sourceData = {
-            mode: 'agent_binding',
-            sourceAgentId: agentId,
-            skillFile: skillFile && skillFile.files.length > 0 ? skillFile.files[0].name : null,
-            bindingAgent: agentId
-          };
-        }
+        // Collect skill data (agent binding removed)
+        const nativeText = document.getElementById('forgeNativeText');
+        skillDesc = nativeText ? nativeText.value : '';
+        const skillOverview = document.getElementById('forgeSkillOverview');
+        sourceData = {
+          mode: 'natural_text',
+          nativeText: skillDesc,
+          refineText: skillOverview ? skillOverview.value : '',
+          structuredBy: 'agent_42',
+          bindingAgent: 'agent_42'
+        };
 
         // Collect creator rights data
         const commercialTagsEl = document.getElementById('commercialTags');
@@ -3957,13 +3911,8 @@ function initSkillForge() {
         const useCasesValue = useCasesEl ? useCasesEl.value : '';
         const disallowedUsesValue = disallowedUsesEl ? disallowedUsesEl.value : '';
 
-        // Get agent info (legacy — only used when binding to a third-party
-        // agent in mode B, kept for the manifest's source_agent_id field).
-        let agentName = 'agent_42';
-        if (selectedMode === 'b') {
-          const agentIdEl = document.getElementById('forgeAgentId');
-          agentName = agentIdEl ? agentIdEl.value : 'agent_unknown';
-        }
+        // Agent binding removed - agents are no longer part of the product
+        const agentName = 'agent_42';
 
         // Display attribution comes from the *creator's* name (the username
         // the user typed at forge time), not the agent. Fall back to a
@@ -3988,7 +3937,7 @@ function initSkillForge() {
           remix: remixValue,
           useCases: useCasesValue,
           disallowedUses: disallowedUsesValue,
-          forgeMode: selectedMode,
+          // forgeMode removed - agents are no longer part of the product
           accountData: accountData,
           sourceData: sourceData,
           fiveLayerSkill: window.agent42StructuredData || null,
@@ -4018,7 +3967,7 @@ function initSkillForge() {
             description_cn: skillDesc,
             domain: selectedDomain || 'ideas',
             five_layer: window.agent42StructuredData || {},
-            forge_mode: selectedMode === 'a' ? 'shadow_agent' : 'direct_knight',
+            // forge_mode removed - agents are no longer part of the product
             source_agent_id: sourceData.sourceAgentId || agentName,
             commercial_use: commercialValue,
             remix_allowed: remixValue === 'yes',
@@ -4132,21 +4081,7 @@ function initSkillForge() {
     const page = document.getElementById(`forgePage${step}`);
     if (page) page.classList.add('active');
 
-    // When entering STEP 1 (forgePage1), show path-specific UI based on selectedMode
-    if (step === 1 && selectedMode) {
-      const pathAContent = document.getElementById('pathA-content');
-      const pathBContent = document.getElementById('pathB-content');
-
-      if (selectedMode === 'a') {
-        // Show Path A (Shadow Agent) - natural language input
-        if (pathAContent) pathAContent.style.display = 'block';
-        if (pathBContent) pathBContent.style.display = 'none';
-      } else if (selectedMode === 'b') {
-        // Show Path B (Direct Knight) - agent linking
-        if (pathAContent) pathAContent.style.display = 'none';
-        if (pathBContent) pathBContent.style.display = 'block';
-      }
-    }
+    // Path-specific UI removed - only natural language path is now supported
 
     // Scroll to top of form
     const forgeModal = document.querySelector('.forge-modal');
@@ -5483,7 +5418,7 @@ function initHeadlineHero() {
 
       // Store idea and start forging
       window.homepageIdea = idea;
-      selectedMode = 'a'; // Natural language mode
+      // selectedMode removed - agents are no longer part of the product
 
       // Open forge modal and skip to Step 2
       const forgeOverlay = document.getElementById('forgeOverlay');
