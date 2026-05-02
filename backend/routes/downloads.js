@@ -170,13 +170,17 @@ function generateSkillMarkdown(skillData) {
   const fiveLayer = skillData.fiveLayerSkill || null;
 
   // ═══ QUICK COPY-PASTE PROMPT FIRST ═══
+  const readyPrompt = fiveLayer && fiveLayer.ready_to_use_prompt
+    ? fiveLayer.ready_to_use_prompt
+    : (fiveLayer && fiveLayer.principle ? fiveLayer.principle : (skillData.desc || 'A skill forged in The 42 Post'));
+
   let md = `# 🚀 READY TO PROMPT
 
-Copy the content below and paste directly into your AI assistant:
+Copy the content below and paste directly into your AI assistant as a System Prompt:
 
 \`\`\`
-${fiveLayer && fiveLayer.principle ? fiveLayer.principle : (skillData.desc || 'A skill forged in The 42 Post')}
-\`\`\`
+${readyPrompt}
+\`\`\``
 
 ---
 
