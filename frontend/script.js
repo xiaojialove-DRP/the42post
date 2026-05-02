@@ -1071,11 +1071,11 @@ const I18N = {
     forge_package_desc: '选择你的格式并下载锻造好的技能以进行集成。',
     forge_package_note: '所有格式都包含完整的五层技能架构。根据你的集成需求进行选择。',
     /* ── 档案库 / 品味档案库 ── */
-    archive_title: 'THE 42 POST · 技能储藏室',
+    archive_title: 'THE 42 POST · Skill 储藏室',
     archive_back_home: '← 返回首页',
-    archive_most_starred: '最受赞的技能 42',
+    archive_most_starred: '⭐ 热门42Skill',
     archive_honor_subtitle: '社区排名 · 星光投票',
-    archive_readable_title: '智能体可读层',
+    archive_readable_title: 'Skill 储藏室',
     archive_readable_subtitle: '创意领域 · 社区策划',
     archive_footer: 'THE 42 POST · 智能体档案库 · Soul.MD 协议激活',
     /* ── 创意游乐场 / 品味竞技场 ── */
@@ -5546,6 +5546,10 @@ function initHeadlineHero() {
         ethicsResult.classList.add('visible');
         ethicsFail.classList.remove('visible');
         ethicsPass.classList.add('visible');
+
+        // Change button color to green after successful share
+        testBtn.classList.add('success');
+        testBtn.textContent = '✓ 已分享';
 
         // Store the idea for when user clicks the button
         window.shareIdea = text;

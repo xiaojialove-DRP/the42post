@@ -1572,7 +1572,7 @@ body[data-lang="cn"] .voices-header-text {
 }
 
 .btn-chat-send {
-  background: #6b9d5c;
+  background: #2a2520;
   border: none;
   color: #fff;
   font-family: var(--font-serif);
@@ -1587,8 +1587,17 @@ body[data-lang="cn"] .voices-header-text {
 }
 
 .btn-chat-send:hover {
-  background: #5a8b4d;
+  background: #1a1510;
   transform: translateY(-2px);
+}
+
+/* Share button success state — turns green after submission */
+.btn-chat-send.success {
+  background: #6b9d5c;
+}
+
+.btn-chat-send.success:hover {
+  background: #5a8b4d;
 }
 
 .btn-chat-send:active {
@@ -1750,15 +1759,26 @@ body[data-lang="cn"] .voices-header-text {
   font-size: 14px;
   padding: 12px 28px;
   border-radius: 8px;
-  background: #6b9d5c;
-  box-shadow: 0 2px 8px rgba(107, 157, 92, 0.2);
+  background: #2a2520;
+  box-shadow: 0 2px 8px rgba(42, 37, 32, 0.15);
   transition: background 0.25s ease, transform 0.2s ease, box-shadow 0.25s ease;
 }
 
 .btn-chat-send:hover {
+  background: #1a1510;
+  box-shadow: 0 4px 16px rgba(42, 37, 32, 0.2);
+  transform: translateY(-2px);
+}
+
+/* Share button turns green after submission */
+.btn-chat-send.success {
+  background: #6b9d5c;
+  box-shadow: 0 2px 8px rgba(107, 157, 92, 0.2);
+}
+
+.btn-chat-send.success:hover {
   background: #5a8b4d;
   box-shadow: 0 4px 16px rgba(107, 157, 92, 0.3);
-  transform: translateY(-2px);
 }
 
 .chat-bubble-footer {
@@ -6261,9 +6281,9 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 .domain-skill-actions {
   display: flex;
   align-items: center;
-  gap: 6px;
-  margin-top: 10px;
-  padding-top: 10px;
+  gap: 4px;
+  margin-top: 8px;
+  padding-top: 8px;
   border-top: 1px solid rgba(212, 200, 188, 0.4);
 }
 
@@ -6275,7 +6295,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
   align-items: center;
   justify-content: center;
   gap: 4px;
-  padding: 6px 8px;
+  padding: 5px 6px;
   background: transparent;
   border: 1px solid #d4c8bc;
   border-radius: 5px;
@@ -6305,19 +6325,19 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
   cursor: not-allowed;
 }
 
-/* The Play button is the call-to-action — it gets the Benson green so
-   the eye lands on it as the primary "do something with this skill"
+/* The Play button is the call-to-action — warm charcoal color
+   so the eye lands on it as the primary "do something with this skill"
    move. Star/Download stay quieter as supporting actions. */
 .btn-skill-play {
-  background: #6b9d5c;
-  border-color: #6b9d5c;
+  background: #3c3028;
+  border-color: #3c3028;
   color: #fff;
   font-weight: 600;
 }
 
 .btn-skill-play:hover {
-  background: #5a8b4d;
-  border-color: #5a8b4d;
+  background: #2c2218;
+  border-color: #2c2218;
   transform: translateY(-1px);
 }
 
@@ -8975,7 +8995,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 
 /* Download button */
 #btnDownloadCertificate {
-  background: var(--wc-charcoal) !important;
+  background: #3c3028 !important;
   color: var(--wc-cream) !important;
   padding: 11px 28px !important;
   border-radius: 24px !important;
@@ -8987,7 +9007,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
   transition: all 0.25s !important;
 }
 #btnDownloadCertificate:hover {
-  background: var(--wc-ink) !important;
+  background: #2c2218 !important;
   transform: translateY(-1px) !important;
   box-shadow: 0 4px 18px rgba(42,32,24,0.24) !important;
 }
