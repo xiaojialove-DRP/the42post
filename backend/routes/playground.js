@@ -15,6 +15,7 @@
 import express from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import { db } from '../server.js';
+import { rateLimitLLM, rateLimitTwinTest } from '../middleware/rateLimiter.js';
 import { callLLMJSON } from '../utils/skillGeneration.js';
 
 const router = express.Router();
@@ -133,7 +134,8 @@ Return JSON only: {"diagnostic":"A …, B …"}`;
 }
 
 // ═══ POST /test — generate Twin Test responses ═══
-router.post('/test', async (req, res, next) => {
+// Rate limited (LLM calls: 10/min) to protect API quota
+router.post('/test', rateLimitLLM, async (req, res, next) => {
   try {
     const { skill_id, scenario, anonymous_id, language } = req.body || {};
 
@@ -326,7 +328,8 @@ router.post('/feedback', async (req, res, next) => {
 });
 
 // ═══ POST /vote — record vote, reveal, return running win rate ═══
-router.post('/vote', async (req, res, next) => {
+// Rate limited (20/min) to prevent vote tampering
+router.post('/vote', rateLimitTwinTest, async (req, res, next) => {
   try {
     const { test_id, chosen_side } = req.body || {};
 

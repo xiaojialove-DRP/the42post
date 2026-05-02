@@ -5,6 +5,7 @@
 import express from 'express';
 import { db } from '../server.js';
 import { requireAuth, optionalAuth } from '../utils/auth.js';
+import { isValidDomain } from '../utils/validation.js';
 
 // Sentinel author for anonymous community forges. The skills.author_id FK
 // still resolves, but the *real* per-user identity lives in
@@ -21,6 +22,14 @@ router.get('/', async (req, res, next) => {
   try {
     const { page = 1, limit = 20, domain, author, search } = req.query;
     const offset = (page - 1) * limit;
+
+    // Validate domain against whitelist (prevents SQL injection)
+    if (domain && !isValidDomain(domain)) {
+      return res.status(400).json({
+        error: 'Invalid input',
+        message: `Invalid domain. Must be one of: safety, science, narrative, design, visual, experience, sound, ideas, history, fun`
+      });
+    }
 
     // JOIN users so the response carries the real creator_name the user
     // typed at forge time (stored as users.username via forge-session
@@ -84,78 +93,76 @@ router.get('/', async (req, res, next) => {
 });
 
 // ═══ GET SKILL STATISTICS (Impact Dashboard) ═══
+// OPTIMIZED: Single query with CTEs instead of 6 sequential queries
 router.get('/:skill_id/stats', async (req, res, next) => {
   try {
     const { skill_id } = req.params;
 
-    // Fetch skill stats from skill_usage_logs
-    const statsResult = await db.query(
-      `SELECT
-         s.id, s.title, s.published_at, s.domain,
-         COUNT(CASE WHEN sul.outcome = 'download_success' THEN 1 END) as download_count,
-         COUNT(DISTINCT sul.agent_id) as unique_downloaders
-       FROM skills s
-       LEFT JOIN skill_usage_logs sul ON s.id = sul.skill_id
-       WHERE s.id = $1
-       GROUP BY s.id, s.title, s.published_at, s.domain`,
+    // CONSOLIDATED QUERY using CTEs to fetch all stats in one database round-trip
+    // This eliminates the N+1 query pattern that was fetching skill, author, and various aggregates separately
+    const result = await db.query(
+      `WITH skill_data AS (
+         -- Get basic skill info
+         SELECT s.id, s.title, s.published_at, s.domain, s.author_id,
+                COUNT(CASE WHEN sul.outcome = 'download_success' THEN 1 END) as download_count,
+                COUNT(DISTINCT sul.agent_id) as unique_downloaders
+         FROM skills s
+         LEFT JOIN skill_usage_logs sul ON s.id = sul.skill_id
+         WHERE s.id = $1
+         GROUP BY s.id, s.title, s.published_at, s.domain, s.author_id
+       ),
+       author_downloads AS (
+         -- Author's total downloads across all their published skills
+         SELECT COALESCE(SUM(CAST(CASE WHEN sul.outcome = 'download_success' THEN 1 ELSE 0 END AS INTEGER)), 0) as total
+         FROM skills s
+         LEFT JOIN skill_usage_logs sul ON s.id = sul.skill_id
+         WHERE s.author_id = (SELECT author_id FROM skill_data) AND s.published = 1
+       ),
+       community_stats AS (
+         -- Total published skills in community
+         SELECT COUNT(*) as total_skills FROM skills WHERE published = 1
+       ),
+       skill_stars AS (
+         -- Stars received by this skill
+         SELECT COUNT(*) as star_count FROM user_skill_interactions
+         WHERE skill_id = $1 AND starred = 1
+       ),
+       interactions_stats AS (
+         -- Total unique participants in Twin Tests
+         SELECT COUNT(DISTINCT anonymous_id) as unique_participants
+         FROM skill_test_votes WHERE voted_for_skill IS NOT NULL
+       )
+       SELECT
+         sd.id, sd.title, sd.published_at, sd.domain,
+         sd.download_count, sd.unique_downloaders,
+         COALESCE(ad.total, 0) as author_total_downloads,
+         COALESCE(cs.total_skills, 0) as community_total_skills,
+         COALESCE(ss.star_count, 0) as star_count,
+         COALESCE(ist.unique_participants, 0) as total_interactions
+       FROM skill_data sd
+       CROSS JOIN author_downloads ad
+       CROSS JOIN community_stats cs
+       CROSS JOIN skill_stars ss
+       CROSS JOIN interactions_stats ist`,
       [skill_id]
     );
 
-    if (statsResult.rows.length === 0) {
+    if (result.rows.length === 0) {
       return res.status(404).json({
         error: 'Not found',
         message: 'Skill not found'
       });
     }
 
-    const stats = statsResult.rows[0];
+    const stats = result.rows[0];
 
-    // 计算自发布以来的时间
+    // Calculate days since publication and daily rate (client-side logic)
     const publishedDate = new Date(stats.published_at);
     const now = new Date();
     const daysSincePublish = Math.floor((now - publishedDate) / (1000 * 60 * 60 * 24));
-
-    // 计算每日下载速率
-    const dailyDownloadRate = daysSincePublish > 0 ? (stats.download_count / daysSincePublish).toFixed(2) : stats.download_count;
-
-    // Fetch author_id for this skill
-    const skillResult = await db.query(
-      `SELECT author_id FROM skills WHERE id = $1`,
-      [skill_id]
-    );
-    const authorId = skillResult.rows?.[0]?.author_id;
-
-    // My Skill Journey: 该作者所有已发布 skill 的总下载数
-    let mySkillJourneyDownloads = 0;
-    if (authorId) {
-      const authorStats = await db.query(
-        `SELECT COALESCE(SUM(CAST(CASE WHEN sul.outcome = 'download_success' THEN 1 ELSE 0 END AS INTEGER)), 0) as total_downloads
-         FROM skills s
-         LEFT JOIN skill_usage_logs sul ON s.id = sul.skill_id
-         WHERE s.author_id = $1 AND s.published = 1`,
-        [authorId]
-      );
-      mySkillJourneyDownloads = parseInt(authorStats.rows?.[0]?.total_downloads) || 0;
-    }
-
-    // Skills Forged: 社群已发布 skill 总数
-    const communityStats = await db.query(
-      `SELECT COUNT(*) as total_skills FROM skills WHERE published = 1`
-    );
-    const skillsForgedCount = parseInt(communityStats.rows?.[0]?.total_skills) || 0;
-
-    // Human Resonance: 这个 skill 的点赞数
-    const starsResult = await db.query(
-      `SELECT COUNT(*) as star_count FROM user_skill_interactions WHERE skill_id = $1 AND starred = 1`,
-      [skill_id]
-    );
-    const humanResonanceCount = parseInt(starsResult.rows?.[0]?.star_count) || 0;
-
-    // Total Interactions: 社群 Twin Test 的唯一参与者数
-    const interactionsResult = await db.query(
-      `SELECT COUNT(DISTINCT anonymous_id) as unique_participants FROM skill_test_votes WHERE voted_for_skill IS NOT NULL`
-    );
-    const totalInteractionsCount = parseInt(interactionsResult.rows?.[0]?.unique_participants) || 0;
+    const dailyDownloadRate = daysSincePublish > 0
+      ? (stats.download_count / daysSincePublish).toFixed(2)
+      : stats.download_count;
 
     res.json({
       success: true,
@@ -170,10 +177,10 @@ router.get('/:skill_id/stats', async (req, res, next) => {
         uniqueDownloaders: parseInt(stats.unique_downloaders) || 0,
         daysSincePublish: daysSincePublish,
         dailyDownloadRate: parseFloat(dailyDownloadRate),
-        mySkillJourney: mySkillJourneyDownloads,
-        skillsForged: skillsForgedCount,
-        humanResonance: humanResonanceCount,
-        totalInteractions: totalInteractionsCount
+        mySkillJourney: parseInt(stats.author_total_downloads) || 0,
+        skillsForged: parseInt(stats.community_total_skills) || 0,
+        humanResonance: parseInt(stats.star_count) || 0,
+        totalInteractions: parseInt(stats.total_interactions) || 0
       }
     });
   } catch (error) {
@@ -275,6 +282,14 @@ router.post('/', optionalAuth, async (req, res, next) => {
       return res.status(400).json({
         error: 'Invalid forge_mode',
         message: 'forge_mode must be "shadow_agent" or "direct_knight"'
+      });
+    }
+
+    // Validate domain against whitelist (prevents SQL injection)
+    if (domain && !isValidDomain(domain)) {
+      return res.status(400).json({
+        error: 'Invalid input',
+        message: `Invalid domain. Must be one of: safety, science, narrative, design, visual, experience, sound, ideas, history, fun`
       });
     }
 

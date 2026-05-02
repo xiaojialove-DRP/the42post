@@ -1,5 +1,9 @@
 /* ═══════════════════════════════════════════════════════
    Authentication Routes
+
+   SECURITY: All authentication routes perform strict input
+   validation to prevent injection attacks and enforce username/
+   email format constraints.
    ═══════════════════════════════════════════════════════ */
 
 import express from 'express';
@@ -12,6 +16,11 @@ import {
   generateVerificationToken,
   requireAuth
 } from '../utils/auth.js';
+import {
+  isValidEmail,
+  isValidUsername,
+  validatePassword
+} from '../utils/validation.js';
 
 const router = express.Router();
 
@@ -19,6 +28,7 @@ const router = express.Router();
 // Core philosophy: "Everyone is welcome, especially non-engineers."
 // Takes just {email, username} — provisions user if needed, returns JWT.
 // No password / no email verification required for forging participation.
+// SECURITY: Validates email and username formats to prevent injection
 router.post('/forge-session', async (req, res, next) => {
   try {
     const { email, username } = req.body || {};
@@ -38,6 +48,22 @@ router.post('/forge-session', async (req, res, next) => {
 
     const emailNorm = email.trim().toLowerCase();
     const usernameNorm = username.trim();
+
+    // Validate email format
+    if (!isValidEmail(emailNorm)) {
+      return res.status(400).json({
+        error: 'Invalid email',
+        message: 'Please provide a valid email address'
+      });
+    }
+
+    // Validate username format
+    if (!isValidUsername(usernameNorm)) {
+      return res.status(400).json({
+        error: 'Invalid username',
+        message: 'Username must be 3-32 characters (alphanumeric and underscore, cannot start with a number)'
+      });
+    }
 
     // Try to find existing user by email
     const existing = await db.query(
@@ -114,11 +140,12 @@ router.post('/forge-session', async (req, res, next) => {
 });
 
 // ═══ REGISTER ═══
+// SECURITY: Validates all input parameters with strict rules
 router.post('/register', async (req, res, next) => {
   try {
     const { email, username, password, account_type } = req.body;
 
-    // Validation
+    // Validation: Required fields
     if (!email || !username || !password || !account_type) {
       return res.status(400).json({
         error: 'Missing required fields',
@@ -126,6 +153,7 @@ router.post('/register', async (req, res, next) => {
       });
     }
 
+    // Validate account type
     if (!['shadow_agent', 'direct_knight'].includes(account_type)) {
       return res.status(400).json({
         error: 'Invalid account type',
@@ -133,10 +161,28 @@ router.post('/register', async (req, res, next) => {
       });
     }
 
-    if (password.length < 8) {
+    // Validate email format
+    if (!isValidEmail(email.trim())) {
+      return res.status(400).json({
+        error: 'Invalid email',
+        message: 'Please provide a valid email address'
+      });
+    }
+
+    // Validate username format
+    if (!isValidUsername(username.trim())) {
+      return res.status(400).json({
+        error: 'Invalid username',
+        message: 'Username must be 3-32 characters (alphanumeric and underscore, cannot start with a number)'
+      });
+    }
+
+    // Validate password strength
+    const passwordValidation = validatePassword(password);
+    if (!passwordValidation.valid) {
       return res.status(400).json({
         error: 'Weak password',
-        message: 'Password must be at least 8 characters'
+        message: passwordValidation.errors.join('; ')
       });
     }
 

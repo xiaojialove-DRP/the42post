@@ -6,6 +6,7 @@ import express from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import { db } from '../server.js';
 import { requireAuth, optionalAuth } from '../utils/auth.js';
+import { rateLimitLLM } from '../middleware/rateLimiter.js';
 import {
   generateProbeWithClaude,
   generatePreviewWithClaude,
@@ -18,7 +19,8 @@ const router = express.Router();
 
 // ═══ GENERATE INTUITION PROBE ═══
 // No auth required — probe is called before account creation (Step 1 of forge)
-router.post('/probe', async (req, res, next) => {
+// Rate limited to protect LLM API quota
+router.post('/probe', rateLimitLLM, async (req, res, next) => {
   try {
     const { idea_text, language } = req.body;
     const userId = req.user?.userId || null; // optional; used only for logging
@@ -69,7 +71,8 @@ router.post('/probe', async (req, res, next) => {
 // No auth required — runs after probe selection, before account confirm.
 // NOTE: distinct from the auth-gated /preview below, which regenerates a
 // flat plaintext five-layer preview from name+definition for the review modal.
-router.post('/preview-from-probe', async (req, res, next) => {
+// Rate limited to protect LLM API quota
+router.post('/preview-from-probe', rateLimitLLM, async (req, res, next) => {
   try {
     const { idea_text, probe_data, selected_response, language } = req.body;
 
@@ -108,7 +111,8 @@ router.post('/preview-from-probe', async (req, res, next) => {
 // ═══ GENERATE FIVE-LAYER SKILL ═══
 // optionalAuth: anonymous community forges are allowed; userId is only used
 // for logging/seeding context, not stored on the request itself.
-router.post('/generate', optionalAuth, async (req, res, next) => {
+// Rate limited to protect LLM API quota
+router.post('/generate', rateLimitLLM, optionalAuth, async (req, res, next) => {
   try {
     const { skill_name, idea_text, probe_data, selected_response, domain, language } = req.body;
     const userId = req.user?.userId || null;
@@ -186,7 +190,8 @@ router.post('/generate', optionalAuth, async (req, res, next) => {
 
 // ═══ SIMPLIFIED PREVIEW (from name + definition; used by the review/preview modals) ═══
 // optionalAuth: same rationale as /generate above.
-router.post('/preview', optionalAuth, async (req, res, next) => {
+// Rate limited to protect LLM API quota
+router.post('/preview', rateLimitLLM, optionalAuth, async (req, res, next) => {
   try {
     const { name, definition, domain, feedback, language } = req.body || {};
 

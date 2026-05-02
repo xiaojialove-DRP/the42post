@@ -1,6 +1,38 @@
 /* ═══════════════════════════════════════════════════════
    Validation Utilities — Data Integrity Checks
+
+   SECURITY:
+   - Domain whitelist prevents SQL injection via domain filters
+   - Input validation is strict: no unexpected fields accepted
+   - Type checking on all user-supplied parameters
    ═══════════════════════════════════════════════════════ */
+
+// Whitelist of valid skill domains
+// These are the ONLY allowed values for domain filtering in queries
+const VALID_DOMAINS = Object.freeze([
+  'safety', 'science', 'narrative', 'design', 'visual',
+  'experience', 'sound', 'ideas', 'history', 'fun'
+]);
+
+/**
+ * Validate domain against whitelist
+ * @param {string} domain - Domain to validate
+ * @returns {boolean}
+ */
+export function isValidDomain(domain) {
+  if (!domain || typeof domain !== 'string') {
+    return false;
+  }
+  return VALID_DOMAINS.includes(domain.toLowerCase().trim());
+}
+
+/**
+ * Get all valid domains
+ * @returns {string[]}
+ */
+export function getValidDomains() {
+  return [...VALID_DOMAINS];
+}
 
 /**
  * 验证 Five-Layer 结构完整性
@@ -107,10 +139,9 @@ export function validateSkillData(skillData) {
     errors.push('domain is required');
   }
 
-  // 验证domain是有效的
-  const validDomains = ['safety', 'science', 'narrative', 'design', 'visual', 'experience', 'sound', 'ideas', 'history', 'fun'];
-  if (skillData.domain && !validDomains.includes(skillData.domain)) {
-    errors.push(`domain must be one of: ${validDomains.join(', ')}`);
+  // Validate domain against whitelist (prevents SQL injection)
+  if (skillData.domain && !isValidDomain(skillData.domain)) {
+    errors.push(`domain must be one of: ${VALID_DOMAINS.join(', ')}`);
   }
 
   return {
@@ -127,6 +158,79 @@ export function validateSkillData(skillData) {
 export function isValidDownloadFormat(format) {
   const validFormats = ['markdown', 'langchain', 'mcp', 'certificate'];
   return validFormats.includes(format);
+}
+
+/**
+ * 验证 Email 格式
+ * @param {string} email - Email 地址
+ * @returns {boolean}
+ */
+export function isValidEmail(email) {
+  if (!email || typeof email !== 'string') {
+    return false;
+  }
+
+  // RFC 5322 简化版本，足以过滤大多数无效输入
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email) && email.length <= 254;
+}
+
+/**
+ * 验证用户名格式
+ * - 字母数字下划线，3-32 字符
+ * - 不能以数字开头
+ * @param {string} username - 用户名
+ * @returns {boolean}
+ */
+export function isValidUsername(username) {
+  if (!username || typeof username !== 'string') {
+    return false;
+  }
+
+  // 3-32 chars, alphanumeric + underscore, cannot start with number
+  const usernameRegex = /^[a-zA-Z_][a-zA-Z0-9_]{2,31}$/;
+  return usernameRegex.test(username);
+}
+
+/**
+ * 验证密码强度
+ * - 最少 8 个字符
+ * - 至少一个大写字母，一个小写字母，一个数字
+ * @param {string} password - 密码
+ * @returns {{valid: boolean, errors: string[]}}
+ */
+export function validatePassword(password) {
+  const errors = [];
+
+  if (!password || typeof password !== 'string') {
+    errors.push('Password must be a string');
+    return { valid: false, errors };
+  }
+
+  if (password.length < 8) {
+    errors.push('Password must be at least 8 characters');
+  }
+
+  if (!/[A-Z]/.test(password)) {
+    errors.push('Password must contain at least one uppercase letter');
+  }
+
+  if (!/[a-z]/.test(password)) {
+    errors.push('Password must contain at least one lowercase letter');
+  }
+
+  if (!/\d/.test(password)) {
+    errors.push('Password must contain at least one digit');
+  }
+
+  if (password.length > 128) {
+    errors.push('Password must be 128 characters or less');
+  }
+
+  return {
+    valid: errors.length === 0,
+    errors
+  };
 }
 
 /**
@@ -164,5 +268,11 @@ export default {
   validateFiveLayerSchema,
   validateSkillData,
   isValidDownloadFormat,
-  normalizeFiveLayer
+  normalizeFiveLayer,
+  isValidDomain,
+  getValidDomains,
+  isValidEmail,
+  isValidUsername,
+  validatePassword,
+  VALID_DOMAINS
 };
