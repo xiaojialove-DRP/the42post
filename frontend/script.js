@@ -899,6 +899,10 @@ const I18N = {
     preview_back: '← Back to Edit',
     preview_regenerate: '🔄 Regenerate',
     preview_confirm: '✓ Confirm Publish',
+    preview_prompt_title: 'Ready-to-Use Prompt',
+    preview_prompt_hint: '— paste into any AI assistant',
+    preview_prompt_note: 'Edit freely. The 5 layers above are the structured form of this same Skill.',
+    preview_prompt_copy: '📋 Copy',
   },
   cn: {
     masthead_subtitle: 'AI 每天都在变得更聪明。<br>但它有让我们的生活更好吗？',
@@ -1113,6 +1117,10 @@ const I18N = {
     preview_back: '← 返回编辑',
     preview_regenerate: '🔄 重新生成',
     preview_confirm: '✓ 确认发布',
+    preview_prompt_title: '开箱即用的 Prompt',
+    preview_prompt_hint: '— 复制到任何 AI 助手即可使用',
+    preview_prompt_note: '可自由编辑。上面五层是这同一个 Skill 的结构化形式。',
+    preview_prompt_copy: '📋 复制',
   }
 };
 
@@ -2435,6 +2443,7 @@ function initSkillForge() {
     window.probeChoice = null;
     window.homepageIdea = null;
     window.agent42StructuredData = null;
+    window.agent42ReadyToUsePrompt = null;
 
     // Reset visible inputs so the user sees a clean slate, not stale text.
     // Both possible idea inputs are cleared (homepage hero + wizard step 1)
@@ -2867,12 +2876,78 @@ function initSkillForge() {
         document.getElementById('previewValidating').textContent = flat(skill.validating);
         document.getElementById('previewContextualizing').textContent = flat(skill.contextualizing);
 
+        // The same LLM call now also returns the natural-language
+        // Ready-to-Use Prompt; surface it in the same review modal so the
+        // user sees the complete artifact (5 layers + prompt) at once.
+        renderReadyPrompt(skill.ready_to_use_prompt);
+
         // 隐藏加载，显示五层
         document.getElementById('previewLoading').style.display = 'none';
         document.getElementById('previewFiveLayer').style.display = 'block';
       } catch (error) {
         console.error('生成五层结构失败:', error);
         document.getElementById('previewLoading').innerHTML = '<p style="color: red;">❌ 生成失败，请重试</p>';
+      }
+    });
+  }
+
+  // ─── Ready-to-Use Prompt rendering ───────────────────────────────────
+  // The same LLM call that returns the 5-layer also returns a natural
+  // language System Prompt. We surface it in the same preview modal so
+  // the skill reads as one complete artifact. Keeping it editable lets
+  // the author tune wording before download / publish without forcing
+  // another LLM round-trip.
+  function renderReadyPrompt(promptText) {
+    const section = document.getElementById('previewPromptSection');
+    const ta = document.getElementById('previewReadyPrompt');
+    const text = (promptText || '').trim();
+    if (ta) ta.value = text;
+    if (section) section.style.display = text ? 'block' : 'none';
+    // Mirror to the global so the publish handler picks up edits.
+    window.agent42ReadyToUsePrompt = text || null;
+    if (window.agent42StructuredData && typeof window.agent42StructuredData === 'object') {
+      window.agent42StructuredData.ready_to_use_prompt = text || null;
+    }
+  }
+
+  // Keep the global synced when the user manually edits the prompt.
+  const previewReadyPromptEl = document.getElementById('previewReadyPrompt');
+  if (previewReadyPromptEl) {
+    previewReadyPromptEl.addEventListener('input', (e) => {
+      const v = e.target.value.trim();
+      window.agent42ReadyToUsePrompt = v || null;
+      if (window.agent42StructuredData && typeof window.agent42StructuredData === 'object') {
+        window.agent42StructuredData.ready_to_use_prompt = v || null;
+      }
+    });
+  }
+
+  // Copy-to-clipboard button — uses the Clipboard API with a visible
+  // confirmation flash so the user knows it worked. Falls back to
+  // selectAll+execCommand when the page is served over an insecure
+  // context (some self-hosted previews).
+  const btnCopyReadyPrompt = document.getElementById('btnCopyReadyPrompt');
+  if (btnCopyReadyPrompt) {
+    btnCopyReadyPrompt.addEventListener('click', async () => {
+      const ta = document.getElementById('previewReadyPrompt');
+      if (!ta || !ta.value.trim()) return;
+      try {
+        if (navigator.clipboard && window.isSecureContext) {
+          await navigator.clipboard.writeText(ta.value);
+        } else {
+          ta.select();
+          document.execCommand('copy');
+          ta.setSelectionRange(0, 0);
+        }
+        const orig = btnCopyReadyPrompt.innerHTML;
+        btnCopyReadyPrompt.innerHTML = '<span>✓ Copied</span>';
+        btnCopyReadyPrompt.classList.add('copied');
+        setTimeout(() => {
+          btnCopyReadyPrompt.innerHTML = orig;
+          btnCopyReadyPrompt.classList.remove('copied');
+        }, 1400);
+      } catch (err) {
+        console.warn('Copy failed:', err);
       }
     });
   }
@@ -2915,6 +2990,21 @@ function initSkillForge() {
       // 同步预览框中的编辑回 Step 2
       document.getElementById('reviewSkillName').value = document.getElementById('previewSkillName').value;
       document.getElementById('reviewSkillDef').value = document.getElementById('previewSkillDef').value;
+
+      // Promote the flat 5-layer + Ready-to-Use Prompt the user just
+      // reviewed into agent42StructuredData so the PUBLISH POST carries
+      // the same artifact. Without this the publish payload was empty
+      // for users coming through the flat preview modal — the long-
+      // running "skill missing in archive after publish" symptom.
+      const editedPrompt = (document.getElementById('previewReadyPrompt')?.value || '').trim();
+      const baseLayer = window.previewFiveLayer || {};
+      window.agent42StructuredData = {
+        ...baseLayer,
+        name: document.getElementById('previewSkillName').value.trim() || baseLayer.name,
+        definition: document.getElementById('previewSkillDef').value.trim() || baseLayer.definition,
+        ready_to_use_prompt: editedPrompt || baseLayer.ready_to_use_prompt || null
+      };
+      window.agent42ReadyToUsePrompt = editedPrompt || baseLayer.ready_to_use_prompt || null;
 
       // 触发原始的 btnConfirmSkill
       const btnConfirm = document.getElementById('btnConfirmSkill');
@@ -2973,6 +3063,11 @@ function initSkillForge() {
         document.getElementById('previewFencing').textContent = flat(skill.fencing);
         document.getElementById('previewValidating').textContent = flat(skill.validating);
         document.getElementById('previewContextualizing').textContent = flat(skill.contextualizing);
+
+        // Re-sync the Ready-to-Use Prompt that came back with the regen.
+        renderReadyPrompt(skill.ready_to_use_prompt);
+        // Mirror to the structured cache so PUBLISH carries the new prompt.
+        window.previewFiveLayer = skill;
 
         alert('✓ 已重新生成！');
       } catch (error) {

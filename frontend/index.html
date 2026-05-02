@@ -846,6 +846,28 @@
           </div>
         </div>
 
+        <!-- Ready-to-Use Prompt — natural language System Prompt synthesised
+             from the five layers in the same LLM call. This is the artifact
+             the author actually copies into ChatGPT / Claude / Gemini. Lives
+             inside the same five-layer preview block (revealed together) so
+             the skill reads as one complete artifact, not a separate step. -->
+        <div class="preview-section preview-prompt-section" id="previewPromptSection" style="display: none;">
+          <h3>
+            <span class="preview-prompt-glyph">📜</span>
+            <span data-i18n="preview_prompt_title">Ready-to-Use Prompt</span>
+            <span class="preview-prompt-hint" data-i18n="preview_prompt_hint">— paste into any AI assistant</span>
+          </h3>
+          <textarea class="preview-prompt-textarea" id="previewReadyPrompt"
+                    rows="8"
+                    placeholder=""></textarea>
+          <div class="preview-prompt-footer">
+            <span class="preview-prompt-note" data-i18n="preview_prompt_note">Edit freely. The 5 layers above are the structured form of this same Skill.</span>
+            <button class="preview-prompt-copy" id="btnCopyReadyPrompt" type="button">
+              <span data-i18n="preview_prompt_copy">📋 Copy</span>
+            </button>
+          </div>
+        </div>
+
         <!-- Loading indicator -->
         <div class="preview-loading" id="previewLoading" style="display: none;">
           <div class="spinner"></div>

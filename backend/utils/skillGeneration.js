@@ -682,6 +682,14 @@ Skill 是"语义资本"：一颗高度压缩的种子，能让 AI agent 在不�
 
 禁令：「激进地推进」「灵活适应」「在 X 与 Y 之间平衡」「当用户表达相关需求时」等空架子。
 
+【ready_to_use_prompt — 关键字段】
+还要写一段自然语言的 System Prompt，让用户**直接复制粘贴到 ChatGPT / Claude / Gemini** 即可使用。要求：
+- 第二人称 "You are..."（中文用"你"），把 AI 直接当作正在执行这个 Skill 的对象
+- 8-14 句话，把上面五层凝练成一段连贯的指令（不是再列一遍五层标题）
+- 包含：身份/姿态 → 何时启用此 Skill → 具体怎么回应（含一个对照例子）→ 边界 → 失败模式自检
+- 不要写"以下是五层"之类的元描述。读起来像一个完整的、独立可用的 system prompt
+- 不要带 markdown 标题或代码框。
+
 只返回 JSON：
 {
   "name": "${skillName}",
@@ -690,7 +698,8 @@ Skill 是"语义资本"：一颗高度压缩的种子，能让 AI agent 在不�
   "instantiating": "一组锐利对照——一个体现这种立场的具体回应 vs 一个看似相近实则错位的回应。",
   "fencing": "命名一类适用信号，再命名一类不适用信号；点出与之拉扯的另一个有名有姓的价值。",
   "validating": "一个体验式问句作为判定——读者读完会问的那种。再点出'看似执行实则精神已死'的样子。",
-  "contextualizing": "跨语言/文化时，这条立场的表达方向会如何偏移（一行说出方向，不写脚本）。"
+  "contextualizing": "跨语言/文化时，这条立场的表达方向会如何偏移（一行说出方向，不写脚本）。",
+  "ready_to_use_prompt": "8-14 句的自然语言 System Prompt，直接可粘贴到任意 LLM 使用。"
 }`
     : `You are an AI values researcher at The 42 Post. Write a five-layer "editorial preview" of a Skill the author is about to publish — last look before they ship.
 
@@ -709,6 +718,14 @@ Each layer is one compact paragraph (2-3 sentences). No numbering, no bullets, n
 
 Bans: "aggressively pursue", "flexibly adapt", "balance between X and Y", "when the user expresses relevant needs", and similar hollow scaffolding.
 
+【ready_to_use_prompt — critical field】
+Also write a natural-language System Prompt that the author can **copy-paste directly into ChatGPT / Claude / Gemini** to put any agent under this Skill. Constraints:
+- Second person ("You are..."), addressing the AI that will run under this Skill.
+- 8-14 sentences, distilling the five layers above into one coherent instruction (not a re-listing of the layer headings).
+- Cover: identity/stance → when to activate the Skill → how to respond concretely (include one short contrast example) → boundaries → silent-failure self-check.
+- No meta-prose like "Below are the five layers". It must read as a complete, standalone system prompt.
+- No markdown headings or code fences.
+
 Return JSON only:
 {
   "name": "${skillName}",
@@ -717,11 +734,15 @@ Return JSON only:
   "instantiating": "One sharp contrast — a concrete response that embodies the stance vs one that looks similar but misses it.",
   "fencing": "Name a class of triggering signals, then a class of non-applicable cases; name the conflicting valuable thing it pulls against.",
   "validating": "An experiential question that decides whether the spirit is alive. Then name the 'looks executed but spirit is dead' shape.",
-  "contextualizing": "How the expression of this stance shifts across languages/cultures (one line on direction, no full script)."
+  "contextualizing": "How the expression of this stance shifts across languages/cultures (one line on direction, no full script).",
+  "ready_to_use_prompt": "8-14 sentences. A natural-language System Prompt the user can paste into any LLM directly."
 }`;
 
   try {
-    const { data, model, usage } = await callLLMJSON(prompt, 1500);
+    // 1500 wasn't enough headroom now that the model also returns a
+    // multi-sentence ready_to_use_prompt; bumped to 2200 to avoid silent
+    // truncation that left the prompt empty in production.
+    const { data, model, usage } = await callLLMJSON(prompt, 2200);
     return {
       success: true,
       data: {
@@ -731,7 +752,8 @@ Return JSON only:
         instantiating: data.instantiating || '',
         fencing: data.fencing || '',
         validating: data.validating || '',
-        contextualizing: data.contextualizing || ''
+        contextualizing: data.contextualizing || '',
+        ready_to_use_prompt: (data.ready_to_use_prompt || '').trim()
       },
       model,
       usage
@@ -770,6 +792,13 @@ function flatFiveLayerFallback(skillName, definition, domain, language = 'en') {
         contextualizing: `Cultural note: the expression of "${definition}" varies across languages and cultures, but the underlying care should stay consistent.`
       };
 
+  // Stitch a serviceable Ready-to-Use Prompt from the layer text so the
+  // download / Playground injection still works when the LLM call falls
+  // back to this template path.
+  const fallbackPrompt = isCn
+    ? `你是一个在执行「${skillName}」这个 Skill 的 AI 助手。${t.defining} ${t.instantiating} ${t.fencing} ${t.validating} ${t.contextualizing} 请以第一人称、简洁、自然地回应用户。不要引用上面的层级标签，让这条立场在你的回应里活起来——是体现，不是引用。`
+    : `You are an AI assistant operating under the "${skillName}" Skill. ${t.defining} ${t.instantiating} ${t.fencing} ${t.validating} ${t.contextualizing} Respond in first person, concisely and naturally. Do not quote the layer headings above — embody the stance, don't cite it.`;
+
   return {
     success: true,
     fallback: true,
@@ -781,7 +810,8 @@ function flatFiveLayerFallback(skillName, definition, domain, language = 'en') {
       instantiating: t.instantiating,
       fencing: t.fencing,
       validating: t.validating,
-      contextualizing: t.contextualizing
+      contextualizing: t.contextualizing,
+      ready_to_use_prompt: fallbackPrompt
     }
   };
 }

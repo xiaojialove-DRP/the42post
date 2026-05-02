@@ -7145,6 +7145,106 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
   resize: vertical;
 }
 
+/* ─── Ready-to-Use Prompt block in the preview modal ─────────────────
+   This is the natural-language artifact the user actually copies into
+   ChatGPT / Claude. Same hierarchy as the 5-layer block above, but with
+   a parchment tint + green accent so the user reads it as the
+   "ready-to-ship" output rather than another structured field. */
+.preview-prompt-section {
+  margin-top: 28px;
+  padding: 20px 22px;
+  background: linear-gradient(180deg, #faf6ec 0%, #f4ede0 100%);
+  border: 1px solid #e6dcc4;
+  border-radius: 10px;
+}
+
+.preview-prompt-section h3 {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 15px;
+  font-family: var(--font-serif);
+  color: #2a2620;
+  margin-bottom: 14px;
+}
+
+.preview-prompt-glyph {
+  font-size: 17px;
+  line-height: 1;
+}
+
+.preview-prompt-hint {
+  font-size: 12px;
+  color: #8a7a5e;
+  font-weight: normal;
+  font-style: italic;
+}
+
+.preview-prompt-textarea {
+  width: 100%;
+  min-height: 180px;
+  padding: 14px 16px;
+  background: #fffdf7;
+  border: 1px solid #d6c7a4;
+  border-left: 4px solid #6b9d5c;
+  border-radius: 6px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.65;
+  color: #2a2620;
+  resize: vertical;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.preview-prompt-textarea:focus {
+  outline: none;
+  border-color: #6b9d5c;
+  box-shadow: 0 2px 10px rgba(107, 157, 92, 0.18);
+}
+
+.preview-prompt-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 12px;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.preview-prompt-note {
+  font-size: 12px;
+  color: #8a7a5e;
+  line-height: 1.5;
+  flex: 1;
+  min-width: 200px;
+}
+
+.preview-prompt-copy {
+  background: #6b9d5c;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-family: var(--font-serif);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.15s ease;
+  white-space: nowrap;
+}
+
+.preview-prompt-copy:hover {
+  background: #5a8b4d;
+  transform: translateY(-1px);
+}
+
+.preview-prompt-copy.copied {
+  background: #4f7e44;
+}
+
 .five-layer-item {
   margin-bottom: 20px;
   padding: 16px;
