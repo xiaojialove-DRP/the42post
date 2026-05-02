@@ -21,11 +21,15 @@ import agentRoutes from './routes/agents.js';
 import emailRoutes from './routes/email.js';
 import downloadsRoutes from './routes/downloads.js';
 import playgroundRoutes from './routes/playground.js';
+import healthRoutes from './routes/health.js';
 
 import { initDatabase } from './db/init.js';
 import { seedSkillsIfNeeded } from './db/seed-skills-on-startup.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { requestLogger } from './middleware/requestLogger.js';
+import { requestValidator } from './middleware/requestValidator.js';
+import { corsOptions, logCorsConfiguration } from './config/cors.js';
+import { initializeCache } from './utils/cache.js';
 
 dotenv.config();
 
@@ -48,6 +52,9 @@ db = new SqlitePool({
   connectionString: `sqlite:///${dbPath}`
 });
 
+// Make db available globally for health checks and other modules
+global.__db__ = db;
+
 // Test connection
 db.query('SELECT 1 as test').then(result => {
   console.log('✓ SQLite database connected');
@@ -56,16 +63,24 @@ db.query('SELECT 1 as test').then(result => {
   process.exit(1);
 });
 
-// ═══ MIDDLEWARE ═══
-app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:8000',
-  credentials: true
-}));
+// ═══ INITIALIZE CACHING ═══
+console.log('\n═══ Cache System Initialization ═══');
+initializeCache(); // Memory-based cache (Redis optional)
 
+// ═══ MIDDLEWARE ═══
+// 1. CORS (with explicit whitelist)
+logCorsConfiguration();
+app.use(cors(corsOptions));
+
+// 2. Body parsing
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
+// 3. Request logging
 app.use(requestLogger);
+
+// 4. Request validation
+app.use(requestValidator);
 
 // ═══ STATIC FILES (Serve frontend) ═══
 const frontendPath = join(__dirname, '../frontend');
@@ -107,14 +122,11 @@ app.get('/', (req, res) => {
   });
 });
 
-// Health check
-app.get('/health', (req, res) => {
-  res.json({
-    status: 'OK',
-    timestamp: new Date().toISOString(),
-    version: '0.1.0'
-  });
-});
+// ═══ HEALTH CHECK ROUTES ═══
+// Use the enhanced health check router for detailed status
+app.use('/health', healthRoutes);
+// Keep backward compatibility with /api/health
+app.use('/api/health', healthRoutes);
 
 // ═══ API ROUTES ═══
 app.use('/api/auth', authRoutes);
@@ -185,5 +197,7 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
+// Export for use in other modules
 export { db };
+export { getCache } from './utils/cache.js';
 export default app;
