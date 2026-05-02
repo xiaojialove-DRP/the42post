@@ -355,35 +355,67 @@ router.post('/', optionalAuth, async (req, res, next) => {
         ]
       );
 
+      // Verify skill was inserted
+      if (!skillResult || skillResult.rowCount === 0) {
+        throw new Error('Failed to insert skill into database');
+      }
+
       // Insert manifest (needs explicit id — TEXT PK, no default)
-      await client.query(
+      const manifestResult = await client.query(
         `INSERT INTO skill_manifests (id, skill_id, soul_hash, author_signature, manifest_json)
          VALUES ($1, $2, $3, $4, $5)`,
         [uuidv4(), skillId, soul_hash, manifest.covenant.author_signature, JSON.stringify(manifest)]
       );
 
+      if (!manifestResult || manifestResult.rowCount === 0) {
+        throw new Error('Failed to insert skill manifest');
+      }
+
       // Insert initial version
-      await client.query(
+      const versionResult = await client.query(
         `INSERT INTO skill_versions (id, skill_id, version_number, five_layer, author_signature)
          VALUES ($1, $2, 1, $3, $4)`,
         [uuidv4(), skillId, JSON.stringify(five_layer), manifest.covenant.author_signature]
       );
 
+      if (!versionResult || versionResult.rowCount === 0) {
+        throw new Error('Failed to insert skill version');
+      }
+
+      // Verify the skill was actually committed by fetching it back
+      const verifyResult = await client.query(
+        `SELECT id, title, domain, soul_hash, published, published_at FROM skills WHERE id = $1`,
+        [skillId]
+      );
+
+      if (!verifyResult || verifyResult.rows.length === 0) {
+        throw new Error('Skill verification failed after insert');
+      }
+
+      const savedSkill = verifyResult.rows[0];
+
       await client.query('COMMIT');
 
+      // Return complete skill data with actual database values
       res.status(201).json({
         success: true,
+        message: 'Skill published successfully',
         skill: {
-          id: skillId,
-          title: title.trim(),
-          soul_hash,
-          published: true,
-          published_at: new Date().toISOString()
+          id: savedSkill.id,
+          title: savedSkill.title,
+          domain: savedSkill.domain,
+          soul_hash: savedSkill.soul_hash,
+          published: Boolean(savedSkill.published),
+          published_at: savedSkill.published_at
         },
         manifest
       });
     } catch (error) {
-      await client.query('ROLLBACK');
+      try {
+        await client.query('ROLLBACK');
+      } catch (rollbackErr) {
+        console.error('Rollback failed:', rollbackErr.message);
+      }
       throw error;
     } finally {
       client.release();

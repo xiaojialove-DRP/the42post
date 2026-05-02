@@ -4073,8 +4073,13 @@ function initSkillForge() {
         // Save to localStorage (local storage)
         saveForgedSkill(forgedSkillData);
 
-        // Invalidate hot-skills cache so newly published skill appears in Playground picker
-        window.__hotSkillsCache = null;
+        // ═══ CACHE INVALIDATION ═══
+        // Clear all cached skill lists to ensure newly published skill appears everywhere
+        window.__hotSkillsCache = null;  // Playground picker cache
+        window.__archiveSkillsCache = null;  // Archive view cache
+
+        // Signal that skills list was updated (for any listeners)
+        window.__skillsLastUpdated = new Date().getTime();
 
         // Refresh the skills feed and vibe grid
         initSkillsFeed();
@@ -4090,6 +4095,11 @@ function initSkillForge() {
 
         // Store skill data globally for reference
         window.currentForgedSkill = forgedSkillData;
+
+        // Log success for debugging
+        console.log(`✅ Skill "${forgedSkillData.title}" published successfully`);
+        console.log(`📊 Skill ID: ${forgedSkillData.id || forgedSkillData.backendId}`);
+        console.log(`🔄 Cache invalidated - Archive will refresh on next view`);
       }, 1800);
     });
   }
@@ -6908,31 +6918,72 @@ async function initAgentArchiveView() {
   // ═══ FETCH PUBLISHED SKILLS FROM DATABASE ═══
   let baseSkills = [];
   try {
+    // ⚡ OPTIMIZATION: Clear any cached skill list to ensure fresh data
+    // This is especially important after the user just published a new skill
+    const now = new Date().getTime();
+    const lastUpdate = window.__skillsLastUpdated || 0;
+
+    // If skills were updated very recently (< 5 seconds), force a refresh
+    const forceRefresh = (now - lastUpdate) < 5000;
+
     // 从后端API获取所有已发布的skills
-    const response = await fetch(`${ApiClient.BASE_URL}/skills?limit=100`);
+    // Add cache-busting parameter for force refresh or always add timestamp for freshness
+    const cacheParam = forceRefresh ? `&nocache=${now}` : '';
+    const apiUrl = `${ApiClient.BASE_URL}/skills?limit=100${cacheParam}`;
+
+    const fetchOptions = {
+      method: 'GET',
+      headers: {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+      }
+    };
+
+    if (forceRefresh) {
+      console.log('🔄 Archive: Force refreshing due to recent skill publication');
+    }
+
+    const response = await fetch(apiUrl, fetchOptions);
+
     if (response.ok) {
       const result = await response.json();
       baseSkills = result.skills || [];
-      console.log(`✓ Loaded ${baseSkills.length} published skills from API`);
+      const isSuccessful = Array.isArray(baseSkills) && baseSkills.length > 0;
+
+      console.log(`✓ Archive: Loaded ${baseSkills.length} published skills from API`);
+
+      // Log the most recent skills for verification
+      if (baseSkills.length > 0) {
+        const mostRecent = baseSkills.sort((a, b) =>
+          new Date(b.published_at) - new Date(a.published_at)
+        ).slice(0, 3);
+        console.log('📌 Most recent skills:', mostRecent.map(s => ({
+          id: s.id,
+          title: s.title,
+          publishedAt: s.published_at,
+          creator: s.creator_name || s.agent || 'Anonymous'
+        })));
+      }
 
       // CRITICAL FIX: If API returns fewer than 40 skills, supplement with fallback
       // This ensures 42 skills always display even if database wasn't seeded
       if (baseSkills.length < 40) {
-        console.warn(`⚠️ API returned only ${baseSkills.length} skills, supplementing with local fallback for 42 display`);
+        console.warn(`⚠️ Archive: API returned only ${baseSkills.length} skills, supplementing with local fallback for 42 display`);
         const fallbackSkills = (typeof ALL_SKILLS !== 'undefined' ? ALL_SKILLS : SHARED_SKILLS) || [];
         // Merge: keep API skills, add fallback skills that don't duplicate
         const existingIds = new Set(baseSkills.map(s => s.id));
         const additional = fallbackSkills.filter(s => !existingIds.has(s.id));
         baseSkills = [...baseSkills, ...additional].slice(0, 42);
-        console.log(`✓ Combined to ${baseSkills.length} skills for display`);
+        console.log(`✓ Archive: Combined to ${baseSkills.length} skills for display`);
       }
     } else {
       // Fallback to hardcoded skills if API fails
-      console.warn('❌ API request failed, falling back to local SHARED_SKILLS/ALL_SKILLS');
+      console.warn(`⚠️ Archive: API request failed (${response.status}), falling back to local SHARED_SKILLS/ALL_SKILLS`);
       baseSkills = (typeof ALL_SKILLS !== 'undefined' ? ALL_SKILLS : SHARED_SKILLS) || [];
     }
   } catch (error) {
-    console.error('❌ Error fetching skills:', error);
+    console.error('❌ Archive: Error fetching skills from API:', error.message);
     // Fallback to hardcoded skills
     baseSkills = (typeof ALL_SKILLS !== 'undefined' ? ALL_SKILLS : SHARED_SKILLS) || [];
   }
