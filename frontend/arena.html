@@ -1199,10 +1199,15 @@
       min-width: 0; /* lets long words wrap inside the grid cell */
       transition: background 0.2s ease, border-color 0.2s ease;
     }
+    /* The skill-side card is "the curated one" — marked the way a
+       printer would highlight a chosen plate: a thin marigold left
+       rule and the lightest warm wash. Reads as honoured, not
+       different-coloured. */
     .twin-rate-card.twin-rate-skill {
-      background: #f4f8ee;
-      border-color: #b8cba2;
-      box-shadow: 0 2px 10px rgba(107, 157, 92, 0.10);
+      background: #faf3df;
+      border-color: #e0d5b8;
+      border-left: 3px solid #d4a43c;
+      box-shadow: 0 2px 10px rgba(212, 164, 60, 0.12);
     }
     .twin-rate-label {
       display: flex; align-items: center; gap: 6px;
@@ -1215,12 +1220,14 @@
       background: #2a2520; color: #fdfaf3; border-radius: 50%;
       font-size: 11px;
     }
-    .twin-rate-card.twin-rate-skill .twin-rate-side { background: #6b9d5c; }
+    /* Side badge stays deep ink on both sides — like a wax seal.
+       The "this is the skill side" cue lives in the marigold tag and
+       the left rule, so the badge doesn't need to recolour. */
     .twin-rate-tag {
       font-size: 10px; color: #5a5048; font-weight: 600;
       letter-spacing: 0.4px; text-transform: none;
     }
-    .twin-rate-card.twin-rate-skill .twin-rate-tag { color: #4a7237; }
+    .twin-rate-card.twin-rate-skill .twin-rate-tag { color: #b8851e; }
     .twin-rate-text {
       font-size: 13px; line-height: 1.55; color: #2a2520;
       /* Cap text growth so a long response can't push the card past
@@ -1257,10 +1264,13 @@
     .twin-rate-btn:hover {
       background: #f7efd9; border-color: #b8915a; transform: translateY(-1px);
     }
+    /* Selected state: deep ink border + the same warm cream wash as
+       the skill-side card — the user's pick reads as a stamped choice
+       rather than a coloured pill. */
     .twin-rate-btn.selected {
-      background: #f4f8ee;
-      border-color: #6b9d5c;
-      box-shadow: 0 2px 8px rgba(107, 157, 92, 0.18);
+      background: #faf3df;
+      border-color: #2a2520;
+      box-shadow: 0 2px 8px rgba(42, 37, 32, 0.18);
     }
     .twin-rate-emoji { font-size: 22px; line-height: 1; }
     .twin-rate-word {
@@ -1277,7 +1287,8 @@
       transition: border-color 0.15s ease;
     }
     .twin-rate-comment:focus {
-      outline: none; border-color: #6b9d5c;
+      outline: none; border-color: #2a2520;
+      box-shadow: 0 0 0 3px rgba(42, 37, 32, 0.06);
     }
     .twin-rate-footer {
       display: flex; justify-content: space-between; align-items: center;
@@ -1286,16 +1297,18 @@
     .twin-rate-counter {
       font-size: 11px; color: #8a7a6e; font-family: 'JetBrains Mono', monospace;
     }
+    /* Submit + action buttons match the trigger button (#2a2520) so
+       every primary CTA on the card speaks the same ink. */
     .twin-rate-submit {
       padding: 10px 22px;
-      background: #6b9d5c; color: #fff; border: none;
+      background: #2a2520; color: #fdfaf3; border: none;
       border-radius: 6px; cursor: pointer;
       font-family: inherit; font-size: 13px; font-weight: 600;
       letter-spacing: 0.5px;
-      transition: background 0.15s ease, transform 0.15s ease;
+      transition: background 0.18s ease, transform 0.18s ease;
     }
     .twin-rate-submit:hover:not(:disabled) {
-      background: #5a8b4d; transform: translateY(-1px);
+      background: #3a3530; transform: translateY(-1px);
     }
     .twin-rate-submit:disabled {
       opacity: 0.4; cursor: not-allowed;
@@ -1314,19 +1327,23 @@
       font-size: 12px; color: #5a5048; line-height: 1.5;
       margin-bottom: 18px;
     }
-    .twin-thanks-stats strong { color: #6b9d5c; }
+    /* Marigold for the "X% said it was clearly better" highlight —
+       the warm gem-glow of a positive result, in the same family as
+       the skill-side card's left rule. */
+    .twin-thanks-stats strong { color: #b8851e; }
     .twin-thanks-actions {
       display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;
     }
+    /* Same ink CTA as twin-rate-submit and the trigger button. */
     .twin-action-btn {
       padding: 10px 18px;
-      background: #6b9d5c; color: #fff; border: none;
+      background: #2a2520; color: #fdfaf3; border: none;
       border-radius: 6px; cursor: pointer;
       font-family: inherit; font-size: 12px; font-weight: 600;
       letter-spacing: 0.5px;
-      transition: background 0.15s ease, transform 0.15s ease;
+      transition: background 0.18s ease, transform 0.18s ease;
     }
-    .twin-action-btn:hover { background: #5a8b4d; transform: translateY(-1px); }
+    .twin-action-btn:hover { background: #3a3530; transform: translateY(-1px); }
     .twin-action-btn.secondary {
       background: transparent; color: #5a5048;
       border: 1.5px solid #d4c8a8;
@@ -2155,7 +2172,7 @@
               <option value="" disabled>${isCn ? '— 选择 —' : '— Select —'}</option>
             </select>
             <button class="twin-pickskill-confirm" data-skill-confirm
-                    style="width:100%;margin-top:14px;padding:12px;background:#6b9d5c;color:#fff;border:none;border-radius:6px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;transition:background 0.15s ease;"
+                    style="width:100%;margin-top:14px;padding:12px;background:#2a2520;color:#fdfaf3;border:none;border-radius:6px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;transition:background 0.18s ease;"
                     disabled>
               ${isCn ? '使用这个 Skill →' : 'Use this Skill →'}
             </button>
