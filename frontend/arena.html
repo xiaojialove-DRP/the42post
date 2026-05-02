@@ -1178,6 +1178,17 @@
       transition: background 0.18s ease, transform 0.18s ease;
     }
     .twin-trigger-btn:hover { background: #3a3530; transform: translateY(-1px); }
+    /* Quiet "swap default skill" link below the START button. Sits as
+       a third-tier action in the visual hierarchy so the eye lands on
+       Start first; only users who actually want to change it notice
+       the link. */
+    .twin-trigger-swap {
+      display: inline-block; margin-top: 12px;
+      color: #8a7a6e; font-size: 11px; letter-spacing: 0.5px;
+      text-decoration: none; cursor: pointer;
+      transition: color 0.15s ease;
+    }
+    .twin-trigger-swap:hover { color: #2a2520; text-decoration: underline; }
 
     /* ─── Reveal-mode rating stage ─────────────────────────────────
        A/B sit side-by-side. The skill side gets a green-tinted card +
@@ -1273,13 +1284,33 @@
       border-color: #2a2520;
       box-shadow: 0 2px 8px rgba(42, 37, 32, 0.18);
     }
+    /* Tap-to-submit flash: during the 120ms between tap and stage
+       transition we disable all rate buttons to prevent double-fire,
+       but the selected one must stay vivid so the user sees their
+       choice register, not a dimmed ghost. */
+    .twin-rate-btn:disabled { opacity: 0.45; cursor: default; }
+    .twin-rate-btn.selected:disabled { opacity: 1; }
     .twin-rate-emoji { font-size: 22px; line-height: 1; }
     .twin-rate-word {
       font-size: 11px; color: #2a2520; font-weight: 500;
       letter-spacing: 0.3px;
     }
+    /* Optional comment is collapsed by default behind a quiet link.
+       Tapping the link reveals the textarea inline. The form stays
+       visually light — most users tap a reaction and never see this. */
+    .twin-rate-note-toggle {
+      display: inline-block; margin-top: 12px;
+      color: #8a7a6e; font-size: 11px; letter-spacing: 0.3px;
+      text-decoration: none; cursor: pointer;
+      transition: color 0.15s ease;
+    }
+    .twin-rate-note-toggle:hover { color: #2a2520; }
+    .twin-rate-note-toggle.open { color: #2a2520; }
+    .twin-rate-note-wrap {
+      margin-top: 8px;
+    }
     .twin-rate-comment {
-      width: 100%; margin-top: 14px;
+      width: 100%;
       padding: 10px 12px;
       background: #fdfaf3; border: 1.5px solid #d4c8a8;
       border-radius: 6px;
@@ -1291,28 +1322,9 @@
       outline: none; border-color: #2a2520;
       box-shadow: 0 0 0 3px rgba(42, 37, 32, 0.06);
     }
-    .twin-rate-footer {
-      display: flex; justify-content: space-between; align-items: center;
-      margin-top: 10px; gap: 12px;
-    }
     .twin-rate-counter {
+      display: block; margin-top: 4px; text-align: right;
       font-size: 11px; color: #8a7a6e; font-family: 'JetBrains Mono', monospace;
-    }
-    /* Submit + action buttons match the trigger button (#2a2520) so
-       every primary CTA on the card speaks the same ink. */
-    .twin-rate-submit {
-      padding: 10px 22px;
-      background: #2a2520; color: #fdfaf3; border: none;
-      border-radius: 6px; cursor: pointer;
-      font-family: inherit; font-size: 13px; font-weight: 600;
-      letter-spacing: 0.5px;
-      transition: background 0.18s ease, transform 0.18s ease;
-    }
-    .twin-rate-submit:hover:not(:disabled) {
-      background: #3a3530; transform: translateY(-1px);
-    }
-    .twin-rate-submit:disabled {
-      opacity: 0.4; cursor: not-allowed;
     }
 
     /* ─── Thank-you stage ──────────────────────────────────────────
@@ -2183,6 +2195,12 @@
           <div class="twin-stage twin-trigger" hidden>
             <div class="twin-trigger-stats" data-trigger-stats></div>
             <button class="twin-trigger-btn" data-trigger-btn>${isCn ? '▶ 开始测试' : '▶ START TEST'}</button>
+            <!-- Quiet escape hatch: the auto-loaded default skill won't
+                 always be what the user wants. Tapping this re-opens
+                 the picker stage so they can swap before starting. -->
+            <a class="twin-trigger-swap" data-trigger-swap href="#" role="button">
+              ${isCn ? '↻ 换个 Skill' : '↻ change skill'}
+            </a>
           </div>
 
           <div class="twin-stage twin-loading" hidden>
@@ -2232,14 +2250,20 @@
                 <span class="twin-rate-word">${isCn ? '没感觉到区别' : "Can't tell"}</span>
               </button>
             </div>
-            <textarea class="twin-rate-comment"
-                      data-comment
-                      maxlength="140"
-                      rows="2"
-                      placeholder="${isCn ? '想说点什么吗？（可选，140字以内）' : 'Want to say anything? (optional, 140 chars)'}"></textarea>
-            <div class="twin-rate-footer">
+            <!-- Tap-to-submit model: choosing a reaction immediately
+                 sends the feedback. The comment is now an optional
+                 expandable note under a quiet link, so the form stays
+                 visually light and a single tap closes the loop. -->
+            <a class="twin-rate-note-toggle" data-note-toggle href="#" role="button">
+              ${isCn ? '💭 加句话？（可选）' : '💭 Add a note? (optional)'}
+            </a>
+            <div class="twin-rate-note-wrap" data-note-wrap hidden>
+              <textarea class="twin-rate-comment"
+                        data-comment
+                        maxlength="140"
+                        rows="2"
+                        placeholder="${isCn ? '想说点什么吗？140字以内' : '140 chars max'}"></textarea>
               <span class="twin-rate-counter" data-comment-counter>0 / 140</span>
-              <button class="twin-rate-submit" data-rate-submit disabled>${isCn ? '提交反馈' : 'Submit feedback'}</button>
             </div>
           </div>
 
@@ -2309,17 +2333,46 @@
       canvas.appendChild(card);
       setTimeout(() => card.classList.remove('spawning'), 600);
 
-      // Branch: skill already loaded → trigger stage; otherwise → in-card picker.
-      // Trigger stage shows current win-rate + ▶ button so users read the
-      // scenario first and the test is intentional (and we save API tokens).
+      // Branch order:
+      //   1. window.TWIN_TEST_SKILL preset (came from Archive's ▶Play
+      //      button or a previous round of this session) → trigger.
+      //   2. No preset → auto-load the picker's first option (the
+      //      user's own latest forge if any, otherwise the top
+      //      community skill) and go straight to trigger. The user
+      //      can swap via the small "↻ change skill" link rendered
+      //      on the trigger stage. This kills the extra picker tap
+      //      on first open without removing user choice.
       if (window.TWIN_TEST_SKILL) {
         applyTwinSkillToCard(card, window.TWIN_TEST_SKILL);
         showTwinTestTrigger(card, task, repo);
       } else {
-        showSkillPickerInCard(card, task, repo);
+        autoLoadDefaultSkill(card, task, repo);
       }
 
       return card;
+    }
+
+    /* Fetch the picker (which already orders user-own first, then
+       community-hot) and apply the first row directly. Falls back to
+       the explicit picker UI if the fetch fails or returns nothing. */
+    async function autoLoadDefaultSkill(card, task, repo) {
+      try {
+        const skills = await fetchHotSkills(7);
+        if (!skills || skills.length === 0) {
+          showSkillPickerInCard(card, task, repo);
+          return;
+        }
+        const first = skills[0];
+        if (typeof first.five_layer === 'string') {
+          try { first.five_layer = JSON.parse(first.five_layer); } catch { first.five_layer = {}; }
+        }
+        window.TWIN_TEST_SKILL = first;
+        applyTwinSkillToCard(card, first);
+        showTwinTestTrigger(card, task, repo);
+      } catch (e) {
+        console.warn('autoLoadDefaultSkill failed, falling back to picker:', e.message);
+        showSkillPickerInCard(card, task, repo);
+      }
     }
 
     async function showTwinTestTrigger(card, task, repo) {
@@ -2344,10 +2397,28 @@
         ? `🎯 <strong>${skillTitle}</strong> — 一键生成两个回应，看看这个 Skill 让 AI 怎样不一样`
         : `🎯 <strong>${skillTitle}</strong> — one click, two responses, see how this Skill changes the AI`;
 
-      btn.addEventListener('click', () => {
-        stage.hidden = true;
-        runTwinTest(card, task, repo);
-      });
+      // Wire the START + swap actions exactly once per card (the
+       // trigger stage can be re-shown when the user swaps a skill).
+      if (!stage.dataset.wired) {
+        btn.addEventListener('click', () => {
+          stage.hidden = true;
+          runTwinTest(card, task, repo);
+        });
+        const swap = stage.querySelector('[data-trigger-swap]');
+        if (swap) {
+          swap.addEventListener('click', (e) => {
+            e.preventDefault();
+            // Drop the cached skill so the picker opens cleanly, then
+            // hand control back to showSkillPickerInCard which already
+            // knows how to populate + advance to the trigger stage on
+            // confirm.
+            window.TWIN_TEST_SKILL = null;
+            stage.hidden = true;
+            showSkillPickerInCard(card, task, repo);
+          });
+        }
+        stage.dataset.wired = '1';
+      }
     }
 
     function applyTwinSkillToCard(card, skill) {
@@ -2526,14 +2597,21 @@
         }
 
         // Reset any stale state from a previous round (when user clicks
-        // "Next scenario" the same DOM gets re-used).
-        stageRate.querySelectorAll('.twin-rate-btn').forEach(b => b.classList.remove('selected'));
-        const submitBtn = stageRate.querySelector('[data-rate-submit]');
-        submitBtn.disabled = true;
+        // "Try another Skill" the same DOM gets re-used).
+        stageRate.querySelectorAll('.twin-rate-btn').forEach(b => {
+          b.classList.remove('selected');
+          b.disabled = false;
+        });
         const commentEl = stageRate.querySelector('[data-comment]');
         commentEl.value = '';
         stageRate.querySelector('[data-comment-counter]').textContent = '0 / 140';
         delete stageRate.dataset.rating;
+        delete stageRate.dataset.submitting;
+        // Collapse the optional note panel back to the link state.
+        const noteWrap = stageRate.querySelector('[data-note-wrap]');
+        const noteToggle = stageRate.querySelector('[data-note-toggle]');
+        if (noteWrap) noteWrap.hidden = true;
+        if (noteToggle) noteToggle.classList.remove('open');
 
         stageLoading.hidden = true;
         stageRate.hidden = false;
@@ -2549,22 +2627,32 @@
     }
 
     /* One-time wiring for the rate stage's interactive bits. We bind
-       once per card and read the current rating + comment off the DOM
-       at submit time, so subsequent rounds (Next scenario) re-use the
-       same listeners. */
+       once per card. Tap-to-submit model: clicking a reaction button
+       immediately fires submitTwinFeedback (no separate Submit). The
+       optional note expands inline only if the user actually wants
+       to leave one, and is read off the DOM at submit time. */
     function wireTwinRateStage(card, task, repo) {
       const isCn = (typeof currentLang !== 'undefined' && currentLang === 'cn');
       const stageRate = card.querySelector('.twin-rate');
-      const submitBtn = stageRate.querySelector('[data-rate-submit]');
       const commentEl = stageRate.querySelector('[data-comment]');
       const counterEl = stageRate.querySelector('[data-comment-counter]');
+      const noteToggle = stageRate.querySelector('[data-note-toggle]');
+      const noteWrap = stageRate.querySelector('[data-note-wrap]');
 
       stageRate.querySelectorAll('.twin-rate-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-          stageRate.querySelectorAll('.twin-rate-btn').forEach(b => b.classList.remove('selected'));
+        btn.addEventListener('click', async () => {
+          if (stageRate.dataset.submitting === '1') return;
+          stageRate.dataset.submitting = '1';
+          stageRate.querySelectorAll('.twin-rate-btn').forEach(b => {
+            b.classList.remove('selected');
+            b.disabled = true;
+          });
           btn.classList.add('selected');
           stageRate.dataset.rating = btn.dataset.rating;
-          submitBtn.disabled = false;
+          // Brief flash so the user sees their tap register before the
+          // card transitions to the thank-you stage.
+          await new Promise(r => setTimeout(r, 120));
+          await submitTwinFeedback(card, task, repo, btn.dataset.rating, commentEl.value.trim());
         });
       });
 
@@ -2572,20 +2660,21 @@
         counterEl.textContent = `${commentEl.value.length} / 140`;
       });
 
-      submitBtn.addEventListener('click', async () => {
-        const rating = stageRate.dataset.rating;
-        if (!rating) return;
-        submitBtn.disabled = true;
-        submitBtn.textContent = isCn ? '提交中…' : 'submitting…';
-        await submitTwinFeedback(card, task, repo, rating, commentEl.value.trim());
-      });
+      if (noteToggle) {
+        noteToggle.addEventListener('click', (e) => {
+          e.preventDefault();
+          const opening = noteWrap.hasAttribute('hidden');
+          noteWrap.hidden = !opening;
+          noteToggle.classList.toggle('open', opening);
+          if (opening) commentEl.focus();
+        });
+      }
     }
 
     async function submitTwinFeedback(card, task, repo, rating, comment) {
       const isCn = (typeof currentLang !== 'undefined' && currentLang === 'cn');
       const stageRate = card.querySelector('.twin-rate');
       const stageThanks = card.querySelector('.twin-thanks');
-      const submitBtn = stageRate.querySelector('[data-rate-submit]');
 
       try {
         const resp = await fetch('/api/playground/feedback', {
@@ -2634,8 +2723,11 @@
           stageThanks.dataset.wired = '1';
         }
       } catch (err) {
-        submitBtn.disabled = false;
-        submitBtn.textContent = isCn ? '提交反馈' : 'Submit feedback';
+        // Re-enable the rating buttons so the user can retry. The
+        // tap-to-submit model has no separate Submit control to
+        // restore; clearing the submitting flag is enough.
+        delete stageRate.dataset.submitting;
+        stageRate.querySelectorAll('.twin-rate-btn').forEach(b => b.disabled = false);
         alert((isCn ? '提交失败：' : 'Submit failed: ') + err.message);
       }
     }
