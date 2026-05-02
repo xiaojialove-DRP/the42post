@@ -33,6 +33,7 @@
   --font-mono: 'JetBrains Mono', 'SF Mono', 'Consolas', monospace;
   --font-serif: 'Playfair Display', 'Georgia', serif;
   --font-serif-cn: 'Noto Serif SC', 'STSong', serif;
+  --font-serif-cn-heading: 'Noto Serif JP', serif;
   --font-sans-cn: 'Noto Sans SC', -apple-system, 'Helvetica Neue', sans-serif;
   --font-sans: -apple-system, 'Helvetica Neue', Arial, sans-serif;
   --gap: 20px;
@@ -9882,4 +9883,49 @@ body[data-lang="cn"] .text-cn-inline {
   color: #1a1a1a;
   margin-top: 20px;
   margin-bottom: 12px;
+}
+
+/* ─── Chinese Typography: Headlines & Emphasis ──────────────────
+   Use Noto Serif JP (源ノ明朝) for titles, headlines, and emphasis.
+   Regular body text remains Noto Serif SC for better readability. */
+.masthead-title,
+.masthead-subtitle,
+.section-heading,
+.headline-hero,
+.about-title,
+.forge-title,
+.forge-subtitle,
+.forge-page-title,
+.forge-page-subtitle,
+.av-title,
+.av-readable-title,
+.av-readable-subtitle,
+.honor-panel-title,
+.honor-panel-subtitle,
+.knight-card-title,
+.completion-title,
+.completion-subtitle,
+.howto-title,
+.package-title,
+.probe-title,
+.probe-modal-title,
+.format-subtitle,
+.oath-title,
+.rights-title,
+.footer-section-title,
+.footer-title,
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-serif-cn-heading) !important;
+}
+
+/* Forge-specific emphasis */
+.forge-steps label,
+.forge-input-group label {
+  font-family: var(--font-serif-cn-heading);
+}
+
+/* Archive section titles */
+.archive-section-title,
+.skills-grid h3 {
+  font-family: var(--font-serif-cn-heading);
 }
