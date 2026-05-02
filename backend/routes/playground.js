@@ -20,19 +20,45 @@ import { callLLMJSON } from '../utils/skillGeneration.js';
 const router = express.Router();
 
 // ─── Build the two prompts ───
+// Prefers the ready_to_use_prompt (natural-language System Prompt synthesised
+// at forge time) over a structured-tag dump of the 5 layers. The natural
+// version produces noticeably more consistent A/B differentiation in
+// practice — every LLM digests prose better than custom 【tag】 syntax.
 function buildPrompts(scenario, skill, language) {
   const isCn = language === 'zh' || /[一-鿿]/.test(scenario.title || scenario.description || '');
   const scenarioText = [scenario.title, scenario.description].filter(Boolean).join('\n');
 
-  // Pull the live parts of the skill into a compact instruction.
+  // Primary path: use the prompt the author actually published.
+  const readyPrompt = (skill.ready_to_use_prompt || '').trim();
+
+  // Fallback path: stitch a compact instruction from the 5-layer fields,
+  // preserved for older skills that pre-date the ready_to_use_prompt column.
   const fl = skill.five_layer || {};
   const principle = fl.principle || skill.description || skill.title || '';
   const applies = (fl.boundaries?.applies_when || []).slice(0, 3).join(' / ');
   const notApplies = (fl.boundaries?.does_not_apply || []).slice(0, 2).join(' / ');
   const exemplar = (fl.exemplars || []).find(e => /DO/i.test(e.label || ''))?.text || '';
 
-  const withSkillPrompt = isCn
-    ? `你是一个 AI 助手，正在按照下面这个 Skill 行事：
+  const withSkillPrompt = readyPrompt
+    ? (isCn
+        ? `${readyPrompt}
+
+请用 2-4 句话，第一人称，回应下面的情境。让上面这条 Skill 的精神在你的回应里自然活起来——不引用、不复述，只是体现。
+
+情境：
+${scenarioText}
+
+只返回 JSON：{"response":"你的回应（2-4 句，第一人称，无引言无说明）"}`
+        : `${readyPrompt}
+
+Respond in 2-4 sentences, first person, to the scenario below. Let the Skill above come through your response naturally — don't quote it, embody it.
+
+Scenario:
+${scenarioText}
+
+Return JSON only: {"response":"your reply (2-4 sentences, first person, no preamble, no commentary)"}`)
+    : (isCn
+        ? `你是一个 AI 助手，正在按照下面这个 Skill 行事：
 
 【原则】${principle}
 ${applies ? `【适用】${applies}` : ''}
@@ -45,7 +71,7 @@ ${exemplar ? `【参考做法】${exemplar}` : ''}
 ${scenarioText}
 
 只返回 JSON：{"response":"你的回应（2-4 句，第一人称，无引言无说明）"}`
-    : `You are an AI agent acting under the following Skill:
+        : `You are an AI agent acting under the following Skill:
 
 【Principle】${principle}
 ${applies ? `【Applies when】${applies}` : ''}
@@ -57,7 +83,7 @@ Respond in 2-4 sentences, first person, to the scenario below. Let the spirit of
 Scenario:
 ${scenarioText}
 
-Return JSON only: {"response":"your reply (2-4 sentences, first person, no preamble, no commentary)"}`;
+Return JSON only: {"response":"your reply (2-4 sentences, first person, no preamble, no commentary)"}`);
 
   const withoutSkillPrompt = isCn
     ? `你是一个有用的 AI 助手。请用 2-4 句话，第一人称，回应下面的情境。
@@ -188,11 +214,96 @@ router.post('/test', async (req, res, next) => {
       test_id: testId,
       response_a: responseA,
       response_b: responseB,
+      // The new Playground UX reveals immediately, so /test now returns
+      // which side has the skill alongside the diagnostic. The legacy
+      // blind /vote flow ignored these — backwards-compatible because
+      // the old client never read these fields.
+      skill_side: skillSide,
+      diagnostic,
       model: withResp.model,
       usage: {
         with_skill: withResp.usage,
         without_skill: withoutResp.usage
       }
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// ═══ POST /feedback — record reveal-mode rating + optional comment ═══
+// Replaces the blind /vote semantics. Users see which response was the
+// skill BEFORE rating, so we collect a 3-level reaction
+// (better / neutral / no_diff) plus a free-text note instead of a side
+// pick. Stored in skill_feedback (created in db/init.js).
+const FEEDBACK_RATINGS = new Set(['better', 'neutral', 'no_diff']);
+router.post('/feedback', async (req, res, next) => {
+  try {
+    const { test_id, rating, comment, anonymous_id } = req.body || {};
+
+    if (!test_id) {
+      return res.status(400).json({ error: 'Missing input', message: 'test_id is required' });
+    }
+    if (!FEEDBACK_RATINGS.has(rating)) {
+      return res.status(400).json({
+        error: 'Invalid input',
+        message: 'rating must be "better", "neutral" or "no_diff"'
+      });
+    }
+
+    // Look up the original test row to recover skill_id, scenario_key,
+    // skill_side, and the two responses (so the feedback row stands on
+    // its own for analytics without a JOIN back to skill_test_votes).
+    const testRow = (await db.query(
+      `SELECT skill_id, scenario_key, skill_side FROM skill_test_votes WHERE id = $1`,
+      [test_id]
+    )).rows?.[0];
+
+    if (!testRow) {
+      return res.status(404).json({ error: 'Not found', message: 'Test not found or expired' });
+    }
+
+    const trimmedComment = (typeof comment === 'string' ? comment : '').trim().slice(0, 140);
+
+    try {
+      await db.query(
+        `INSERT INTO skill_feedback (id, skill_id, scenario_key, anonymous_id, rating, comment, skill_side)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+        [
+          uuidv4(),
+          testRow.skill_id,
+          testRow.scenario_key || null,
+          anonymous_id || null,
+          rating,
+          trimmedComment || null,
+          testRow.skill_side || null
+        ]
+      );
+    } catch (dbErr) {
+      console.warn('skill_feedback insert failed:', dbErr.message);
+      return res.status(500).json({ error: 'Save failed', message: dbErr.message });
+    }
+
+    // Aggregate counts so the client can show "X% of testers said your
+    // skill was clearly better" right after the user submits.
+    const stats = (await db.query(
+      `SELECT rating, COUNT(*) AS n FROM skill_feedback WHERE skill_id = $1 GROUP BY rating`,
+      [testRow.skill_id]
+    )).rows || [];
+
+    const counts = { better: 0, neutral: 0, no_diff: 0 };
+    let total = 0;
+    for (const row of stats) {
+      const n = Number(row.n) || 0;
+      if (counts[row.rating] !== undefined) counts[row.rating] = n;
+      total += n;
+    }
+
+    res.json({
+      success: true,
+      counts,
+      total,
+      better_rate: total > 0 ? counts.better / total : null
     });
   } catch (error) {
     next(error);
@@ -254,6 +365,67 @@ router.post('/vote', async (req, res, next) => {
       wins,
       win_rate: winRate
     });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// ═══ GET /picker — Playground picker list (user's own first, then hot) ═══
+// Returns at most `limit` skills. Skills the requesting device created
+// (matched on creator_anonymous_id, sent as ?anonymous_id=) are placed
+// at the top so the user's freshly forged skill is the first option in
+// the dropdown. The remaining slots are filled by community-hot skills
+// ordered by starlight_score, deduplicated against the user's own.
+router.get('/picker', async (req, res, next) => {
+  try {
+    const { anonymous_id } = req.query;
+    const limit = Math.min(parseInt(req.query.limit, 10) || 8, 30);
+
+    let mySkills = [];
+    if (anonymous_id && typeof anonymous_id === 'string') {
+      mySkills = (await db.query(
+        `SELECT s.*, u.username AS creator_name
+         FROM skills s
+         LEFT JOIN users u ON s.author_id = u.id
+         WHERE s.creator_anonymous_id = $1
+           AND s.published = true
+           AND s.deleted_at IS NULL
+         ORDER BY s.published_at DESC
+         LIMIT $2`,
+        [anonymous_id, limit]
+      )).rows || [];
+    }
+
+    // Fetch a generous pool for hot — we'll dedupe locally.
+    const hotSkills = (await db.query(
+      `SELECT s.*, u.username AS creator_name
+       FROM skills s
+       LEFT JOIN users u ON s.author_id = u.id
+       WHERE s.published = true AND s.deleted_at IS NULL
+       ORDER BY COALESCE(s.starlight_score, 0) DESC, s.published_at DESC
+       LIMIT $1`,
+      [limit + mySkills.length + 10]
+    )).rows || [];
+
+    const seen = new Set(mySkills.map(s => s.id));
+    const merged = [...mySkills];
+    for (const s of hotSkills) {
+      if (merged.length >= limit) break;
+      if (seen.has(s.id)) continue;
+      merged.push(s);
+      seen.add(s.id);
+    }
+
+    // Annotate which row is the user's own so the client can render a
+    // "👋 Your latest forge" badge on the first option without another
+    // round trip. is_mine is true for any skill where the device-level
+    // anonymous_id matches.
+    const annotated = merged.map(s => ({
+      ...s,
+      is_mine: !!anonymous_id && s.creator_anonymous_id === anonymous_id
+    }));
+
+    res.json({ success: true, skills: annotated });
   } catch (error) {
     next(error);
   }

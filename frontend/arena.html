@@ -1172,6 +1172,155 @@
       transition: background 0.18s ease, transform 0.18s ease;
     }
     .twin-trigger-btn:hover { background: #3a3530; transform: translateY(-1px); }
+
+    /* ─── Reveal-mode rating stage ─────────────────────────────────
+       A/B sit side-by-side. The skill side gets a green-tinted card +
+       🔥 tag so the user sees which response was generated under the
+       skill before reacting. Below the cards: a server-generated
+       one-line diagnostic, the rating prompt, three reaction buttons,
+       and an optional 140-char comment box. */
+    .twin-rate-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+    }
+    @media (max-width: 520px) {
+      .twin-rate-grid { grid-template-columns: 1fr; }
+    }
+    .twin-rate-card {
+      padding: 12px 13px;
+      background: #fdfaf3; border: 1.5px solid #e0d5b8;
+      border-radius: 8px;
+      transition: background 0.2s ease, border-color 0.2s ease;
+    }
+    .twin-rate-card.twin-rate-skill {
+      background: #f4f8ee;
+      border-color: #b8cba2;
+      box-shadow: 0 2px 10px rgba(107, 157, 92, 0.10);
+    }
+    .twin-rate-label {
+      display: flex; align-items: center; gap: 6px;
+      margin-bottom: 8px;
+      font-size: 11px; font-weight: 700; letter-spacing: 1px;
+    }
+    .twin-rate-side {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 22px; height: 22px;
+      background: #2a2520; color: #fdfaf3; border-radius: 50%;
+      font-size: 11px;
+    }
+    .twin-rate-card.twin-rate-skill .twin-rate-side { background: #6b9d5c; }
+    .twin-rate-tag {
+      font-size: 10px; color: #5a5048; font-weight: 600;
+      letter-spacing: 0.4px; text-transform: none;
+    }
+    .twin-rate-card.twin-rate-skill .twin-rate-tag { color: #4a7237; }
+    .twin-rate-text {
+      font-size: 13px; line-height: 1.55; color: #2a2520;
+    }
+    .twin-rate-diagnostic {
+      margin-top: 14px; padding: 9px 12px;
+      background: #f7efd9; border-left: 3px solid #b8915a;
+      border-radius: 3px;
+      font-size: 12px; color: #5a5048; line-height: 1.5; font-style: italic;
+    }
+    .twin-rate-question {
+      margin-top: 18px; margin-bottom: 10px;
+      font-size: 14px; font-weight: 600; color: #2a2520;
+      text-align: center;
+    }
+    .twin-rate-buttons {
+      display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;
+    }
+    @media (max-width: 380px) {
+      .twin-rate-buttons { grid-template-columns: 1fr; }
+    }
+    .twin-rate-btn {
+      display: flex; flex-direction: column; align-items: center; gap: 4px;
+      padding: 12px 8px;
+      background: #fdfaf3; border: 1.5px solid #d4c8a8;
+      border-radius: 8px; cursor: pointer;
+      font-family: inherit;
+      transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+    }
+    .twin-rate-btn:hover {
+      background: #f7efd9; border-color: #b8915a; transform: translateY(-1px);
+    }
+    .twin-rate-btn.selected {
+      background: #f4f8ee;
+      border-color: #6b9d5c;
+      box-shadow: 0 2px 8px rgba(107, 157, 92, 0.18);
+    }
+    .twin-rate-emoji { font-size: 22px; line-height: 1; }
+    .twin-rate-word {
+      font-size: 11px; color: #2a2520; font-weight: 500;
+      letter-spacing: 0.3px;
+    }
+    .twin-rate-comment {
+      width: 100%; margin-top: 14px;
+      padding: 10px 12px;
+      background: #fdfaf3; border: 1.5px solid #d4c8a8;
+      border-radius: 6px;
+      font-family: inherit; font-size: 13px; color: #2a2520;
+      line-height: 1.5; resize: vertical;
+      transition: border-color 0.15s ease;
+    }
+    .twin-rate-comment:focus {
+      outline: none; border-color: #6b9d5c;
+    }
+    .twin-rate-footer {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-top: 10px; gap: 12px;
+    }
+    .twin-rate-counter {
+      font-size: 11px; color: #8a7a6e; font-family: 'JetBrains Mono', monospace;
+    }
+    .twin-rate-submit {
+      padding: 10px 22px;
+      background: #6b9d5c; color: #fff; border: none;
+      border-radius: 6px; cursor: pointer;
+      font-family: inherit; font-size: 13px; font-weight: 600;
+      letter-spacing: 0.5px;
+      transition: background 0.15s ease, transform 0.15s ease;
+    }
+    .twin-rate-submit:hover:not(:disabled) {
+      background: #5a8b4d; transform: translateY(-1px);
+    }
+    .twin-rate-submit:disabled {
+      opacity: 0.4; cursor: not-allowed;
+    }
+
+    /* ─── Thank-you stage ──────────────────────────────────────────
+       Warm closer + two "keep playing" actions. */
+    .twin-thanks {
+      padding: 22px 18px; text-align: center;
+    }
+    .twin-thanks-headline {
+      font-size: 16px; font-weight: 600; color: #2a2520;
+      margin-bottom: 10px;
+    }
+    .twin-thanks-stats {
+      font-size: 12px; color: #5a5048; line-height: 1.5;
+      margin-bottom: 18px;
+    }
+    .twin-thanks-stats strong { color: #6b9d5c; }
+    .twin-thanks-actions {
+      display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;
+    }
+    .twin-action-btn {
+      padding: 10px 18px;
+      background: #6b9d5c; color: #fff; border: none;
+      border-radius: 6px; cursor: pointer;
+      font-family: inherit; font-size: 12px; font-weight: 600;
+      letter-spacing: 0.5px;
+      transition: background 0.15s ease, transform 0.15s ease;
+    }
+    .twin-action-btn:hover { background: #5a8b4d; transform: translateY(-1px); }
+    .twin-action-btn.secondary {
+      background: transparent; color: #5a5048;
+      border: 1.5px solid #d4c8a8;
+    }
+    .twin-action-btn.secondary:hover {
+      background: #f7efd9; border-color: #b8915a; color: #2a2520;
+    }
   </style>
 </head>
 <body>
@@ -1868,8 +2017,8 @@
       const hint = document.querySelector('.canvas-empty-hint');
       if (hint) {
         hint.textContent = isCn
-          ? '点击下方任一分类 → 在卡片里挑一个 Skill 开始盲选 A/B 测试'
-          : 'TAP A CATEGORY BELOW → PICK A SKILL IN THE CARD TO START A BLIND A/B TEST';
+          ? '点击下方任一分类 → 挑一个 Skill 看看它如何改变 AI 的回应'
+          : 'TAP A CATEGORY BELOW → PICK A SKILL TO SEE HOW IT CHANGES THE AI';
       }
 
       // Pre-warm the hot-skills cache so the first card opens snappily.
@@ -1906,15 +2055,32 @@
       }
     }
 
-    /* Fetch top hot skills (cached for the session). Sorted by starlight_score
-       descending. Used by the in-card picker. */
+    /* Fetch picker skills (cached for the session). The /picker endpoint
+       puts skills the current device created (matched on anonymous_id)
+       at the top, then fills with community-hot skills by starlight.
+       New visitors with no forges still get a sensible default — the
+       most-starred community skill leads. */
     async function fetchHotSkills(limit = 8) {
       if (window.__hotSkillsCache) return window.__hotSkillsCache.slice(0, limit);
-      const resp = await fetch('/api/skills?limit=50');
-      if (!resp.ok) throw new Error(`Failed to fetch skills (HTTP ${resp.status})`);
-      const json = await resp.json();
-      const skills = (json.skills || []).slice();
-      skills.sort((a, b) => (b.starlight_score || 0) - (a.starlight_score || 0));
+      const anonId = encodeURIComponent(getAnonymousId());
+      let skills = [];
+      try {
+        const resp = await fetch(`/api/playground/picker?anonymous_id=${anonId}&limit=20`);
+        if (resp.ok) {
+          const json = await resp.json();
+          skills = json.skills || [];
+        }
+      } catch (e) {
+        console.warn('Picker endpoint failed, falling back to /skills:', e.message);
+      }
+      // Fallback for older deployments without /picker.
+      if (!skills.length) {
+        const resp = await fetch('/api/skills?limit=50');
+        if (!resp.ok) throw new Error(`Failed to fetch skills (HTTP ${resp.status})`);
+        const json = await resp.json();
+        skills = (json.skills || []).slice();
+        skills.sort((a, b) => (b.starlight_score || 0) - (a.starlight_score || 0));
+      }
       window.__hotSkillsCache = skills;
       return skills.slice(0, limit);
     }
@@ -1971,16 +2137,21 @@
           ${td.desc ? `<div class="twin-scenario-desc">${td.desc}</div>` : ''}
 
           <div class="twin-stage twin-pickskill" hidden>
-            <div class="twin-pickskill-label">${isCn ? '挑一个热门 Skill 来测' : 'Pick a hot Skill to test'}</div>
+            <div class="twin-pickskill-label">${isCn ? '挑一个 Skill 来测' : 'Pick a Skill to test'}</div>
             <select class="twin-skill-select" data-skill-select style="width:100%;padding:12px 14px;border:1.5px solid #d4c8a8;border-radius:6px;background:#fdfaf3;font-family:inherit;font-size:14px;color:#1a1a1a;cursor:pointer;font-weight:500;transition:all 0.15s ease;">
-              <option value="" disabled selected>${isCn ? '— 选择 —' : '— Select —'}</option>
+              <option value="" disabled>${isCn ? '— 选择 —' : '— Select —'}</option>
             </select>
+            <button class="twin-pickskill-confirm" data-skill-confirm
+                    style="width:100%;margin-top:14px;padding:12px;background:#6b9d5c;color:#fff;border:none;border-radius:6px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;transition:background 0.15s ease;"
+                    disabled>
+              ${isCn ? '使用这个 Skill →' : 'Use this Skill →'}
+            </button>
             <a class="twin-pickskill-archive-link" href="index.html#archive" style="display:block;margin-top:12px;">${isCn ? '或在 Archive 浏览全部 →' : 'Or browse all in Archive →'}</a>
           </div>
 
           <div class="twin-stage twin-trigger" hidden>
             <div class="twin-trigger-stats" data-trigger-stats></div>
-            <button class="twin-trigger-btn" data-trigger-btn>${isCn ? '▶ 开始盲测' : '▶ START BLIND TEST'}</button>
+            <button class="twin-trigger-btn" data-trigger-btn>${isCn ? '▶ 开始测试' : '▶ START TEST'}</button>
           </div>
 
           <div class="twin-stage twin-loading" hidden>
@@ -1988,33 +2159,65 @@
             <span>${isCn ? '正在生成两个回应…' : 'generating two responses…'}</span>
           </div>
 
-          <div class="twin-stage twin-pick" hidden>
-            <div class="twin-pick-grid">
-              <button class="twin-resp" data-side="A">
-                <div class="twin-resp-label">${isCn ? '回应 A' : 'RESPONSE A'}</div>
-                <div class="twin-resp-text"></div>
-                <div class="twin-resp-pick">${isCn ? '这段更对 →' : 'PICK THIS →'}</div>
+          <!-- Reveal-mode rating stage. Replaces the legacy blind-pick UI:
+               we now show both responses with the skill side clearly
+               labelled, ask for a 3-level reaction + an optional 140-char
+               comment, then submit. Lighter, more game-like, and the data
+               we collect is "did this skill feel different?" instead of
+               "could you guess which one?". -->
+          <div class="twin-stage twin-rate" hidden>
+            <div class="twin-rate-grid">
+              <div class="twin-rate-card" data-side="A">
+                <div class="twin-rate-label">
+                  <span class="twin-rate-side">A</span>
+                  <span class="twin-rate-tag" data-tag-a></span>
+                </div>
+                <div class="twin-rate-text" data-text-a></div>
+              </div>
+              <div class="twin-rate-card" data-side="B">
+                <div class="twin-rate-label">
+                  <span class="twin-rate-side">B</span>
+                  <span class="twin-rate-tag" data-tag-b></span>
+                </div>
+                <div class="twin-rate-text" data-text-b></div>
+              </div>
+            </div>
+            <div class="twin-rate-diagnostic" data-rate-diag hidden></div>
+            <div class="twin-rate-question">${isCn ? '这个 Skill 效果怎么样？' : 'How was this Skill?'}</div>
+            <div class="twin-rate-buttons">
+              <button class="twin-rate-btn" data-rating="better">
+                <span class="twin-rate-emoji">🔥</span>
+                <span class="twin-rate-word">${isCn ? '明显更好' : 'Clearly better'}</span>
               </button>
-              <button class="twin-resp" data-side="B">
-                <div class="twin-resp-label">${isCn ? '回应 B' : 'RESPONSE B'}</div>
-                <div class="twin-resp-text"></div>
-                <div class="twin-resp-pick">${isCn ? '这段更对 →' : 'PICK THIS →'}</div>
+              <button class="twin-rate-btn" data-rating="neutral">
+                <span class="twin-rate-emoji">😐</span>
+                <span class="twin-rate-word">${isCn ? '一般' : 'Just OK'}</span>
+              </button>
+              <button class="twin-rate-btn" data-rating="no_diff">
+                <span class="twin-rate-emoji">🤔</span>
+                <span class="twin-rate-word">${isCn ? '没感觉到区别' : "Can't tell"}</span>
               </button>
             </div>
-            <div class="twin-question" data-question>
-              <span>💡</span>
-              <span data-question-text></span>
+            <textarea class="twin-rate-comment"
+                      data-comment
+                      maxlength="140"
+                      rows="2"
+                      placeholder="${isCn ? '想说点什么吗？（可选，140字以内）' : 'Want to say anything? (optional, 140 chars)'}"></textarea>
+            <div class="twin-rate-footer">
+              <span class="twin-rate-counter" data-comment-counter>0 / 140</span>
+              <button class="twin-rate-submit" data-rate-submit disabled>${isCn ? '提交反馈' : 'Submit feedback'}</button>
             </div>
           </div>
 
-          <div class="twin-stage twin-reveal" hidden>
-            <div class="twin-reveal-headline" data-headline></div>
-            <div class="twin-reveal-which" data-which></div>
-            <div class="twin-reveal-diagnostic" data-diag hidden></div>
-            <div class="twin-reveal-stats" data-stats></div>
-            <div class="twin-reveal-actions">
-              <button class="twin-action-btn secondary" data-action="archive">${isCn ? '回 Archive' : '← Archive'}</button>
-              <button class="twin-action-btn" data-action="next">${isCn ? '换一个情境 ↻' : 'Next scenario ↻'}</button>
+          <!-- Thank-you stage. Two warm follow-up actions instead of a
+               dead end, so the user keeps playing: a fresh scenario with
+               the same skill, or pick a different skill entirely. -->
+          <div class="twin-stage twin-thanks" hidden>
+            <div class="twin-thanks-headline">${isCn ? '感谢你的反馈！' : 'Thank you for your feedback!'}</div>
+            <div class="twin-thanks-stats" data-thanks-stats></div>
+            <div class="twin-thanks-actions">
+              <button class="twin-action-btn secondary" data-action="next-scenario">${isCn ? '↻ 换个情境' : '↻ Next scenario'}</button>
+              <button class="twin-action-btn" data-action="next-skill">${isCn ? '↻ 换个 Skill' : '↻ Different skill'}</button>
             </div>
           </div>
         </div>
@@ -2097,27 +2300,14 @@
 
       stage.hidden = false;
 
-      // Provisional copy while stats fetch resolves.
-      statsLine.textContent = isCn ? '加载胜率…' : 'loading win rate…';
-
-      try {
-        const stats = await (await fetch(`/api/playground/stats/${encodeURIComponent(skill.id)}`)).json();
-        const total = stats.total_votes || 0;
-        const skillTitle = getSkillTitle(skill);
-        if (total === 0) {
-          statsLine.innerHTML = isCn
-            ? `🎯 <strong>${skillTitle}</strong> · 还没人盲测过 — 你来开第一枪`
-            : `🎯 <strong>${skillTitle}</strong> · No blind picks yet — be the first`;
-        } else {
-          const pct = Math.round((stats.win_rate || 0) * 100);
-          statsLine.innerHTML = isCn
-            ? `🎯 <strong>${skillTitle}</strong> · 当前胜率 <strong>${pct}%</strong>（${total} 次盲选）· 你能识破吗？`
-            : `🎯 <strong>${skillTitle}</strong> · <strong>${pct}%</strong> win rate (${total} blind picks) · can you spot it?`;
-        }
-      } catch {
-        // Non-fatal — keep the trigger button usable even if stats fetch fails.
-        statsLine.textContent = '';
-      }
+      // Friendly invite — the previous "win rate / blind picks"
+      // framing belonged to the old blind-vote model. The new flow
+      // reveals which side is which up-front, so we just tee up the
+      // skill title and let the user push Start.
+      const skillTitle = getSkillTitle(skill);
+      statsLine.innerHTML = isCn
+        ? `🎯 <strong>${skillTitle}</strong> — 一键生成两个回应，看看这个 Skill 让 AI 怎样不一样`
+        : `🎯 <strong>${skillTitle}</strong> — one click, two responses, see how this Skill changes the AI`;
 
       btn.addEventListener('click', () => {
         stage.hidden = true;
@@ -2168,22 +2358,43 @@
           return;
         }
 
-        // Populate dropdown
+        // Populate dropdown. The picker endpoint already orders the
+        // user's own skills first (is_mine=true), so we just render in
+        // the order received and tag the user's own with a 👋 prefix
+        // so it visually leads.
         skills.forEach(s => {
           const opt = document.createElement('option');
           opt.value = s.id;
-          opt.textContent = `${getSkillTitle(s)} · ${s.domain || '—'} (⭐${s.starlight_score || 0})`;
+          const baseLabel = `${getSkillTitle(s)} · ${s.domain || '—'} (⭐${s.starlight_score || 0})`;
+          opt.textContent = s.is_mine
+            ? (isCn ? `👋 你刚锻造的：${baseLabel}` : `👋 Your latest forge — ${baseLabel}`)
+            : baseLabel;
           opt.dataset.skill = JSON.stringify(s);
           select.appendChild(opt);
         });
 
-        // Use 'once' to prevent duplicate event listeners if this is called again
-        select.addEventListener('change', function handleSelectChange() {
+        // Auto-select the first option (the user's own skill, or the
+        // top community skill for new visitors) so the "Use this Skill"
+        // button is immediately actionable. The dedicated confirm
+        // button avoids the awkward "change event doesn't fire on the
+        // already-selected first option" trap.
+        const confirmBtn = stage.querySelector('[data-skill-confirm]');
+        if (skills.length > 0) {
+          select.value = skills[0].id;
+          confirmBtn.disabled = false;
+        }
+
+        // Enable / disable the confirm button alongside the dropdown.
+        select.addEventListener('change', () => {
+          confirmBtn.disabled = !select.value;
+        });
+
+        confirmBtn.addEventListener('click', () => {
           const skillId = select.value;
           if (!skillId) return;
-          const skillJson = select.querySelector(`option[value="${skillId}"]`).dataset.skill;
-          const skill = JSON.parse(skillJson);
-
+          const opt = select.querySelector(`option[value="${skillId}"]`);
+          if (!opt) return;
+          const skill = JSON.parse(opt.dataset.skill);
           if (typeof skill.five_layer === 'string') {
             try { skill.five_layer = JSON.parse(skill.five_layer); } catch { skill.five_layer = {}; }
           }
@@ -2191,9 +2402,6 @@
           stage.hidden = true;
           applyTwinSkillToCard(card, skill);
           showTwinTestTrigger(card, task, repo);
-
-          // Remove this listener to prevent duplicate triggers
-          select.removeEventListener('change', handleSelectChange);
         });
       } catch (err) {
         console.error('Skill picker error:', err);
@@ -2201,22 +2409,25 @@
       }
     }
 
+    /* Reveal-mode Twin Test:
+       1. POST /api/playground/test → returns response_a, response_b,
+          skill_side, diagnostic.
+       2. Render both responses with the skill side labelled up-front
+          (no blind pick).
+       3. User picks one of three reactions (🔥 / 😐 / 🤔) plus an
+          optional 140-char comment, hits Submit.
+       4. POST /api/playground/feedback → thank-you + counts. */
     async function runTwinTest(card, task, repo) {
       const skill = window.TWIN_TEST_SKILL;
       const isCn = (typeof currentLang !== 'undefined' && currentLang === 'cn');
       const td = getTaskDisplay(task);
       const stageLoading = card.querySelector('.twin-loading');
-      const stagePick = card.querySelector('.twin-pick');
-      const stageReveal = card.querySelector('.twin-reveal');
+      const stageRate = card.querySelector('.twin-rate');
       stageLoading.hidden = false;
 
-      // Apply responsive animation: expand on large screens, fade on small
+      // Apply responsive animation: expand on large screens, fade on small.
       const isSmallScreen = window.innerWidth <= 480;
-      if (isSmallScreen) {
-        stageLoading.classList.add('fade-animation');
-      } else {
-        stageLoading.classList.add('expand-animation');
-      }
+      stageLoading.classList.add(isSmallScreen ? 'fade-animation' : 'expand-animation');
 
       const anonId = getAnonymousId();
       console.log('🚀 Twin Test starting:', { skill_id: skill.id, scenario: td.title, anonId });
@@ -2235,38 +2446,63 @@
           body: JSON.stringify(payload)
         });
 
-        console.log('📡 API response status:', resp.status);
-
         if (!resp.ok) {
           const err = await resp.json().catch(() => ({ message: `HTTP ${resp.status}` }));
           throw new Error(err.message || `API error ${resp.status}`);
         }
 
         const data = await resp.json();
-        console.log('✅ API response:', { test_id: data.test_id, response_a_len: data.response_a?.length, response_b_len: data.response_b?.length });
-
         if (!data.response_a || !data.response_b) {
           throw new Error('API returned empty responses');
         }
 
         card.dataset.testId = data.test_id;
-        stageLoading.hidden = true;
-        stagePick.hidden = false;
+        card.dataset.skillSide = data.skill_side || '';
 
-        // Continue animation for pick stage
-        const isSmallScreen = window.innerWidth <= 480;
-        if (isSmallScreen) {
-          stagePick.classList.add('fade-animation');
+        // Populate the rate stage. Side labels show 🔥 "with skill" /
+        // ◯ "no skill" tags so the user knows which is which up-front.
+        stageRate.querySelector('[data-text-a]').textContent = data.response_a;
+        stageRate.querySelector('[data-text-b]').textContent = data.response_b;
+
+        const skillTagText = isCn ? '🔥 加了 Skill' : '🔥 with this Skill';
+        const baselineTagText = isCn ? '◯ 普通 AI' : '◯ baseline AI';
+        stageRate.querySelector('[data-tag-a]').textContent =
+          data.skill_side === 'A' ? skillTagText : baselineTagText;
+        stageRate.querySelector('[data-tag-b]').textContent =
+          data.skill_side === 'B' ? skillTagText : baselineTagText;
+        stageRate.querySelector('[data-side="A"]').classList.toggle('twin-rate-skill', data.skill_side === 'A');
+        stageRate.querySelector('[data-side="B"]').classList.toggle('twin-rate-skill', data.skill_side === 'B');
+
+        // The diagnostic was generated server-side comparing the two
+        // responses. Show it as a soft hint between the cards and the
+        // rating prompt — gives the user something to react to.
+        const diagEl = stageRate.querySelector('[data-rate-diag]');
+        if (data.diagnostic) {
+          diagEl.textContent = data.diagnostic;
+          diagEl.hidden = false;
         } else {
-          stagePick.classList.add('expand-animation');
+          diagEl.hidden = true;
         }
 
-        stagePick.querySelector('[data-side="A"] .twin-resp-text').textContent = data.response_a;
-        stagePick.querySelector('[data-side="B"] .twin-resp-text').textContent = data.response_b;
+        // Wire the rating buttons (only once per card).
+        if (!stageRate.dataset.wired) {
+          wireTwinRateStage(card, task, repo);
+          stageRate.dataset.wired = '1';
+        }
 
-        stagePick.querySelectorAll('.twin-resp').forEach(btn => {
-          btn.addEventListener('click', () => submitTwinVote(card, task, repo, btn.dataset.side));
-        });
+        // Reset any stale state from a previous round (when user clicks
+        // "Next scenario" the same DOM gets re-used).
+        stageRate.querySelectorAll('.twin-rate-btn').forEach(b => b.classList.remove('selected'));
+        const submitBtn = stageRate.querySelector('[data-rate-submit]');
+        submitBtn.disabled = true;
+        const commentEl = stageRate.querySelector('[data-comment]');
+        commentEl.value = '';
+        stageRate.querySelector('[data-comment-counter]').textContent = '0 / 140';
+        delete stageRate.dataset.rating;
+
+        stageLoading.hidden = true;
+        stageRate.hidden = false;
+        stageRate.classList.add(isSmallScreen ? 'fade-animation' : 'expand-animation');
       } catch (err) {
         console.error('❌ Twin Test error:', err);
         stageLoading.innerHTML = `<div style="color:#b85a4a;font-size:12px;line-height:1.5;">
@@ -2277,73 +2513,103 @@
       }
     }
 
-    async function submitTwinVote(card, task, repo, chosenSide) {
+    /* One-time wiring for the rate stage's interactive bits. We bind
+       once per card and read the current rating + comment off the DOM
+       at submit time, so subsequent rounds (Next scenario) re-use the
+       same listeners. */
+    function wireTwinRateStage(card, task, repo) {
       const isCn = (typeof currentLang !== 'undefined' && currentLang === 'cn');
-      const skill = window.TWIN_TEST_SKILL || {};
-      const skillTitle = getSkillTitle(skill);
-      const stagePick = card.querySelector('.twin-pick');
-      const stageReveal = card.querySelector('.twin-reveal');
-      const respButtons = stagePick.querySelectorAll('.twin-resp');
-      respButtons.forEach(b => b.disabled = true);
+      const stageRate = card.querySelector('.twin-rate');
+      const submitBtn = stageRate.querySelector('[data-rate-submit]');
+      const commentEl = stageRate.querySelector('[data-comment]');
+      const counterEl = stageRate.querySelector('[data-comment-counter]');
+
+      stageRate.querySelectorAll('.twin-rate-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          stageRate.querySelectorAll('.twin-rate-btn').forEach(b => b.classList.remove('selected'));
+          btn.classList.add('selected');
+          stageRate.dataset.rating = btn.dataset.rating;
+          submitBtn.disabled = false;
+        });
+      });
+
+      commentEl.addEventListener('input', () => {
+        counterEl.textContent = `${commentEl.value.length} / 140`;
+      });
+
+      submitBtn.addEventListener('click', async () => {
+        const rating = stageRate.dataset.rating;
+        if (!rating) return;
+        submitBtn.disabled = true;
+        submitBtn.textContent = isCn ? '提交中…' : 'submitting…';
+        await submitTwinFeedback(card, task, repo, rating, commentEl.value.trim());
+      });
+    }
+
+    async function submitTwinFeedback(card, task, repo, rating, comment) {
+      const isCn = (typeof currentLang !== 'undefined' && currentLang === 'cn');
+      const stageRate = card.querySelector('.twin-rate');
+      const stageThanks = card.querySelector('.twin-thanks');
+      const submitBtn = stageRate.querySelector('[data-rate-submit]');
 
       try {
-        const resp = await fetch('/api/playground/vote', {
+        const resp = await fetch('/api/playground/feedback', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ test_id: card.dataset.testId, chosen_side: chosenSide })
+          body: JSON.stringify({
+            test_id: card.dataset.testId,
+            rating,
+            comment: comment || '',
+            anonymous_id: getAnonymousId()
+          })
         });
-        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        if (!resp.ok) {
+          const err = await resp.json().catch(() => ({}));
+          throw new Error(err.message || `HTTP ${resp.status}`);
+        }
         const data = await resp.json();
 
-        // Mark which side had the skill, which was baseline
-        respButtons.forEach(b => {
-          if (b.dataset.side === data.skill_side) b.classList.add('twin-correct');
-          else b.classList.add('twin-other');
-        });
-
-        const headline = stageReveal.querySelector('[data-headline]');
-        const whichEl = stageReveal.querySelector('[data-which]');
-        const diagEl = stageReveal.querySelector('[data-diag]');
-        const statsEl = stageReveal.querySelector('[data-stats]');
-
-        if (data.voted_for_skill) {
-          headline.classList.add('win');
-          headline.textContent = isCn
-            ? `✓ 你选了 ${chosenSide} — 猜对！`
-            : `✓ You picked ${chosenSide} — correct!`;
+        // Render aggregate stats: how many testers, what % said better.
+        const total = data.total || 0;
+        const betterPct = total > 0 ? Math.round((data.better_rate || 0) * 100) : null;
+        const statsEl = stageThanks.querySelector('[data-thanks-stats]');
+        if (total > 0 && betterPct !== null) {
+          statsEl.innerHTML = isCn
+            ? `🎯 ${betterPct}% 的测试者觉得这个 Skill <strong>明显更好</strong> · 共 ${total} 次反馈`
+            : `🎯 ${betterPct}% of testers said this Skill was <strong>clearly better</strong> · ${total} feedbacks`;
         } else {
-          headline.classList.add('lose');
-          headline.textContent = isCn
-            ? `✗ 你选了 ${chosenSide} — Skill 在 ${data.skill_side}`
-            : `✗ You picked ${chosenSide} — the Skill was ${data.skill_side}`;
-        }
-        whichEl.textContent = isCn
-          ? `${data.skill_side} 是加载了 skill 的版本`
-          : `${data.skill_side} was the version loaded with the skill.`;
-
-        if (data.diagnostic) {
-          diagEl.textContent = (isCn ? '一句诊断：' : 'In one line: ') + data.diagnostic;
-          diagEl.hidden = false;
+          statsEl.textContent = isCn ? '你是第一个反馈这个 Skill 的人 ✨' : 'You are the first to rate this Skill ✨';
         }
 
-        const total = data.total_votes || 0;
-        const pct = Math.round((data.win_rate || 0) * 100);
-        statsEl.innerHTML = isCn
-          ? `🎯 <span style="font-weight:600;">${skillTitle}</span> 当前胜率 <span class="twin-rate-num">${pct}%</span> · 基于 ${total} 次盲测`
-          : `🎯 <span style="font-weight:600;">${skillTitle}</span> · <span class="twin-rate-num">${pct}%</span> win rate · ${total} blind picks`;
+        stageRate.hidden = true;
+        stageThanks.hidden = false;
+        const isSmallScreen = window.innerWidth <= 480;
+        stageThanks.classList.add(isSmallScreen ? 'fade-animation' : 'expand-animation');
 
-        stageReveal.hidden = false;
-        stageReveal.querySelector('[data-action="next"]').addEventListener('click', () => {
-          const next = repo.tasks[Math.floor(Math.random() * repo.tasks.length)];
-          card.classList.add('minimizing');
-          setTimeout(() => { card.remove(); checkEmpty(); spawnCard(next, repo); }, 280);
-        });
-        stageReveal.querySelector('[data-action="archive"]').addEventListener('click', () => {
-          window.location.href = 'index.html#archive';
-        });
+        if (!stageThanks.dataset.wired) {
+          stageThanks.querySelector('[data-action="next-scenario"]').addEventListener('click', () => {
+            // Pick a different task in the same repo to keep variety.
+            let next = repo.tasks[Math.floor(Math.random() * repo.tasks.length)];
+            if (repo.tasks.length > 1 && next.title === task.title) {
+              next = repo.tasks.find(t => t.title !== task.title) || next;
+            }
+            card.classList.add('minimizing');
+            setTimeout(() => { card.remove(); checkEmpty(); spawnCard(next, repo); }, 280);
+          });
+          stageThanks.querySelector('[data-action="next-skill"]').addEventListener('click', () => {
+            // Drop the cached skill so the user is sent through the
+            // picker again on the next card.
+            window.TWIN_TEST_SKILL = null;
+            const newTask = repo.tasks[Math.floor(Math.random() * repo.tasks.length)];
+            card.classList.add('minimizing');
+            setTimeout(() => { card.remove(); checkEmpty(); spawnCard(newTask, repo); }, 280);
+          });
+          stageThanks.dataset.wired = '1';
+        }
       } catch (err) {
-        respButtons.forEach(b => b.disabled = false);
-        alert((isCn ? '投票失败：' : 'Vote failed: ') + err.message);
+        submitBtn.disabled = false;
+        submitBtn.textContent = isCn ? '提交反馈' : 'Submit feedback';
+        alert((isCn ? '提交失败：' : 'Submit failed: ') + err.message);
       }
     }
   </script>
