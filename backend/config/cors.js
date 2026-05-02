@@ -21,8 +21,9 @@ const WHITELISTED_ORIGINS = [
   'https://42post.railway.app',
   'https://www.the42post.railway.app',
 
-  // Custom domains (add as needed)
-  // 'https://example.com',
+  // Custom domains
+  'https://www.the42post.com',
+  'https://the42post.com',
 ];
 
 /**
