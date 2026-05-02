@@ -1203,25 +1203,21 @@
     }
     .twin-rate-card {
       display: flex; flex-direction: column;
-      padding: 14px 16px;
-      background: #fdfaf3; border: 1px solid #d4c8a8;
-      border-radius: 10px;
-      min-width: 0;
-      transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+      padding: 12px 13px;
+      background: #fdfaf3; border: 1.5px solid #e0d5b8;
+      border-radius: 8px;
+      min-width: 0; /* lets long words wrap inside the grid cell */
+      transition: background 0.2s ease, border-color 0.2s ease;
     }
-    .twin-rate-card:hover {
-      border-color: #c0b395;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-    }
+    /* The skill-side card is "the curated one" — marked the way a
+       printer would highlight a chosen plate: a thin marigold left
+       rule and the lightest warm wash. Reads as honoured, not
+       different-coloured. */
     .twin-rate-card.twin-rate-skill {
       background: #faf3df;
-      border-color: #d4a43c;
-      border-left: 4px solid var(--marigold);
-      box-shadow: 0 3px 12px rgba(212, 164, 60, 0.15);
-    }
-    .twin-rate-card.twin-rate-skill:hover {
-      box-shadow: 0 5px 16px rgba(212, 164, 60, 0.2);
+      border-color: #e0d5b8;
+      border-left: 3px solid #d4a43c;
+      box-shadow: 0 2px 10px rgba(212, 164, 60, 0.12);
     }
     .twin-rate-label {
       display: flex; align-items: center; gap: 6px;
@@ -2453,11 +2449,10 @@
         `;
       }
 
-      // Principle quote
+      // Principle quote (hidden)
       const pEl = card.querySelector('[data-principle]');
-      if (pEl && principle) {
-        pEl.textContent = `"${principle}"`;
-        pEl.hidden = false;
+      if (pEl) {
+        pEl.hidden = true;
       }
 
       // Question line in pick stage
