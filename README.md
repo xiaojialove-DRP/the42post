@@ -1,129 +1,151 @@
-# THE 42 POST 🛸
+# THE 42 POST
 
-**An Open-Source Platform for Human-Centered AI Value Alignment**
+**A community platform for forging, sharing, and verifying human values as AI-ready Skills.**
 
-Democratizing how humans define, share, and verify their values for AI systems.
-🌐 **[中文版本 (Chinese Version)](./README.zh.md)** 
-
-> **Built on [SemanticForge](https://github.com/xiaojialove-DRP/SemanticForge)** — THE 42 POST implements SemanticForge's five-layer framework as a community platform where anyone can create and share AI-aligned skills.
+🌐 **[www.the42post.com](https://www.the42post.com)** · [中文版本](./README.zh.md)
 
 ---
 
-## 🎯 What is THE 42 POST?
+## What Is This?
 
-THE 42 POST is a web platform where anyone can create "Skills" — structured, verifiable representations of human values that guide AI behavior. Instead of hidden values in training data, THE 42 POST makes them explicit, shareable, verifiable, and multi-cultural.
+AI systems are shaped by values — but whose values, structured how, verifiable by whom? THE 42 POST is an open platform where anyone can author a **Skill**: a structured, cryptographically-signed representation of a human value that AI systems can read, test against, and act on.
 
-### Key Features
+A Skill is not a prompt. It is a five-layer document — principle, examples, boundaries, tests, cultural variants — that makes a value **explicit, auditable, and portable** across any AI system.
 
-- 🛠️ **Skill Forging Workshop** — Turn your values into verifiable AI guidance in 4 steps
-- 📚 **Skill Library** — Explore 42+ community-created skills across different domains
-- 👁️ **Preview & Iterate** — Review before publishing and refine based on feedback
-- 🤖 **AI-Ready** — Test behavior with Shadow Agent or integrate into your systems
+The name comes from *The Hitchhiker's Guide to the Galaxy*. 42 is the answer to life, the universe, and everything. We're still working on the question — but at least we're writing it down.
 
 ---
 
-## ❓ Why Did We Build This?
+## The Five-Layer Skill Architecture
 
-**The Problem:** AI values are hidden in training data, inconsistent across cultures, unverifiable, and controlled by few organizations.
+Every Skill forged on this platform follows the same structure:
 
-**Our Solution:** We democratize AI alignment by making values explicit, auditable, and culturally adapted. Everyone—from users to ethicists—can shape AI behavior without needing technical expertise.
+| Layer | What It Defines |
+|---|---|
+| **Defining** | The core principle in one clear statement |
+| **Instantiating** | Before/after examples showing the skill in action |
+| **Fencing** | When to apply it — and when explicitly not to |
+| **Validating** | Test cases: how to know if it's working |
+| **Contextualizing** | Cultural adaptations and contextual variants |
 
----
+**Example — "Grandma Filter"** *(most-starred skill, ethics domain)*
+> *Before outputting anything, ask: would I be comfortable if my grandmother read this?*
+> Applicable when: content moderation, sensitive topics, public-facing AI responses.
+> Not applicable when: medical/legal precision matters more than tone.
 
-## 🚀 Getting Started
-
-**No setup required.** Visit [THE 42 POST](https://the42post-production.up.railway.app):
-
-1. **Browse** 42+ community-created skills (2 min)
-2. **Create** your first skill using Skill Forge (5-10 min)
-3. **Publish** and receive your Soul-Hash identity (1 min)
-
----
-
-## 💭 Why We're Committed to Open Research
-
-THE 42 POST is not a commercial product. We believe AI alignment should be:
-- **Owned by everyone**, not corporations
-- **Rooted in research**, not proprietary algorithms  
-- **Culturally diverse**, shaped by communities worldwide
-- **Verifiable and auditable**, not black-box
-
-This is why we open-sourced it.
+Each published Skill receives a **Soul-Hash** — a SHA-256 fingerprint of its core content, author, and timestamp. `SOUL_4f2a…_1745678400000`. The hash changes if the principle changes. It doesn't change if formatting does. This makes skills verifiable and citeable.
 
 ---
 
-## 📚 Architecture
+## What You Can Do
 
-For detailed system design, data flows, database schema, and technical architecture, see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+### Forge a Skill
+Walk through a four-step guided flow. Describe your value; the AI generates the five-layer structure; you review and publish. Takes 5–10 minutes. No account required.
 
----
+### Browse the Archive
+21 community skills across 9 domains: ethics, design, narrative, culture, science, silence, history, time, labor. Searchable by keyword or domain. Sorted by community starlight score.
 
-## 📖 How to Use THE 42 POST
+### Test in the Playground
+Pick a skill from the archive, write a task, and see two AI responses side by side — one with the skill applied, one without. The comparison is the product.
 
-### For Skill Discoverers
-- **Search the Library** by domain, creator, or keyword
-- **Read Skill Details** including five-layer structure, examples, and community feedback
-- **Experience Skills** using the Shadow Agent to see how they guide AI behavior
-- **Rate & Share** feedback and recommendations
-
-### For Creators
-1. **Click "Skill Forge"** and enter your core idea
-2. **AI generates** the five-layer structure (DEFINING, INSTANTIATING, FENCING, VALIDATING, CONTEXTUALIZING)
-3. **Preview & refine** before publishing
-4. **Publish** and receive your Soul-Hash identity + Creator Card
-
-### For Researchers
-- **Analyze patterns** across 42+ skills in different domains
-- **Study effectiveness** using test cases and Shadow Agent
-- **Access via API** — Get skill data in JSON format (`/api/skills`, `/api/search`)
-- **Publish findings** and contribute to human-centered AI research
-
-### For Developers
-- **Integrate skills** into your AI agents using REST API
-- **Run test cases** to validate behavior alignment
-- **Collaborate** with skill creators on improvements
+### Download
+Every published skill exports as:
+- **Markdown** — ready to paste as a system prompt
+- **LangChain** — Python file with the full five-layer schema
+- **MCP** — JSON config for tool-compatible agents
+- **Creator Card** — printable HTML certificate with Soul-Hash
 
 ---
 
-## 🤝 Contributing
+## Why Open Source?
 
-We welcome contributions from creators, developers, and researchers:
+The alignment problem is not a technical problem that one lab will solve. It is a human problem that requires human input — from different cultures, disciplines, and lived experiences. Keeping Skills proprietary would defeat the purpose.
 
-- **Skill Creators:** Design and publish skills through the platform
-- **Developers:** Fork the repo, submit PRs, improve the platform
-- **Researchers:** Download skills, run experiments, share findings
-
----
-
-## 📄 License
-
-MIT License — See [LICENSE](LICENSE) file
+We open-source the platform so that:
+- Communities can run their own Skill archives
+- Researchers can study what values people actually try to encode
+- Developers can integrate Skills into their own agents without permission
+- The format can evolve through use, not through committee
 
 ---
 
-## 📚 Documentation
+## Architecture
 
-- **[Architecture](docs/ARCHITECTURE.md)** — System design and data flows
-- **[API Reference](docs/API_REFERENCE.md)** — REST API endpoints for integration
-- **[Contributing Guide](docs/CONTRIBUTING.md)** — How to contribute (creators, designers, developers, researchers)
-- **[Changelog](CHANGELOG.md)** — What's new in each release
+```
+Frontend (Vanilla JS + CSS)
+    ↓ REST API
+Backend (Node.js / Express)
+    ↓
+SQLite (Railway-hosted)
+    ↓
+DeepSeek API  ←  five-layer generation at forge time
+```
 
----
+**Stack:** Node 24 · Express 4 · better-sqlite3 · DeepSeek API · Vitest (30 tests)  
+**Deployment:** Railway · Custom domain: www.the42post.com  
+**Auth:** Anonymous by default (`X-Anonymous-Id` header). No account required for forge, star, or download.
 
-## 🔗 Quick Links
-
-- **🌐 Live Platform**: [https://the42post-production.up.railway.app](https://the42post-production.up.railway.app)
-- **📦 GitHub Repository**: https://github.com/xiaojialove-DRP/the42post
-- **🐛 Report Issues**: [GitHub Issues](https://github.com/xiaojialove-DRP/the42post/issues)
-
----
-
-## 🙏 Acknowledgments
-
-THE 42 POST brings together research in Value-Sensitive Design, Participatory Design, Cross-Cultural HCI, and AI Alignment to make value definition accessible to everyone. Special thanks to all creators who have contributed skills to the library.
+Full schema and data flows: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 
 ---
 
-**Version**: 1.0.0 · **Status**: Public Release ✅
+## Running Locally
 
-*Making AI values transparent, verifiable, and human-centered.*
+```bash
+# Clone
+git clone https://github.com/xiaojialove-DRP/the42post.git
+cd the42post/backend
+
+# Install & configure
+npm install
+cp .env.example .env          # add DEEPSEEK_API_KEY
+npm run migrate               # initialize SQLite schema
+npm run seed                  # seed 21 community skills
+npm start                     # http://localhost:3000
+
+# Tests
+npm test                      # 30 tests — forge / star / download flows
+```
+
+---
+
+## API
+
+All endpoints are public. Mutations (forge, star) require only an anonymous device ID header.
+
+```
+GET  /api/skills                    List published skills (paginated, searchable)
+GET  /api/skills/:id                Skill detail
+POST /api/skills                    Forge and publish a new skill
+POST /api/skills/:id/star           Star or unstar
+GET  /api/skills/:id/stars          Star count + caller's state
+GET  /api/download/:id?format=      markdown | langchain | mcp | certificate
+GET  /api/skills/:id/manifest       Verify soul_hash and covenant signatures
+GET  /api/search?q=                 Full-text search across title and description
+```
+
+Full reference: [docs/API_REFERENCE.md](docs/API_REFERENCE.md)
+
+---
+
+## Contributing
+
+**Skill authors** — The best contribution is a well-crafted Skill. Use the platform.
+
+**Developers** — Bug fixes, new export formats, improved Playground comparisons. Open a PR.
+
+**Researchers** — If you use Skills in a paper or experiment, open an issue to add it to the citations list.
+
+See [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) for details.
+
+---
+
+## License
+
+MIT — See [LICENSE](LICENSE)
+
+---
+
+**Status:** Open beta · 21 community skills · 30 backend tests passing
+
+*THE 42 POST is not the answer. It's infrastructure for writing better questions.*
