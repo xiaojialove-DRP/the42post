@@ -1341,6 +1341,9 @@ function initializeSlotData() {
         initSlotGrid();
       }
     }
+  }).catch(err => {
+    console.error('Failed to load skills from database:', err);
+    // Continue with empty DB_SKILLS if load fails
   });
 }
 

@@ -6,6 +6,7 @@ import express from 'express';
 import { db } from '../server.js';
 import { sendForgeSuccessEmail } from '../utils/email.js';
 import { generateEmailTemplate, generateCertificateHTML } from '../utils/certificate.js';
+import { isValidEmail } from '../utils/validation.js';
 
 const router = express.Router();
 
@@ -31,6 +32,13 @@ router.post('/send-forge-success', async (req, res, next) => {
       return res.status(400).json({
         error: 'Missing input',
         message: 'recipientEmail is required'
+      });
+    }
+
+    if (!isValidEmail(recipientEmail)) {
+      return res.status(400).json({
+        error: 'Invalid input',
+        message: 'recipientEmail must be a valid email address'
       });
     }
 
