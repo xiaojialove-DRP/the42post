@@ -4383,11 +4383,21 @@ function showEmailStatusBanner(result, recipientEmail) {
     banner.style.border = '1px solid #ff9800';
     banner.style.color = '#5d2f00';
     const errMsg = (result && result.error) ? result.error : 'Unknown error';
-    // Escape HTML to prevent XSS
-    const escapedErrMsg = String(errMsg).replace(/[<>]/g, m => m === '<' ? '&lt;' : '&gt;');
+    // Escape HTML to prevent XSS - escape all special characters
+    const escapeHtmlSimple = (str) => {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    };
+    const escapedErrMsg = escapeHtmlSimple(errMsg);
+    const escapedEmail = escapeHtmlSimple(recipientEmail);
     banner.innerHTML = `
       <div style="font-weight:600;margin-bottom:4px;">⚠ Email delivery issue</div>
-      <div style="opacity:0.9;">We couldn't send to <strong>${recipientEmail}</strong>:</div>
+      <div style="opacity:0.9;">We couldn't send to <strong>${escapedEmail}</strong>:</div>
       <div style="margin:6px 0;padding:6px 8px;background:rgba(0,0,0,0.05);border-radius:4px;font-size:12px;font-family:monospace;word-break:break-word;">${escapedErrMsg}</div>
       <div style="margin-top:6px;font-size:12px;opacity:0.8;">Your skill was still forged successfully. You can download the certificate directly from this page.</div>
       <button style="margin-top:10px;padding:4px 10px;border:none;background:#8d6e63;color:#fff;border-radius:4px;cursor:pointer;font-size:12px;" onclick="this.parentElement.remove()">Dismiss</button>
