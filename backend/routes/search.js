@@ -10,8 +10,11 @@ const router = express.Router();
 // ═══ SEARCH SKILLS ═══
 router.get('/', async (req, res, next) => {
   try {
-    const { q, type = 'skill', sort = 'relevance', page = 1, limit = 20 } = req.query;
-    const offset = (page - 1) * limit;
+    const { q, type = 'skill', sort = 'relevance' } = req.query;
+    // INPUT VALIDATION: Parse and validate pagination parameters
+    const parsedPage = Math.max(1, Math.min(parseInt(req.query.page, 10) || 1, 1000));
+    const parsedLimit = Math.max(1, Math.min(parseInt(req.query.limit, 10) || 20, 100));
+    const offset = (parsedPage - 1) * parsedLimit;
 
     if (!q || !q.trim()) {
       return res.status(400).json({
@@ -55,19 +58,19 @@ router.get('/', async (req, res, next) => {
     `;
 
     const [resultsResult, countResult] = await Promise.all([
-      db.query(query, [q.trim(), searchTerm, limit, offset]),
+      db.query(query, [q.trim(), searchTerm, parsedLimit, offset]),
       db.query(countQuery, [searchTerm])
     ]);
 
     const total = parseInt(countResult.rows[0].count, 10);
-    const totalPages = Math.ceil(total / limit);
+    const totalPages = Math.ceil(total / parsedLimit);
 
     res.json({
       success: true,
       results: resultsResult.rows,
       pagination: {
-        page: parseInt(page, 10),
-        limit: parseInt(limit, 10),
+        page: parsedPage,
+        limit: parsedLimit,
         total,
         totalPages
       }
@@ -80,7 +83,9 @@ router.get('/', async (req, res, next) => {
 // ═══ TRENDING SKILLS ═══
 router.get('/trending', async (req, res, next) => {
   try {
-    const { limit = 10, domain } = req.query;
+    // INPUT VALIDATION: Parse and validate limit parameter
+    const parsedLimit = Math.max(1, Math.min(parseInt(req.query.limit, 10) || 10, 100));
+    const { domain } = req.query;
 
     let domainClause = '';
     const params = [];
@@ -97,7 +102,7 @@ router.get('/trending', async (req, res, next) => {
        WHERE published = true AND deleted_at IS NULL ${domainClause}
        ORDER BY starlight_score DESC, published_at DESC
        LIMIT $${paramIndex}`,
-      [...params, parseInt(limit, 10)]
+      [...params, parsedLimit]
     );
 
     res.json({
@@ -113,8 +118,10 @@ router.get('/trending', async (req, res, next) => {
 router.get('/domain/:domain', async (req, res, next) => {
   try {
     const { domain } = req.params;
-    const { page = 1, limit = 20 } = req.query;
-    const offset = (page - 1) * limit;
+    // INPUT VALIDATION: Parse and validate pagination parameters
+    const parsedPage = Math.max(1, Math.min(parseInt(req.query.page, 10) || 1, 1000));
+    const parsedLimit = Math.max(1, Math.min(parseInt(req.query.limit, 10) || 20, 100));
+    const offset = (parsedPage - 1) * parsedLimit;
 
     const [resultsResult, countResult] = await Promise.all([
       db.query(
@@ -122,7 +129,7 @@ router.get('/domain/:domain', async (req, res, next) => {
          WHERE domain = $1 AND published = true AND deleted_at IS NULL
          ORDER BY published_at DESC
          LIMIT $2 OFFSET $3`,
-        [domain, limit, offset]
+        [domain, parsedLimit, offset]
       ),
       db.query(
         'SELECT COUNT(*) FROM skills WHERE domain = $1 AND published = true AND deleted_at IS NULL',
@@ -131,14 +138,14 @@ router.get('/domain/:domain', async (req, res, next) => {
     ]);
 
     const total = parseInt(countResult.rows[0].count, 10);
-    const totalPages = Math.ceil(total / limit);
+    const totalPages = Math.ceil(total / parsedLimit);
 
     res.json({
       success: true,
       skills: resultsResult.rows,
       pagination: {
-        page: parseInt(page, 10),
-        limit: parseInt(limit, 10),
+        page: parsedPage,
+        limit: parsedLimit,
         total,
         totalPages
       }
