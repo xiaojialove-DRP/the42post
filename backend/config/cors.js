@@ -62,6 +62,16 @@ function isOriginWhitelisted(origin) {
     }
   }
 
+  // Allow ANY railway.app subdomain (deployed branches, previews, etc.)
+  if (/^https?:\/\/[a-z0-9-]+\.railway\.app$/.test(normalized)) {
+    return true;
+  }
+
+  // Allow the42post.com domain (production)
+  if (/^https?:\/\/(www\.)?the42post\.com$/.test(normalized)) {
+    return true;
+  }
+
   return false;
 }
 
