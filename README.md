@@ -1,208 +1,129 @@
-# THE 42 POST
+# THE 42 POST 🛸
 
-**An open platform for composing, testing, and distributing AI alignment skills.**
+**An Open-Source Platform for Human-Centered AI Value Alignment**
 
-🌐 **[www.the42post.com](https://www.the42post.com)** · [中文版本](./README.zh.md)
+Democratizing how humans define, share, and verify their values for AI systems.
+🌐 **[中文版本 (Chinese Version)](./README.zh.md)** 
 
----
-
-## What It Is
-
-THE 42 POST implements the **SemanticForge five-layer framework** as a community platform. Users author "Skills" — structured representations of human values that guide AI behavior — using a standardized five-layer schema. Each skill is cryptographically signed and portable across systems.
-
-This is not a prompt library. This is infrastructure for **compositional, verifiable, multi-cultural AI alignment**.
+> **Built on [SemanticForge](https://github.com/xiaojialove-DRP/SemanticForge)** — THE 42 POST implements SemanticForge's five-layer framework as a community platform where anyone can create and share AI-aligned skills.
 
 ---
 
-## Relationship to SemanticForge
+## 🎯 What is THE 42 POST?
 
-[SemanticForge](https://github.com/xiaojialove-DRP/SemanticForge) is the research framework and conceptual foundation.  
-THE 42 POST is the first implementation: a platform where the framework meets practice.
+THE 42 POST is a web platform where anyone can create "Skills" — structured, verifiable representations of human values that guide AI behavior. Instead of hidden values in training data, THE 42 POST makes them explicit, shareable, verifiable, and multi-cultural.
 
-What SemanticForge defines (the five-layer model), THE 42 POST operationalizes:
-- Web UI for collaborative skill authoring
-- AI-assisted skill generation (DeepSeek)
-- Community verification through starlight scores
-- Downloadable, executable skill formats
-- A/B testing via Playground
+### Key Features
 
----
-
-## Design: 10 Domains
-
-Skills are authored within ten research domains, each testing a different dimension of AI alignment:
-
-| Domain | Research Question |
-|---|---|
-| **Narrative & Language** | How does linguistic framing shape AI behavior? |
-| **Logic & Reasoning** | Can AI distinguish valid from invalid inference? |
-| **History & Tradition** | Does temporal context improve decision-making? |
-| **Science & Systems** | Can AI reason about causation vs. correlation? |
-| **Ethics & Values** | How do cultural and personal values encode? |
-| **Design & Experience** | What role does friction and slowness play? |
-| **Culture & Understanding** | Does cultural context prevent misalignment? |
-| **Time & Legacy** | Can AI reason about multi-generational impact? |
-| **Silence & Space** | When is non-response the correct response? |
-| **Labor & Value** | How does AI account for invisible work? |
-
-Each domain has a reference skill (designed by the core team) and accepts community contributions.
+- 🛠️ **Skill Forging Workshop** — Turn your values into verifiable AI guidance in 4 steps
+- 📚 **Skill Library** — Explore 42+ community-created skills across different domains
+- 👁️ **Preview & Iterate** — Review before publishing and refine based on feedback
+- 🤖 **AI-Ready** — Test behavior with Shadow Agent or integrate into your systems
 
 ---
 
-## The Five-Layer Architecture
+## ❓ Why Did We Build This?
 
-```
-┌─────────────────────────────────────┐
-│ DEFINING: Core principle (1 sentence)│
-├─────────────────────────────────────┤
-│ INSTANTIATING: Before/after examples │
-├─────────────────────────────────────┤
-│ FENCING: Applicable / not applicable │
-├─────────────────────────────────────┤
-│ VALIDATING: Test cases & criteria   │
-├─────────────────────────────────────┤
-│ CONTEXTUALIZING: Cultural variants  │
-└─────────────────────────────────────┘
-```
+**The Problem:** AI values are hidden in training data, inconsistent across cultures, unverifiable, and controlled by few organizations.
 
-**Example: "Grandma Filter"** (Ethics domain, highest community star score)
-
-```json
-{
-  "defining": "Before any output, ask: would I be comfortable if my grandmother read this?",
-  "instantiating": {
-    "before": "AI generates: 'Your life choices are suboptimal...'",
-    "after": "AI pauses, asks itself the Grandma Test, rephrases with dignity"
-  },
-  "fencing": {
-    "apply": "Content moderation, sensitive topics, public-facing responses",
-    "notApply": "Medical/legal contexts where precision > tone"
-  },
-  "validating": ["Does output pass the Grandma Test?", "Is dignity preserved?"],
-  "contextualizing": {
-    "en-US": "Reflects American cultural respect for elders",
-    "zh-CN": "Aligns with Confucian filial piety (孝)"
-  }
-}
-```
+**Our Solution:** We democratize AI alignment by making values explicit, auditable, and culturally adapted. Everyone—from users to ethicists—can shape AI behavior without needing technical expertise.
 
 ---
 
-## Core Features
+## 🚀 Getting Started
 
-**Skill Authoring**: Four-step web form. AI (DeepSeek) generates initial five-layer draft. User refines. One-click publish.
+**No setup required.** Visit [THE 42 POST](https://the42post-production.up.railway.app):
 
-**Soul-Hash**: Each skill receives a SHA-256 fingerprint: `SOUL_<24-char-hash>_<timestamp>`. Cryptographic identity. Immutable for a given principle; changes if defining layer changes.
-
-**Community Verification**: Users can star skills. Starlight score orders the archive and influences Playground recommendations.
-
-**Playground A/B Testing**: Pick a skill → describe a task → see two AI responses side-by-side (with skill, without skill). Single most valuable feature for understanding skill effectiveness.
-
-**Export Formats**:
-- **Markdown** — System prompt template
-- **LangChain** — Python dataclass with five-layer fields
-- **MCP** — JSON schema for Claude/OpenAI tool integration
-- **Certificate** — Printable HTML with Soul-Hash QR
+1. **Browse** 42+ community-created skills (2 min)
+2. **Create** your first skill using Skill Forge (5-10 min)
+3. **Publish** and receive your Soul-Hash identity (1 min)
 
 ---
 
-## Architecture
+## 💭 Why We're Committed to Open Research
 
-```
-Frontend (Vanilla JS, SkillStore singleton)
-  ↓ REST API
-Backend (Node.js 24 / Express 4)
-  ↓
-SQLite (Railway-hosted, schema-versioned)
-  ↓
-DeepSeek API (five-layer generation)
-```
+THE 42 POST is not a commercial product. We believe AI alignment should be:
+- **Owned by everyone**, not corporations
+- **Rooted in research**, not proprietary algorithms  
+- **Culturally diverse**, shaped by communities worldwide
+- **Verifiable and auditable**, not black-box
 
-**Test Coverage**: 30 tests (Vitest)
-- 7 tests: skill forge + archive listing + search
-- 10 tests: star/unstar + starlight_score sync
-- 13 tests: download formats + manifest verification
+This is why we open-sourced it.
 
 ---
 
-## API
+## 📚 Architecture
 
-```
-GET  /api/skills                     List (paginated, filterable by domain)
-GET  /api/skills/:id                 Skill detail + manifest
-POST /api/skills                     Create & publish skill
-POST /api/skills/:id/star            Toggle star
-GET  /api/skills/:id/stars           Star count + user state
-GET  /api/download/:id?format=       [markdown|langchain|mcp|certificate]
-GET  /api/search?q=                  Full-text search
-```
-
-All endpoints public. No authentication for reads. Mutations require only `X-Anonymous-Id` header (device ID).
-
-Full spec: [docs/API_REFERENCE.md](docs/API_REFERENCE.md)
+For detailed system design, data flows, database schema, and technical architecture, see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ---
 
-## For Researchers
+## 📖 How to Use THE 42 POST
 
-**Download & analyze**: All skills available as JSON via `/api/skills`.
+### For Skill Discoverers
+- **Search the Library** by domain, creator, or keyword
+- **Read Skill Details** including five-layer structure, examples, and community feedback
+- **Experience Skills** using the Shadow Agent to see how they guide AI behavior
+- **Rate & Share** feedback and recommendations
 
-**Case studies**:
-- Study how humans encode cultural values in the Contextualizing layer
-- Analyze whether Fencing (boundary definition) prevents misuse
-- A/B test Playground results: does skill presence correlate with alignment outcomes?
+### For Creators
+1. **Click "Skill Forge"** and enter your core idea
+2. **AI generates** the five-layer structure (DEFINING, INSTANTIATING, FENCING, VALIDATING, CONTEXTUALIZING)
+3. **Preview & refine** before publishing
+4. **Publish** and receive your Soul-Hash identity + Creator Card
 
-**Integrate**: Use the MCP export format to load skills directly into Claude or other agents. Test behavior empirically.
+### For Researchers
+- **Analyze patterns** across 42+ skills in different domains
+- **Study effectiveness** using test cases and Shadow Agent
+- **Access via API** — Get skill data in JSON format (`/api/skills`, `/api/search`)
+- **Publish findings** and contribute to human-centered AI research
 
-**Contribute**: Author a new skill in an underexplored domain. The framework is designed for research iteration.
-
----
-
-## Running Locally
-
-```bash
-git clone https://github.com/xiaojialove-DRP/the42post.git
-cd the42post/backend
-
-npm install
-cp .env.example .env                 # DEEPSEEK_API_KEY required
-npm run migrate                      # SQLite schema
-npm run seed                         # 10 reference skills + community examples
-npm start                            # http://localhost:3000
-
-# Test
-npm test                             # 30 tests, ~1s total
-npm run test:watch                   # Watch mode
-```
+### For Developers
+- **Integrate skills** into your AI agents using REST API
+- **Run test cases** to validate behavior alignment
+- **Collaborate** with skill creators on improvements
 
 ---
 
-## Known Limitations
+## 🤝 Contributing
 
-- **AI generation quality varies**: DeepSeek sometimes produces shallow five-layer structures. User review essential.
-- **Playground is read-only**: A/B results not logged. Researchers must implement custom logging for empirical studies.
-- **No moderation system**: Archive quality depends entirely on community. Spam/low-quality skills can be soft-deleted by admins, never permanently.
-- **Soul-Hash collision**: Extremely low probability (~1 in 2^256), but theoretically possible. Not a practical concern.
-- **Scale**: SQLite is synchronous, suitable for ~100 req/sec. Will need migration to PostgreSQL if traffic exceeds that.
+We welcome contributions from creators, developers, and researchers:
 
----
-
-## Contributing
-
-**Skills**: Use the platform. High-quality submissions become reference examples for their domain.
-
-**Code**: Fork, open issues, submit PRs. Focus areas: Playground logging, moderation UI, new export formats.
-
-**Research**: If you publish using THE 42 POST skills or Playground data, cite this repo and open an issue linking to your work.
+- **Skill Creators:** Design and publish skills through the platform
+- **Developers:** Fork the repo, submit PRs, improve the platform
+- **Researchers:** Download skills, run experiments, share findings
 
 ---
 
-## License
+## 📄 License
 
-MIT — See [LICENSE](LICENSE)
+MIT License — See [LICENSE](LICENSE) file
 
 ---
 
-**Status**: Open beta · 10 design domains · 42 original skills (21 published after quality curation) · 30 backend tests passing
+## 📚 Documentation
 
-*THE 42 POST: making alignment work testable, not just declarable.*
+- **[Architecture](docs/ARCHITECTURE.md)** — System design and data flows
+- **[API Reference](docs/API_REFERENCE.md)** — REST API endpoints for integration
+- **[Contributing Guide](docs/CONTRIBUTING.md)** — How to contribute (creators, designers, developers, researchers)
+- **[Changelog](CHANGELOG.md)** — What's new in each release
+
+---
+
+## 🔗 Quick Links
+
+- **🌐 Live Platform**: [https://the42post-production.up.railway.app](https://the42post-production.up.railway.app)
+- **📦 GitHub Repository**: https://github.com/xiaojialove-DRP/the42post
+- **🐛 Report Issues**: [GitHub Issues](https://github.com/xiaojialove-DRP/the42post/issues)
+
+---
+
+## 🙏 Acknowledgments
+
+THE 42 POST brings together research in Value-Sensitive Design, Participatory Design, Cross-Cultural HCI, and AI Alignment to make value definition accessible to everyone. Special thanks to all creators who have contributed skills to the library.
+
+---
+
+**Version**: 1.0.0 · **Status**: Public Release ✅
+
+*Making AI values transparent, verifiable, and human-centered.*

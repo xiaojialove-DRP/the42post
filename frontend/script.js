@@ -561,48 +561,6 @@ function attachSkillCardListeners() {
 }
 
 /* ═══ GENERATE MARKDOWN ═══ */
-function generateSkillMarkdown(skill) {
-  const markdown = `# ${skill.title}
-*${skill.titleCn}*
-
-**Forger:** ${skill.author}  
-**Soul-Hash:** ${skill.soul_hash || 'SH-GENERATED'}  
-**Domain:** ${skill.domain}  
-**⭐ Stars:** ${skill.stars || 0}  
-**📥 Downloads:** ${skill.downloads || 0}
-
----
-
-## DEFINING
-${skill.five_layer?.defining || 'No definition provided'}
-
-## INSTANTIATING
-${(skill.five_layer?.instantiating || []).map(ex => 
-  `**Before:** ${ex.before}\n\n**After:** ${ex.after}`
-).join('\n\n---\n\n')}
-
-## FENCING
-**When to Apply:** ${skill.five_layer?.fencing?.when_apply || 'N/A'}
-
-**When NOT:** ${skill.five_layer?.fencing?.when_not || 'N/A'}
-
-## VALIDATING
-${(skill.five_layer?.validating || []).map(test => `- ${test}`).join('\n')}
-
-## CONTEXTUALIZING
-${Object.entries(skill.five_layer?.contextualizing || {}).map(([context, note]) => 
-  `**${context}:** ${note}`
-).join('\n')}
-
----
-**Commercial Use:** ${skill.commercial}  
-**Remixing:** ${skill.remix}
-
-Generated from THE 42 POST
-`;
-  return markdown;
-}
-
 /* ═══ DOWNLOAD FILE HELPER ═══ */
 function downloadMarkdownFile(content, filename) {
   const blob = new Blob([content], { type: 'text/markdown' });
@@ -1290,9 +1248,7 @@ const getAllSkillsForVibe = () => {
     // 优先使用数据库中的技能，其次使用硬编码的技能
     const base = (typeof SkillStore !== 'undefined' && SkillStore.size() > 0)
                   ? SkillStore.all()
-                  : (DB_SKILLS.length > 0 ? DB_SKILLS :
-                    ? SkillStore.all()
-                    : (typeof ALL_SKILLS !== 'undefined' ? ALL_SKILLS : SHARED_SKILLS)) || [];
+                  : (DB_SKILLS.length > 0 ? DB_SKILLS : (typeof ALL_SKILLS !== 'undefined' ? ALL_SKILLS : SHARED_SKILLS)) || [];
     const allSkills = [...base, ...forgedSkills];
     // Sort by starlight descending to show most popular skills first
     return allSkills.sort((a, b) => (b.starlight || 0) - (a.starlight || 0));
@@ -1300,9 +1256,7 @@ const getAllSkillsForVibe = () => {
     console.error('Error in getAllSkillsForVibe:', e);
     return (typeof SkillStore !== 'undefined' && SkillStore.size() > 0)
            ? SkillStore.all()
-           : (DB_SKILLS.length > 0 ? DB_SKILLS :
-             ? SkillStore.all()
-             : (typeof ALL_SKILLS !== 'undefined' ? ALL_SKILLS : SHARED_SKILLS)) || [];
+           : (DB_SKILLS.length > 0 ? DB_SKILLS : (typeof ALL_SKILLS !== 'undefined' ? ALL_SKILLS : SHARED_SKILLS)) || [];
   }
 };
 
@@ -4917,35 +4871,6 @@ function initArena() {
 }
 
 /* ═══ ABOUT US & HOW TO PLAY ═══ */
-function initAboutHowTo() {
-  const aboutOverlay = document.getElementById('aboutOverlay');
-  const aboutClose = document.getElementById('aboutClose');
-  const howtoOverlay = document.getElementById('howtoOverlay');
-  const howtoClose = document.getElementById('howtoClose');
-
-  // Footer About link
-  const footerAboutBtn = document.getElementById('footerAboutBtn');
-  if (footerAboutBtn && aboutOverlay) {
-    footerAboutBtn.addEventListener('click', () => aboutOverlay.classList.add('active'));
-  }
-
-  if (aboutClose && aboutOverlay) {
-    aboutClose.addEventListener('click', () => aboutOverlay.classList.remove('active'));
-    aboutOverlay.addEventListener('click', (e) => { if (e.target === aboutOverlay) aboutOverlay.classList.remove('active'); });
-  }
-
-  // Footer HowTo link
-  const footerHowtoBtn = document.getElementById('footerHowtoBtn');
-  if (footerHowtoBtn && howtoOverlay) {
-    footerHowtoBtn.addEventListener('click', () => howtoOverlay.classList.add('active'));
-  }
-
-  if (howtoClose && howtoOverlay) {
-    howtoClose.addEventListener('click', () => howtoOverlay.classList.remove('active'));
-    howtoOverlay.addEventListener('click', (e) => { if (e.target === howtoOverlay) howtoOverlay.classList.remove('active'); });
-  }
-}
-
 /* ═══ CREATIVE PLAYGROUND TASKS — 80+ Scenarios, 8 per Domain ═══ */
 const SAMPLE_PLAYGROUND_TASKS = [
   // SAFETY (🛡️) — 8 scenarios
@@ -5053,25 +4978,6 @@ function getPlaygroundTasks() {
   const stored = localStorage.getItem('42post_playground_tasks');
   const customTasks = stored ? JSON.parse(stored) : [];
   return [...SAMPLE_PLAYGROUND_TASKS, ...customTasks];
-}
-
-function displayRandomPlaygroundTask() {
-  const tasks = getPlaygroundTasks();
-  if (tasks.length === 0) return;
-
-  const randomIndex = Math.floor(Math.random() * tasks.length);
-  const task = tasks[randomIndex];
-
-  const showcase = document.getElementById('showcaseTask');
-  if (showcase) {
-    showcase.innerHTML = `
-      <h3 class="inspiration-question">${task.title}</h3>
-      <p class="inspiration-context">${task.description}</p>
-      <div class="task-tags">
-        ${task.tags.map(tag => `<span class="task-tag">${tag}</span>`).join('')}
-      </div>
-    `;
-  }
 }
 
 function initPlaygroundShowcase() {
