@@ -387,6 +387,44 @@ function initSkillGrids() {
 function attachSkillCardListeners() {
   const starredSkills = JSON.parse(localStorage.getItem('starred_skills') || '{}');
 
+  // ═══ LOAD STAR STATUS FROM BACKEND ═══
+  // Sync user's star state with backend on page load
+  document.querySelectorAll('.btn-star').forEach(async (btn) => {
+    const skillId = btn.dataset.skillId;
+    try {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/skills/${skillId}/stars`, {
+        headers: {
+          'X-Anonymous-Id': getAnonymousId()
+        }
+      });
+      if (response.ok) {
+        const result = await response.json();
+        const starBtn = btn;
+        const countSpan = starBtn.querySelector('.star-count');
+        const iconSpan = starBtn.querySelector('.star-icon');
+
+        // Update star count from backend
+        if (countSpan && result.totalStars) {
+          countSpan.textContent = result.totalStars;
+        }
+
+        // Update star state if user has already starred this
+        if (result.userStarred) {
+          starredSkills[skillId] = true;
+          if (iconSpan) iconSpan.textContent = '★';
+        } else {
+          delete starredSkills[skillId];
+          if (iconSpan) iconSpan.textContent = '☆';
+        }
+
+        // Sync with localStorage
+        localStorage.setItem('starred_skills', JSON.stringify(starredSkills));
+      }
+    } catch (error) {
+      console.warn(`Could not load star status for skill ${skillId}:`, error);
+    }
+  });
+
   // Star button handler (with backend sync)
   document.querySelectorAll('.btn-star').forEach(btn => {
     btn.addEventListener('click', async (e) => {
