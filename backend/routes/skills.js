@@ -3,7 +3,7 @@
    ═══════════════════════════════════════════════════════ */
 
 import express from 'express';
-import { db } from '../server.js';
+import { db } from '../utils/db.js';
 import { requireAuth, optionalAuth } from '../utils/auth.js';
 import { isValidDomain } from '../utils/validation.js';
 

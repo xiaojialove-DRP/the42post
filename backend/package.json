@@ -9,12 +9,14 @@
     "dev": "nodemon server.js",
     "migrate": "node scripts/migrate.js",
     "seed": "node scripts/seed.js",
-    "test": "NODE_OPTIONS=--experimental-vm-modules node --test"
+    "test": "vitest run --reporter=verbose",
+    "test:watch": "vitest --reporter=verbose",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
     "bcryptjs": "2.4.3",
-    "better-sqlite3": "9.0.0",
+    "better-sqlite3": "^12.9.0",
     "cors": "2.8.5",
     "dotenv": "16.3.1",
     "express": "4.18.2",
@@ -24,6 +26,26 @@
     "uuid": "9.0.0"
   },
   "devDependencies": {
-    "nodemon": "^3.0.1"
+    "@vitest/coverage-v8": "^4.1.5",
+    "nodemon": "^3.0.1",
+    "supertest": "^7.2.2",
+    "vitest": "^4.1.5"
+  },
+  "vitest": {
+    "environment": "node",
+    "testMatch": [
+      "./test/**/*.test.js"
+    ],
+    "coverage": {
+      "provider": "v8",
+      "reporter": [
+        "text",
+        "html"
+      ],
+      "include": [
+        "routes/**/*.js",
+        "utils/**/*.js"
+      ]
+    }
   }
 }

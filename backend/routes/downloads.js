@@ -3,7 +3,7 @@
    ═══════════════════════════════════════════════════════ */
 
 import express from 'express';
-import { db } from '../server.js';
+import { db } from '../utils/db.js';
 import { validateFiveLayerSchema, isValidDownloadFormat } from '../utils/validation.js';
 import { v4 as uuidv4 } from 'uuid';
 

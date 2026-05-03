@@ -893,9 +893,15 @@
   <!-- Notyf Toast Notifications -->
   <script src="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.js"></script>
   <script src="skills.js?t=1777029023-lang"></script>
+  <script src="skillStore.js"></script>
   <script>
     if (typeof SHARED_SKILLS !== 'undefined') {
       console.log('✓ SHARED_SKILLS loaded: ' + SHARED_SKILLS.length + ' skills');
+      // Seed SkillStore with static skills so it's ready before API load
+      if (typeof SkillStore !== 'undefined' && typeof ALL_SKILLS !== 'undefined') {
+        SkillStore.load(ALL_SKILLS);
+        console.log('✓ SkillStore seeded: ' + SkillStore.size() + ' skills');
+      }
     } else {
       console.error('✗ ERROR: SHARED_SKILLS not loaded');
     }

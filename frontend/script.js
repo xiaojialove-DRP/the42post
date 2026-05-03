@@ -375,7 +375,8 @@ function initSkillGrids() {
   }
 
   if (voicesContainer) {
-    voicesContainer.innerHTML = SHARED_SKILLS.slice(0, 6).map(renderSkillCard).join('');
+    const _voiceSkills = (typeof SkillStore !== 'undefined' && SkillStore.size() > 0) ? SkillStore.sample(6) : SHARED_SKILLS.slice(0, 6);
+    voicesContainer.innerHTML = _voiceSkills.map(renderSkillCard).join('');
   }
 
   // Attach event listeners
@@ -1201,21 +1202,20 @@ const GUILD_ICONS = {
 // Combine SHARED_SKILLS with forged skills for the vibe grid
 // Initialize with SHARED_SKILLS, will be updated dynamically
 let SLOT_DATA = [];
-let DB_SKILLS = []; // 数据库中的 42 个技能
+let DB_SKILLS = []; // legacy cache — SkillStore is the authoritative source
 
-// Helper: find a skill by ID across all skill sources
+// findSkillById — thin wrapper around SkillStore (single source of truth)
 function findSkillById(id) {
   if (!id) return null;
-  if (typeof DB_SKILLS !== 'undefined') {
-    const found = DB_SKILLS.find(s => s.id === id);
-    if (found) return found;
-  }
-  if (typeof SHARED_SKILLS !== 'undefined') {
-    const found = SHARED_SKILLS.find(s => s.id === id);
-    if (found) return found;
-  }
-  if (typeof ALL_SKILLS !== 'undefined') {
-    const found = ALL_SKILLS.find(s => s.id === id);
+  if (typeof SkillStore !== 'undefined') return SkillStore.find(id);
+  // Fallback for pages that don't load skillStore.js (e.g. arena.html)
+  const pools = [
+    typeof DB_SKILLS !== 'undefined' ? DB_SKILLS : [],
+    typeof SHARED_SKILLS !== 'undefined' ? SHARED_SKILLS : [],
+    typeof ALL_SKILLS !== 'undefined' ? ALL_SKILLS : [],
+  ];
+  for (const pool of pools) {
+    const found = pool.find(s => s.id === id);
     if (found) return found;
   }
   return null;
@@ -1288,21 +1288,27 @@ const getAllSkillsForVibe = () => {
   try {
     const forgedSkills = (typeof getRecentForges === 'function') ? getRecentForges() : [];
     // 优先使用数据库中的技能，其次使用硬编码的技能
-    const base = (DB_SKILLS.length > 0 ? DB_SKILLS :
-                  (typeof ALL_SKILLS !== 'undefined' ? ALL_SKILLS : SHARED_SKILLS)) || [];
+    const base = (typeof SkillStore !== 'undefined' && SkillStore.size() > 0)
+                  ? SkillStore.all()
+                  : (DB_SKILLS.length > 0 ? DB_SKILLS :
+                    ? SkillStore.all()
+                    : (typeof ALL_SKILLS !== 'undefined' ? ALL_SKILLS : SHARED_SKILLS)) || [];
     const allSkills = [...base, ...forgedSkills];
     // Sort by starlight descending to show most popular skills first
     return allSkills.sort((a, b) => (b.starlight || 0) - (a.starlight || 0));
   } catch (e) {
     console.error('Error in getAllSkillsForVibe:', e);
-    return (DB_SKILLS.length > 0 ? DB_SKILLS :
-            (typeof ALL_SKILLS !== 'undefined' ? ALL_SKILLS : SHARED_SKILLS)) || [];
+    return (typeof SkillStore !== 'undefined' && SkillStore.size() > 0)
+           ? SkillStore.all()
+           : (DB_SKILLS.length > 0 ? DB_SKILLS :
+             ? SkillStore.all()
+             : (typeof ALL_SKILLS !== 'undefined' ? ALL_SKILLS : SHARED_SKILLS)) || [];
   }
 };
 
 // 初始化 SLOT_DATA 并加载数据库中的技能
 function initializeSlotData() {
-  if (typeof SHARED_SKILLS !== 'undefined') {
+  if (typeof SHARED_SKILLS !== 'undefined') { // seed SkillStore with static data as fallback
     SLOT_DATA = getAllSkillsForVibe();
   }
 
@@ -1310,6 +1316,7 @@ function initializeSlotData() {
   loadSkillsFromDB().then(dbSkills => {
     if (dbSkills.length > 0) {
       DB_SKILLS = dbSkills;
+      if (typeof SkillStore !== 'undefined') SkillStore.load(dbSkills);
       SLOT_DATA = getAllSkillsForVibe();
       console.log('✅ Updated SLOT_DATA with database skills');
       // 重新初始化 slot grid 以显示新的技能
@@ -5683,8 +5690,9 @@ function displayRandomCreativeTask() {
   generateAlexSothStyleImage(task);
 
   // Panel 1: Display Skill Info (from SHARED_SKILLS)
-  const skillIdx = Math.floor(Math.random() * SHARED_SKILLS.length);
-  const skill = SHARED_SKILLS[skillIdx];
+  const _pool = (typeof SkillStore !== 'undefined' && SkillStore.size() > 0) ? SkillStore.all() : SHARED_SKILLS;
+  const skillIdx = Math.floor(Math.random() * _pool.length);
+  const skill = _pool[skillIdx];
   const skillTitle = document.getElementById('skillTitle');
   const skillAuthor = document.getElementById('skillAuthor');
   const skillCopyright = document.getElementById('skillCopyright');
@@ -5784,7 +5792,7 @@ function initSkillsFeed() {
   }));
 
   // Add a selection of SHARED_SKILLS (6 latest by position)
-  const sharedSample = SHARED_SKILLS.slice(0, 6);
+  const sharedSample = (typeof SkillStore !== 'undefined' && SkillStore.size() > 0) ? SkillStore.sample(6) : SHARED_SKILLS.slice(0, 6);
   sharedSample.forEach(s => feedItems.push({
     type: 'skill',
     title: currentLang === 'cn' ? s.titleCn : s.title,
@@ -6931,7 +6939,7 @@ async function initAgentArchiveView() {
       // This ensures 42 skills always display even if database wasn't seeded
       if (baseSkills.length < 40) {
         console.warn(`⚠️ Archive: API returned only ${baseSkills.length} skills, supplementing with local fallback for 42 display`);
-        const fallbackSkills = (typeof ALL_SKILLS !== 'undefined' ? ALL_SKILLS : SHARED_SKILLS) || [];
+        const fallbackSkills = (typeof SkillStore !== 'undefined' && SkillStore.size() > 0) ? SkillStore.all() : (typeof ALL_SKILLS !== 'undefined' ? ALL_SKILLS : SHARED_SKILLS) || [];
         // Merge: keep API skills, add fallback skills that don't duplicate
         const existingIds = new Set(baseSkills.map(s => s.id));
         const additional = fallbackSkills.filter(s => !existingIds.has(s.id));
@@ -6941,18 +6949,18 @@ async function initAgentArchiveView() {
     } else {
       // Fallback to hardcoded skills if API fails
       console.warn(`⚠️ Archive: API request failed (${response.status}), falling back to local SHARED_SKILLS/ALL_SKILLS`);
-      baseSkills = (typeof ALL_SKILLS !== 'undefined' ? ALL_SKILLS : SHARED_SKILLS) || [];
+      baseSkills = (typeof SkillStore !== 'undefined' && SkillStore.size() > 0) ? SkillStore.all() : (typeof ALL_SKILLS !== 'undefined' ? ALL_SKILLS : SHARED_SKILLS) || [];
     }
   } catch (error) {
     console.error('❌ Archive: Error fetching skills from API:', error.message);
     // Fallback to hardcoded skills
-    baseSkills = (typeof ALL_SKILLS !== 'undefined' ? ALL_SKILLS : SHARED_SKILLS) || [];
+    baseSkills = (typeof SkillStore !== 'undefined' && SkillStore.size() > 0) ? SkillStore.all() : (typeof ALL_SKILLS !== 'undefined' ? ALL_SKILLS : SHARED_SKILLS) || [];
   }
 
   // Safety: ensure we always have at least some skills to display
   if (!baseSkills || baseSkills.length === 0) {
     console.warn('⚠️ No skills available from API or fallback, using SHARED_SKILLS');
-    baseSkills = (typeof SHARED_SKILLS !== 'undefined' ? SHARED_SKILLS : []);
+    baseSkills = (typeof SkillStore !== 'undefined' && SkillStore.size() > 0) ? SkillStore.all() : (typeof SHARED_SKILLS !== 'undefined' ? SHARED_SKILLS : []);
   }
 
   // Normalize attribution: API rows expose creator_name (from users JOIN),
@@ -7492,11 +7500,8 @@ function attachTop42SkillListeners() {
   skillCells.forEach(cell => {
     const skillId = cell.dataset.skillId;
 
-    // Find skill from ALL_SKILLS
-    let skill = typeof ALL_SKILLS !== 'undefined' ? ALL_SKILLS.find(s => s.id === skillId) : null;
-    if (!skill) {
-      skill = SHARED_SKILLS && SHARED_SKILLS.find(s => s.id === skillId);
-    }
+    // Find skill via SkillStore (single source of truth)
+    let skill = findSkillById(skillId);
 
     if (!skill) {
       console.warn(`Skill with ID ${skillId} not found`);
