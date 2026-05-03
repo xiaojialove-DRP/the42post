@@ -201,7 +201,7 @@ router.post('/register', async (req, res, next) => {
     const user = result.rows[0];
 
     // TODO: Send verification email with verificationToken
-    console.log(`Verification token for ${email}: ${verificationToken}`);
+    // NOTE: Do not log verification tokens to console - they are sensitive
 
     res.status(201).json({
       success: true,
@@ -353,7 +353,7 @@ router.patch('/me', requireAuth, async (req, res, next) => {
 
     const result = await db.query(
       `UPDATE users
-       SET username = $1, updated_at = NOW()
+       SET username = $1, updated_at = CURRENT_TIMESTAMP
        WHERE id = $2
        RETURNING id, email, username, account_type, verified`,
       [username, userId]

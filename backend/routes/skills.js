@@ -335,7 +335,7 @@ router.post('/', optionalAuth, async (req, res, next) => {
       // (e.g., duplicate skill creation if user submits twice)
       await client.query('BEGIN IMMEDIATE');
 
-      // Insert skill (SQLite-compatible: 1/0 for booleans, CURRENT_TIMESTAMP for NOW())
+      // Insert skill (SQLite-compatible: 1/0 for booleans, CURRENT_TIMESTAMP for CURRENT_TIMESTAMP)
       const skillResult = await client.query(
         `INSERT INTO skills (
           id, author_id, title, title_cn, description, description_cn, domain,
@@ -455,7 +455,7 @@ router.patch('/:skill_id', requireAuth, async (req, res, next) => {
            description_cn = COALESCE($2, description_cn),
            applicable_when = COALESCE($3::text[], applicable_when),
            disallowed_uses = COALESCE($4::text[], disallowed_uses),
-           updated_at = NOW()
+           updated_at = CURRENT_TIMESTAMP
        WHERE id = $5
        RETURNING id, title, soul_hash, updated_at`,
       [description, description_cn, applicable_when, disallowed_uses, skill_id]
@@ -491,7 +491,7 @@ router.delete('/:skill_id', requireAuth, async (req, res, next) => {
 
     // Soft delete
     await db.query(
-      'UPDATE skills SET deleted_at = NOW() WHERE id = $1',
+      'UPDATE skills SET deleted_at = CURRENT_TIMESTAMP WHERE id = $1',
       [skill_id]
     );
 
@@ -576,7 +576,7 @@ router.post('/:skill_id/sign', requireAuth, async (req, res, next) => {
     // Update manifest
     await db.query(
       `UPDATE skill_manifests
-       SET covenant_signatures = $1, updated_at = NOW()
+       SET covenant_signatures = $1, updated_at = CURRENT_TIMESTAMP
        WHERE skill_id = $2`,
       [JSON.stringify(signatures), skill_id]
     );
