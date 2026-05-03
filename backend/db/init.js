@@ -6,11 +6,14 @@ import { db } from '../server.js';
 
 export async function initDatabase() {
   try {
-    // Skip UUID extension for SQLite
-    try {
-      await db.query('CREATE EXTENSION IF NOT EXISTS "uuid-ossp"');
-    } catch (e) {
-      // SQLite doesn't need this, ignore error
+    // UUID extension only needed for PostgreSQL, skip for SQLite
+    // SQLite generates UUIDs via randomblob() in the adapter layer
+    if (process.env.DATABASE_URL && process.env.DATABASE_URL.startsWith('postgresql')) {
+      try {
+        await db.query('CREATE EXTENSION IF NOT EXISTS "uuid-ossp"');
+      } catch (e) {
+        console.warn('Could not create uuid-ossp extension:', e.message);
+      }
     }
 
     // Create users table
