@@ -392,7 +392,7 @@ function attachSkillCardListeners() {
       e.preventDefault();
       e.stopPropagation();
       const skillId = btn.dataset.skillId;
-      const skill = SHARED_SKILLS.find(s => s.id === skillId);
+      const skill = findSkillById(skillId);
 
       if (!skill) return;
 
@@ -470,7 +470,7 @@ function attachSkillCardListeners() {
       e.preventDefault();
       e.stopPropagation();
       const skillId = btn.dataset.skillId;
-      const skill = SHARED_SKILLS.find(s => s.id === skillId);
+      const skill = findSkillById(skillId);
 
       if (!skill) return;
       if (!starredSkills[skillId]) {
@@ -532,7 +532,7 @@ function attachSkillCardListeners() {
       e.preventDefault();
       e.stopPropagation();
       const skillId = btn.dataset.skillId;
-      const skill = SHARED_SKILLS.find(s => s.id === skillId);
+      const skill = findSkillById(skillId);
 
       if (!skill) return;
       showSkillModal(skill);
@@ -1203,6 +1203,24 @@ const GUILD_ICONS = {
 let SLOT_DATA = [];
 let DB_SKILLS = []; // 数据库中的 42 个技能
 
+// Helper: find a skill by ID across all skill sources
+function findSkillById(id) {
+  if (!id) return null;
+  if (typeof DB_SKILLS !== 'undefined') {
+    const found = DB_SKILLS.find(s => s.id === id);
+    if (found) return found;
+  }
+  if (typeof SHARED_SKILLS !== 'undefined') {
+    const found = SHARED_SKILLS.find(s => s.id === id);
+    if (found) return found;
+  }
+  if (typeof ALL_SKILLS !== 'undefined') {
+    const found = ALL_SKILLS.find(s => s.id === id);
+    if (found) return found;
+  }
+  return null;
+}
+
 // 从 API 加载数据库中的技能
 async function loadSkillsFromDB() {
   try {
@@ -1238,6 +1256,8 @@ async function loadSkillsFromDB() {
         creator: creatorLabel,
         creatorName: rawName,
         starlight: skill.starlight_score || 0,
+        stars: skill.starlight_score || 0,   // alias so card renders using skill.stars always work
+        downloads: skill.download_count || 0,
         domain: skill.domain || 'ideas',
         author: creatorLabel,
         commercial: skill.commercial_use || 'authorized',
@@ -7568,11 +7588,11 @@ function attachDomainSkillListeners() {
   skillCards.forEach(card => {
     const skillId = card.dataset.skillId;
 
-    // Find skill from SHARED_SKILLS (which includes both original and forged skills)
-    let skill = SHARED_SKILLS && SHARED_SKILLS.find(s => s.id === skillId);
+    // Find skill across all sources (DB_SKILLS, SHARED_SKILLS, ALL_SKILLS)
+    let skill = findSkillById(skillId);
 
     if (!skill) {
-      console.warn(`Skill with ID ${skillId} not found in SHARED_SKILLS`);
+      console.warn(`Skill with ID ${skillId} not found`);
       return;
     }
 
@@ -7583,28 +7603,28 @@ function attachDomainSkillListeners() {
     // Star button handler
     const starBtn = card.querySelector('.btn-skill-star');
     if (starBtn) {
-      starBtn.addEventListener('click', (e) => {
+      starBtn.addEventListener('click', async (e) => {
         e.stopPropagation();
         const starredSkills = JSON.parse(localStorage.getItem('starred_skills') || '{}');
         const isCurrentlyStarred = starredSkills[skillId] === true;
+        const newStarred = !isCurrentlyStarred;
 
-        if (isCurrentlyStarred) {
-          delete starredSkills[skillId];
-          skill.stars = Math.max(0, (skill.stars || 0) - 1);
-          starBtn.textContent = `☆ ${skill.stars}`;
-        } else {
+        // Optimistic UI update
+        if (newStarred) {
           starredSkills[skillId] = true;
           skill.stars = (skill.stars || 0) + 1;
           starBtn.textContent = `⭐ ${skill.stars}`;
+        } else {
+          delete starredSkills[skillId];
+          skill.stars = Math.max(0, (skill.stars || 0) - 1);
+          starBtn.textContent = `☆ ${skill.stars}`;
         }
-
         localStorage.setItem('starred_skills', JSON.stringify(starredSkills));
 
         // Enable/disable download button
         const downloadBtn = card.querySelector('.btn-skill-download');
         if (downloadBtn) {
-          const newIsStarred = starredSkills[skillId] === true;
-          if (newIsStarred) {
+          if (newStarred) {
             downloadBtn.removeAttribute('disabled');
             downloadBtn.title = 'Download';
           } else {
@@ -7613,7 +7633,24 @@ function attachDomainSkillListeners() {
           }
         }
 
-        console.log(`⭐ Skill "${skill.title}" star toggled. Current stars: ${skill.stars}`);
+        // Sync to backend
+        try {
+          const resp = await fetch(`${ApiClient.BASE_URL}/skills/${skillId}/star`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Anonymous-Id': getAnonymousId()
+            },
+            body: JSON.stringify({ starred: newStarred })
+          });
+          if (resp.ok) {
+            const result = await resp.json();
+            skill.stars = result.totalStars;
+            starBtn.textContent = `${newStarred ? '⭐' : '☆'} ${skill.stars}`;
+          }
+        } catch (err) {
+          console.warn('Star sync to backend failed (local state preserved):', err.message);
+        }
       });
     }
 

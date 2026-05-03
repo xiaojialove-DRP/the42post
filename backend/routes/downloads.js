@@ -5,6 +5,7 @@
 import express from 'express';
 import { db } from '../server.js';
 import { validateFiveLayerSchema, isValidDownloadFormat } from '../utils/validation.js';
+import { v4 as uuidv4 } from 'uuid';
 
 const router = express.Router();
 
@@ -143,7 +144,7 @@ router.get('/:skillId', async (req, res, next) => {
           `INSERT INTO skill_usage_logs (id, skill_id, agent_id, context, outcome, created_at)
            VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP)`,
           [
-            require('uuid').v4(),
+            uuidv4(),
             skillId,
             anonymousUserId, // 匿名用户ID（来自前端localStorage）
             `format: ${format} | ip: ${req.ip} | user-agent: ${req.get('user-agent')}`,
