@@ -95,29 +95,33 @@ router.get('/:skillId', async (req, res, next) => {
 
     let content, filename, contentType;
 
+    // Use soul_hash for filename to avoid HTTP header encoding issues with special characters
+    // (titles can contain Chinese, quotes, etc. which are invalid in HTTP headers)
+    const safeFilename = skill.soul_hash || `skill_${skill.id.substring(0, 8)}`;
+
     switch (format) {
       case 'markdown':
         content = generateSkillMarkdown(skillData);
-        filename = `The42Post_${skill.title.replace(/\s+/g, '_')}.md`;
+        filename = `The42Post_${safeFilename}.md`;
         contentType = 'text/markdown';
         break;
 
       case 'langchain':
         content = generateAgentSkillFormat(skillData);
-        filename = `The42Post_${skill.title.replace(/\s+/g, '_')}.py`;
+        filename = `The42Post_${safeFilename}.py`;
         contentType = 'text/plain';
         break;
 
       case 'mcp':
         content = generateMCPConfigFormat(skillData);
-        filename = `The42Post_${skill.title.replace(/\s+/g, '_')}.json`;
+        filename = `The42Post_${safeFilename}.json`;
         contentType = 'application/json';
         break;
 
       case 'certificate':
         // Certificate is an HTML file
         content = generateCertificateHTML(skillData, skill.soul_hash);
-        filename = `Creator_Certificate_${skill.soul_hash}.html`;
+        filename = `Creator_Certificate_${safeFilename}.html`;
         contentType = 'text/html';
         break;
 
