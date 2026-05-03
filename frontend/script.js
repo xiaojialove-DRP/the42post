@@ -441,9 +441,13 @@ function attachSkillCardListeners() {
       if (btn.disabled) return;
 
       const skillId = btn.dataset.skillId;
-      const skill = findSkillById(skillId);
-
-      if (!skill) return;
+      
+      // NOTE: We don't check if skill exists here because:
+      // 1. The skill might be in a different data source
+      // 2. If it doesn't exist, the backend API will return 404
+      // 3. We let the backend be the source of truth for validation
+      
+      if (!skillId) return;
 
       // Determine new state
       const isCurrentlyStar = starredSkills[skillId];
@@ -506,7 +510,15 @@ function attachSkillCardListeners() {
         console.error('Error updating star:', error);
         // Revert UI on error
         btn.querySelector('.star-icon').textContent = originalIcon;
-        showError('Failed to update star. Please try again.');
+        
+        // Provide specific error messages
+        if (error.message && error.message.includes('404')) {
+          showError('Skill not found. It may have been deleted.');
+        } else if (error.message && error.message.includes('400')) {
+          showError('Invalid request. Please refresh and try again.');
+        } else {
+          showError('Failed to update star. Please check your connection and try again.');
+        }
       } finally {
         btn.disabled = false;
       }
@@ -523,9 +535,12 @@ function attachSkillCardListeners() {
       if (btn.disabled) return;
 
       const skillId = btn.dataset.skillId;
-      const skill = findSkillById(skillId);
-
-      if (!skill) return;
+      
+      if (!skillId) {
+        showError('Invalid skill ID');
+        return;
+      }
+      
       if (!starredSkills[skillId]) {
         showWarning('Please star this skill first to download it');
         return;
