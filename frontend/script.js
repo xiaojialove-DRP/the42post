@@ -281,7 +281,8 @@ const API = {
   }
 };
 
-document.addEventListener('DOMContentLoaded', () => {
+// Consolidate all initialization into a single DOMContentLoaded handler
+function initializeApp() {
   initI18n();
   initSkillGrids();
   initSlotGrid();
@@ -300,7 +301,12 @@ document.addEventListener('DOMContentLoaded', () => {
   initCreativeTriptych();
   initSkillPackageDownload();
   initArchiveBackButton();
-});
+  initSkillDetailModal();
+  // Initialize Dashboard card check after a short delay to ensure DOM is ready
+  setTimeout(checkAndDisplayDashboard, 500);
+}
+
+document.addEventListener('DOMContentLoaded', initializeApp);
 
 /* ═══ SKILL GRIDS ═══ */
 /* ═══ SKILL GRIDS - ENHANCED WITH STAR/DOWNLOAD SYSTEM ═══ */
@@ -479,7 +485,7 @@ function attachSkillCardListeners() {
         btn.querySelector('.star-count').textContent = skill.stars || 0;
 
         // Enable/disable download button
-        const downloadBtn = btn.parentElement.querySelector('.btn-download');
+        const downloadBtn = btn.parentElement?.querySelector('.btn-download');
         if (downloadBtn) {
           if (newStarred) {
             downloadBtn.disabled = false;
@@ -1452,6 +1458,7 @@ function initSlotGrid() {
     e.stopPropagation();
     btn.classList.toggle('lit');
     const countEl = btn.nextElementSibling;
+    if (!countEl) return; // Guard: countEl must exist
     let count = parseInt(countEl.textContent) || 0;
     if (btn.classList.contains('lit')) {
       count++;
@@ -1506,8 +1513,8 @@ function showSkillDetail(skillData) {
   document.body.style.overflow = 'hidden';
 }
 
-// Close skill detail modal
-document.addEventListener('DOMContentLoaded', () => {
+// Initialize skill detail modal close handlers
+function initSkillDetailModal() {
   const overlay = document.getElementById('skillDetailOverlay');
   const closeBtn = document.getElementById('btnCloseSkillDetail');
 
@@ -1535,7 +1542,7 @@ document.addEventListener('DOMContentLoaded', () => {
       document.body.style.overflow = '';
     }
   });
-});
+}
 
 /* ═══ SAND CANVAS (adapted for white background) ═══ */
 function initSandCanvas() {
@@ -2401,7 +2408,6 @@ function initSkillForge() {
   // Handle next button from STEP 2 (with probe selected)
   const btnNextPage2 = document.getElementById('btnNextPage2');
   if (btnNextPage2) {
-    btnNextPage2.removeEventListener('click', null); // Remove old listener
     btnNextPage2.addEventListener('click', () => {
       const skillName = document.getElementById('forgeSkillName');
       if (!skillName || !skillName.value.trim()) {
@@ -4355,10 +4361,12 @@ function showEmailStatusBanner(result, recipientEmail) {
     banner.style.border = '1px solid #ff9800';
     banner.style.color = '#5d2f00';
     const errMsg = (result && result.error) ? result.error : 'Unknown error';
+    // Escape HTML to prevent XSS
+    const escapedErrMsg = String(errMsg).replace(/[<>]/g, m => m === '<' ? '&lt;' : '&gt;');
     banner.innerHTML = `
       <div style="font-weight:600;margin-bottom:4px;">⚠ Email delivery issue</div>
       <div style="opacity:0.9;">We couldn't send to <strong>${recipientEmail}</strong>:</div>
-      <div style="margin:6px 0;padding:6px 8px;background:rgba(0,0,0,0.05);border-radius:4px;font-size:12px;font-family:monospace;word-break:break-word;">${errMsg}</div>
+      <div style="margin:6px 0;padding:6px 8px;background:rgba(0,0,0,0.05);border-radius:4px;font-size:12px;font-family:monospace;word-break:break-word;">${escapedErrMsg}</div>
       <div style="margin-top:6px;font-size:12px;opacity:0.8;">Your skill was still forged successfully. You can download the certificate directly from this page.</div>
       <button style="margin-top:10px;padding:4px 10px;border:none;background:#8d6e63;color:#fff;border-radius:4px;cursor:pointer;font-size:12px;" onclick="this.parentElement.remove()">Dismiss</button>
     `;
@@ -8036,8 +8044,4 @@ function onSkillForgeSuccess(skillData) {
   checkAndDisplayDashboard();
 }
 
-// Run on page load
-document.addEventListener('DOMContentLoaded', () => {
-  // Initialize Dashboard card check after a short delay to ensure DOM is ready
-  setTimeout(checkAndDisplayDashboard, 500);
-});
+// Dashboard initialization is now handled in initializeApp()

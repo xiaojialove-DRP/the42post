@@ -4,7 +4,7 @@
 
 import express from 'express';
 import { db } from '../utils/db.js';
-import { validateFiveLayerSchema, isValidDownloadFormat } from '../utils/validation.js';
+import { validateFiveLayerSchema, isValidDownloadFormat, isValidAnonymousId } from '../utils/validation.js';
 import { v4 as uuidv4 } from 'uuid';
 
 const router = express.Router();
@@ -29,6 +29,14 @@ router.get('/:skillId', async (req, res, next) => {
 
     // Generate anonymous session ID (stored in browser localStorage)
     const anonymousUserId = req.headers['x-anonymous-id'] || null;
+
+    // SECURITY: Validate X-Anonymous-Id if present
+    if (anonymousUserId && !isValidAnonymousId(anonymousUserId)) {
+      return res.status(400).json({
+        error: 'Invalid anonymous ID format',
+        message: 'X-Anonymous-Id must be a valid UUID or alphanumeric string (max 255 chars)'
+      });
+    }
 
     if (skillResult.rows.length === 0) {
       return res.status(404).json({

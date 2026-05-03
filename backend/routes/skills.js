@@ -5,7 +5,7 @@
 import express from 'express';
 import { db } from '../utils/db.js';
 import { requireAuth, optionalAuth } from '../utils/auth.js';
-import { isValidDomain } from '../utils/validation.js';
+import { isValidDomain, isValidAnonymousId } from '../utils/validation.js';
 
 // Sentinel author for anonymous community forges. The skills.author_id FK
 // still resolves, but the *real* per-user identity lives in
@@ -594,10 +594,18 @@ router.post('/:skill_id/star', async (req, res, next) => {
     const { starred } = req.body;
     const anonymousId = req.headers['x-anonymous-id'] || req.headers['x-anon-id'];
 
+    // SECURITY: Validate X-Anonymous-Id header
     if (!anonymousId) {
       return res.status(400).json({
         error: 'Missing anonymous ID',
         message: 'X-Anonymous-Id header is required'
+      });
+    }
+
+    if (!isValidAnonymousId(anonymousId)) {
+      return res.status(400).json({
+        error: 'Invalid anonymous ID format',
+        message: 'X-Anonymous-Id must be a valid UUID or alphanumeric string (max 255 chars)'
       });
     }
 

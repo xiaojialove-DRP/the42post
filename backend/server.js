@@ -39,6 +39,16 @@ const __dirname = dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// ═══ SECURITY CHECKS ═══
+// CRITICAL: Validate JWT_SECRET is set (but skip in test environment)
+if (process.env.NODE_ENV !== 'test' && !process.env.JWT_SECRET) {
+  console.error('╔════════════════════════════════════════════════════════════╗');
+  console.error('║ FATAL ERROR: JWT_SECRET environment variable is not set   ║');
+  console.error('║ Set JWT_SECRET in your .env file before starting server   ║');
+  console.error('╚════════════════════════════════════════════════════════════╝');
+  process.exit(1);
+}
+
 // ═══ DATABASE SETUP ═══
 // Always use SQLite for now (ignore DATABASE_URL)
 let db;

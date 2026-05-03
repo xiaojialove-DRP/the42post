@@ -161,6 +161,34 @@ export function isValidDownloadFormat(format) {
 }
 
 /**
+ * SECURITY: Validate X-Anonymous-Id header format
+ * Should be a reasonable string (UUID format preferred, but fallback to alphanumeric)
+ * @param {string} id - Anonymous ID from header
+ * @returns {boolean}
+ */
+export function isValidAnonymousId(id) {
+  if (!id || typeof id !== 'string') {
+    return false;
+  }
+
+  // Accept UUID format or alphanumeric with hyphens/underscores
+  // Max length 255 to prevent storage abuse
+  if (id.length > 255) {
+    return false;
+  }
+
+  // UUID format: 550e8400-e29b-41d4-a716-446655440000
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (uuidRegex.test(id)) {
+    return true;
+  }
+
+  // Fallback: alphanumeric with hyphens, underscores (e.g., anonymous-user-001)
+  const alphanumericRegex = /^[a-zA-Z0-9_-]+$/;
+  return alphanumericRegex.test(id);
+}
+
+/**
  * 验证 Email 格式
  * @param {string} email - Email 地址
  * @returns {boolean}

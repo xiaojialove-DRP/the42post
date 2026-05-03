@@ -63,12 +63,14 @@ describe('GET /api/download/:id?format=markdown', () => {
     expect(res.headers['content-type']).toMatch(/text\/markdown/i);
   });
 
-  it('Content-Disposition filename contains the skill title', async () => {
+  it('Content-Disposition filename uses soul_hash for security', async () => {
     const res = await request(app)
       .get(`/api/download/${forgedSkill.id}?format=markdown`)
       .set('X-Anonymous-Id', 'dl-anon-1');
 
-    expect(res.headers['content-disposition']).toMatch(/Download_Test_Skill/);
+    // Filename uses soul_hash (not skill title) to avoid HTTP header encoding issues
+    // with special characters like Chinese. Format: "The42Post_SOUL_<hash>.md"
+    expect(res.headers['content-disposition']).toMatch(/The42Post_SOUL_.*\.md/);
   });
 
   it('markdown body contains the skill title', async () => {

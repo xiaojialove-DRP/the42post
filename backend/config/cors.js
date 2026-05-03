@@ -70,9 +70,13 @@ function isOriginWhitelisted(origin) {
  */
 const corsOptions = {
   origin: (origin, callback) => {
-    // Allow requests with no origin (like mobile apps, Postman, curl requests)
+    // SECURITY: Reject requests with no origin header (prevent bypassing CORS via curl/mobile)
+    // Browser requests MUST include Origin header for cross-origin requests
     if (!origin) {
-      return callback(null, true);
+      // Only allow no-origin for same-origin requests (server-side only)
+      // Cross-origin requests without Origin header are suspicious
+      console.warn('CORS: Rejected request without Origin header');
+      return callback(new Error('CORS: Origin header required for cross-origin requests'));
     }
 
     if (isOriginWhitelisted(origin)) {
