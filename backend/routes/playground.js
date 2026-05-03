@@ -398,7 +398,7 @@ router.post('/vote', rateLimitTwinTest, async (req, res, next) => {
 router.get('/picker', async (req, res, next) => {
   try {
     const { anonymous_id, exclude_domain } = req.query;
-    const limit = Math.min(parseInt(req.query.limit, 10) || 8, 30);
+    const limit = Math.max(1, Math.min(parseInt(req.query.limit, 10) || 8, 30));
 
     let mySkills = [];
     if (anonymous_id && typeof anonymous_id === 'string') {
