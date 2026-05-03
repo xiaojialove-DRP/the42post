@@ -436,6 +436,10 @@ function attachSkillCardListeners() {
     btn.addEventListener('click', async (e) => {
       e.preventDefault();
       e.stopPropagation();
+
+      // RACE CONDITION FIX: Prevent double-click by checking disabled state first
+      if (btn.disabled) return;
+
       const skillId = btn.dataset.skillId;
       const skill = findSkillById(skillId);
 
@@ -514,6 +518,10 @@ function attachSkillCardListeners() {
     btn.addEventListener('click', async (e) => {
       e.preventDefault();
       e.stopPropagation();
+
+      // RACE CONDITION FIX: Prevent double-click
+      if (btn.disabled) return;
+
       const skillId = btn.dataset.skillId;
       const skill = findSkillById(skillId);
 
@@ -1236,19 +1244,30 @@ async function loadSkillsFromDB() {
     console.log(`✅ Loaded ${skills.length} skills from database`);
 
     // 转换数据库技能格式以匹配 SHARED_SKILLS
-    return skills.map(skill => {
-      // Attribution comes from the name the user typed at forge time
-      // (stored as users.username via forge-session). The legacy
-      // `source_agent_id` was a confusing "agent_42"-style label that
-      // made every skill look like it was authored by a bot. We now
-      // surface "creator_<name>" everywhere — both the Archive grid
-      // (formerly the .domain-skill-agent slot) and skill cards.
-      const rawName = (skill.creator_name && skill.creator_name !== 'Anonymous' && skill.creator_name !== 'System')
-        ? skill.creator_name
-        : 'anonymous';
-      const creatorLabel = `creator_${rawName}`;
+    // DATA VALIDATION: Filter and validate API response before using
+    return skills
+      .filter(skill => {
+        // Ensure required fields are present
+        if (!skill || typeof skill !== 'object') return false;
+        if (!skill.id || !skill.title) {
+          console.warn('Skipping malformed skill:', skill);
+          return false;
+        }
+        return true;
+      })
+      .map(skill => {
+        // Attribution comes from the name the user typed at forge time
+        // (stored as users.username via forge-session). The legacy
+        // `source_agent_id` was a confusing "agent_42"-style label that
+        // made every skill look like it was authored by a bot. We now
+        // surface "creator_<name>" everywhere — both the Archive grid
+        // (formerly the .domain-skill-agent slot) and skill cards.
+        const rawName = (skill.creator_name && skill.creator_name !== 'Anonymous' && skill.creator_name !== 'System')
+          ? skill.creator_name
+          : 'anonymous';
+        const creatorLabel = `creator_${rawName}`;
 
-      return {
+        return {
         id: skill.id,
         title: skill.title,
         titleCn: skill.title_cn || skill.title,

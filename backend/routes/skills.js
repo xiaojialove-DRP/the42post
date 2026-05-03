@@ -20,8 +20,11 @@ const router = express.Router();
 // ═══ GET ALL PUBLISHED SKILLS (Public) ═══
 router.get('/', async (req, res, next) => {
   try {
-    const { page = 1, limit = 20, domain, author, search } = req.query;
-    const offset = (page - 1) * limit;
+    // INPUT VALIDATION: Parse and validate pagination parameters
+    const parsedPage = Math.max(1, Math.min(parseInt(req.query.page, 10) || 1, 1000));
+    const parsedLimit = Math.max(1, Math.min(parseInt(req.query.limit, 10) || 20, 100));
+    const { domain, author, search } = req.query;
+    const offset = (parsedPage - 1) * parsedLimit;
 
     // Validate domain against whitelist (prevents SQL injection)
     if (domain && !isValidDomain(domain)) {
@@ -66,7 +69,7 @@ router.get('/', async (req, res, next) => {
     }
 
     query += ` ORDER BY s.published_at DESC LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
-    params.push(limit, offset);
+    params.push(parsedLimit, offset);
 
     const [skillsResult, countResult] = await Promise.all([
       db.query(query, params),
@@ -75,14 +78,14 @@ router.get('/', async (req, res, next) => {
 
     const skills = skillsResult.rows;
     const total = parseInt(countResult.rows[0].count, 10);
-    const totalPages = Math.ceil(total / limit);
+    const totalPages = Math.ceil(total / parsedLimit);
 
     res.json({
       success: true,
       skills,
       pagination: {
-        page: parseInt(page, 10),
-        limit: parseInt(limit, 10),
+        page: parsedPage,
+        limit: parsedLimit,
         total,
         totalPages
       }
@@ -328,7 +331,9 @@ router.post('/', optionalAuth, async (req, res, next) => {
     const client = await db.connect();
 
     try {
-      await client.query('BEGIN');
+      // SECURITY: Use SERIALIZABLE isolation level to prevent race conditions
+      // (e.g., duplicate skill creation if user submits twice)
+      await client.query('BEGIN IMMEDIATE');
 
       // Insert skill (SQLite-compatible: 1/0 for booleans, CURRENT_TIMESTAMP for NOW())
       const skillResult = await client.query(

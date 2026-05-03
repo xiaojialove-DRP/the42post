@@ -203,8 +203,19 @@ startServer();
 // Graceful shutdown
 process.on('SIGTERM', () => {
   console.log('SIGTERM received, shutting down gracefully...');
-  db.end(() => console.log('✓ Database pool closed'));
-  process.exit(0);
+
+  // Wait for database pool to close before exiting
+  db.end(() => {
+    console.log('✓ Database pool closed');
+    process.exit(0);
+  });
+
+  // Force exit after 10 seconds to prevent hanging
+  // if database connection is stuck
+  setTimeout(() => {
+    console.error('⚠ Forced shutdown after timeout - database pool still draining');
+    process.exit(1);
+  }, 10000);
 });
 
 // Export for use in other modules
