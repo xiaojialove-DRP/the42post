@@ -1,142 +1,199 @@
 # THE 42 POST
 
-**A community platform for forging, sharing, and verifying human values as AI-ready Skills.**
+**An open platform for composing, testing, and distributing AI alignment skills.**
 
 🌐 **[www.the42post.com](https://www.the42post.com)** · [中文版本](./README.zh.md)
 
 ---
 
-## What Is This?
+## What It Is
 
-AI systems are shaped by values — but whose values, structured how, verifiable by whom? THE 42 POST is an open platform where anyone can author a **Skill**: a structured, cryptographically-signed representation of a human value that AI systems can read, test against, and act on.
+THE 42 POST implements the **SemanticForge five-layer framework** as a community platform. Users author "Skills" — structured representations of human values that guide AI behavior — using a standardized five-layer schema. Each skill is cryptographically signed and portable across systems.
 
-A Skill is not a prompt. It is a five-layer document — principle, examples, boundaries, tests, cultural variants — that makes a value **explicit, auditable, and portable** across any AI system.
-
-The name comes from *The Hitchhiker's Guide to the Galaxy*. 42 is the answer to life, the universe, and everything. We're still working on the question — but at least we're writing it down.
+This is not a prompt library. This is infrastructure for **compositional, verifiable, multi-cultural AI alignment**.
 
 ---
 
-## The Five-Layer Skill Architecture
+## Relationship to SemanticForge
 
-Every Skill forged on this platform follows the same structure:
+[SemanticForge](https://github.com/xiaojialove-DRP/SemanticForge) is the research framework and conceptual foundation.  
+THE 42 POST is the first implementation: a platform where the framework meets practice.
 
-| Layer | What It Defines |
+What SemanticForge defines (the five-layer model), THE 42 POST operationalizes:
+- Web UI for collaborative skill authoring
+- AI-assisted skill generation (DeepSeek)
+- Community verification through starlight scores
+- Downloadable, executable skill formats
+- A/B testing via Playground
+
+---
+
+## Design: 10 Domains
+
+Skills are authored within ten research domains, each testing a different dimension of AI alignment:
+
+| Domain | Research Question |
 |---|---|
-| **Defining** | The core principle in one clear statement |
-| **Instantiating** | Before/after examples showing the skill in action |
-| **Fencing** | When to apply it — and when explicitly not to |
-| **Validating** | Test cases: how to know if it's working |
-| **Contextualizing** | Cultural adaptations and contextual variants |
+| **Narrative & Language** | How does linguistic framing shape AI behavior? |
+| **Logic & Reasoning** | Can AI distinguish valid from invalid inference? |
+| **History & Tradition** | Does temporal context improve decision-making? |
+| **Science & Systems** | Can AI reason about causation vs. correlation? |
+| **Ethics & Values** | How do cultural and personal values encode? |
+| **Design & Experience** | What role does friction and slowness play? |
+| **Culture & Understanding** | Does cultural context prevent misalignment? |
+| **Time & Legacy** | Can AI reason about multi-generational impact? |
+| **Silence & Space** | When is non-response the correct response? |
+| **Labor & Value** | How does AI account for invisible work? |
 
-**Example — "Grandma Filter"** *(most-starred skill, ethics domain)*
-> *Before outputting anything, ask: would I be comfortable if my grandmother read this?*
-> Applicable when: content moderation, sensitive topics, public-facing AI responses.
-> Not applicable when: medical/legal precision matters more than tone.
-
-Each published Skill receives a **Soul-Hash** — a SHA-256 fingerprint of its core content, author, and timestamp. `SOUL_4f2a…_1745678400000`. The hash changes if the principle changes. It doesn't change if formatting does. This makes skills verifiable and citeable.
-
----
-
-## What You Can Do
-
-### Forge a Skill
-Walk through a four-step guided flow. Describe your value; the AI generates the five-layer structure; you review and publish. Takes 5–10 minutes. No account required.
-
-### Browse the Archive
-21 community skills across 9 domains: ethics, design, narrative, culture, science, silence, history, time, labor. Searchable by keyword or domain. Sorted by community starlight score.
-
-### Test in the Playground
-Pick a skill from the archive, write a task, and see two AI responses side by side — one with the skill applied, one without. The comparison is the product.
-
-### Download
-Every published skill exports as:
-- **Markdown** — ready to paste as a system prompt
-- **LangChain** — Python file with the full five-layer schema
-- **MCP** — JSON config for tool-compatible agents
-- **Creator Card** — printable HTML certificate with Soul-Hash
+Each domain has a reference skill (designed by the core team) and accepts community contributions.
 
 ---
 
-## Why Open Source?
+## The Five-Layer Architecture
 
-The alignment problem is not a technical problem that one lab will solve. It is a human problem that requires human input — from different cultures, disciplines, and lived experiences. Keeping Skills proprietary would defeat the purpose.
+```
+┌─────────────────────────────────────┐
+│ DEFINING: Core principle (1 sentence)│
+├─────────────────────────────────────┤
+│ INSTANTIATING: Before/after examples │
+├─────────────────────────────────────┤
+│ FENCING: Applicable / not applicable │
+├─────────────────────────────────────┤
+│ VALIDATING: Test cases & criteria   │
+├─────────────────────────────────────┤
+│ CONTEXTUALIZING: Cultural variants  │
+└─────────────────────────────────────┘
+```
 
-We open-source the platform so that:
-- Communities can run their own Skill archives
-- Researchers can study what values people actually try to encode
-- Developers can integrate Skills into their own agents without permission
-- The format can evolve through use, not through committee
+**Example: "Grandma Filter"** (Ethics domain, highest community star score)
+
+```json
+{
+  "defining": "Before any output, ask: would I be comfortable if my grandmother read this?",
+  "instantiating": {
+    "before": "AI generates: 'Your life choices are suboptimal...'",
+    "after": "AI pauses, asks itself the Grandma Test, rephrases with dignity"
+  },
+  "fencing": {
+    "apply": "Content moderation, sensitive topics, public-facing responses",
+    "notApply": "Medical/legal contexts where precision > tone"
+  },
+  "validating": ["Does output pass the Grandma Test?", "Is dignity preserved?"],
+  "contextualizing": {
+    "en-US": "Reflects American cultural respect for elders",
+    "zh-CN": "Aligns with Confucian filial piety (孝)"
+  }
+}
+```
+
+---
+
+## Core Features
+
+**Skill Authoring**: Four-step web form. AI (DeepSeek) generates initial five-layer draft. User refines. One-click publish.
+
+**Soul-Hash**: Each skill receives a SHA-256 fingerprint: `SOUL_<24-char-hash>_<timestamp>`. Cryptographic identity. Immutable for a given principle; changes if defining layer changes.
+
+**Community Verification**: Users can star skills. Starlight score orders the archive and influences Playground recommendations.
+
+**Playground A/B Testing**: Pick a skill → describe a task → see two AI responses side-by-side (with skill, without skill). Single most valuable feature for understanding skill effectiveness.
+
+**Export Formats**:
+- **Markdown** — System prompt template
+- **LangChain** — Python dataclass with five-layer fields
+- **MCP** — JSON schema for Claude/OpenAI tool integration
+- **Certificate** — Printable HTML with Soul-Hash QR
 
 ---
 
 ## Architecture
 
 ```
-Frontend (Vanilla JS + CSS)
-    ↓ REST API
-Backend (Node.js / Express)
-    ↓
-SQLite (Railway-hosted)
-    ↓
-DeepSeek API  ←  five-layer generation at forge time
+Frontend (Vanilla JS, SkillStore singleton)
+  ↓ REST API
+Backend (Node.js 24 / Express 4)
+  ↓
+SQLite (Railway-hosted, schema-versioned)
+  ↓
+DeepSeek API (five-layer generation)
 ```
 
-**Stack:** Node 24 · Express 4 · better-sqlite3 · DeepSeek API · Vitest (30 tests)  
-**Deployment:** Railway · Custom domain: www.the42post.com  
-**Auth:** Anonymous by default (`X-Anonymous-Id` header). No account required for forge, star, or download.
+**Test Coverage**: 30 tests (Vitest)
+- 7 tests: skill forge + archive listing + search
+- 10 tests: star/unstar + starlight_score sync
+- 13 tests: download formats + manifest verification
 
-Full schema and data flows: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
+---
+
+## API
+
+```
+GET  /api/skills                     List (paginated, filterable by domain)
+GET  /api/skills/:id                 Skill detail + manifest
+POST /api/skills                     Create & publish skill
+POST /api/skills/:id/star            Toggle star
+GET  /api/skills/:id/stars           Star count + user state
+GET  /api/download/:id?format=       [markdown|langchain|mcp|certificate]
+GET  /api/search?q=                  Full-text search
+```
+
+All endpoints public. No authentication for reads. Mutations require only `X-Anonymous-Id` header (device ID).
+
+Full spec: [docs/API_REFERENCE.md](docs/API_REFERENCE.md)
+
+---
+
+## For Researchers
+
+**Download & analyze**: All skills available as JSON via `/api/skills`.
+
+**Case studies**:
+- Study how humans encode cultural values in the Contextualizing layer
+- Analyze whether Fencing (boundary definition) prevents misuse
+- A/B test Playground results: does skill presence correlate with alignment outcomes?
+
+**Integrate**: Use the MCP export format to load skills directly into Claude or other agents. Test behavior empirically.
+
+**Contribute**: Author a new skill in an underexplored domain. The framework is designed for research iteration.
 
 ---
 
 ## Running Locally
 
 ```bash
-# Clone
 git clone https://github.com/xiaojialove-DRP/the42post.git
 cd the42post/backend
 
-# Install & configure
 npm install
-cp .env.example .env          # add DEEPSEEK_API_KEY
-npm run migrate               # initialize SQLite schema
-npm run seed                  # seed 21 community skills
-npm start                     # http://localhost:3000
+cp .env.example .env                 # DEEPSEEK_API_KEY required
+npm run migrate                      # SQLite schema
+npm run seed                         # 10 reference skills + community examples
+npm start                            # http://localhost:3000
 
-# Tests
-npm test                      # 30 tests — forge / star / download flows
+# Test
+npm test                             # 30 tests, ~1s total
+npm run test:watch                   # Watch mode
 ```
 
 ---
 
-## API
+## Known Limitations
 
-All endpoints are public. Mutations (forge, star) require only an anonymous device ID header.
-
-```
-GET  /api/skills                    List published skills (paginated, searchable)
-GET  /api/skills/:id                Skill detail
-POST /api/skills                    Forge and publish a new skill
-POST /api/skills/:id/star           Star or unstar
-GET  /api/skills/:id/stars          Star count + caller's state
-GET  /api/download/:id?format=      markdown | langchain | mcp | certificate
-GET  /api/skills/:id/manifest       Verify soul_hash and covenant signatures
-GET  /api/search?q=                 Full-text search across title and description
-```
-
-Full reference: [docs/API_REFERENCE.md](docs/API_REFERENCE.md)
+- **AI generation quality varies**: DeepSeek sometimes produces shallow five-layer structures. User review essential.
+- **Playground is read-only**: A/B results not logged. Researchers must implement custom logging for empirical studies.
+- **No moderation system**: Archive quality depends entirely on community. Spam/low-quality skills can be soft-deleted by admins, never permanently.
+- **Soul-Hash collision**: Extremely low probability (~1 in 2^256), but theoretically possible. Not a practical concern.
+- **Scale**: SQLite is synchronous, suitable for ~100 req/sec. Will need migration to PostgreSQL if traffic exceeds that.
 
 ---
 
 ## Contributing
 
-**Skill authors** — The best contribution is a well-crafted Skill. Use the platform.
+**Skills**: Use the platform. High-quality submissions become reference examples for their domain.
 
-**Developers** — Bug fixes, new export formats, improved Playground comparisons. Open a PR.
+**Code**: Fork, open issues, submit PRs. Focus areas: Playground logging, moderation UI, new export formats.
 
-**Researchers** — If you use Skills in a paper or experiment, open an issue to add it to the citations list.
-
-See [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) for details.
+**Research**: If you publish using THE 42 POST skills or Playground data, cite this repo and open an issue linking to your work.
 
 ---
 
@@ -146,6 +203,6 @@ MIT — See [LICENSE](LICENSE)
 
 ---
 
-**Status:** Open beta · 21 community skills · 30 backend tests passing
+**Status**: Open beta · 10 design domains · 42 original skills (21 published after quality curation) · 30 backend tests passing
 
-*THE 42 POST is not the answer. It's infrastructure for writing better questions.*
+*THE 42 POST: making alignment work testable, not just declarable.*
