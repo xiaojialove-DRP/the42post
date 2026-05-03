@@ -1258,17 +1258,23 @@ async function loadSkillsFromDB() {
         starlight: skill.starlight_score || 0,
         stars: skill.starlight_score || 0,   // alias so card renders using skill.stars always work
         downloads: skill.download_count || 0,
+        soul_hash: skill.soul_hash || null,
         domain: skill.domain || 'ideas',
         author: creatorLabel,
         commercial: skill.commercial_use || 'authorized',
         remix: skill.remix_allowed ? 'share-alike' : 'no',
-        five_layer: {
-          defining: skill.five_layer ? JSON.parse(skill.five_layer).defining : '',
-          instantiating: skill.five_layer ? JSON.parse(skill.five_layer).instantiating : '',
-          fencing: skill.five_layer ? JSON.parse(skill.five_layer).fencing : '',
-          validating: skill.five_layer ? JSON.parse(skill.five_layer).validating : [],
-          contextualizing: skill.five_layer ? JSON.parse(skill.five_layer).contextualizing : ''
-        }
+        five_layer: (() => {
+          try {
+            const fl = skill.five_layer ? JSON.parse(skill.five_layer) : {};
+            return {
+              defining: fl.defining || '',
+              instantiating: fl.instantiating || '',
+              fencing: fl.fencing || '',
+              validating: fl.validating || [],
+              contextualizing: fl.contextualizing || ''
+            };
+          } catch { return { defining: '', instantiating: '', fencing: '', validating: [], contextualizing: '' }; }
+        })()
       };
     });
   } catch (error) {
@@ -7408,37 +7414,8 @@ async function initAgentArchiveView() {
         ${html}
       `;
       grid.appendChild(cell);
-    
-
-  // ═══ STEP 2.5: Ready to Forge → STEP 2 ═══
-  const btnProceedToPublish = document.querySelector('[data-next="3"]');
-  if (btnProceedToPublish) {
-    btnProceedToPublish.addEventListener('click', () => {
-      goToStep(2);
-    });
-  }
-  
-  // ═══ STEP 2: Confirm Generated Skill ═══
-  const btnConfirmSkill = document.getElementById('btnConfirmSkill');
-  if (btnConfirmSkill) {
-    btnConfirmSkill.addEventListener('click', () => {
-      // 保存用户的确认
-      if (window.forgeData && window.forgeData.generatedSkill) {
-        console.log('✓ 用户确认了自动生成的技能');
-        goToStep(3); // 进入STEP 3: PUBLISH
-      }
-    });
-  }
-  
-  const btnAdjust = document.getElementById('btnAdjust');
-  if (btnAdjust) {
-    btnAdjust.addEventListener('click', () => {
-      alert('微调功能开发中 / Adjust feature coming soon');
-    });
-  }
-
-});
-  }
+    }); // end ARCHIVE_DOMAINS.forEach
+  } // end initDomainGrid
   
   // Initialize
   resizeCanvas();
@@ -7529,25 +7506,42 @@ function attachTop42SkillListeners() {
     // Star button
     const starBtn = cell.querySelector('.star-btn');
     if (starBtn) {
-      starBtn.addEventListener('click', (e) => {
+      starBtn.addEventListener('click', async (e) => {
         e.stopPropagation();
         const starredSkills = JSON.parse(localStorage.getItem('starred_skills') || '{}');
         const isStarred = starredSkills[skillId] === true;
+        const newStarred = !isStarred;
 
-        if (isStarred) {
-          delete starredSkills[skillId];
-          starBtn.classList.remove('starred');
-          skill.starlight = (skill.starlight || 0) - 1;
-        } else {
+        // Optimistic UI update
+        if (newStarred) {
           starredSkills[skillId] = true;
           starBtn.classList.add('starred');
           skill.starlight = (skill.starlight || 0) + 1;
+          skill.stars = skill.starlight;
+        } else {
+          delete starredSkills[skillId];
+          starBtn.classList.remove('starred');
+          skill.starlight = Math.max(0, (skill.starlight || 0) - 1);
+          skill.stars = skill.starlight;
         }
-
         localStorage.setItem('starred_skills', JSON.stringify(starredSkills));
-        // Update the display
         const starDisplay = cell.querySelector('.top42-skill-meta .top42-skill-meta-item:first-child span');
         if (starDisplay) starDisplay.textContent = skill.starlight || 0;
+
+        // Sync to backend so starlight_score stays accurate
+        try {
+          const resp = await fetch(`${ApiClient.BASE_URL}/skills/${skillId}/star`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-Anonymous-Id': getAnonymousId() },
+            body: JSON.stringify({ starred: newStarred })
+          });
+          if (resp.ok) {
+            const result = await resp.json();
+            skill.starlight = result.totalStars;
+            skill.stars = result.totalStars;
+            if (starDisplay) starDisplay.textContent = skill.starlight;
+          }
+        } catch (err) { console.warn('Star sync failed (local state preserved):', err.message); }
       });
 
       // Check if already starred

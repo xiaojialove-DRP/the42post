@@ -260,7 +260,7 @@ router.post('/feedback', async (req, res, next) => {
     if (!FEEDBACK_RATINGS.has(rating)) {
       return res.status(400).json({
         error: 'Invalid input',
-        message: 'rating must be "better", "neutral" or "no_diff"'
+        message: 'rating must be "better", "worse", or "no_diff"'
       });
     }
 

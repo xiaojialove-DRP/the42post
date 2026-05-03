@@ -61,8 +61,8 @@ router.get('/', async (req, res, next) => {
       query += ` AND (s.title ILIKE $${paramIndex} OR s.description ILIKE $${paramIndex})`;
       countQuery += ` AND (s.title ILIKE $${paramIndex} OR s.description ILIKE $${paramIndex})`;
       const searchTerm = `%${search}%`;
-      params.push(searchTerm, searchTerm);
-      paramIndex += 2;
+      params.push(searchTerm); // one placeholder ($N), one value
+      paramIndex += 1;
     }
 
     query += ` ORDER BY s.published_at DESC LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
@@ -271,10 +271,10 @@ router.post('/', optionalAuth, async (req, res, next) => {
       });
     }
 
-    if (!five_layer) {
+    if (!five_layer || (typeof five_layer === 'object' && Object.keys(five_layer).length === 0)) {
       return res.status(400).json({
         error: 'Missing input',
-        message: 'five_layer is required'
+        message: 'five_layer is required and must not be empty'
       });
     }
 
@@ -662,6 +662,12 @@ router.post('/:skill_id/star', async (req, res, next) => {
     );
 
     const starCount = parseInt(countResult.rows[0].star_count) || 0;
+
+    // Keep skills.starlight_score in sync so archive/picker ordering reflects real stars
+    await db.query(
+      `UPDATE skills SET starlight_score = $1 WHERE id = $2`,
+      [starCount, skill_id]
+    );
 
     res.json({
       success: true,
