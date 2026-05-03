@@ -278,12 +278,8 @@ router.post('/', optionalAuth, async (req, res, next) => {
       });
     }
 
-    if (!['shadow_agent', 'direct_knight'].includes(forge_mode)) {
-      return res.status(400).json({
-        error: 'Invalid forge_mode',
-        message: 'forge_mode must be "shadow_agent" or "direct_knight"'
-      });
-    }
+    // forge_mode: agents removed from product, use default value for DB compatibility
+    const resolvedForgeMode = forge_mode || 'standard';
 
     // Validate domain against whitelist (prevents SQL injection)
     if (domain && !isValidDomain(domain)) {
@@ -319,7 +315,7 @@ router.post('/', optionalAuth, async (req, res, next) => {
       id: skillId,
       title: title.trim(),
       title_cn,
-      forge_mode,
+      forge_mode: resolvedForgeMode,
       five_layer,
       commercial_use,
       remix_allowed
@@ -346,7 +342,7 @@ router.post('/', optionalAuth, async (req, res, next) => {
         [
           skillId, userId, title.trim(), title_cn || null, description || null, description_cn || null,
           domain || 'ideas', soul_hash, JSON.stringify(five_layer),
-          forge_mode, source_agent_id || null, commercial_use || 'authorized',
+          resolvedForgeMode, source_agent_id || null, commercial_use || 'authorized',
           remix_allowed === false ? 0 : 1,
           applicable_when || null,
           disallowed_uses || null,
