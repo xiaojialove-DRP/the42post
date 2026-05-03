@@ -7315,11 +7315,13 @@ async function initAgentArchiveView() {
     sorted.forEach((s, i) => {
       const row = document.createElement('div');
       row.className = 'honor-row';
+      // Extract creator name (fallback to anonymous)
+      const creatorName = s.creatorName || s.creator?.replace('creator_', '') || 'anonymous';
       row.innerHTML = `
         <span class="honor-rank">#${String(i + 1).padStart(2, '0')}</span>
-        <span class="honor-star">★${s.starlight}</span>
         <span class="honor-name">${s.title}</span>
-        <span class="honor-starlight">#${s.id}</span>
+        <span class="honor-creator">by ${creatorName}</span>
+        <span class="honor-stars">★${s.starlight || 0}</span>
       `;
       row.addEventListener('click', () => {
         const ni = nodes.findIndex(n => n.id === s.id);
@@ -7390,6 +7392,17 @@ async function initAgentArchiveView() {
           </div>`;
       }).join('');
 
+      // DEBUG: Log the first skill to verify descriptions are present
+      if (domSkills.length > 0) {
+        const firstSkill = domSkills[0];
+        console.log(`🔍 DEBUG: Domain "${dom.key}" first skill:`, {
+          title: firstSkill.title,
+          description: firstSkill.description,
+          desc: firstSkill.desc,
+          id: firstSkill.id
+        });
+      }
+
       for (let i = 0; i < openSeats; i++) {
         html += `
           <div class="domain-skill domain-open-seat">
@@ -7407,8 +7420,25 @@ async function initAgentArchiveView() {
       `;
       grid.appendChild(cell);
     }); // end ARCHIVE_DOMAINS.forEach
+
+    // DEBUG: Check if descriptions are actually rendered in the DOM
+    setTimeout(() => {
+      const descElements = document.querySelectorAll('.domain-skill-desc');
+      if (descElements.length > 0) {
+        const firstDesc = descElements[0];
+        console.log(`🔍 DEBUG: First .domain-skill-desc element:`, {
+          textContent: firstDesc.textContent,
+          innerHTML: firstDesc.innerHTML,
+          className: firstDesc.className,
+          computedDisplay: window.getComputedStyle(firstDesc).display,
+          computedColor: window.getComputedStyle(firstDesc).color
+        });
+      } else {
+        console.log('🔍 DEBUG: No .domain-skill-desc elements found!');
+      }
+    }, 100);
   } // end initDomainGrid
-  
+
   // Initialize
   resizeCanvas();
   window.addEventListener('resize', () => { resizeCanvas(); initNodes(); });

@@ -6077,7 +6077,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 
 .honor-row {
   display: grid;
-  grid-template-columns: 32px 40px 1fr 40px;
+  grid-template-columns: 32px 1fr 80px 35px;
   align-items: center;
   padding: 10px 14px;
   font-size: 10px;
@@ -6117,10 +6117,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 }
 
 .honor-starlight {
-  color: #8a7a6e;
-  text-align: right;
-  font-size: 8px;
-  min-width: 40px;
+  display: none; /* Hide UUID/ID - not needed for user display */
 }
 
 /* ═══ ZOOM CONTROLS ═══ */
@@ -9956,4 +9953,47 @@ h1, h2, h3, h4, h5, h6 {
 .archive-section-title,
 .skills-grid h3 {
   font-family: var(--font-serif-cn-heading);
+}
+
+/* Honor List Details - Name and Description */
+.honor-details {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  overflow: hidden;
+}
+
+.honor-name {
+  font-weight: 600;
+  font-size: 11px;
+  color: #2c2420;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.honor-desc {
+  font-size: 9px;
+  color: #8a7a6e;
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.honor-creator {
+  font-size: 9px;
+  color: #a89a8e;
+  white-space: nowrap;
+  text-align: right;
+}
+
+.honor-stars {
+  font-size: 10px;
+  color: #d4a574;
+  font-weight: 600;
+  text-align: right;
+  white-space: nowrap;
 }
