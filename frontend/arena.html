@@ -2039,17 +2039,12 @@
       }
 
       // Spawn the new card with bottom-fly-in animation
+      // Keep the old card on canvas — supports the existing "stacking cards" play pattern
       const newCard = spawnTwinTestCard(task, repo);
       if (newCard) {
         newCard.classList.add('fly-in-from-bottom');
         setTimeout(() => newCard.classList.remove('fly-in-from-bottom'), 600);
       }
-
-      // Close current card after a short delay (smooth transition)
-      setTimeout(() => {
-        currentCard.classList.add('minimizing');
-        setTimeout(() => { currentCard.remove(); checkEmpty(); }, 300);
-      }, 100);
     }
 
     /* ── Global drag and resize handlers ── */
