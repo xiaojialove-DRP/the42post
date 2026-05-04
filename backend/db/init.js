@@ -6,15 +6,14 @@ import { db } from '../server.js';
 
 export async function initDatabase() {
   try {
-    // UUID extension only needed for PostgreSQL, skip for SQLite
-    // SQLite generates UUIDs via randomblob() in the adapter layer
-    if (process.env.DATABASE_URL && process.env.DATABASE_URL.startsWith('postgresql')) {
-      try {
-        await db.query('CREATE EXTENSION IF NOT EXISTS "uuid-ossp"');
-      } catch (e) {
-        console.warn('Could not create uuid-ossp extension:', e.message);
-      }
-    }
+    // NOTE: server.js forces SQLite ("Always use SQLite for now"), so even
+    // when Railway provides a postgresql:// DATABASE_URL we run on SQLite.
+    // SQLite has no CREATE EXTENSION concept (UUIDs handled in adapter
+    // layer via randomblob/v4 helpers), so this block is intentionally
+    // disabled. If we ever flip back to real PostgreSQL, restore the
+    // CREATE EXTENSION call AND gate it on the actual db.dialect, not
+    // DATABASE_URL.
+    // (Was: CREATE EXTENSION IF NOT EXISTS "uuid-ossp" — now disabled.)
 
     // Create users table
     await db.query(`
