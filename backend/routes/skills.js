@@ -302,17 +302,27 @@ router.post('/', optionalAuth, async (req, res, next) => {
 
     // Get user info for manifest creation. For anonymous forges this
     // resolves to the sentinel row inserted by initDatabase().
-    const userResult = await db.query(
+    let userResult = await db.query(
       'SELECT id, email, username, account_type FROM users WHERE id = $1',
       [userId]
     );
 
+    // Fallback: if authenticated user no longer exists in DB (e.g. DB was reset
+    // but client still holds an old JWT), gracefully fall back to anonymous
+    // sentinel rather than rejecting the forge. The user's creatorName /
+    // anonymousId still preserves attribution.
+    if (userResult.rows.length === 0 && !isAnonymous) {
+      console.warn(`[skills.create] Stale JWT — userId ${userId} not found, falling back to anonymous sentinel`);
+      userResult = await db.query(
+        'SELECT id, email, username, account_type FROM users WHERE id = $1',
+        [ANONYMOUS_AUTHOR_ID]
+      );
+    }
+
     if (userResult.rows.length === 0) {
       return res.status(404).json({
         error: 'User not found',
-        message: isAnonymous
-          ? 'Anonymous author sentinel missing — server not fully initialised'
-          : 'Authenticated user not found'
+        message: 'Anonymous author sentinel missing — server not fully initialised'
       });
     }
 
