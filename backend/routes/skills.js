@@ -38,7 +38,13 @@ router.get('/', async (req, res, next) => {
     // typed at forge time (stored as users.username via forge-session
     // auto-provision). Frontend uses this for the "creator_<name>" badge
     // on Archive cards instead of the legacy "agent_<id>" display.
-    let query = `SELECT s.*, u.username AS creator_name
+    // For anonymous forges, use creator_anonymous_id as the creator name
+    let query = `SELECT s.*,
+                 CASE
+                   WHEN s.author_id = 'anonymous-user-001' AND s.creator_anonymous_id IS NOT NULL
+                   THEN s.creator_anonymous_id
+                   ELSE u.username
+                 END AS creator_name
                  FROM skills s
                  LEFT JOIN users u ON s.author_id = u.id
                  WHERE s.published = true AND s.deleted_at IS NULL`;
@@ -254,7 +260,8 @@ router.post('/', optionalAuth, async (req, res, next) => {
       applicable_when,
       disallowed_uses,
       ready_to_use_prompt,
-      anonymous_id: bodyAnonymousId
+      anonymous_id: bodyAnonymousId,
+      creatorName  // ✅ Creator name for forged skills (user's chosen name)
     } = req.body;
 
     // Logged-in users author with their real id; anonymous community forges
@@ -264,7 +271,8 @@ router.post('/', optionalAuth, async (req, res, next) => {
     // when the user later signs in or out.
     const userId = req.user?.userId || ANONYMOUS_AUTHOR_ID;
     const isAnonymous = !req.user;
-    const anonymousId = bodyAnonymousId || req.headers['x-anonymous-id'] || null;
+    // ✅ Use creatorName if provided (user's chosen creator name), otherwise use device identifier
+    const anonymousId = creatorName || bodyAnonymousId || req.headers['x-anonymous-id'] || null;
 
     // Validation
     if (!title || !title.trim()) {

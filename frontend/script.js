@@ -6007,16 +6007,26 @@ const DAILY_HONORS = [
 /* ═══ RECENTLY FORGED SKILLS STORAGE ═══ */
 function saveForgedSkill(skillData) {
   let recentSkills = JSON.parse(localStorage.getItem('42post_recent_forges') || '[]');
+
+  // Get creator name from skillData or ask user
+  let creatorName = skillData.creatorName || skillData.author || null;
+  if (!creatorName) {
+    // Prompt user for creator name if not provided
+    creatorName = prompt('请输入你的创作者名字 / Enter your creator name:', 'anonymous');
+    if (!creatorName) creatorName = 'anonymous';
+  }
+
   const newSkill = {
     id: 'forged_' + Date.now(),
     title: skillData.title || 'Unnamed Skill',
     titleCn: skillData.titleCn || '未命名技能',
     desc: skillData.desc || '',
     descCn: skillData.descCn || '',
-    agent: skillData.agent || 'shadow_knight_' + Math.random().toString(16).slice(2, 8),
+    agent: `creator_${creatorName}`,  // ✅ Use creator_ prefix for consistency
     domain: skillData.domain || 'ideas',
     soulHash: skillData.soulHash || 'SOUL_' + Math.random().toString(16).slice(2, 10),
-    author: skillData.author || 'Anonymous',
+    author: creatorName,  // ✅ Store actual creator name for display
+    creatorName: creatorName,  // ✅ Also store in creatorName field
     email: skillData.email || '',
     commercial: skillData.commercial || 'authorized',
     remix: skillData.remix || 'share-alike',
