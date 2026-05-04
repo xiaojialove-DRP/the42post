@@ -2424,10 +2424,11 @@ function initSkillForge() {
   let selectedDomain = null;
 
   // Homepage Idea to Forge Pipeline
-  const btnStartForging = document.getElementById("btnStartForging");
-  if (btnStartForging) {
-    btnStartForging.addEventListener("click", () => {
-      const ideaInput = document.getElementById("ideaInput");
+  // Share按钮处理 (btnTest是首页的Share按钮)
+  const btnTest = document.getElementById("btnTest");
+  if (btnTest) {
+    btnTest.addEventListener("click", () => {
+      const ideaInput = document.getElementById("chaosInput");  // 首页输入框的ID是chaosInput
       const creatorNameInput = document.getElementById("creatorNameInput");
       if (!ideaInput || !ideaInput.value.trim()) {
         alert("Please share your idea first");
@@ -5451,8 +5452,30 @@ function initHeadlineHero() {
   // Chat bubble placeholder logic
   const chaosInput = document.getElementById('chaosInput');
   const chatBubblePlaceholder = document.getElementById('chatBubblePlaceholder');
+  const chatBubbleWrap = document.querySelector('.chat-bubble-wrap');
 
   if (chaosInput && chatBubblePlaceholder) {
+    // ═══ 现代对话框交互：点击任何地方激活输入 ═══
+    // 用户体验改进：类似ChatGPT的交互模式
+    const activateInput = () => {
+      chaosInput.focus();
+      chatBubblePlaceholder.classList.add('hidden');
+      if (chatBubbleWrap) chatBubbleWrap.classList.add('is-focused');
+    };
+
+    // 点击placeholder区域激活输入
+    chatBubblePlaceholder.addEventListener('click', activateInput);
+
+    // 点击chat-bubble-wrap的任何地方都能激活输入
+    if (chatBubbleWrap) {
+      chatBubbleWrap.addEventListener('click', (e) => {
+        // 如果点击的是placeholder或footer之外的区域，激活输入
+        if (!e.target.closest('.chat-bubble-footer')) {
+          activateInput();
+        }
+      });
+    }
+
     // ═══ Enhanced Placeholder Management ═══
     // Auto-hide placeholder when user starts typing
     chaosInput.addEventListener('input', () => {

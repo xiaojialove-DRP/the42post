@@ -1387,6 +1387,7 @@ body[data-lang="cn"] .voices-header-text {
 .chat-bubble-wrap:hover {
   border-color: #d0d0d0;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
+  cursor: text;  /* 现代对话框交互：悬停显示文本光标 */
 }
 
 .chat-bubble-wrap:focus-within {
