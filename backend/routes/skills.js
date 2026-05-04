@@ -30,62 +30,57 @@ function detectIsChinese(text) {
 }
 
 async function translateBilingualPair(title, title_cn, description, description_cn) {
-  // Determine if translation is actually needed
-  const titleNeedsTranslation = !title_cn || title_cn === title;
-  const descNeedsTranslation = !description_cn || description_cn === description;
-  const titleCnNeedsEnglish = !title || title === title_cn;
-  const descCnNeedsEnglish = !description || description === description_cn;
-
   // Pick the source language based on what the user actually wrote
   const sourceText = title || title_cn || '';
   const isSourceChinese = detectIsChinese(sourceText);
 
-  // No translation needed if both versions are already distinct
-  if (!titleNeedsTranslation && !descNeedsTranslation && !titleCnNeedsEnglish && !descCnNeedsEnglish) {
-    return { title, title_cn, description, description_cn };
-  }
+  // Always run LLM step now (it does BOTH summarization + translation):
+  // - Long raw input (e.g. user's full idea paragraph) -> 1-sentence concise description
+  // - Single-language input -> bilingual output
 
   try {
     const sourceTitle = isSourceChinese ? (title_cn || title) : (title || title_cn);
-    const sourceDesc = isSourceChinese ? (description_cn || description || '') : (description || description_cn || '');
-    const targetLang = isSourceChinese ? 'English' : 'Chinese (Simplified)';
+    const sourceDescRaw = isSourceChinese ? (description_cn || description || '') : (description || description_cn || '');
 
-    const prompt = `You are a skilled bilingual translator for an AI alignment platform called "THE 42 POST". Translate the following Skill metadata from ${isSourceChinese ? 'Chinese' : 'English'} to ${targetLang}.
+    // Skip LLM if everything is already short, distinct, and bilingual
+    const looksConcise = sourceDescRaw.length > 0 && sourceDescRaw.length <= 120;
+    const alreadyBilingual = title && title_cn && title !== title_cn
+      && description && description_cn && description !== description_cn;
+    if (looksConcise && alreadyBilingual) {
+      return { title, title_cn, description, description_cn };
+    }
 
-Preserve:
-- Tone and intent (philosophical, design-oriented, sometimes playful)
-- Technical terms (Skill, AI, prompt, etc. stay in English in Chinese version)
-- Brevity of titles (do not pad)
+    const prompt = `You curate metadata for skills on "THE 42 POST", an AI alignment platform. Given a Skill's source title and a (possibly long, raw) description, produce a refined bilingual pair.
 
+Rules:
+- Description: ONE sentence, under 100 characters in English (or 40 Chinese chars). Capture the essence, not the full idea. Crisp, evocative, slightly poetic. No marketing fluff.
+- Title: keep brief (under 30 chars). Refine if awkward.
+- Preserve technical terms (Skill, AI, prompt) in English even in Chinese version.
+- Tone: philosophical, design-oriented, sometimes playful — never corporate.
+
+Source language: ${isSourceChinese ? 'Chinese' : 'English'}
 Source title: ${sourceTitle}
-Source description: ${sourceDesc}
+Source description: ${sourceDescRaw}
 
-Return ONLY a JSON object with exactly these two keys:
+Return ONLY this JSON:
 {
-  "title": "translated title",
-  "description": "translated description"
+  "title_en": "concise English title",
+  "title_cn": "简洁中文标题",
+  "description_en": "One crisp English sentence.",
+  "description_cn": "一句精炼的中文描述。"
 }`;
 
-    const result = await callLLMJSON(prompt, 800);
-    const translated = result.data || {};
+    const result = await callLLMJSON(prompt, 600);
+    const out = result.data || {};
 
-    if (isSourceChinese) {
-      return {
-        title: translated.title || title || sourceTitle,
-        title_cn: title_cn || sourceTitle,
-        description: translated.description || description || sourceDesc,
-        description_cn: description_cn || sourceDesc
-      };
-    } else {
-      return {
-        title: title || sourceTitle,
-        title_cn: translated.title || title_cn || sourceTitle,
-        description: description || sourceDesc,
-        description_cn: translated.description || description_cn || sourceDesc
-      };
-    }
+    return {
+      title: out.title_en || title || sourceTitle,
+      title_cn: out.title_cn || title_cn || sourceTitle,
+      description: out.description_en || description || sourceDescRaw,
+      description_cn: out.description_cn || description_cn || sourceDescRaw
+    };
   } catch (err) {
-    console.warn('[skills.translate] Auto-translation failed, keeping original:', err.message);
+    console.warn('[skills.translate] Bilingual refine failed, keeping original:', err.message);
     return { title, title_cn, description, description_cn };
   }
 }
