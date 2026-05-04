@@ -2443,6 +2443,31 @@ function initSkillForge() {
           alert("Your idea is a bit short. Please elaborate. (At least 12 characters)");
         }
         return;
+      }
+      // 字数检查通过，打开forge modal
+      window.homepageIdea = { text: ideaInput.value, creatorName: creatorNameInput ? creatorNameInput.value : "" };
+      overlay.classList.add("active");
+      document.querySelectorAll(".forge-page").forEach(p => p.classList.remove("active"));
+      const forgePage2 = document.getElementById("forgePage2");
+      if (forgePage2) forgePage2.classList.add("active");
+      document.querySelectorAll(".forge-step").forEach((s, i) => {
+        s.classList.remove("active", "completed");
+        if (i < 1) s.classList.add("completed");
+        if (i === 1) s.classList.add("active");
+      });
+      const nativeTextEl = document.getElementById("forgeNativeText");
+      if (nativeTextEl) {
+        nativeTextEl.value = window.homepageIdea.text;
+        setTimeout(() => {
+          const btnAutoStructure = document.getElementById("btnAutoStructure");
+          if (btnAutoStructure) btnAutoStructure.click();
+        }, 300);
+      }
+      ideaInput.value = "";
+      if (creatorNameInput) creatorNameInput.value = "";
+      updateFormMode();
+    });
+  }
 
   // ═══ INTUITION PROBE HANDLERS ═══
   document.querySelectorAll('.probe-btn').forEach(btn => {
@@ -2513,31 +2538,8 @@ function initSkillForge() {
       startFiveLayerAnimation();
     });
   }
-        return;
-      }
-      window.homepageIdea = { text: ideaInput.value, creatorName: creatorNameInput ? creatorNameInput.value : "" };
-      overlay.classList.add("active");
-      document.querySelectorAll(".forge-page").forEach(p => p.classList.remove("active"));
-      const forgePage2 = document.getElementById("forgePage2");
-      if (forgePage2) forgePage2.classList.add("active");
-      document.querySelectorAll(".forge-step").forEach((s, i) => {
-        s.classList.remove("active", "completed");
-        if (i < 1) s.classList.add("completed");
-        if (i === 1) s.classList.add("active");
-      });
-      const nativeTextEl = document.getElementById("forgeNativeText");
-      if (nativeTextEl) {
-        nativeTextEl.value = window.homepageIdea.text;
-        setTimeout(() => {
-          const btnAutoStructure = document.getElementById("btnAutoStructure");
-          if (btnAutoStructure) btnAutoStructure.click();
-        }, 300);
-      }
-      ideaInput.value = "";
-      if (creatorNameInput) creatorNameInput.value = "";
-      updateFormMode();
-    });
-  }  if (!overlay) return;
+
+  if (!overlay) return;
 
   function openForge() {
     // ─── Reset all in-memory forge state so re-entry always starts fresh ───
