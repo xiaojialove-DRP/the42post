@@ -12,10 +12,83 @@ import { isValidDomain, isValidAnonymousId } from '../utils/validation.js';
 // skills.creator_anonymous_id (set from the request body / X-Anonymous-Id
 // header). See backend/db/init.js for where this row is created.
 const ANONYMOUS_AUTHOR_ID = 'anonymous-user-001';
-import { createManifest, addCovenantSignature } from '../utils/skillGeneration.js';
+import { createManifest, addCovenantSignature, callLLMJSON } from '../utils/skillGeneration.js';
 import { v4 as uuidv4 } from 'uuid';
 
 const router = express.Router();
+
+// ─── Bilingual auto-translation helper ───
+// When the client sends only one language (e.g. title and title_cn are
+// identical, indicating the user only wrote in their current language),
+// auto-translate to the other language so the skill renders correctly on
+// both /cn and /en pages. Falls back to the original text on translation
+// failure — better to show duplicated text than to block the publish.
+function detectIsChinese(text) {
+  if (!text || typeof text !== 'string') return false;
+  // Heuristic: presence of any CJK ideograph or fullwidth punctuation
+  return /[一-鿿　-〿＀-￯]/.test(text);
+}
+
+async function translateBilingualPair(title, title_cn, description, description_cn) {
+  // Determine if translation is actually needed
+  const titleNeedsTranslation = !title_cn || title_cn === title;
+  const descNeedsTranslation = !description_cn || description_cn === description;
+  const titleCnNeedsEnglish = !title || title === title_cn;
+  const descCnNeedsEnglish = !description || description === description_cn;
+
+  // Pick the source language based on what the user actually wrote
+  const sourceText = title || title_cn || '';
+  const isSourceChinese = detectIsChinese(sourceText);
+
+  // No translation needed if both versions are already distinct
+  if (!titleNeedsTranslation && !descNeedsTranslation && !titleCnNeedsEnglish && !descCnNeedsEnglish) {
+    return { title, title_cn, description, description_cn };
+  }
+
+  try {
+    const sourceTitle = isSourceChinese ? (title_cn || title) : (title || title_cn);
+    const sourceDesc = isSourceChinese ? (description_cn || description || '') : (description || description_cn || '');
+    const targetLang = isSourceChinese ? 'English' : 'Chinese (Simplified)';
+
+    const prompt = `You are a skilled bilingual translator for an AI alignment platform called "THE 42 POST". Translate the following Skill metadata from ${isSourceChinese ? 'Chinese' : 'English'} to ${targetLang}.
+
+Preserve:
+- Tone and intent (philosophical, design-oriented, sometimes playful)
+- Technical terms (Skill, AI, prompt, etc. stay in English in Chinese version)
+- Brevity of titles (do not pad)
+
+Source title: ${sourceTitle}
+Source description: ${sourceDesc}
+
+Return ONLY a JSON object with exactly these two keys:
+{
+  "title": "translated title",
+  "description": "translated description"
+}`;
+
+    const result = await callLLMJSON(prompt, 800);
+    const translated = result.data || {};
+
+    if (isSourceChinese) {
+      return {
+        title: translated.title || title || sourceTitle,
+        title_cn: title_cn || sourceTitle,
+        description: translated.description || description || sourceDesc,
+        description_cn: description_cn || sourceDesc
+      };
+    } else {
+      return {
+        title: title || sourceTitle,
+        title_cn: translated.title || title_cn || sourceTitle,
+        description: description || sourceDesc,
+        description_cn: translated.description || description_cn || sourceDesc
+      };
+    }
+  } catch (err) {
+    console.warn('[skills.translate] Auto-translation failed, keeping original:', err.message);
+    return { title, title_cn, description, description_cn };
+  }
+}
 
 // ═══ GET ALL PUBLISHED SKILLS (Public) ═══
 router.get('/', async (req, res, next) => {
@@ -246,7 +319,7 @@ router.get('/:skill_id', async (req, res, next) => {
 // ═══ CREATE & PUBLISH SKILL ═══
 router.post('/', optionalAuth, async (req, res, next) => {
   try {
-    const {
+    let {
       title,
       title_cn,
       description,
@@ -263,6 +336,16 @@ router.post('/', optionalAuth, async (req, res, next) => {
       anonymous_id: bodyAnonymousId,
       creatorName  // ✅ Creator name for forged skills (user's chosen name)
     } = req.body;
+
+    // ─── Auto-translate to ensure both language versions exist ───
+    // Frontend often sends title === title_cn (only one language); we
+    // generate the missing version so the skill renders correctly on
+    // both /cn and /en archive pages.
+    const translated = await translateBilingualPair(title, title_cn, description, description_cn);
+    title = translated.title;
+    title_cn = translated.title_cn;
+    description = translated.description;
+    description_cn = translated.description_cn;
 
     // Logged-in users author with their real id; anonymous community forges
     // attach to the sentinel anonymous user. The anonymous_id is recorded
