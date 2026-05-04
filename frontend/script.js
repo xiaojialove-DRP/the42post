@@ -7173,12 +7173,29 @@ async function initAgentArchiveView() {
   // "creator_<name>" label on every skill so the Archive grid no longer
   // shows the legacy "agent_<id>" string.
   baseSkills = baseSkills.map(s => {
-    if (s.agent && /^creator_/.test(s.agent)) return s;
+    // Map DB field names → UI field names so star/download counts render
+    // - starlight_score (DB) → stars + starlight (UI)
+    // - download_count   (DB) → downloads (UI)
+    const stars = s.stars ?? s.starlight_score ?? s.starlight ?? 0;
+    const downloads = s.downloads ?? s.download_count ?? 0;
+    const starlight = s.starlight ?? s.starlight_score ?? stars;
+
+    if (s.agent && /^creator_/.test(s.agent)) {
+      return { ...s, stars, downloads, starlight };
+    }
     const rawName = s.creator_name && s.creator_name !== 'Anonymous' && s.creator_name !== 'System'
       ? s.creator_name
       : (typeof s.agent === 'string' && s.agent && !/^agent_/i.test(s.agent) ? s.agent : 'anonymous');
     const creatorLabel = `creator_${rawName}`;
-    return { ...s, agent: creatorLabel, creator: creatorLabel, creatorName: rawName };
+    return {
+      ...s,
+      agent: creatorLabel,
+      creator: creatorLabel,
+      creatorName: rawName,
+      stars,
+      downloads,
+      starlight
+    };
   });
 
   // Combine published skills with forged skills from localStorage

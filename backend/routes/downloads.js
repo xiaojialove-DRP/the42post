@@ -148,8 +148,8 @@ router.get('/:skillId', async (req, res, next) => {
     // Send content
     res.send(content);
 
-    // ═══ LOG DOWNLOAD (async, non-blocking) ═══
-    // 记录下载日志（不中断下载过程）
+    // ═══ LOG DOWNLOAD + INCREMENT COUNTER (async, non-blocking) ═══
+    // 记录下载日志 + 累加 skills.download_count 让 archive 显示真实数字
     (async () => {
       try {
         await db.query(
@@ -158,14 +158,18 @@ router.get('/:skillId', async (req, res, next) => {
           [
             uuidv4(),
             skillId,
-            anonymousUserId, // 匿名用户ID（来自前端localStorage）
+            anonymousUserId,
             `format: ${format} | ip: ${req.ip} | user-agent: ${req.get('user-agent')}`,
             'download_success'
           ]
         );
+        // Bump the per-skill download counter so the archive UI reflects it
+        await db.query(
+          `UPDATE skills SET download_count = COALESCE(download_count, 0) + 1 WHERE id = $1`,
+          [skillId]
+        );
       } catch (logErr) {
         console.warn('Failed to log download:', logErr.message);
-        // 不中断主流程，日志失败不影响用户
       }
     })();
 

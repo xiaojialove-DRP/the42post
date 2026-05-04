@@ -234,18 +234,19 @@ export async function initDatabase() {
     await db.query(`CREATE INDEX IF NOT EXISTS idx_skill_feedback_skill ON skill_feedback(skill_id)`);
     await db.query(`CREATE INDEX IF NOT EXISTS idx_skill_feedback_rating ON skill_feedback(skill_id, rating)`);
 
-    // ─── Moderation audit columns on skills ───
+    // ─── Moderation audit columns + download counter on skills ───
     // Added in 2026-05; wrapped in try/catch since SQLite errors on
     // duplicate column names (idempotent migration).
-    const moderationCols = [
+    const idempotentColAdds = [
       `ALTER TABLE skills ADD COLUMN moderation_status VARCHAR(30) DEFAULT 'pending'`,
       `ALTER TABLE skills ADD COLUMN moderation_risk_level VARCHAR(20)`,
       `ALTER TABLE skills ADD COLUMN moderation_explanation TEXT`,
       `ALTER TABLE skills ADD COLUMN moderation_categories TEXT`,
       `ALTER TABLE skills ADD COLUMN moderation_decided_at TIMESTAMP`,
-      `ALTER TABLE skills ADD COLUMN moderation_review_required INTEGER DEFAULT 0`
+      `ALTER TABLE skills ADD COLUMN moderation_review_required INTEGER DEFAULT 0`,
+      `ALTER TABLE skills ADD COLUMN download_count INTEGER DEFAULT 0`
     ];
-    for (const sql of moderationCols) {
+    for (const sql of idempotentColAdds) {
       try { await db.query(sql); } catch (e) { /* column exists */ }
     }
     try {
