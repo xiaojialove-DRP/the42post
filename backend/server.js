@@ -92,6 +92,12 @@ db.query('SELECT 1 as test').then(result => {
   process.exit(1);
 });
 
+// ═══ BACKUP SCHEDULER ═══
+// Daily SQLite snapshots with 7-day retention to /app/data/backups/.
+// Protects real user-forged skills against accidental drops/migrations.
+import { startBackupScheduler } from './utils/backupScheduler.js';
+startBackupScheduler(db, dbPath);
+
 // ═══ INITIALIZE CACHING ═══
 console.log('\n═══ Cache System Initialization ═══');
 initializeCache(); // Memory-based cache (Redis optional)
