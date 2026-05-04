@@ -2437,11 +2437,31 @@ function initSkillForge() {
       // ✅ 字数限制检查 (最少12个字)
       const ideaText = ideaInput.value.trim();
       if (ideaText.length < 12) {
-        const isCn = ideaText.match(/[一-龥]/);
-        if (isCn) {
-          alert("你的想法有点简短，能多说一点吗？(至少12个字)");
-        } else {
-          alert("Your idea is a bit short. Please elaborate. (At least 12 characters)");
+        // Show styled warning instead of alert
+        const ethicsResult = document.getElementById('ethicsResult');
+        const ethicsShortText = document.getElementById('ethicsShortText');
+        const ethicsShortMsg = document.getElementById('ethicsShortMsg');
+
+        if (ethicsResult && ethicsShortText && ethicsShortMsg) {
+          // Determine language and set message
+          const isCn = ideaText.match(/[一-龥]/);
+          if (isCn) {
+            ethicsShortMsg.textContent = "你的想法有点简短，能多说一点吗？(至少12个字)";
+          } else {
+            ethicsShortMsg.textContent = "Your idea is a bit short. Please elaborate. (At least 12 characters)";
+          }
+
+          // Show warning with fade animation
+          ethicsResult.classList.add('visible');
+          ethicsShortText.style.display = 'flex';
+          ethicsPass.classList.remove('visible');
+          ethicsFail.classList.remove('visible');
+
+          // Auto-hide warning after 3 seconds
+          setTimeout(() => {
+            ethicsResult.classList.remove('visible');
+            ethicsShortText.style.display = 'none';
+          }, 3000);
         }
         return;
       }
@@ -5596,51 +5616,8 @@ function initHeadlineHero() {
     });
   }
 
-  // Keep old test button if it exists (backward compatibility)
-  if (testBtn && !startForgingBtn) {
-    testBtn.addEventListener('click', () => {
-      const text = chaosInput.value.trim();
-      if (!text) {
-        chaosInput.style.borderColor = 'var(--coral)';
-        setTimeout(() => { chaosInput.style.borderColor = ''; }, 1000);
-        return;
-      }
-
-      // STATE 1 → STATE 2: Show loading and transition
-      testBtn.textContent = '分享中...';
-      testBtn.style.pointerEvents = 'none';
-
-      // Store the idea for use in forge workflow
-      window.shareIdea = text;
-
-      // Fade out the chat bubble input section
-      const chatBubbleWrap = document.querySelector('.chat-bubble-wrap');
-      if (chatBubbleWrap) {
-        chatBubbleWrap.style.opacity = '0';
-        chatBubbleWrap.style.transform = 'translateY(-20px)';
-        chatBubbleWrap.style.transition = 'all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)';
-      }
-
-      // Wait for animation then show confirmation
-      setTimeout(() => {
-        // Hide chat bubble
-        if (chatBubbleWrap) chatBubbleWrap.style.display = 'none';
-
-        // Show confirmation message with fade-in animation
-        ethicsResult.classList.add('visible');
-        ethicsFail.classList.remove('visible');
-        ethicsPass.classList.add('visible');
-
-        // Transition button to success state
-        if (!testBtn.classList.contains('success')) {
-          testBtn.classList.add('success');
-          testBtn.textContent = '✓ 已分享';
-        }
-
-        window.shareIdea = text;
-      }, 600);
-    });
-  }
+  // REMOVED: Duplicate listener - using only the first btnTest listener (lines 2430-2506)
+  // which includes proper character limit validation
 
   // Helper function to open forge and populate with shared idea
   function openForgeFromShareTaste(ideaText) {
