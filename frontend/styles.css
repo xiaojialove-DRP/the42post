@@ -1988,28 +1988,47 @@ body[data-lang="cn"] .voices-header-text {
 }
 .ethics-fail.visible { visibility: visible; opacity: 1; transform: translateY(0); background: var(--paper); }
 
-/* Compact character-limit warning — small toast right under the input */
+/* Character-limit warning — bottom-right toast notification */
 .ethics-result.warning-mode {
-  margin-top: -32px;  /* pull closer to the chat bubble */
+  position: fixed !important;
+  bottom: 24px;
+  right: 24px;
+  left: auto;
+  top: auto;
+  width: auto !important;
+  max-width: 380px !important;
+  z-index: 9999;
+  margin: 0 !important;
 }
 .ethics-short-text {
-  padding: 8px 14px !important;
-  border-radius: 8px !important;
-  gap: 8px !important;
-  width: auto !important;
-  max-width: max-content !important;
-  margin: 0 auto !important;
-  font-size: 13px;
-  box-shadow: 0 2px 8px rgba(107, 157, 92, 0.12);
+  display: flex !important;
+  align-items: flex-start !important;
+  gap: 12px !important;
+  padding: 16px 20px !important;
+  border-radius: 12px !important;
+  background: #f0f9ec !important;
+  border: 1px solid #c5e1b3 !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08), 0 2px 6px rgba(107, 157, 92, 0.12);
+  width: 100%;
+  max-width: 380px;
+  animation: toast-slide-in 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes toast-slide-in {
+  from { opacity: 0; transform: translateX(20px) translateY(8px); }
+  to { opacity: 1; transform: translateX(0) translateY(0); }
 }
 .ethics-short-text .ethics-icon {
-  font-size: 14px;
+  font-size: 16px;
   color: #6b9d5c;
+  flex-shrink: 0;
+  margin-top: 1px;
 }
 .ethics-short-text .ethics-msg {
   font-size: 13px;
-  color: #3d5c33;
-  line-height: 1.4;
+  color: #2d4a23;
+  line-height: 1.55;
+  font-weight: 500;
+  font-family: var(--font-serif);
 }
 
 .ethics-icon {
