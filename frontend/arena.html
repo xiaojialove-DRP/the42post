@@ -1346,6 +1346,38 @@
       0%, 100% { transform: translateY(0); }
       50% { transform: translateY(3px); }
     }
+    /* "换个场景看看效果" — clickable button styled to match the prompt */
+    .twin-thanks-btn {
+      background: transparent; border: none; padding: 8px 16px;
+      font-family: inherit; cursor: pointer;
+      border-radius: 6px;
+      transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+    }
+    .twin-thanks-btn:hover {
+      background: rgba(184, 145, 90, 0.1);
+      color: #6b5a3f;
+      transform: translateY(-1px);
+      animation-play-state: paused;
+    }
+    .twin-thanks-btn:active { transform: translateY(0); }
+
+    /* Friendly farewell after 7 scenarios */
+    .twin-farewell-msg {
+      font-size: 13px; color: #8b7d5f; font-weight: 500;
+      line-height: 1.7;
+      padding: 10px 16px;
+      font-style: italic;
+      letter-spacing: 0.2px;
+    }
+
+    /* New card flies in from the bottom */
+    .task-card.fly-in-from-bottom {
+      animation: fly-in-from-bottom 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes fly-in-from-bottom {
+      from { transform: translateY(100vh) scale(0.92); opacity: 0; }
+      to { transform: translateY(0) scale(1); opacity: 1; }
+    }
     /* Same ink CTA as twin-rate-submit and the trigger button. */
     .twin-action-btn {
       padding: 10px 18px;
@@ -1969,6 +2001,57 @@
       spawnCard(task, repo);
     }
 
+    /* ── "Try Another Scenario" — limited to 7 plays per session ── */
+    let twinScenarioCount = 0; // tracks how many "another scenario" cards user has spawned
+    const TWIN_SCENARIO_LIMIT = 7;
+
+    function handleTryAnotherScenario(currentCard, repo) {
+      const isCn = (typeof currentLang !== 'undefined' && currentLang === 'cn');
+
+      // Reached the limit — show a friendly farewell on the current card
+      if (twinScenarioCount >= TWIN_SCENARIO_LIMIT) {
+        const stageThanks = currentCard.querySelector('.twin-thanks');
+        if (stageThanks) {
+          const actions = stageThanks.querySelector('.twin-thanks-actions');
+          if (actions) {
+            actions.innerHTML = `<div class="twin-farewell-msg">${isCn
+              ? '☕ 你已经体验了 7 个场景，很棒了。先去做点别的事吧～'
+              : '☕ You\'ve explored 7 scenarios — well played. Time for a real-world break.'}</div>`;
+          }
+        }
+        return;
+      }
+
+      twinScenarioCount++;
+
+      // Pick a fresh random task from the same repo (avoid same task as current if possible)
+      let task;
+      if (repo.tasks.length > 1) {
+        const currentTaskTitle = currentCard.querySelector('.twin-scenario-title')?.textContent;
+        const candidates = repo.tasks.filter(t => {
+          const td = getTaskDisplay(t);
+          return td.title !== currentTaskTitle;
+        });
+        const pool = candidates.length > 0 ? candidates : repo.tasks;
+        task = pool[Math.floor(Math.random() * pool.length)];
+      } else {
+        task = repo.tasks[0];
+      }
+
+      // Spawn the new card with bottom-fly-in animation
+      const newCard = spawnTwinTestCard(task, repo);
+      if (newCard) {
+        newCard.classList.add('fly-in-from-bottom');
+        setTimeout(() => newCard.classList.remove('fly-in-from-bottom'), 600);
+      }
+
+      // Close current card after a short delay (smooth transition)
+      setTimeout(() => {
+        currentCard.classList.add('minimizing');
+        setTimeout(() => { currentCard.remove(); checkEmpty(); }, 300);
+      }, 100);
+    }
+
     /* ── Global drag and resize handlers ── */
     document.addEventListener('mousemove', (e) => {
       if (!dragState) return;
@@ -2308,12 +2391,15 @@
             <div class="twin-thanks-headline">${isCn ? '感谢你的反馈！' : 'Thank you for your feedback!'}</div>
             <div class="twin-thanks-stats" data-thanks-stats></div>
             <div class="twin-thanks-actions">
-              <div class="twin-thanks-prompt">${isCn ? '↓ 换个场景看看效果' : '↓ Try different scenarios'}</div>
+              <button type="button" class="twin-thanks-prompt twin-thanks-btn">${isCn ? '↓ 换个场景看看效果' : '↓ Try a different scenario'}</button>
             </div>
           </div>
         </div>
         <div class="card-resize-handle" title="Drag to resize"></div>
       `;
+
+      // Save repo reference for "try another scenario" button
+      card._repo = repo;
 
       // Close button
       card.querySelector('.card-close').addEventListener('click', (e) => {
@@ -2321,6 +2407,15 @@
         card.classList.add('minimizing');
         setTimeout(() => { card.remove(); checkEmpty(); }, 300);
       });
+
+      // "换个场景看看效果" button — spawn a new card from the same repo
+      const tryAnotherBtn = card.querySelector('.twin-thanks-btn');
+      if (tryAnotherBtn) {
+        tryAnotherBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          handleTryAnotherScenario(card, repo);
+        });
+      }
 
       // Interactive elements that must keep their default behaviour
       // (select dropdown opening, link navigation, text input focus, etc.).
