@@ -2462,7 +2462,7 @@ function initSkillForge() {
           }
 
           // Show warning with fade animation - 使用.visible类(不是display)
-          ethicsResult.classList.add('visible');
+          ethicsResult.classList.add('visible', 'warning-mode');
           ethicsShortText.style.display = 'flex';
           ethicsShortText.classList.add('visible');
           if (ethicsPass) ethicsPass.classList.remove('visible');
@@ -2470,7 +2470,7 @@ function initSkillForge() {
 
           // Auto-hide warning after 3 seconds
           setTimeout(() => {
-            ethicsResult.classList.remove('visible');
+            ethicsResult.classList.remove('visible', 'warning-mode');
             ethicsShortText.classList.remove('visible');
             ethicsShortText.style.display = 'none';
           }, 3000);

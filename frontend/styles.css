@@ -1988,6 +1988,30 @@ body[data-lang="cn"] .voices-header-text {
 }
 .ethics-fail.visible { visibility: visible; opacity: 1; transform: translateY(0); background: var(--paper); }
 
+/* Compact character-limit warning — small toast right under the input */
+.ethics-result.warning-mode {
+  margin-top: -32px;  /* pull closer to the chat bubble */
+}
+.ethics-short-text {
+  padding: 8px 14px !important;
+  border-radius: 8px !important;
+  gap: 8px !important;
+  width: auto !important;
+  max-width: max-content !important;
+  margin: 0 auto !important;
+  font-size: 13px;
+  box-shadow: 0 2px 8px rgba(107, 157, 92, 0.12);
+}
+.ethics-short-text .ethics-icon {
+  font-size: 14px;
+  color: #6b9d5c;
+}
+.ethics-short-text .ethics-msg {
+  font-size: 13px;
+  color: #3d5c33;
+  line-height: 1.4;
+}
+
 .ethics-icon {
   font-size: 20px;
   font-weight: 700;
