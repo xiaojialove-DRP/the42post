@@ -2444,25 +2444,61 @@ function initSkillForge() {
         }
         return;
       }
-      // 字数检查通过，打开forge modal
+      // 字数检查通过，显示确认信息然后打开forge
       window.homepageIdea = { text: ideaInput.value, creatorName: creatorNameInput ? creatorNameInput.value : "" };
-      overlay.classList.add("active");
-      document.querySelectorAll(".forge-page").forEach(p => p.classList.remove("active"));
-      const forgePage2 = document.getElementById("forgePage2");
-      if (forgePage2) forgePage2.classList.add("active");
-      document.querySelectorAll(".forge-step").forEach((s, i) => {
-        s.classList.remove("active", "completed");
-        if (i < 1) s.classList.add("completed");
-        if (i === 1) s.classList.add("active");
-      });
-      const nativeTextEl = document.getElementById("forgeNativeText");
-      if (nativeTextEl) {
-        nativeTextEl.value = window.homepageIdea.text;
+
+      // 显示确认✓和文案 (保留: We heard you...)
+      const ethicsResult = document.getElementById('ethicsResult');
+      const ethicsPass = document.getElementById('ethicsPass');
+      if (ethicsResult && ethicsPass) {
+        ethicsResult.classList.add('visible');
+        ethicsPass.classList.add('visible');
+
+        // 延迟1.5秒后自动进入forge流程
         setTimeout(() => {
-          const btnAutoStructure = document.getElementById("btnAutoStructure");
-          if (btnAutoStructure) btnAutoStructure.click();
-        }, 300);
+          ethicsResult.classList.remove('visible');
+          ethicsPass.classList.remove('visible');
+
+          // 打开forge modal
+          overlay.classList.add("active");
+          document.querySelectorAll(".forge-page").forEach(p => p.classList.remove("active"));
+          const forgePage2 = document.getElementById("forgePage2");
+          if (forgePage2) forgePage2.classList.add("active");
+          document.querySelectorAll(".forge-step").forEach((s, i) => {
+            s.classList.remove("active", "completed");
+            if (i < 1) s.classList.add("completed");
+            if (i === 1) s.classList.add("active");
+          });
+          const nativeTextEl = document.getElementById("forgeNativeText");
+          if (nativeTextEl) {
+            nativeTextEl.value = window.homepageIdea.text;
+            setTimeout(() => {
+              const btnAutoStructure = document.getElementById("btnAutoStructure");
+              if (btnAutoStructure) btnAutoStructure.click();
+            }, 300);
+          }
+        }, 1500);
+      } else {
+        // 如果ethics元素不存在，直接打开forge
+        overlay.classList.add("active");
+        document.querySelectorAll(".forge-page").forEach(p => p.classList.remove("active"));
+        const forgePage2 = document.getElementById("forgePage2");
+        if (forgePage2) forgePage2.classList.add("active");
+        document.querySelectorAll(".forge-step").forEach((s, i) => {
+          s.classList.remove("active", "completed");
+          if (i < 1) s.classList.add("completed");
+          if (i === 1) s.classList.add("active");
+        });
+        const nativeTextEl = document.getElementById("forgeNativeText");
+        if (nativeTextEl) {
+          nativeTextEl.value = window.homepageIdea.text;
+          setTimeout(() => {
+            const btnAutoStructure = document.getElementById("btnAutoStructure");
+            if (btnAutoStructure) btnAutoStructure.click();
+          }, 300);
+        }
       }
+
       ideaInput.value = "";
       if (creatorNameInput) creatorNameInput.value = "";
       updateFormMode();
