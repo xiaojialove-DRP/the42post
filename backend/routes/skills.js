@@ -13,6 +13,8 @@ import { isValidDomain, isValidAnonymousId } from '../utils/validation.js';
 // header). See backend/db/init.js for where this row is created.
 const ANONYMOUS_AUTHOR_ID = 'anonymous-user-001';
 import { createManifest, addCovenantSignature, callLLMJSON } from '../utils/skillGeneration.js';
+import { moderateSkill } from '../utils/moderation.js';
+import { rateLimitForge } from '../middleware/rateLimiter.js';
 import { v4 as uuidv4 } from 'uuid';
 
 const router = express.Router();
@@ -312,7 +314,8 @@ router.get('/:skill_id', async (req, res, next) => {
 });
 
 // ═══ CREATE & PUBLISH SKILL ═══
-router.post('/', optionalAuth, async (req, res, next) => {
+// rateLimitForge: 5/hour per identity (caps LLM/DB cost from spam)
+router.post('/', optionalAuth, rateLimitForge, async (req, res, next) => {
   try {
     let {
       title,
@@ -331,6 +334,74 @@ router.post('/', optionalAuth, async (req, res, next) => {
       anonymous_id: bodyAnonymousId,
       creatorName  // ✅ Creator name for forged skills (user's chosen name)
     } = req.body;
+
+    // ─── Safety + Quality Moderation (run BEFORE translation to save cost on rejects) ───
+    // Calls the moderation LLM with a strict review rubric. On REJECT or
+    // REQUIRES_MODIFICATION we return a structured error before spending
+    // tokens on translation/save. On infra failure we fail-open with a
+    // manual-review flag (better UX than blocking).
+    const moderationResult = await moderateSkill({
+      title,
+      description,
+      five_layer,
+      applicable_when,
+      disallowed_uses
+    });
+
+    // Always log the decision, even on APPROVE — gives us an audit trail
+    // for tuning the rubric and catching false negatives later.
+    try {
+      await db.query(
+        `INSERT INTO moderation_logs
+          (id, skill_id, identity, decision, risk_level, violations, explanation,
+           categories, suggested_modifications, review_required,
+           title_snapshot, description_snapshot, created_at)
+         VALUES ($1, NULL, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, CURRENT_TIMESTAMP)`,
+        [
+          uuidv4(),
+          req.user?.userId || req.headers['x-anonymous-id'] || req.ip || 'unknown',
+          moderationResult.decision,
+          moderationResult.risk_level,
+          JSON.stringify(moderationResult.violations || []),
+          moderationResult.explanation || '',
+          JSON.stringify(moderationResult.flagged_categories || []),
+          moderationResult.suggested_modifications || '',
+          moderationResult.review_required ? 1 : 0,
+          (title || '').slice(0, 500),
+          (description || '').slice(0, 1000)
+        ]
+      );
+    } catch (logErr) {
+      // Don't block publish on logging failure
+      console.warn('[moderation] Failed to write audit log:', logErr.message);
+    }
+
+    if (moderationResult.decision === 'REJECT') {
+      return res.status(403).json({
+        error: 'Content moderation: rejected',
+        decision: 'REJECT',
+        risk_level: moderationResult.risk_level,
+        violations: moderationResult.violations,
+        explanation: moderationResult.explanation,
+        flagged_categories: moderationResult.flagged_categories,
+        message_cn: '很抱歉，你的内容暂时无法发布。' + (moderationResult.explanation ? '\n\n原因：' + moderationResult.explanation : ''),
+        message_en: 'Sorry, this content cannot be published.' + (moderationResult.explanation ? '\n\nReason: ' + moderationResult.explanation : '')
+      });
+    }
+
+    if (moderationResult.decision === 'REQUIRES_MODIFICATION') {
+      return res.status(422).json({
+        error: 'Content moderation: needs modification',
+        decision: 'REQUIRES_MODIFICATION',
+        risk_level: moderationResult.risk_level,
+        violations: moderationResult.violations,
+        explanation: moderationResult.explanation,
+        suggested_modifications: moderationResult.suggested_modifications,
+        flagged_categories: moderationResult.flagged_categories,
+        message_cn: '内容需要稍作调整：\n\n' + (moderationResult.suggested_modifications || moderationResult.explanation || ''),
+        message_en: 'Content needs adjustment:\n\n' + (moderationResult.suggested_modifications || moderationResult.explanation || '')
+      });
+    }
 
     // ─── Auto-translate to ensure both language versions exist ───
     // Frontend often sends title === title_cn (only one language); we
@@ -438,8 +509,10 @@ router.post('/', optionalAuth, async (req, res, next) => {
           soul_hash, five_layer, forge_mode, source_agent_id, commercial_use,
           remix_allowed, applicable_when, disallowed_uses,
           creator_anonymous_id, ready_to_use_prompt,
+          moderation_status, moderation_risk_level, moderation_explanation,
+          moderation_categories, moderation_review_required, moderation_decided_at,
           published, published_at
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, 1, CURRENT_TIMESTAMP)`,
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, CURRENT_TIMESTAMP, 1, CURRENT_TIMESTAMP)`,
         [
           skillId, userId, title.trim(), title_cn || null, description || null, description_cn || null,
           domain || 'ideas', soul_hash, JSON.stringify(five_layer),
@@ -448,7 +521,13 @@ router.post('/', optionalAuth, async (req, res, next) => {
           applicable_when || null,
           disallowed_uses || null,
           anonymousId,
-          ready_to_use_prompt || null
+          ready_to_use_prompt || null,
+          // Moderation fields (decision was already APPROVE to reach here)
+          moderationResult.review_required ? 'pending_review' : 'approved',
+          moderationResult.risk_level || 'LOW',
+          moderationResult.explanation || '',
+          JSON.stringify(moderationResult.flagged_categories || []),
+          moderationResult.review_required ? 1 : 0
         ]
       );
 

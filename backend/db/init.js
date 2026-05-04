@@ -235,6 +235,47 @@ export async function initDatabase() {
     await db.query(`CREATE INDEX IF NOT EXISTS idx_skill_feedback_skill ON skill_feedback(skill_id)`);
     await db.query(`CREATE INDEX IF NOT EXISTS idx_skill_feedback_rating ON skill_feedback(skill_id, rating)`);
 
+    // ─── Moderation audit columns on skills ───
+    // Added in 2026-05; wrapped in try/catch since SQLite errors on
+    // duplicate column names (idempotent migration).
+    const moderationCols = [
+      `ALTER TABLE skills ADD COLUMN moderation_status VARCHAR(30) DEFAULT 'pending'`,
+      `ALTER TABLE skills ADD COLUMN moderation_risk_level VARCHAR(20)`,
+      `ALTER TABLE skills ADD COLUMN moderation_explanation TEXT`,
+      `ALTER TABLE skills ADD COLUMN moderation_categories TEXT`,
+      `ALTER TABLE skills ADD COLUMN moderation_decided_at TIMESTAMP`,
+      `ALTER TABLE skills ADD COLUMN moderation_review_required INTEGER DEFAULT 0`
+    ];
+    for (const sql of moderationCols) {
+      try { await db.query(sql); } catch (e) { /* column exists */ }
+    }
+    try {
+      await db.query(`CREATE INDEX IF NOT EXISTS idx_skills_moderation_status ON skills(moderation_status)`);
+      await db.query(`CREATE INDEX IF NOT EXISTS idx_skills_moderation_review ON skills(moderation_review_required) WHERE moderation_review_required = 1`);
+    } catch (e) { /* index exists */ }
+
+    // ─── Moderation audit log (full history of every decision) ───
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS moderation_logs (
+        id TEXT PRIMARY KEY,
+        skill_id TEXT,
+        identity TEXT,
+        decision VARCHAR(40) NOT NULL,
+        risk_level VARCHAR(20),
+        violations TEXT,
+        explanation TEXT,
+        categories TEXT,
+        suggested_modifications TEXT,
+        review_required INTEGER DEFAULT 0,
+        title_snapshot TEXT,
+        description_snapshot TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    await db.query(`CREATE INDEX IF NOT EXISTS idx_moderation_logs_skill ON moderation_logs(skill_id)`);
+    await db.query(`CREATE INDEX IF NOT EXISTS idx_moderation_logs_decision ON moderation_logs(decision)`);
+    await db.query(`CREATE INDEX IF NOT EXISTS idx_moderation_logs_created ON moderation_logs(created_at)`);
+
     console.log('✓ All database tables initialized');
   } catch (error) {
     console.error('Database initialization failed:', error);

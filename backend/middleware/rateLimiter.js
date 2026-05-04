@@ -153,6 +153,55 @@ export const rateLimitTwinTest = (req, res, next) => {
 };
 
 /**
+ * Forge rate limiter — protect skill creation endpoint
+ * 5 publishes per hour per identity (user > anon device > IP).
+ * Each forge triggers translation + moderation LLM calls (paid),
+ * plus DB writes — much more expensive than a normal API request.
+ */
+const FORGE_WINDOW_MS = 60 * 60 * 1000;  // 1 hour
+const FORGE_MAX = 5;
+
+export const rateLimitForge = (req, res, next) => {
+  // Identity precedence: authenticated user > anon device ID > IP
+  const userId = req.user?.userId;
+  const anonId = req.headers['x-anonymous-id'] || req.body?.anonymous_id;
+  const ip = getClientIp(req);
+  const identity = userId ? `user:${userId}` : (anonId ? `anon:${anonId}` : `ip:${ip}`);
+
+  const now = Date.now();
+  const key = 'forge';
+
+  if (!requestTimestamps.has(identity)) {
+    requestTimestamps.set(identity, {});
+  }
+  const data = requestTimestamps.get(identity);
+  if (!data[key]) data[key] = [];
+
+  // Sliding window cleanup
+  data[key] = data[key].filter(ts => now - ts < FORGE_WINDOW_MS);
+
+  if (data[key].length >= FORGE_MAX) {
+    const oldestTs = data[key][0];
+    const resetSec = Math.ceil((oldestTs + FORGE_WINDOW_MS - now) / 1000);
+    return res.status(429).json({
+      error: 'Rate limit exceeded',
+      message_cn: `你已经在 1 小时内创建了 ${FORGE_MAX} 个 Skill。请稍后再来创作 ☕️`,
+      message_en: `You've created ${FORGE_MAX} Skills in the past hour. Please come back later ☕️`,
+      retryAfter: resetSec,
+      limit: FORGE_MAX,
+      window_seconds: Math.floor(FORGE_WINDOW_MS / 1000)
+    });
+  }
+
+  data[key].push(now);
+  res.set('X-RateLimit-Limit-Forge', FORGE_MAX);
+  res.set('X-RateLimit-Remaining-Forge', FORGE_MAX - data[key].length);
+  res.set('X-RateLimit-Reset-Forge', String(Math.ceil((now + FORGE_WINDOW_MS) / 1000)));
+
+  next();
+};
+
+/**
  * Cleanup old IPs from memory periodically (every 10 minutes)
  * This prevents unbounded memory growth
  */

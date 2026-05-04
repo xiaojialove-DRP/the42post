@@ -4247,12 +4247,33 @@ function initSkillForge() {
             const errorData = await response.json().catch(() => ({}));
             console.error('Backend skill save failed:', errorData);
             const isCn = (typeof currentLang !== 'undefined' && currentLang === 'cn');
-            alert((isCn
-              ? '保存失败: '
-              : 'Save failed: ') + (errorData.message || response.statusText) +
-              (isCn
-                ? '\n\n你的草稿已保留。下次打开时可以恢复。'
-                : '\n\nYour draft has been saved. You can restore it next time.'));
+
+            // ─── Specialized handling for moderation + rate-limit responses ───
+            // The backend returns localized message_cn / message_en for these.
+            let userMessage;
+            if (response.status === 429) {
+              // Rate limited
+              userMessage = isCn
+                ? (errorData.message_cn || '操作太频繁了，请稍后再试。')
+                : (errorData.message_en || 'Too many requests, please try again later.');
+            } else if (response.status === 403 && errorData.decision === 'REJECT') {
+              // Moderation rejected — content cannot be published
+              userMessage = isCn
+                ? (errorData.message_cn || '内容审核未通过。')
+                : (errorData.message_en || 'Content moderation: rejected.');
+            } else if (response.status === 422 && errorData.decision === 'REQUIRES_MODIFICATION') {
+              // Moderation says: needs adjustment, return suggested fix
+              userMessage = isCn
+                ? (errorData.message_cn || '内容需要稍作调整。')
+                : (errorData.message_en || 'Content needs adjustment.');
+            } else {
+              // Generic save failure (5xx, network, etc.)
+              userMessage = (isCn ? '保存失败: ' : 'Save failed: ') + (errorData.message || response.statusText) +
+                (isCn
+                  ? '\n\n你的草稿已保留。下次打开时可以恢复。'
+                  : '\n\nYour draft has been saved. You can restore it next time.');
+            }
+            alert(userMessage);
             publishBtn.textContent = '⚔ PUBLISH & FORGE';
             publishBtn.style.pointerEvents = 'auto';
             return;
