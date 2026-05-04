@@ -2004,6 +2004,9 @@
     /* ── "Try Another Scenario" — limited to 7 plays per session ── */
     let twinScenarioCount = 0; // tracks how many "another scenario" cards user has spawned
     const TWIN_SCENARIO_LIMIT = 7;
+    // Per-repo set of scenario titles already shown via "try another", so each
+    // new card pulls from the unused pool. Resets when the pool is exhausted.
+    const usedTaskTitlesByRepo = new Map();
 
     function handleTryAnotherScenario(currentCard, repo) {
       const isCn = (typeof currentLang !== 'undefined' && currentLang === 'cn');
@@ -2024,16 +2027,28 @@
 
       twinScenarioCount++;
 
-      // Pick a fresh random task from the same repo (avoid same task as current if possible)
+      // Get/init the used-titles set for this repo
+      const repoKey = repo.key || repo.name || 'default';
+      if (!usedTaskTitlesByRepo.has(repoKey)) usedTaskTitlesByRepo.set(repoKey, new Set());
+      const usedSet = usedTaskTitlesByRepo.get(repoKey);
+
+      // Seed with the title currently shown on the card so we don't immediately repeat it
+      const currentTitle = currentCard.querySelector('.twin-scenario-title')?.textContent;
+      if (currentTitle) usedSet.add(currentTitle);
+
+      // Pick from unused tasks; if pool exhausted, reset and try again
       let task;
       if (repo.tasks.length > 1) {
-        const currentTaskTitle = currentCard.querySelector('.twin-scenario-title')?.textContent;
-        const candidates = repo.tasks.filter(t => {
-          const td = getTaskDisplay(t);
-          return td.title !== currentTaskTitle;
-        });
-        const pool = candidates.length > 0 ? candidates : repo.tasks;
-        task = pool[Math.floor(Math.random() * pool.length)];
+        let candidates = repo.tasks.filter(t => !usedSet.has(getTaskDisplay(t).title));
+        if (candidates.length === 0) {
+          // All tasks used — reset cycle but still avoid the immediately-current one
+          usedSet.clear();
+          if (currentTitle) usedSet.add(currentTitle);
+          candidates = repo.tasks.filter(t => !usedSet.has(getTaskDisplay(t).title));
+          if (candidates.length === 0) candidates = repo.tasks;
+        }
+        task = candidates[Math.floor(Math.random() * candidates.length)];
+        usedSet.add(getTaskDisplay(task).title);
       } else {
         task = repo.tasks[0];
       }
