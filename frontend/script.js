@@ -2500,13 +2500,15 @@ function initSkillForge() {
             // Step 0 (Probe) is the first active step
             if (i === 0) s.classList.add("active");
           });
-          const nativeTextEl = document.getElementById("forgeNativeText");
-          if (nativeTextEl) {
-            nativeTextEl.value = window.homepageIdea.text;
-            setTimeout(() => {
-              const btnAutoStructure = document.getElementById("btnAutoStructure");
-              if (btnAutoStructure) btnAutoStructure.click();
-            }, 300);
+          // 预填首页想法到Step 1的输入框（forgeSkillIdea）
+          const skillIdeaEl = document.getElementById("forgeSkillIdea");
+          if (skillIdeaEl) {
+            skillIdeaEl.value = window.homepageIdea.text;
+          }
+          // 预填creator name到Step 1的Username输入框（如果有）
+          const usernameEl = document.getElementById("forgeUsername");
+          if (usernameEl && window.homepageIdea.creatorName) {
+            usernameEl.value = window.homepageIdea.creatorName;
           }
         }, 1500);
       } else {
