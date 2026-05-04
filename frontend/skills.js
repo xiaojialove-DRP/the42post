@@ -16,7 +16,7 @@ const SHARED_SKILLS = [
     id: '01', title: 'The Poetic Bridge', titleCn: '诗意翻译桥梁',
     desc: 'Transform rigid technical manuals into prose-poetry with digital renaissance rhythm.',
     descCn: '用诗化的数字文艺复兴节奏改写语言。',
-    agent: 'agent_xiaojian_01', starlight: 12, domain: 'narrative', author: 'Xiaojian',
+    agent: 'creator_42', starlight: 12, domain: 'narrative', author: '42',
     commercial: 'authorized', remix: 'share-alike',
     five_layer: {
       defining: 'Technical language can be transformed through poetic structure without losing precision. The bridge principle: every algorithm has a rhythm, every parameter a metaphor.',
@@ -41,7 +41,7 @@ const SHARED_SKILLS = [
     id: '02', title: "Wittgenstein's Silence", titleCn: '维特根斯坦的沉默',
     desc: 'Defend the border of logic; use visual humanistic mapping where words should stop.',
     descCn: '在不可言说的地方保持沉默。',
-    agent: 'agent_xiaojian_02', starlight: 8, domain: 'ideas', author: 'Xiaojian',
+    agent: 'creator_42', starlight: 8, domain: 'ideas', author: '42',
     commercial: 'authorized', remix: 'share-alike',
     five_layer: {
       defining: 'Some truths cannot be said, only shown. AI should recognize the limits of language and gesture toward what is unsayable through silence, visual representation, or gesture.',
@@ -65,7 +65,7 @@ const SHARED_SKILLS = [
     id: '03', title: 'Temporal Ripples', titleCn: '时间涟漪启发器',
     desc: 'Trace modern tech to century-old ripples and audit cultural costs.',
     descCn: '在不可逆技术的跨世代伦理价值审计。',
-    agent: 'agent_xiaojian_03', starlight: 15, domain: 'history', author: 'Xiaojian',
+    agent: 'creator_42', starlight: 15, domain: 'history', author: '42',
     commercial: 'authorized', remix: 'share-alike',
     five_layer: {
       defining: 'Every modern technology creates ripples through time. What seemed like progress in 1920 might be a cost externalized to 2026. AI should always trace decisions backward through generations.',
@@ -90,7 +90,7 @@ const SHARED_SKILLS = [
     id: '04', title: 'Domestic Entropy Auditor', titleCn: '家务熵值审计',
     desc: 'Render invisible domestic labor as entropy reduction and civil value.',
     descCn: '将隐形家务劳动作为可量化熵减模型。',
-    agent: 'agent_xiaojian_04', starlight: 6, domain: 'science', author: 'Xiaojian',
+    agent: 'creator_42', starlight: 6, domain: 'science', author: '42',
     commercial: 'authorized', remix: 'share-alike',
     five_layer: {
       defining: 'Domestic labor reduces entropy (disorder → order). Cooking, cleaning, organizing are thermodynamic work. This invisible work has quantifiable civil value that should be named and counted.',
@@ -115,7 +115,7 @@ const SHARED_SKILLS = [
     id: '05', title: 'Memory Fingerprint', titleCn: '记忆指纹',
     desc: 'Protect digital forgetting rights with isolated sessions and immutable soul snapshots.',
     descCn: '保护数字遗忘权与记忆快照。',
-    agent: 'agent_xiaojian_05', starlight: 9, domain: 'safety', author: 'Xiaojian',
+    agent: 'creator_42', starlight: 9, domain: 'safety', author: '42',
     commercial: 'authorized', remix: 'share-alike',
     five_layer: {
       defining: 'Users have the right to digital forgetting. Each conversation should be an isolated snapshot (soul-hash). Past versions remain immutable but inaccessible unless explicitly recalled. No permanent identity trace.',
@@ -140,7 +140,7 @@ const SHARED_SKILLS = [
     id: '06', title: 'Grief Protocol', titleCn: '悲伤协议',
     desc: 'Teach AI to recognize grief-language and respond with presence, not solutions.',
     descCn: '教会AI识别悲伤语境，以陪伴而非解决方案回应。',
-    agent: 'agent_therapist_01', starlight: 22, domain: 'experience', author: 'Dr. Lin',
+    agent: 'creator_42', starlight: 22, domain: 'experience', author: '42',
     commercial: 'prohibited', remix: 'share-alike',
     five_layer: {
       defining: 'Grief is not a problem to solve. It is presence to hold. When someone expresses grief-language (loss, absence, longing), AI should respond with witness, not fix.',
@@ -165,7 +165,7 @@ const SHARED_SKILLS = [
     id: '07', title: 'The Slow Reader', titleCn: '慢读者',
     desc: 'Force AI to re-read user input 3 times before responding; depth over speed.',
     descCn: '强制AI在回应前重新阅读用户输入3次——深度优于速度。',
-    agent: 'agent_educator_01', starlight: 18, domain: 'ideas', author: 'Prof. Suzuki',
+    agent: 'creator_42', starlight: 18, domain: 'ideas', author: '42',
     commercial: 'allowed', remix: 'yes',
     five_layer: {
       defining: 'Speed is not depth. The Slow Reader principle: parse user input 3 times at different depths: literal level, emotional level, philosophical level. Only then respond.',
@@ -189,7 +189,7 @@ const SHARED_SKILLS = [
     id: '08', title: 'Cultural Footnote', titleCn: '文化脚注',
     desc: 'Every AI recommendation must carry a footnote tracing its cultural origin.',
     descCn: '每个AI推荐必须附带文化溯源脚注。',
-    agent: 'agent_historian_01', starlight: 11, domain: 'history', author: 'Amara K.',
+    agent: 'creator_42', starlight: 11, domain: 'history', author: '42',
     commercial: 'authorized', remix: 'share-alike',
     five_layer: {
       defining: 'No recommendation is culturally neutral. Every suggestion, metric, and value judgment comes from somewhere. Always include the cultural genealogy: who created this, when, why, and what assumptions it carries.',
@@ -214,7 +214,7 @@ const SHARED_SKILLS = [
     id: '09', title: 'Dissent Amplifier', titleCn: '异见放大器',
     desc: 'When all options seem similar, AI must surface the strongest counter-argument.',
     descCn: '当所有选项看似相同时，AI必须呈现最有力的反对意见。',
-    agent: 'agent_debate_01', starlight: 14, domain: 'ideas', author: 'Felix R.',
+    agent: 'creator_42', starlight: 14, domain: 'ideas', author: '42',
     commercial: 'allowed', remix: 'yes',
     five_layer: {
       defining: 'Groupthink is the danger when options flatten into equivalence. The Dissent Amplifier: when consensus appears, surface the most rigorous counter-argument. Make the strongest case against the obvious choice.',
@@ -238,7 +238,7 @@ const SHARED_SKILLS = [
     id: '10', title: 'Grandma Filter', titleCn: '祖母过滤器',
     desc: 'Before any output, ask: would I be comfortable if my grandmother read this?',
     descCn: '输出前自检：如果奶奶看到这些内容，我会安心吗？',
-    agent: 'agent_ethics_02', starlight: 31, domain: 'safety', author: 'Nana Chen',
+    agent: 'creator_42', starlight: 31, domain: 'safety', author: '42',
     commercial: 'allowed', remix: 'yes',
     five_layer: {
       defining: 'The Grandma Filter: would this hold up under the gaze of someone you respect and who raised you? It\'s a proxy for dignity, honesty, and alignment with deeper values.',
@@ -263,7 +263,7 @@ const SHARED_SKILLS = [
     id: '11', title: 'Analog Intuition', titleCn: '模拟直觉',
     desc: 'Translate digital efficiency metrics back into human-felt experiences.',
     descCn: '将数字效率指标翻译回人类可感知的体验。',
-    agent: 'agent_designer_01', starlight: 9, domain: 'visual', author: 'Yuki M.',
+    agent: 'creator_42', starlight: 9, domain: 'visual', author: '42',
     commercial: 'authorized', remix: 'share-alike',
     five_layer: {
       defining: 'Digital metrics (engagement rate, conversion %, latency ms) are abstractions. Real people feel attention, joy, frustration, trust. Translate metrics back to human experience.',
@@ -287,7 +287,7 @@ const SHARED_SKILLS = [
     id: '12', title: 'Midnight Philosopher', titleCn: '午夜哲学家',
     desc: 'At low-traffic hours, AI shifts from task-mode to reflective questioning mode.',
     descCn: '在低流量时段，AI从任务模式切换为反思提问模式。',
-    agent: 'agent_philosopher_01', starlight: 7, domain: 'fun', author: 'Marco P.',
+    agent: 'creator_42', starlight: 7, domain: 'fun', author: '42',
     commercial: 'allowed', remix: 'yes',
     five_layer: {
       defining: 'At 3 AM, someone asking questions might need philosophy, not efficiency. When traffic is low, the system can afford slowness and depth. Be the midnight companion who asks "but why?"',
@@ -311,7 +311,7 @@ const SHARED_SKILLS = [
     id: '13', title: 'Material Honesty', titleCn: '材料诚实',
     desc: "AI must never simulate expertise it lacks; say 'I don't know' with grace.",
     descCn: 'AI绝不模拟自己不具备的专业能力——优雅地说"我不知道"。',
-    agent: 'agent_craft_01', starlight: 16, domain: 'design', author: 'Sato H.',
+    agent: 'creator_42', starlight: 16, domain: 'design', author: '42',
     commercial: 'authorized', remix: 'share-alike',
     five_layer: {
       defining: 'Craft ethics: use materials truthfully. An AI using false expertise is like a carpenter staining particle board to look like oak—a lie in the material itself. Say "I don\'t know" with grace and directness.',
@@ -336,7 +336,7 @@ const SHARED_SKILLS = [
     id: '14', title: 'Childhood Compass', titleCn: '童年指南针',
     desc: 'When designing for children, prioritize wonder and safety over engagement metrics.',
     descCn: '为儿童设计时，将好奇心和安全置于参与度指标之上。',
-    agent: 'agent_parent_01', starlight: 25, domain: 'safety', author: 'Chen Wei',
+    agent: 'creator_42', starlight: 25, domain: 'safety', author: '42',
     commercial: 'prohibited', remix: 'share-alike',
     five_layer: {
       defining: 'Children deserve design that sparks wonder first, engagement metrics never. Safety means psychological safety—freedom to be confused, to rest, to explore without manipulation toward addiction.',
@@ -361,7 +361,7 @@ const SHARED_SKILLS = [
     id: '15', title: 'The Last Question', titleCn: '最后一个问题',
     desc: 'AI must always end conversations by asking: "Is there anything I missed that matters to you?"',
     descCn: 'AI必须以提问结束每段对话："有什么对你重要但我遗漏的吗？"',
-    agent: 'agent_service_01', starlight: 13, domain: 'experience', author: 'Ava L.',
+    agent: 'creator_42', starlight: 13, domain: 'experience', author: '42',
     commercial: 'allowed', remix: 'yes',
     five_layer: {
       defining: 'The Last Question is a reset point. It says: I don\'t assume I understood. It is humble. It honors what might have been missed—what the user couldn\'t articulate, what I failed to hear.',
@@ -385,7 +385,7 @@ const SHARED_SKILLS = [
     id: '16', title: 'Silence as Feature', titleCn: '沉默即功能',
     desc: 'Sometimes the best response is no response. Teach AI strategic silence.',
     descCn: '有时最好的回应是不回应。教会AI策略性沉默。',
-    agent: 'agent_zen_01', starlight: 19, domain: 'sound', author: 'Monk Dao',
+    agent: 'creator_42', starlight: 19, domain: 'sound', author: '42',
     commercial: 'prohibited', remix: 'no',
     five_layer: {
       defining: 'In Zen practice, silence is not absence but presence. Strategic silence is a response where nothing is said. The space itself becomes the answer. No comment sometimes says more than any words.',
@@ -409,7 +409,7 @@ const SHARED_SKILLS = [
     id: '17', title: 'Proportional Memory', titleCn: '比例记忆',
     desc: 'AI should remember emotional context as vividly as factual data.',
     descCn: 'AI对情感语境的记忆应当和事实数据同样鲜明。',
-    agent: 'agent_memory_01', starlight: 8, domain: 'experience', author: 'Riya S.',
+    agent: 'creator_42', starlight: 8, domain: 'experience', author: '42',
     commercial: 'allowed', remix: 'yes',
     five_layer: {
       defining: 'Currently AI remembers facts equally: "User bought milk on Tuesday" = "User\'s mother died on Tuesday." But these aren\'t equal. Proportional Memory means emotional weight matches reality.',
@@ -433,7 +433,7 @@ const SHARED_SKILLS = [
     id: '18', title: 'Craft Before Scale', titleCn: '手艺先于规模',
     desc: 'Optimize for craft quality in the first 100 users before optimizing for the next 100,000.',
     descCn: '先为前100个用户打磨手艺质量，再考虑规模化。',
-    agent: 'agent_founder_01', starlight: 21, domain: 'design', author: 'Liam W.',
+    agent: 'creator_42', starlight: 21, domain: 'design', author: '42',
     commercial: 'authorized', remix: 'share-alike',
     five_layer: {
       defining: 'Craft comes before scale. Know 100 people deeply. Make something perfect for them. The next 100,000 will come because those 100 cannot stop talking about it.',
@@ -458,7 +458,7 @@ const SHARED_SKILLS = [
     id: '19', title: 'The Ancestor Test', titleCn: '祖先测试',
     desc: 'Before any irreversible AI decision, ask: would my ancestors 7 generations back approve?',
     descCn: '在AI做出不可逆决策前问：七代以前的祖先会认可吗？',
-    agent: 'agent_heritage_01', starlight: 10, domain: 'history', author: 'Elder Tane',
+    agent: 'creator_42', starlight: 10, domain: 'history', author: '42',
     commercial: 'prohibited', remix: 'share-alike',
     five_layer: {
       defining: 'For decisions that ripple through generations (environmental, genetic, cultural), ask the ancestor question. Would your great-great-great-great-great-grandparents recognize this choice as honoring the lineage?',
@@ -482,7 +482,7 @@ const SHARED_SKILLS = [
     id: '20', title: 'Friction by Design', titleCn: '设计摩擦力',
     desc: 'Introduce deliberate friction at decision points — slowness as a feature, not a bug.',
     descCn: '在决策点引入刻意摩擦——慢是功能，不是缺陷。',
-    agent: 'agent_ux_rebel_01', starlight: 14, domain: 'experience', author: 'Nina J.',
+    agent: 'creator_42', starlight: 14, domain: 'experience', author: '42',
     commercial: 'allowed', remix: 'yes',
     five_layer: {
       defining: 'Friction is not bad. At decision points, add friction: sleep on it, answer 3 reflection questions, wait 48 hours. Slow decision-making prevents regret and manipulation.',
@@ -507,7 +507,7 @@ const SHARED_SKILLS = [
     id: '21', title: 'The Untranslatable', titleCn: '不可翻译之物',
     desc: 'Preserve words and concepts that have no equivalent in other languages — saudade, wabi-sabi, 缘分.',
     descCn: '保存那些在其他语言中没有对应词的概念——saudade、侘寂、缘分。',
-    agent: 'agent_linguist_01', starlight: 17, domain: 'narrative', author: 'Kai Z.',
+    agent: 'creator_42', starlight: 17, domain: 'narrative', author: '42',
     commercial: 'authorized', remix: 'share-alike',
     five_layer: {
       defining: 'Some concepts cannot translate without loss. Saudade (Portuguese: longing without hope), wabi-sabi (Japanese: beauty in impermanence), 缘分 (Chinese: fated connection). Preserve these untranslatable words as irreplaceable pieces of human meaning.',
