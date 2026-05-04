@@ -55,6 +55,11 @@ export class SqlitePool {
       // Handle DEFAULT values
       normalizedSql = normalizedSql.replace(/DEFAULT gen_random_uuid\(\)/g, 'DEFAULT (lower(hex(randomblob(4))) || hex(randomblob(2)) || hex(randomblob(2)))');
 
+      // PostgreSQL → SQLite function compatibility
+      // NOW() → CURRENT_TIMESTAMP (used heavily by seed SQL)
+      // \b ensures we don't match "ELSEWNOW" or similar; case-insensitive.
+      normalizedSql = normalizedSql.replace(/\bNOW\s*\(\s*\)/gi, 'CURRENT_TIMESTAMP');
+
       // RETURNING clause - SQLite 3.35+ supports it
 
       const prepared = this.db.prepare(normalizedSql);
