@@ -2429,6 +2429,53 @@ function initSkillForge() {
   const knightCardSection = document.getElementById('knightCardSection');
   let selectedDomain = null;
 
+  // ─── Draft Recovery: offer to restore an unsubmitted forge ───
+  // If the previous session's POST /skills failed (network drop, 5xx)
+  // we kept their work in localStorage. Offer to restore it here.
+  function maybeOfferDraftRecovery() {
+    let draft;
+    try {
+      const raw = localStorage.getItem('42post_forge_draft');
+      if (!raw) return;
+      draft = JSON.parse(raw);
+    } catch (e) { return; }
+
+    if (!draft || !draft.payload) return;
+
+    // Drafts older than 7 days are stale — drop silently
+    const ageMs = Date.now() - (draft.savedAt || 0);
+    if (ageMs > 7 * 24 * 60 * 60 * 1000) {
+      try { localStorage.removeItem('42post_forge_draft'); } catch (e) {}
+      return;
+    }
+
+    const isCn = (typeof currentLang !== 'undefined' && currentLang === 'cn');
+    const title = (draft.payload.title || '').slice(0, 30);
+    const msg = isCn
+      ? `你上次有一个未发布的 Skill「${title}」。要恢复继续吗？`
+      : `You have an unfinished Skill "${title}" from before. Restore it?`;
+
+    if (confirm(msg)) {
+      // Pre-fill the forge inputs
+      const map = {
+        forgeSkillIdea: draft.payload.description,
+        forgeNativeText: draft.payload.description,
+        forgeSkillName: draft.payload.title,
+        forgeUsername: draft.accountData?.username,
+        forgeEmail: draft.accountData?.email
+      };
+      Object.entries(map).forEach(([id, val]) => {
+        const el = document.getElementById(id);
+        if (el && val) el.value = val;
+      });
+      if (draft.payload.five_layer) {
+        window.agent42StructuredData = draft.payload.five_layer;
+      }
+    } else {
+      try { localStorage.removeItem('42post_forge_draft'); } catch (e) {}
+    }
+  }
+
   // Homepage Idea to Forge Pipeline
   // Share按钮处理 (btnTest是首页的Share按钮)
   const btnTest = document.getElementById("btnTest");
@@ -2437,6 +2484,8 @@ function initSkillForge() {
     console.log("✓ Attaching character limit validation to Share button");
     btnTest.addEventListener("click", () => {
       console.log("🔵 Share button clicked");
+      // Offer recovery before user starts a fresh forge
+      maybeOfferDraftRecovery();
       const ideaInput = document.getElementById("chaosInput");  // 首页输入框的ID是chaosInput
       const creatorNameInput = document.getElementById("creatorNameInput");
       if (!ideaInput || !ideaInput.value.trim()) {
@@ -4160,11 +4209,26 @@ function initSkillForge() {
             // anonymous_id ties the new skill back to this device so the
             // Playground can put "your latest forge" first in the picker.
             anonymous_id: getAnonymousId(),
+            // creatorName: user's chosen creator name (Username from Step 1 Account section).
+            // Backend stores this in skills.creator_anonymous_id so archive shows "by <name>"
+            // instead of the device hash.
+            creatorName: accountData.username || '',
             // ready_to_use_prompt is generated server-side at PUBLISH time
             // when missing from the payload, so we send through whatever the
             // user may have edited in the publish review.
             ready_to_use_prompt: window.agent42ReadyToUsePrompt || null
           };
+
+          // ═══ Draft autosave: persist before network call ═══
+          // If the POST fails (network drop, 5xx), the user can recover
+          // their forge instead of losing 30 minutes of work.
+          try {
+            localStorage.setItem('42post_forge_draft', JSON.stringify({
+              payload: backendPayload,
+              accountData,
+              savedAt: Date.now()
+            }));
+          } catch (e) { /* localStorage full or unavailable — non-fatal */ }
 
           // Build headers — only attach a Bearer when a real token exists,
           // otherwise the empty "Bearer " line tripped strict auth parsers.
@@ -4182,7 +4246,13 @@ function initSkillForge() {
           if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
             console.error('Backend skill save failed:', errorData);
-            alert('保存到数据库失败: ' + (errorData.message || response.statusText));
+            const isCn = (typeof currentLang !== 'undefined' && currentLang === 'cn');
+            alert((isCn
+              ? '保存失败: '
+              : 'Save failed: ') + (errorData.message || response.statusText) +
+              (isCn
+                ? '\n\n你的草稿已保留。下次打开时可以恢复。'
+                : '\n\nYour draft has been saved. You can restore it next time.'));
             publishBtn.textContent = '⚔ PUBLISH & FORGE';
             publishBtn.style.pointerEvents = 'auto';
             return;
@@ -4194,9 +4264,16 @@ function initSkillForge() {
           forgedSkillData.backendId = savedSkill.skill.id;
           forgedSkillData.soulHash = savedSkill.skill.soul_hash;
 
+          // Save succeeded — clear the recovery draft
+          try { localStorage.removeItem('42post_forge_draft'); } catch (e) {}
+
         } catch (error) {
           console.error('Error saving skill to backend:', error);
-          alert('保存失败: ' + error.message);
+          const isCn = (typeof currentLang !== 'undefined' && currentLang === 'cn');
+          alert((isCn ? '保存失败: ' : 'Save failed: ') + error.message +
+            (isCn
+              ? '\n\n你的草稿已保留。下次打开时可以恢复。'
+              : '\n\nYour draft has been saved. You can restore it next time.'));
           publishBtn.textContent = '⚔ PUBLISH & FORGE';
           publishBtn.style.pointerEvents = 'auto';
           return;
