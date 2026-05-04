@@ -1431,6 +1431,7 @@ body[data-lang="cn"] .voices-header-text {
   cursor: text;
   transition: color 0.3s ease, opacity 0.3s ease;
   padding: 4px -4px;  /* Add subtle padding for click target */
+  white-space: pre-line;  /* 渲染 \n 为换行符，支持段落空行 */
 }
 
 /* Hover effect for better discoverability */
