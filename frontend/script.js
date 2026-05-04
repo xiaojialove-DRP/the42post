@@ -2426,23 +2426,31 @@ function initSkillForge() {
   // Homepage Idea to Forge Pipeline
   // Share按钮处理 (btnTest是首页的Share按钮)
   const btnTest = document.getElementById("btnTest");
+  console.log("initSkillForge: btnTest =", btnTest);
   if (btnTest) {
+    console.log("✓ Attaching character limit validation to Share button");
     btnTest.addEventListener("click", () => {
+      console.log("🔵 Share button clicked");
       const ideaInput = document.getElementById("chaosInput");  // 首页输入框的ID是chaosInput
       const creatorNameInput = document.getElementById("creatorNameInput");
       if (!ideaInput || !ideaInput.value.trim()) {
+        console.log("⚠ No idea input found or empty");
         alert("Please share your idea first");
         return;
       }
       // ✅ 字数限制检查 (最少12个字)
       const ideaText = ideaInput.value.trim();
+      console.log("📝 Idea text length:", ideaText.length, "Content:", ideaText.substring(0, 50));
       if (ideaText.length < 12) {
+        console.log("❌ Character limit check FAILED - showing warning");
         // Show styled warning instead of alert
         const ethicsResult = document.getElementById('ethicsResult');
         const ethicsShortText = document.getElementById('ethicsShortText');
         const ethicsShortMsg = document.getElementById('ethicsShortMsg');
         const ethicsPass = document.getElementById('ethicsPass');
         const ethicsFail = document.getElementById('ethicsFail');
+
+        console.log("Elements found:", { ethicsResult: !!ethicsResult, ethicsShortText: !!ethicsShortText, ethicsShortMsg: !!ethicsShortMsg });
 
         if (ethicsResult && ethicsShortText && ethicsShortMsg) {
           // Determine language and set message
