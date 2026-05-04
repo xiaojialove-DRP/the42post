@@ -54,8 +54,27 @@ if (process.env.NODE_ENV !== 'test' && !process.env.JWT_SECRET) {
 let db;
 
 console.log('Using SQLite database (forced)...');
-// 使用相对于 backend 目录的路径
-const dbPath = join(__dirname, '../database.sqlite3');
+// Persistent storage:
+// - Production (Railway): use /app/data (Volume-mounted, survives redeploys)
+// - Local dev: use ../database.sqlite3 next to the repo
+// Fallback chain ensures local development still works without a /app/data dir.
+import { existsSync, mkdirSync } from 'fs';
+const PERSISTENT_DIR = '/app/data';
+let dbPath;
+if (existsSync(PERSISTENT_DIR)) {
+  dbPath = join(PERSISTENT_DIR, 'database.sqlite3');
+} else if (process.env.NODE_ENV === 'production') {
+  // Production but no volume mounted — try to create the dir, otherwise warn loudly
+  try {
+    mkdirSync(PERSISTENT_DIR, { recursive: true });
+    dbPath = join(PERSISTENT_DIR, 'database.sqlite3');
+  } catch (e) {
+    console.warn('⚠ /app/data not available, falling back to ephemeral path. Data WILL BE LOST on redeploy!');
+    dbPath = join(__dirname, '../database.sqlite3');
+  }
+} else {
+  dbPath = join(__dirname, '../database.sqlite3');
+}
 console.log('Database path:', dbPath);
 
 db = new SqlitePool({
