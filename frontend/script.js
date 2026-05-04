@@ -807,9 +807,12 @@ const I18N = {
     /* ── Probe modal ── */
     probe_modal_title: 'INTUITION PROBE',
     probe_scenario_label: 'Scenario:',
-    probe_choice_a_type: 'Thesis',
-    probe_choice_b_type: 'Antithesis',
-    probe_choice_c_type: 'Extreme',
+    probe_choice_a_type: 'Ideal Context',
+    probe_choice_b_type: 'Challenging Context',
+    probe_choice_c_type: 'Boundary Context',
+    probe_choice_a_question: 'How should this principle work in the best case?',
+    probe_choice_b_question: 'What if circumstances become difficult or conflicting?',
+    probe_choice_c_question: 'What are the boundaries? When might this not apply?',
     /* ── Forge modal labels ── */
     forge_account: 'ACCOUNT',
     forge_username_ph: 'Username',
@@ -817,8 +820,8 @@ const I18N = {
     forge_thought: 'YOUR THOUGHT',
     forge_instruction: 'Any skill you wish or don\'t wish AI to have. Any idea counts.',
     forge_idea_ph: 'e.g. AI should understand the silence of grief…',
-    forge_probe_title: 'GENERATE PROBE',
-    forge_probe_desc: 'Generate intuition probes from your idea',
+    forge_probe_title: 'Generate 3 thinking angles for your idea',
+    forge_probe_desc: 'Understand your idea from 3 different perspectives',
     forge_forging_title: 'YOUR SKILL IS BEING FORGED',
     forge_layer_1: '01  DEFINING',
     forge_layer_2: '02  INSTANTIATING',
@@ -1016,9 +1019,12 @@ const I18N = {
     /* ── 直觉探针 modal ── */
     probe_modal_title: '直觉探针',
     probe_scenario_label: '场景:',
-    probe_choice_a_type: '主流派',
-    probe_choice_b_type: '反题派',
-    probe_choice_c_type: '实验派',
+    probe_choice_a_type: '理想情境',
+    probe_choice_b_type: '挑战情境',
+    probe_choice_c_type: '边界情境',
+    probe_choice_a_question: '在最好的情况下，这个原则应该如何落实？',
+    probe_choice_b_question: '当情况变得困难或有冲突时，AI应该怎么办？',
+    probe_choice_c_question: '这个原则的边界在哪里？什么时候不适用？',
     /* ── 锻造流程标签 ── */
     forge_account: '账户',
     forge_username_ph: '用户名',
@@ -1026,8 +1032,8 @@ const I18N = {
     forge_thought: '你的想法',
     forge_instruction: '你希望 AI 拥有或最不希望它拥有的技能。任何想法都可以。',
     forge_idea_ph: '例：我希望 AI 能理解人类悲伤时的沉默…',
-    forge_probe_title: '生成直觉探针',
-    forge_probe_desc: '基于你的想法和直觉生成探针',
+    forge_probe_title: '让我从不同角度理解你的想法',
+    forge_probe_desc: '为你的创意生成三个思考角度',
     forge_forging_title: '你的技能正在铸造中',
     forge_layer_1: '01  定义',
     forge_layer_2: '02  场景举例',
@@ -2425,6 +2431,18 @@ function initSkillForge() {
       const creatorNameInput = document.getElementById("creatorNameInput");
       if (!ideaInput || !ideaInput.value.trim()) {
         alert("Please share your idea first");
+        return;
+      }
+      // ✅ 字数限制检查 (最少12个字)
+      const ideaText = ideaInput.value.trim();
+      if (ideaText.length < 12) {
+        const isCn = ideaText.match(/[一-龥]/);
+        if (isCn) {
+          alert("你的想法有点简短，能多说一点吗？(至少12个字)");
+        } else {
+          alert("Your idea is a bit short. Please elaborate. (At least 12 characters)");
+        }
+        return;
 
   // ═══ INTUITION PROBE HANDLERS ═══
   document.querySelectorAll('.probe-btn').forEach(btn => {
@@ -2432,20 +2450,34 @@ function initSkillForge() {
       const choice = this.dataset.choice;
       const probeSelected = document.getElementById('probeSelected');
       const probeSelectedText = document.getElementById('probeSelectedText');
-      const choices = { a: 'A · THESIS / 正题', b: 'B · ANTITHESIS / 反题', c: 'C · EXTREME / 极端边缘' };
-      
-      probeSelectedText.textContent = choices[choice] || choice;
+
+      // 使用I18N[currentLang]获取当前语言的标签和问题 (改为问题驱动)
+      const dict = I18N[currentLang || 'en'];
+      const choiceLabels = {
+        a: dict.probe_choice_a_type,
+        b: dict.probe_choice_b_type,
+        c: dict.probe_choice_c_type
+      };
+      const choiceQuestions = {
+        a: dict.probe_choice_a_question,
+        b: dict.probe_choice_b_question,
+        c: dict.probe_choice_c_question
+      };
+
+      // 显示标签和问题
+      const displayText = `${choiceLabels[choice]}\n\n${choiceQuestions[choice]}`;
+      probeSelectedText.textContent = displayText;
       probeSelected.style.display = 'block';
-      
+
       // Save selection
       window.probeChoice = choice;
-      
+
       // Disable other buttons, highlight this one
       document.querySelectorAll('.probe-card').forEach(card => card.style.opacity = '0.6');
       this.closest('.probe-card').style.opacity = '1';
       this.style.background = '#1a1a1a';
       this.style.color = 'white';
-      
+
       console.log('✓ User selected probe:', choice);
     });
   });
@@ -2639,10 +2671,16 @@ function initSkillForge() {
       if (!idea) { alert('请分享你的想法 / Please share your idea'); return; }
 
       // Establish forge session (zero-friction JWT)
+      const isCn = (typeof currentLang !== 'undefined' && currentLang === 'cn');
+      const originalText = btnGenerateProbe.textContent;
+
       btnGenerateProbe.disabled = true;
+      btnGenerateProbe.textContent = isCn ? '⟳ 正在思考中...' : '⟳ Thinking...';
+
       const sess = await ApiClient.establishForgeSession(email, username);
-      btnGenerateProbe.disabled = false;
       if (!sess.ok) {
+        btnGenerateProbe.disabled = false;
+        btnGenerateProbe.textContent = originalText;
         alert('无法建立会话 / Session failed: ' + (sess.message || 'Unknown error'));
         return;
       }
@@ -2654,16 +2692,16 @@ function initSkillForge() {
         probeChoice: null // Will be set when user selects a probe
       };
 
-      // Show loading state
-      if (probeModal) {
-        const loader = probeModal.querySelector('.probe-loader') || document.createElement('div');
-        loader.innerHTML = '⟳ Generating probes...';
-        loader.className = 'probe-loader';
-        if (!probeModal.querySelector('.probe-loader')) probeModal.prepend(loader);
-      }
+      // 简洁的加载状态 - 只显示"正在思考中..."
+      btnGenerateProbe.classList.add('generating');
 
       // Generate probe scenarios based on idea
       const scenarios = await generateProbeScenarios(idea);
+
+      // 恢复按钮状态
+      btnGenerateProbe.disabled = false;
+      btnGenerateProbe.textContent = originalText;
+      btnGenerateProbe.classList.remove('generating');
 
       // Persist the full probe payload so STEP 2 can call /forge/preview with it
       if (window.forgeData) {

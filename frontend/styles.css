@@ -6616,6 +6616,23 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
   }
 }
 
+/* Simple pulse animation for button generating state */
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(26, 26, 26, 0.3);
+  }
+  50% {
+    transform: scale(1.02);
+    box-shadow: 0 0 0 3px rgba(26, 26, 26, 0.1);
+  }
+}
+
+/* Generating state for forge buttons */
+button.generating {
+  animation: pulse 0.6s ease-in-out infinite;
+}
+
 .layer-status.complete {
   animation: none;
   color: #1a1a1a;
