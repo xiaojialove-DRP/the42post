@@ -2461,15 +2461,17 @@ function initSkillForge() {
             ethicsShortMsg.textContent = "Your idea is a bit short. Please elaborate. (At least 12 characters)";
           }
 
-          // Show warning with fade animation
+          // Show warning with fade animation - 使用.visible类(不是display)
           ethicsResult.classList.add('visible');
           ethicsShortText.style.display = 'flex';
+          ethicsShortText.classList.add('visible');
           if (ethicsPass) ethicsPass.classList.remove('visible');
           if (ethicsFail) ethicsFail.classList.remove('visible');
 
           // Auto-hide warning after 3 seconds
           setTimeout(() => {
             ethicsResult.classList.remove('visible');
+            ethicsShortText.classList.remove('visible');
             ethicsShortText.style.display = 'none';
           }, 3000);
         }
@@ -2510,7 +2512,7 @@ function initSkillForge() {
           if (usernameEl && window.homepageIdea.creatorName) {
             usernameEl.value = window.homepageIdea.creatorName;
           }
-        }, 1500);
+        }, 600);
       } else {
         // Fallback: 如果ethics元素不存在，直接打开forge - 从Step 1开始
         overlay.classList.add("active");
@@ -2525,7 +2527,7 @@ function initSkillForge() {
 
       ideaInput.value = "";
       if (creatorNameInput) creatorNameInput.value = "";
-      updateFormMode();
+      // updateFormMode() removed - was throwing ReferenceError
     });
   }
 
