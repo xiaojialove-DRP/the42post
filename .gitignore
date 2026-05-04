@@ -71,3 +71,5 @@ COMPLETION_CHECKLIST.txt
 test-dashboard.html
 test-*.html
 *-test.html
+backups/
+*.sqlite3
