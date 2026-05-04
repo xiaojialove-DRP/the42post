@@ -476,21 +476,24 @@ function attachSkillCardListeners() {
 
         const result = await response.json();
 
-        // Update local state
+        // Update local state - get skill object and sync star count
+        const skill = findSkillById(skillId);
+        if (skill) {
+          skill.stars = result.totalStars;
+        }
+
         if (newStarred) {
           starredSkills[skillId] = true;
-          skill.stars = result.totalStars;
         } else {
           delete starredSkills[skillId];
-          skill.stars = result.totalStars;
         }
 
         // Save to localStorage as backup
         localStorage.setItem('starred_skills', JSON.stringify(starredSkills));
 
-        // Update button
+        // Update button with the new star count from backend
         btn.querySelector('.star-icon').textContent = newStarred ? '⭐' : '☆';
-        btn.querySelector('.star-count').textContent = skill.stars || 0;
+        btn.querySelector('.star-count').textContent = result.totalStars;
 
         // Enable/disable download button
         const downloadBtn = btn.parentElement?.querySelector('.btn-download');
@@ -552,6 +555,9 @@ function attachSkillCardListeners() {
       btn.disabled = true;
 
       try {
+        // Get skill object for metadata
+        const skill = findSkillById(skillId);
+
         // Call backend download API
         const anonId = getAnonymousId();
         const downloadUrl = `${API_CONFIG.BASE_URL}/download/${skillId}?format=markdown`;
@@ -570,15 +576,17 @@ function attachSkillCardListeners() {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `The42Post_${skill.title.replace(/\s+/g, '_')}.md`;
+        a.download = `The42Post_${skill ? skill.title.replace(/\s+/g, '_') : skillId}.md`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
 
         // Update download count
-        skill.downloads = (skill.downloads || 0) + 1;
-        btn.querySelector('.download-count').textContent = skill.downloads;
+        if (skill) {
+          skill.downloads = (skill.downloads || 0) + 1;
+          btn.querySelector('.download-count').textContent = skill.downloads;
+        }
 
         showSuccess('Skill downloaded! 📥');
       } catch (error) {
