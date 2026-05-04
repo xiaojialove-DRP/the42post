@@ -1336,6 +1336,16 @@
     .twin-thanks-actions {
       display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;
     }
+    .twin-thanks-prompt {
+      font-size: 13px; color: #8b7d5f; font-weight: 500;
+      letter-spacing: 0.3px;
+      margin: 5px 0 10px;
+      animation: subtle-bounce 2.5s ease-in-out infinite;
+    }
+    @keyframes subtle-bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(3px); }
+    }
     /* Same ink CTA as twin-rate-submit and the trigger button. */
     .twin-action-btn {
       padding: 10px 18px;
@@ -2298,7 +2308,7 @@
             <div class="twin-thanks-headline">${isCn ? '感谢你的反馈！' : 'Thank you for your feedback!'}</div>
             <div class="twin-thanks-stats" data-thanks-stats></div>
             <div class="twin-thanks-actions">
-              <button class="twin-action-btn" data-action="next-skill">${isCn ? '↻ 试试别的 Skill' : '↻ Try another Skill'}</button>
+              <div class="twin-thanks-prompt">${isCn ? '↓ 换个场景看看效果' : '↓ Try different scenarios'}</div>
             </div>
           </div>
         </div>
@@ -2705,41 +2715,7 @@
         const isSmallScreen = window.innerWidth <= 480;
         stageThanks.classList.add(isSmallScreen ? 'fade-animation' : 'expand-animation');
 
-        if (!stageThanks.dataset.wired) {
-          stageThanks.querySelector('[data-action="next-skill"]').addEventListener('click', async () => {
-            // Check vote limit (max 3 skills per day)
-            const todayKey = 'votedSkillsToday_' + new Date().toISOString().split('T')[0];
-            let votedSkills = JSON.parse(localStorage.getItem(todayKey) || '[]');
-
-            // Only count votes for skills NOT created by this anonymous user
-            const currentAnonId = getAnonymousId();
-            const currentSkill = window.TWIN_TEST_SKILL;
-            const isOwnSkill = currentSkill && currentSkill.creator_anonymous_id === currentAnonId;
-
-            if (!isOwnSkill && currentSkill?.id && !votedSkills.includes(currentSkill.id)) {
-              votedSkills.push(currentSkill.id);
-              localStorage.setItem(todayKey, JSON.stringify(votedSkills));
-            }
-
-            // If reached limit (3 skills) and all are non-own skills, show limit message
-            if (votedSkills.length >= 3) {
-              const isCn = (typeof currentLang !== 'undefined' && currentLang === 'cn');
-              alert(isCn
-                ? '今天的 Skill 评估已达上限，明天再来吧 😊'
-                : "Today's Skill evaluations have reached the limit. Come back tomorrow! 😊"
-              );
-              return;
-            }
-
-            // Clear the preset skill so the new card shows skill picker
-            window.TWIN_TEST_SKILL = null;
-
-            const newTask = repo.tasks[Math.floor(Math.random() * repo.tasks.length)];
-            card.classList.add('minimizing');
-            setTimeout(() => { card.remove(); checkEmpty(); spawnCard(newTask, repo); }, 280);
-          });
-          stageThanks.dataset.wired = '1';
-        }
+        // No interactive elements on thanks stage — user is guided to scenario cards below
       } catch (err) {
         // Re-enable the rating buttons so the user can retry. The
         // tap-to-submit model has no separate Submit control to

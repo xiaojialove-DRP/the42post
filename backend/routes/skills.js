@@ -478,6 +478,49 @@ router.patch('/:skill_id', requireAuth, async (req, res, next) => {
   }
 });
 
+// ═══ CLEANUP LOW-QUALITY FORGED SKILLS ═══
+// DELETE /api/skills/cleanup?pwd=cleanup42post
+// 删除所有低质量的forged skills（没有proper creator_name的anonymous skills）
+router.delete('/cleanup', async (req, res, next) => {
+  try {
+    const password = req.query.pwd || req.body.pwd;
+
+    // Simple security check - require a password
+    if (password !== 'cleanup42post') {
+      return res.status(401).json({
+        error: 'Unauthorized',
+        message: 'Invalid password'
+      });
+    }
+
+    // Delete all forged skills that:
+    // 1. author_id = anonymous-user-001 (forged by anonymous users)
+    // 2. creator_anonymous_id IS NULL (no proper creator name)
+    // OR creator_anonymous_id like 'anonymous%' (default/auto-generated)
+    const deleteResult = await db.query(
+      `DELETE FROM skills
+       WHERE author_id = 'anonymous-user-001'
+       AND (creator_anonymous_id IS NULL
+            OR creator_anonymous_id LIKE 'anonymous%'
+            OR creator_anonymous_id LIKE 'shadow_knight_%')`,
+      []
+    );
+
+    const deletedCount = deleteResult.rowCount || 0;
+
+    res.json({
+      success: true,
+      message: `✓ 已删除 ${deletedCount} 个低质量forged skills`,
+      deletedCount: deletedCount,
+      nextStep: '前端localStorage中的数据会在下次刷新时自动清空'
+    });
+
+    console.log(`🧹 清理完成: 删除了 ${deletedCount} 个低质量forged skills`);
+  } catch (error) {
+    next(error);
+  }
+});
+
 // ═══ DELETE SKILL (soft delete, only by author) ═══
 router.delete('/:skill_id', requireAuth, async (req, res, next) => {
   try {
