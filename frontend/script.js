@@ -2490,15 +2490,15 @@ function initSkillForge() {
           ethicsResult.classList.remove('visible');
           ethicsPass.classList.remove('visible');
 
-          // 打开forge modal
+          // 打开forge modal - 从Step 1开始（直觉探针）
           overlay.classList.add("active");
           document.querySelectorAll(".forge-page").forEach(p => p.classList.remove("active"));
-          const forgePage2 = document.getElementById("forgePage2");
-          if (forgePage2) forgePage2.classList.add("active");
+          const forgePage1 = document.getElementById("forgePage1");
+          if (forgePage1) forgePage1.classList.add("active");
           document.querySelectorAll(".forge-step").forEach((s, i) => {
             s.classList.remove("active", "completed");
-            if (i < 1) s.classList.add("completed");
-            if (i === 1) s.classList.add("active");
+            // Step 0 (Probe) is the first active step
+            if (i === 0) s.classList.add("active");
           });
           const nativeTextEl = document.getElementById("forgeNativeText");
           if (nativeTextEl) {
@@ -2510,24 +2510,15 @@ function initSkillForge() {
           }
         }, 1500);
       } else {
-        // 如果ethics元素不存在，直接打开forge
+        // Fallback: 如果ethics元素不存在，直接打开forge - 从Step 1开始
         overlay.classList.add("active");
         document.querySelectorAll(".forge-page").forEach(p => p.classList.remove("active"));
-        const forgePage2 = document.getElementById("forgePage2");
-        if (forgePage2) forgePage2.classList.add("active");
+        const forgePage1 = document.getElementById("forgePage1");
+        if (forgePage1) forgePage1.classList.add("active");
         document.querySelectorAll(".forge-step").forEach((s, i) => {
           s.classList.remove("active", "completed");
-          if (i < 1) s.classList.add("completed");
-          if (i === 1) s.classList.add("active");
+          if (i === 0) s.classList.add("active");
         });
-        const nativeTextEl = document.getElementById("forgeNativeText");
-        if (nativeTextEl) {
-          nativeTextEl.value = window.homepageIdea.text;
-          setTimeout(() => {
-            const btnAutoStructure = document.getElementById("btnAutoStructure");
-            if (btnAutoStructure) btnAutoStructure.click();
-          }, 300);
-        }
       }
 
       ideaInput.value = "";
