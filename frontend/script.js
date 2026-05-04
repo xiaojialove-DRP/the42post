@@ -2441,6 +2441,8 @@ function initSkillForge() {
         const ethicsResult = document.getElementById('ethicsResult');
         const ethicsShortText = document.getElementById('ethicsShortText');
         const ethicsShortMsg = document.getElementById('ethicsShortMsg');
+        const ethicsPass = document.getElementById('ethicsPass');
+        const ethicsFail = document.getElementById('ethicsFail');
 
         if (ethicsResult && ethicsShortText && ethicsShortMsg) {
           // Determine language and set message
@@ -2454,8 +2456,8 @@ function initSkillForge() {
           // Show warning with fade animation
           ethicsResult.classList.add('visible');
           ethicsShortText.style.display = 'flex';
-          ethicsPass.classList.remove('visible');
-          ethicsFail.classList.remove('visible');
+          if (ethicsPass) ethicsPass.classList.remove('visible');
+          if (ethicsFail) ethicsFail.classList.remove('visible');
 
           // Auto-hide warning after 3 seconds
           setTimeout(() => {
