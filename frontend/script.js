@@ -320,8 +320,14 @@ function initSkillGrids() {
 
   function renderSkillCard(skill) {
     const lang = document.body.dataset.lang || 'en';
-    const title = lang === 'cn' ? skill.titleCn : skill.title;
-    const desc = lang === 'cn' ? skill.descCn : skill.desc;
+    // Fallback to the other language when the primary is null/empty.
+    // Prevents "English suddenly disappears" when title or desc only exists in one lang.
+    const title = lang === 'cn'
+      ? (skill.titleCn || skill.title || '')
+      : (skill.title || skill.titleCn || '');
+    const desc = lang === 'cn'
+      ? (skill.descCn || skill.desc || '')
+      : (skill.desc || skill.descCn || '');
     const isStarred = starredSkills[skill.id] === true;
     const userId = currentUser?.id || 'anonymous';
     const canDownload = isStarred;
@@ -5786,7 +5792,9 @@ function displayRandomCreativeTask() {
   const skillCopyright = document.getElementById('skillCopyright');
   const skillHash = document.getElementById('skillHash');
 
-  if (skillTitle) skillTitle.textContent = currentLang === 'cn' ? skill.titleCn : skill.title;
+  if (skillTitle) skillTitle.textContent = currentLang === 'cn'
+    ? (skill.titleCn || skill.title || '')
+    : (skill.title || skill.titleCn || '');
   if (skillAuthor) skillAuthor.textContent = skill.author;
   if (skillCopyright) skillCopyright.textContent = `${skill.commercial} · ${skill.remix}`;
   if (skillHash) skillHash.textContent = generateSoulHash();
@@ -5883,8 +5891,9 @@ function initSkillsFeed() {
   const sharedSample = (typeof SkillStore !== 'undefined' && SkillStore.size() > 0) ? SkillStore.sample(6) : SHARED_SKILLS.slice(0, 6);
   sharedSample.forEach(s => feedItems.push({
     type: 'skill',
-    title: currentLang === 'cn' ? s.titleCn : s.title,
-    desc: currentLang === 'cn' ? s.descCn : s.desc,
+    // Fallback to the other language when one is missing
+    title: currentLang === 'cn' ? (s.titleCn || s.title || '') : (s.title || s.titleCn || ''),
+    desc: currentLang === 'cn' ? (s.descCn || s.desc || '') : (s.desc || s.descCn || ''),
     author: s.author || 'Anonymous',
     commercial: s.commercial || 'authorized',
     starlight: s.starlight || 0,
