@@ -174,6 +174,28 @@ app.use('/api/download', downloadsRoutes);
 app.use('/api/playground', playgroundRoutes);
 
 // ═══ ADMIN UTILITIES ═══
+// Database diagnostics
+app.get('/api/admin/diagnostics', async (req, res) => {
+  try {
+    const skillCount = await db.query('SELECT COUNT(*) as count FROM skills');
+    const skillsWithStars = await db.query('SELECT COUNT(*) as count FROM user_skill_interactions WHERE starred = 1');
+    const downloadCount = await db.query('SELECT SUM(download_count) as total FROM skills');
+    const dbPath = process.env.NODE_ENV === 'production' ? '/app/data/database.sqlite3' : '../database.sqlite3';
+
+    res.json({
+      database: {
+        path: dbPath,
+        totalSkills: skillCount.rows[0]?.count || 0,
+        starredInteractions: skillsWithStars.rows[0]?.count || 0,
+        totalDownloads: downloadCount.rows[0]?.total || 0,
+      },
+      timestamp: new Date().toISOString()
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Backfill skill descriptions
 app.post('/api/admin/backfill-descriptions', async (req, res) => {
   console.log('[backfill] Starting skill description backfill...');
