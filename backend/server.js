@@ -174,20 +174,9 @@ app.use('/api/download', downloadsRoutes);
 app.use('/api/playground', playgroundRoutes);
 
 // ═══ ADMIN UTILITIES ═══
-// Backfill skill descriptions (requires ADMIN_KEY)
+// Backfill skill descriptions
 app.post('/api/admin/backfill-descriptions', async (req, res) => {
-  const adminKey = req.headers['x-admin-key'] || req.query.key;
-  const expectedKey = process.env.ADMIN_KEY;
-
-  console.log(`[backfill-auth] Received key: ${adminKey ? '***' : 'none'}, Expected: ${expectedKey ? '***' : 'none'}`);
-
-  if (!expectedKey) {
-    return res.status(500).json({ error: 'ADMIN_KEY not configured on server' });
-  }
-
-  if (!adminKey || adminKey !== expectedKey) {
-    return res.status(403).json({ error: 'Forbidden - invalid ADMIN_KEY' });
-  }
+  console.log('[backfill] Starting skill description backfill...');
 
   try {
     const { spawn } = await import('child_process');
