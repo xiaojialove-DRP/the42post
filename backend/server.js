@@ -288,65 +288,34 @@ app.get('/admin/reseed-control', (req, res) => {
   res.send(html);
 });
 
-// Force reseed 42 skills (even if already exist)
+// Force reseed 42 skills (simple version - calls existing seedSkillsIfNeeded)
 app.post('/api/admin/force-reseed', async (req, res) => {
-  console.log('[force-reseed] Starting forced skill reseed...');
+  console.log('[force-reseed] Starting skill reseed...');
 
   try {
-    const seedPath = join(__dirname, '../sql/seed-42-skills.sql');
+    // Call the same function used at startup
+    await seedSkillsIfNeeded(db);
 
-    if (!existsSync(seedPath)) {
-      return res.status(400).json({ error: `Seed file not found: ${seedPath}` });
-    }
-
-    const sqlContent = readFileSync(seedPath, 'utf8');
-    const statements = sqlContent
-      .split(';')
-      .filter(s => s.trim() && !s.trim().startsWith('--'))
-      .map(s => s.trim() + ';');
-
-    console.log(`[force-reseed] Found ${statements.length} SQL statements to execute`);
-
-    let successCount = 0;
-    let failedCount = 0;
-    const errors = [];
-
-    for (const statement of statements) {
-      try {
-        await db.query(statement);
-        successCount++;
-      } catch (err) {
-        failedCount++;
-        // Log unique constraint errors separately
-        if (err.message?.includes('UNIQUE') || err.message?.includes('already exists')) {
-          console.log(`[force-reseed] Skipped (duplicate): ${statement.substring(0, 60)}...`);
-        } else {
-          errors.push(err.message?.substring(0, 100));
-          console.warn(`[force-reseed] Error: ${err.message}`);
-        }
-      }
-    }
-
-    // Final count
-    const finalResult = await db.query('SELECT COUNT(*) as count FROM skills WHERE published = 1');
-    const finalPublishedCount = parseInt(finalResult.rows[0]?.count || 0, 10);
+    // Check final count
+    const publishedResult = await db.query('SELECT COUNT(*) as count FROM skills WHERE published = 1');
+    const publishedCount = parseInt(publishedResult.rows[0]?.count || 0, 10);
 
     const allResult = await db.query('SELECT COUNT(*) as count FROM skills');
     const totalCount = parseInt(allResult.rows[0]?.count || 0, 10);
 
     res.json({
-      success: failedCount === 0 || failedCount < statements.length / 2,
-      executed: successCount,
-      failed: failedCount,
-      total_statements: statements.length,
-      final_published_skills: finalPublishedCount,
-      final_total_skills: totalCount,
-      errors: errors.length > 0 ? errors : 'none',
-      message: `Reseed complete! Database now has ${finalPublishedCount} published skills (${totalCount} total)`
+      success: publishedCount >= 40,
+      message: `Reseed complete! Database has ${publishedCount} published skills (${totalCount} total)`,
+      skills_published: publishedCount,
+      skills_total: totalCount
     });
 
   } catch (err) {
-    res.status(500).json({ error: err.message, stack: err.stack });
+    console.error('[force-reseed] Error:', err);
+    res.status(500).json({
+      error: err.message,
+      success: false
+    });
   }
 });
 
