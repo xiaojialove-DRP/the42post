@@ -1360,8 +1360,9 @@ body[data-lang="cn"] .voices-header-text {
   box-shadow:
     0 1px 3px rgba(0, 0, 0, 0.02),
     0 8px 40px rgba(0, 0, 0, 0.04),
-    0 0 30px rgba(147, 112, 219, 0.08),
-    0 0 60px rgba(100, 200, 255, 0.04);
+    0 0 25px rgba(212, 114, 106, 0.06),
+    0 0 50px rgba(58, 154, 140, 0.04),
+    0 0 35px rgba(106, 142, 186, 0.05);
 }
 
 /* Subtle AI-era accent: thin gradient line at the top */
@@ -1393,8 +1394,9 @@ body[data-lang="cn"] .voices-header-text {
   box-shadow:
     0 1px 4px rgba(0, 0, 0, 0.03),
     0 12px 48px rgba(0, 0, 0, 0.06),
-    0 0 40px rgba(147, 112, 219, 0.12),
-    0 0 80px rgba(100, 200, 255, 0.06);
+    0 0 40px rgba(212, 114, 106, 0.1),
+    0 0 70px rgba(58, 154, 140, 0.07),
+    0 0 50px rgba(106, 142, 186, 0.08);
   cursor: text;  /* 现代对话框交互：悬停显示文本光标 */
   transform: translateY(-2px);
 }
@@ -1403,9 +1405,10 @@ body[data-lang="cn"] .voices-header-text {
   box-shadow:
     0 2px 12px rgba(0, 0, 0, 0.06),
     0 16px 56px rgba(0, 0, 0, 0.08),
-    0 0 50px rgba(147, 112, 219, 0.15),
-    0 0 100px rgba(100, 200, 255, 0.08);
-  border-color: #c0a8d8;
+    0 0 50px rgba(212, 114, 106, 0.12),
+    0 0 80px rgba(58, 154, 140, 0.1),
+    0 0 60px rgba(106, 142, 186, 0.12);
+  border-color: #d4cfc6;
   background: linear-gradient(180deg, #ffffff 0%, #faf8f5 100%);
 }
 
