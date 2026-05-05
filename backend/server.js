@@ -173,6 +173,44 @@ app.use('/api/email', emailRoutes);
 app.use('/api/download', downloadsRoutes);
 app.use('/api/playground', playgroundRoutes);
 
+// ═══ ADMIN UTILITIES ═══
+// Backfill skill descriptions (requires ADMIN_KEY)
+app.post('/api/admin/backfill-descriptions', async (req, res) => {
+  const adminKey = req.headers['x-admin-key'] || req.query.key;
+  if (adminKey !== process.env.ADMIN_KEY || !process.env.ADMIN_KEY) {
+    return res.status(403).json({ error: 'Forbidden - invalid or missing ADMIN_KEY' });
+  }
+
+  try {
+    const { spawn } = await import('child_process');
+    let output = '';
+    let errorOutput = '';
+
+    const child = spawn('node', ['backend/scripts/backfill-descriptions.js', '--apply']);
+
+    child.stdout.on('data', (data) => {
+      output += data.toString();
+      console.log(`[backfill] ${data}`);
+    });
+
+    child.stderr.on('data', (data) => {
+      errorOutput += data.toString();
+      console.error(`[backfill-err] ${data}`);
+    });
+
+    child.on('close', (code) => {
+      res.json({
+        success: code === 0,
+        exitCode: code,
+        output: output,
+        errors: errorOutput
+      });
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ═══ ERROR HANDLING ═══
 app.use((req, res) => {
   res.status(404).json({
