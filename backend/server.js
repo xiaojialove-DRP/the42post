@@ -180,11 +180,10 @@ app.get('/api/admin/diagnostics', async (req, res) => {
     const skillCount = await db.query('SELECT COUNT(*) as count FROM skills');
     const skillsWithStars = await db.query('SELECT COUNT(*) as count FROM user_skill_interactions WHERE starred = 1');
     const downloadCount = await db.query('SELECT SUM(download_count) as total FROM skills');
-    const dbPath = process.env.NODE_ENV === 'production' ? '/app/data/database.sqlite3' : '../database.sqlite3';
 
     res.json({
       database: {
-        path: dbPath,
+        actualPath: dbPath,
         totalSkills: skillCount.rows[0]?.count || 0,
         starredInteractions: skillsWithStars.rows[0]?.count || 0,
         totalDownloads: downloadCount.rows[0]?.total || 0,
