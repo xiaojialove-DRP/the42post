@@ -177,8 +177,16 @@ app.use('/api/playground', playgroundRoutes);
 // Backfill skill descriptions (requires ADMIN_KEY)
 app.post('/api/admin/backfill-descriptions', async (req, res) => {
   const adminKey = req.headers['x-admin-key'] || req.query.key;
-  if (adminKey !== process.env.ADMIN_KEY || !process.env.ADMIN_KEY) {
-    return res.status(403).json({ error: 'Forbidden - invalid or missing ADMIN_KEY' });
+  const expectedKey = process.env.ADMIN_KEY;
+
+  console.log(`[backfill-auth] Received key: ${adminKey ? '***' : 'none'}, Expected: ${expectedKey ? '***' : 'none'}`);
+
+  if (!expectedKey) {
+    return res.status(500).json({ error: 'ADMIN_KEY not configured on server' });
+  }
+
+  if (!adminKey || adminKey !== expectedKey) {
+    return res.status(403).json({ error: 'Forbidden - invalid ADMIN_KEY' });
   }
 
   try {
