@@ -284,9 +284,11 @@ async function startServer() {
     // Initialize database schema
     await initDatabase();
     console.log('✓ Database schema initialized');
-    
+
     // Auto-seed 42 skills if needed
-    await seedSkillsIfNeeded(db);
+    // Temporarily disabled due to startup crash — will implement manual endpoint
+    // await seedSkillsIfNeeded(db);
+    console.log('⚠ Skill seeding disabled during startup (manual seeding available via API)');
 
     const server = app.listen(PORT, () => {
       console.log(`
