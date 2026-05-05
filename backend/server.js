@@ -30,6 +30,8 @@ import { requestLogger } from './middleware/requestLogger.js';
 import { requestValidator } from './middleware/requestValidator.js';
 import { corsOptions, logCorsConfiguration } from './config/cors.js';
 import { initializeCache } from './utils/cache.js';
+import { isOriginWhitelisted, getWhitelistedOrigins } from './config/cors.js';
+import { readFileSync, existsSync } from 'fs';
 
 dotenv.config();
 
@@ -153,7 +155,11 @@ app.get('/', (req, res) => {
     status: 'running',
     frontend: 'Frontend not yet deployed',
     api_docs: '/api/health',
-    version: '0.1.0'
+    version: '0.1.0',
+    diagnostics: {
+      cors_debug: '/api/cors-debug (check if your origin is whitelisted)',
+      db_status: '/api/admin/diagnostics (check database & skills count)'
+    }
   });
 });
 
@@ -174,24 +180,174 @@ app.use('/api/download', downloadsRoutes);
 app.use('/api/playground', playgroundRoutes);
 
 // ═══ ADMIN UTILITIES ═══
+// CORS Debug endpoint (no auth needed for troubleshooting)
+app.get('/api/cors-debug', (req, res) => {
+  const origin = req.get('origin');
+  const isWhitelisted = origin ? isOriginWhitelisted(origin) : 'N/A (same-origin request)';
+
+  res.json({
+    current_origin: origin || '(no origin header - same-origin)',
+    is_whitelisted: isWhitelisted,
+    whitelisted_origins: getWhitelistedOrigins(),
+    request_headers: {
+      origin: origin || 'missing',
+      'user-agent': req.get('user-agent'),
+      referer: req.get('referer')
+    },
+    diagnosis: isWhitelisted === true
+      ? '✓ This origin is whitelisted'
+      : isWhitelisted === 'N/A (same-origin request)'
+      ? '✓ Same-origin request (no CORS check needed)'
+      : '✗ Origin NOT whitelisted - add to CORS config'
+  });
+});
+
 // Database diagnostics
 app.get('/api/admin/diagnostics', async (req, res) => {
   try {
-    const skillCount = await db.query('SELECT COUNT(*) as count FROM skills');
+    const allSkills = await db.query('SELECT COUNT(*) as count FROM skills');
+    const publishedSkills = await db.query('SELECT COUNT(*) as count FROM skills WHERE published = 1');
+    const unpublishedSkills = await db.query('SELECT COUNT(*) as count FROM skills WHERE published = 0 OR published IS NULL');
+    const deletedSkills = await db.query('SELECT COUNT(*) as count FROM skills WHERE deleted_at IS NOT NULL');
+
     const skillsWithStars = await db.query('SELECT COUNT(*) as count FROM user_skill_interactions WHERE starred = 1');
     const downloadCount = await db.query('SELECT SUM(download_count) as total FROM skills');
+    const skillsTable = await db.query("SELECT name FROM sqlite_master WHERE type='table' AND name='skills'");
 
     res.json({
       database: {
         actualPath: dbPath,
-        totalSkills: skillCount.rows[0]?.count || 0,
+        skills_total: allSkills.rows[0]?.count || 0,
+        skills_published: publishedSkills.rows[0]?.count || 0,
+        skills_unpublished: unpublishedSkills.rows[0]?.count || 0,
+        skills_deleted: deletedSkills.rows[0]?.count || 0,
         starredInteractions: skillsWithStars.rows[0]?.count || 0,
         totalDownloads: downloadCount.rows[0]?.total || 0,
+        skillsTableExists: skillsTable.rows?.length > 0
       },
+      seedStatus: publishedSkills.rows[0]?.count >= 40 ? 'Seeds loaded (≥40 published)' : 'Seeds NOT loaded (< 40 published)',
       timestamp: new Date().toISOString()
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: err.message, stack: err.stack });
+  }
+});
+
+// Reseed control panel (simple HTML UI)
+app.get('/admin/reseed-control', (req, res) => {
+  res.send(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <title>Reseed Control</title>
+      <style>
+        body { font-family: Arial; padding: 20px; background: #f5f5f5; }
+        .panel { background: white; padding: 30px; border-radius: 8px; max-width: 500px; }
+        button { padding: 10px 20px; font-size: 16px; cursor: pointer; background: #007bff; color: white; border: none; border-radius: 4px; }
+        button:hover { background: #0056b3; }
+        .status { margin-top: 20px; padding: 15px; border-radius: 4px; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .loading { background: #e2e3e5; color: #383d41; }
+        pre { background: #f8f9fa; padding: 10px; overflow-x: auto; border-radius: 4px; }
+      </style>
+    </head>
+    <body>
+      <div class="panel">
+        <h1>🔄 Force Reseed 42 Skills</h1>
+        <p>Click the button below to force reload all 42 skills into the database.</p>
+        <button onclick="triggerReseed()">▶ Start Reseed</button>
+        <div id="status"></div>
+      </div>
+
+      <script>
+        async function triggerReseed() {
+          const statusDiv = document.getElementById('status');
+          statusDiv.className = 'status loading';
+          statusDiv.innerHTML = '<p>Reseeding... please wait...</p>';
+
+          try {
+            const response = await fetch('/api/admin/force-reseed', { method: 'POST' });
+            const data = await response.json();
+
+            if (data.success) {
+              statusDiv.className = 'status success';
+              statusDiv.innerHTML = \`<pre>\${JSON.stringify(data, null, 2)}</pre>\`;
+            } else {
+              statusDiv.className = 'status error';
+              statusDiv.innerHTML = \`<pre>\${JSON.stringify(data, null, 2)}</pre>\`;
+            }
+          } catch (err) {
+            statusDiv.className = 'status error';
+            statusDiv.innerHTML = \`<p>Error: \${err.message}</p>\`;
+          }
+        }
+      </script>
+    </body>
+    </html>
+  `);
+});
+
+// Force reseed 42 skills (even if already exist)
+app.post('/api/admin/force-reseed', async (req, res) => {
+  console.log('[force-reseed] Starting forced skill reseed...');
+
+  try {
+    const seedPath = join(__dirname, './sql/seed-42-skills.sql');
+
+    if (!existsSync(seedPath)) {
+      return res.status(400).json({ error: `Seed file not found: ${seedPath}` });
+    }
+
+    const sqlContent = readFileSync(seedPath, 'utf8');
+    const statements = sqlContent
+      .split(';')
+      .filter(s => s.trim() && !s.trim().startsWith('--'))
+      .map(s => s.trim() + ';');
+
+    console.log(`[force-reseed] Found ${statements.length} SQL statements to execute`);
+
+    let successCount = 0;
+    let failedCount = 0;
+    const errors = [];
+
+    for (const statement of statements) {
+      try {
+        await db.query(statement);
+        successCount++;
+      } catch (err) {
+        failedCount++;
+        // Log unique constraint errors separately
+        if (err.message?.includes('UNIQUE') || err.message?.includes('already exists')) {
+          console.log(`[force-reseed] Skipped (duplicate): ${statement.substring(0, 60)}...`);
+        } else {
+          errors.push(err.message?.substring(0, 100));
+          console.warn(`[force-reseed] Error: ${err.message}`);
+        }
+      }
+    }
+
+    // Final count
+    const finalResult = await db.query('SELECT COUNT(*) as count FROM skills WHERE published = 1');
+    const finalPublishedCount = parseInt(finalResult.rows[0]?.count || 0, 10);
+
+    const allResult = await db.query('SELECT COUNT(*) as count FROM skills');
+    const totalCount = parseInt(allResult.rows[0]?.count || 0, 10);
+
+    res.json({
+      success: failedCount === 0 || failedCount < statements.length / 2,
+      executed: successCount,
+      failed: failedCount,
+      total_statements: statements.length,
+      final_published_skills: finalPublishedCount,
+      final_total_skills: totalCount,
+      errors: errors.length > 0 ? errors : 'none',
+      message: `Reseed complete! Database now has ${finalPublishedCount} published skills (${totalCount} total)`
+    });
+
+  } catch (err) {
+    res.status(500).json({ error: err.message, stack: err.stack });
   }
 });
 
