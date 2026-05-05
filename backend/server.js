@@ -227,6 +227,81 @@ app.get('/api/admin/seed-test', async (req, res) => {
   }
 });
 
+// Simple UI to trigger seed
+app.get('/admin/seed-ui', (req, res) => {
+  const html = `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>Seed Manager</title>
+<style>
+body{font-family:Arial;padding:20px;background:#f5f5f5}
+.box{background:white;padding:20px;border-radius:8px;max-width:600px}
+button{padding:10px 20px;margin:10px 0;font-size:16px;cursor:pointer;border:none;border-radius:4px}
+.btn-test{background:#0066cc;color:white}
+.btn-apply{background:#28a745;color:white}
+.btn-test:hover{background:#0052a3}
+.btn-apply:hover{background:#218838}
+pre{background:#f8f9fa;padding:10px;border-radius:4px;overflow-x:auto;max-height:400px}
+.status{margin:20px 0;padding:15px;border-radius:4px}
+.success{background:#d4edda;color:#155724}
+.error{background:#f8d7da;color:#721c24}
+.loading{background:#e2e3e5}
+</style>
+</head>
+<body>
+<div class="box">
+<h1>🌱 Seed Manager</h1>
+<p>Step 1: Check if seed file exists</p>
+<button class="btn-test" onclick="testSeed()">▶ Test Seed File</button>
+<div id="test-status"></div>
+
+<hr>
+<p>Step 2: Apply seeds to database (load 42 skills)</p>
+<button class="btn-apply" onclick="applySeed()">▶ Apply Seeds</button>
+<div id="apply-status"></div>
+
+<hr>
+<p><a href="/api/admin/diagnostics">Check current skill count →</a></p>
+</div>
+
+<script>
+async function testSeed() {
+  const div = document.getElementById('test-status');
+  div.className = 'status loading';
+  div.innerHTML = 'Testing...';
+  try {
+    const res = await fetch('/api/admin/seed-test');
+    const data = await res.json();
+    div.className = 'status success';
+    div.innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+  } catch (e) {
+    div.className = 'status error';
+    div.innerHTML = 'Error: ' + e.message;
+  }
+}
+
+async function applySeed() {
+  const div = document.getElementById('apply-status');
+  div.className = 'status loading';
+  div.innerHTML = 'Loading 42 skills... please wait...';
+  try {
+    const res = await fetch('/api/admin/seed-apply', {method: 'POST'});
+    const data = await res.json();
+    if (data.success || data.finalPublishedSkills > 20) {
+      div.className = 'status success';
+    } else {
+      div.className = 'status error';
+    }
+    div.innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+  } catch (e) {
+    div.className = 'status error';
+    div.innerHTML = 'Error: ' + e.message;
+  }
+}
+</script>
+</body></html>`;
+  res.send(html);
+});
+
 // Apply seed (safe version)
 app.post('/api/admin/seed-apply', async (req, res) => {
   try {
