@@ -179,6 +179,81 @@ app.use('/api/download', downloadsRoutes);
 app.use('/api/playground', playgroundRoutes);
 
 // ═══ ADMIN UTILITIES ═══
+// Seed diagnostic endpoint
+app.get('/api/admin/seed-test', async (req, res) => {
+  try {
+    const { existsSync, readFileSync } = await import('fs');
+    const seedPath = join(__dirname, '../sql/seed-42-skills.sql');
+
+    // Step 1: Check file exists
+    if (!existsSync(seedPath)) {
+      return res.json({ step: 'file_check', success: false, error: `File not found: ${seedPath}` });
+    }
+
+    res.json({
+      step: 'file_check',
+      success: true,
+      seedPath: seedPath,
+      fileExists: true,
+      message: 'Seed file found. Next: call /api/admin/seed-apply to execute'
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Apply seed (safe version)
+app.post('/api/admin/seed-apply', async (req, res) => {
+  try {
+    const { existsSync, readFileSync } = await import('fs');
+    const seedPath = join(__dirname, '../sql/seed-42-skills.sql');
+
+    if (!existsSync(seedPath)) {
+      return res.status(400).json({ error: `Seed file not found: ${seedPath}` });
+    }
+
+    const sqlContent = readFileSync(seedPath, 'utf8');
+    const statements = sqlContent
+      .split(';')
+      .filter(s => s.trim() && !s.trim().startsWith('--'));
+
+    console.log(`[seed-apply] Executing ${statements.length} statements...`);
+
+    let executed = 0;
+    let failed = 0;
+
+    for (let i = 0; i < statements.length; i++) {
+      const stmt = statements[i].trim() + ';';
+      try {
+        await db.query(stmt);
+        executed++;
+      } catch (err) {
+        failed++;
+        console.warn(`[seed-apply] Stmt ${i} failed: ${err.message?.substring(0, 80)}`);
+        if (failed > 5) {
+          console.warn('[seed-apply] Too many failures, stopping early');
+          break;
+        }
+      }
+    }
+
+    const result = await db.query('SELECT COUNT(*) as count FROM skills WHERE published = 1');
+    const finalCount = parseInt(result.rows[0]?.count || 0, 10);
+
+    res.json({
+      success: true,
+      executed,
+      failed,
+      total: statements.length,
+      finalPublishedSkills: finalCount,
+      message: `Executed ${executed}/${statements.length} statements. Database now has ${finalCount} published skills.`
+    });
+  } catch (err) {
+    console.error('[seed-apply] Fatal error:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // CORS Debug endpoint (no auth needed for troubleshooting)
 app.get('/api/cors-debug', (req, res) => {
   const origin = req.get('origin');
