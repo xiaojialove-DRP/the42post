@@ -179,24 +179,49 @@ app.use('/api/download', downloadsRoutes);
 app.use('/api/playground', playgroundRoutes);
 
 // ═══ ADMIN UTILITIES ═══
-// Seed diagnostic endpoint
+// Seed diagnostic endpoint - check file paths
 app.get('/api/admin/seed-test', async (req, res) => {
   try {
-    const { existsSync, readFileSync } = await import('fs');
-    const seedPath = join(__dirname, '../sql/seed-42-skills.sql');
+    const { existsSync, readdirSync } = await import('fs');
 
-    // Step 1: Check file exists
-    if (!existsSync(seedPath)) {
-      return res.json({ step: 'file_check', success: false, error: `File not found: ${seedPath}` });
+    // Try multiple possible paths
+    const possiblePaths = [
+      join(__dirname, '../sql/seed-42-skills.sql'),
+      join(__dirname, './sql/seed-42-skills.sql'),
+      '/app/sql/seed-42-skills.sql',
+      '/sql/seed-42-skills.sql',
+      process.cwd() + '/sql/seed-42-skills.sql',
+      process.cwd() + '/backend/sql/seed-42-skills.sql',
+    ];
+
+    const results = {
+      __dirname,
+      cwd: process.cwd(),
+      foundPaths: [],
+      missingPaths: [],
+      directoryListing: {}
+    };
+
+    // Check each path
+    for (const path of possiblePaths) {
+      if (existsSync(path)) {
+        results.foundPaths.push(path);
+      } else {
+        results.missingPaths.push(path);
+      }
     }
 
-    res.json({
-      step: 'file_check',
-      success: true,
-      seedPath: seedPath,
-      fileExists: true,
-      message: 'Seed file found. Next: call /api/admin/seed-apply to execute'
-    });
+    // List what's in common directories
+    const dirsToList = [__dirname, join(__dirname, '..'), '/app', process.cwd()];
+    for (const dir of dirsToList) {
+      try {
+        results.directoryListing[dir] = readdirSync(dir).slice(0, 20);
+      } catch (e) {
+        results.directoryListing[dir] = `Error reading: ${e.message}`;
+      }
+    }
+
+    res.json(results);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
