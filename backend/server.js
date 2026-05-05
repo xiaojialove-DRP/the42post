@@ -306,10 +306,26 @@ async function applySeed() {
 app.post('/api/admin/seed-apply', async (req, res) => {
   try {
     const { existsSync, readFileSync } = await import('fs');
-    const seedPath = join(__dirname, '../sql/seed-42-skills.sql');
 
-    if (!existsSync(seedPath)) {
-      return res.status(400).json({ error: `Seed file not found: ${seedPath}` });
+    // Try multiple paths for seed file
+    const seedPaths = [
+      join(__dirname, '../sql/seed-42-skills.sql'),
+      join(__dirname, './sql/seed-42-skills.sql'),
+      join(__dirname, '../../sql/seed-42-skills.sql'),
+    ];
+
+    let seedPath = null;
+    for (const path of seedPaths) {
+      if (existsSync(path)) {
+        seedPath = path;
+        break;
+      }
+    }
+
+    if (!seedPath) {
+      return res.status(400).json({
+        error: `Seed file not found in any path: ${seedPaths.join(', ')}`
+      });
     }
 
     const sqlContent = readFileSync(seedPath, 'utf8');
