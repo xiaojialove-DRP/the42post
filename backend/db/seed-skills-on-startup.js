@@ -13,12 +13,16 @@ export async function seedSkillsIfNeeded(db) {
   try {
     // Check if skills already exist
     const result = await db.query('SELECT COUNT(*) as count FROM skills WHERE published = 1');
-    const existingSkills = parseInt(result.rows[0].count || 0, 10);
+    const existingSkills = parseInt(result.rows[0]?.count || 0, 10);
 
-    if (existingSkills >= 40) {
-      console.log(`✅ Database already has ${existingSkills} published skills`);
+    console.log(`[seed] Checking: ${existingSkills} published skills found`);
+
+    if (existingSkills >= 42) {
+      console.log(`✅ Database already has ${existingSkills} published skills. Skipping seed.`);
       return;
     }
+
+    console.log(`[seed] Found ${existingSkills} skills (< 42 needed). Proceeding with seed...`);
 
     // Read SQL seed file (define paths BEFORE referencing them in log output)
     const sqlPath = path.join(__dirname, '../sql/seed-42-skills.sql');
