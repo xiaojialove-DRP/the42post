@@ -302,33 +302,41 @@ async function applySeed() {
   res.send(html);
 });
 
-// Apply seed (safe version)
+// Apply seed (from GitHub raw if local file not available)
 app.post('/api/admin/seed-apply', async (req, res) => {
   try {
     const { existsSync, readFileSync } = await import('fs');
 
-    // Try multiple paths for seed file
+    let sqlContent = null;
+
+    // Try local file first
     const seedPaths = [
       join(__dirname, '../sql/seed-42-skills.sql'),
       join(__dirname, './sql/seed-42-skills.sql'),
-      join(__dirname, '../../sql/seed-42-skills.sql'),
     ];
 
-    let seedPath = null;
     for (const path of seedPaths) {
       if (existsSync(path)) {
-        seedPath = path;
+        sqlContent = readFileSync(path, 'utf8');
+        console.log(`[seed-apply] Loaded from local: ${path}`);
         break;
       }
     }
 
-    if (!seedPath) {
-      return res.status(400).json({
-        error: `Seed file not found in any path: ${seedPaths.join(', ')}`
-      });
+    // If local not found, try GitHub raw
+    if (!sqlContent) {
+      console.log('[seed-apply] Local file not found, fetching from GitHub...');
+      const response = await fetch(
+        'https://raw.githubusercontent.com/xiaojialove-DRP/the42post/main/backend/sql/seed-42-skills.sql'
+      );
+      if (!response.ok) {
+        return res.status(400).json({
+          error: `Could not fetch seed file. GitHub returned: ${response.status} ${response.statusText}`
+        });
+      }
+      sqlContent = await response.text();
+      console.log('[seed-apply] Loaded from GitHub');
     }
-
-    const sqlContent = readFileSync(seedPath, 'utf8');
     const statements = sqlContent
       .split(';')
       .filter(s => s.trim() && !s.trim().startsWith('--'));
