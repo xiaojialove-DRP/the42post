@@ -293,7 +293,7 @@ app.post('/api/admin/force-reseed', async (req, res) => {
   console.log('[force-reseed] Starting forced skill reseed...');
 
   try {
-    const seedPath = join(__dirname, './sql/seed-42-skills.sql');
+    const seedPath = join(__dirname, '../sql/seed-42-skills.sql');
 
     if (!existsSync(seedPath)) {
       return res.status(400).json({ error: `Seed file not found: ${seedPath}` });
