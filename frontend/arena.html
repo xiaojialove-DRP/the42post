@@ -2002,16 +2002,15 @@
     }
 
     /* ── "Try Another Scenario" — limited to 7 plays per session ── */
-    let twinScenarioCount = 0; // tracks how many "another scenario" cards user has spawned
+    let twinScenarioCount = 0;
     const TWIN_SCENARIO_LIMIT = 7;
-    // Per-repo set of scenario titles already shown via "try another", so each
-    // new card pulls from the unused pool. Resets when the pool is exhausted.
-    const usedTaskTitlesByRepo = new Map();
+    // Global set of used scenario identifiers (repo:taskTitle) to prevent duplicates across all repos
+    const usedScenarioBatch = new Set();
 
     function handleTryAnotherScenario(currentCard, repo) {
       const isCn = (typeof currentLang !== 'undefined' && currentLang === 'cn');
 
-      // Reached the limit — show a friendly farewell on the current card
+      // Reached the limit — show a friendly farewell
       if (twinScenarioCount >= TWIN_SCENARIO_LIMIT) {
         const stageThanks = currentCard.querySelector('.twin-thanks');
         if (stageThanks) {
@@ -2027,35 +2026,44 @@
 
       twinScenarioCount++;
 
-      // Get/init the used-titles set for this repo
-      const repoKey = repo.key || repo.name || 'default';
-      if (!usedTaskTitlesByRepo.has(repoKey)) usedTaskTitlesByRepo.set(repoKey, new Set());
-      const usedSet = usedTaskTitlesByRepo.get(repoKey);
-
-      // Seed with the title currently shown on the card so we don't immediately repeat it
+      // Mark current scenario as used
       const currentTitle = currentCard.querySelector('.twin-scenario-title')?.textContent;
-      if (currentTitle) usedSet.add(currentTitle);
-
-      // Pick from unused tasks; if pool exhausted, reset and try again
-      let task;
-      if (repo.tasks.length > 1) {
-        let candidates = repo.tasks.filter(t => !usedSet.has(getTaskDisplay(t).title));
-        if (candidates.length === 0) {
-          // All tasks used — reset cycle but still avoid the immediately-current one
-          usedSet.clear();
-          if (currentTitle) usedSet.add(currentTitle);
-          candidates = repo.tasks.filter(t => !usedSet.has(getTaskDisplay(t).title));
-          if (candidates.length === 0) candidates = repo.tasks;
-        }
-        task = candidates[Math.floor(Math.random() * candidates.length)];
-        usedSet.add(getTaskDisplay(task).title);
-      } else {
-        task = repo.tasks[0];
+      if (currentTitle) {
+        usedScenarioBatch.add(currentTitle);
       }
 
+      // Build list of all available scenarios from all repos
+      let allCandidates = [];
+      for (const r of REPOSITORIES) {
+        for (const t of r.tasks) {
+          const taskDisplay = getTaskDisplay(t);
+          const scenarioId = taskDisplay.title;
+          if (!usedScenarioBatch.has(scenarioId)) {
+            allCandidates.push({ task: t, repo: r, scenarioId });
+          }
+        }
+      }
+
+      // If no unused candidates remain, stop (don't repeat)
+      if (allCandidates.length === 0) {
+        const stageThanks = currentCard.querySelector('.twin-thanks');
+        if (stageThanks) {
+          const actions = stageThanks.querySelector('.twin-thanks-actions');
+          if (actions) {
+            actions.innerHTML = `<div class="twin-farewell-msg">${isCn
+              ? '你已经体验了 7 个场景，很棒了。休息一下吧 ☕️'
+              : 'You\'ve explored 7 scenarios — well played. Time for a break ☕️'}</div>`;
+          }
+        }
+        return;
+      }
+
+      // Pick a random unused scenario
+      const { task, repo: selectedRepo, scenarioId } = allCandidates[Math.floor(Math.random() * allCandidates.length)];
+      usedScenarioBatch.add(scenarioId);
+
       // Spawn the new card with bottom-fly-in animation
-      // Keep the old card on canvas — supports the existing "stacking cards" play pattern
-      const newCard = spawnTwinTestCard(task, repo);
+      const newCard = spawnTwinTestCard(task, selectedRepo);
       if (newCard) {
         newCard.classList.add('fly-in-from-bottom');
         setTimeout(() => newCard.classList.remove('fly-in-from-bottom'), 600);
