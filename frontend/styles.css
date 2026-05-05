@@ -1357,7 +1357,11 @@ body[data-lang="cn"] .voices-header-text {
   position: relative;
   transition: background 0.3s ease, color 0.3s ease, border-color 0.3s ease, opacity 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
   min-height: 360px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02), 0 8px 40px rgba(0, 0, 0, 0.04);
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.02),
+    0 8px 40px rgba(0, 0, 0, 0.04),
+    0 0 30px rgba(147, 112, 219, 0.08),
+    0 0 60px rgba(100, 200, 255, 0.04);
 }
 
 /* Subtle AI-era accent: thin gradient line at the top */
@@ -1386,14 +1390,23 @@ body[data-lang="cn"] .voices-header-text {
 
 .chat-bubble-wrap:hover {
   border-color: #d0d0d0;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
+  box-shadow:
+    0 1px 4px rgba(0, 0, 0, 0.03),
+    0 12px 48px rgba(0, 0, 0, 0.06),
+    0 0 40px rgba(147, 112, 219, 0.12),
+    0 0 80px rgba(100, 200, 255, 0.06);
   cursor: text;  /* 现代对话框交互：悬停显示文本光标 */
+  transform: translateY(-2px);
 }
 
 .chat-bubble-wrap:focus-within {
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
-  border-color: #b0b0b0;
-  background: rgba(255, 255, 255, 0.98);
+  box-shadow:
+    0 2px 12px rgba(0, 0, 0, 0.06),
+    0 16px 56px rgba(0, 0, 0, 0.08),
+    0 0 50px rgba(147, 112, 219, 0.15),
+    0 0 100px rgba(100, 200, 255, 0.08);
+  border-color: #c0a8d8;
+  background: linear-gradient(180deg, #ffffff 0%, #faf8f5 100%);
 }
 
 .chat-bubble-placeholder {
