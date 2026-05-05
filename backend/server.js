@@ -31,7 +31,6 @@ import { requestValidator } from './middleware/requestValidator.js';
 import { corsOptions, logCorsConfiguration } from './config/cors.js';
 import { initializeCache } from './utils/cache.js';
 import { isOriginWhitelisted, getWhitelistedOrigins } from './config/cors.js';
-import { readFileSync, existsSync } from 'fs';
 
 dotenv.config();
 
