@@ -112,7 +112,7 @@ MIT License — See [LICENSE](LICENSE) file
 
 ## 🔗 Quick Links
 
-- **🌐 Live Platform**: [https://the42post-production.up.railway.app](https://the42post-production.up.railway.app)
+- **🌐 Live Platform**: www.the42post.com
 - **📦 GitHub Repository**: https://github.com/xiaojialove-DRP/the42post
 - **🐛 Report Issues**: [GitHub Issues](https://github.com/xiaojialove-DRP/the42post/issues)
 
