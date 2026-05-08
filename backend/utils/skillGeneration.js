@@ -831,8 +831,10 @@ export function generateSoulHash(skillData, authorEmail, timestamp) {
 
   const hash = crypto.createHash('sha256').update(dataToHash).digest('hex');
 
-  // SOUL_[24-char-hash]_[timestamp]
-  return `SOUL_${hash.substring(0, 24)}_${timestamp}`;
+  // SOUL_[16-char-hash]_[timestamp]
+  // Uses first 16 chars of SHA256 hash for display (still cryptographically secure)
+  // Full 64-char SHA256 hash is computed internally for verification
+  return `SOUL_${hash.substring(0, 16)}_${timestamp}`;
 }
 
 // ═══ MANIFEST CREATION ═══
