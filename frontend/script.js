@@ -4517,7 +4517,7 @@ function initSkillForge() {
         initSkillsFeed();
         initSlotGrid();
 
-        publishBtn.textContent = `✓ FORGED | ${forgedSkillData.soulHash}`;
+        publishBtn.textContent = '✓ FORGED';
         publishBtn.style.background = 'var(--accent-green)';
         publishBtn.style.color = '#fff';
         publishBtn.style.borderColor = 'var(--accent-green)';
@@ -8182,7 +8182,8 @@ function generateForgeSuccessEmail(skillData) {
         .card-soul-hash { font-size: 11px; color: #999; background: #f0f0f0; padding: 8px; border-radius: 3px; margin: 10px 0; word-break: break-all; }
         .card-meta { font-size: 11px; color: #888; margin: 15px 0; line-height: 1.8; }
         .card-divider { border-top: 1px solid #ddd; margin: 15px 0; }
-        .card-footer { font-size: 12px; color: #222; font-weight: bold; }
+        .card-tagline { font-size: 12px; color: #666; font-style: italic; margin: 12px 0 8px; letter-spacing: 0.5px; }
+        .card-footer { font-size: 11px; color: #888; font-weight: 400; letter-spacing: 0.5px; }
         .install-section { margin: 40px 0; padding: 30px; background: #fafafa; border-radius: 4px; }
         .install-title { font-size: 18px; font-weight: bold; text-align: center; margin-bottom: 10px; color: #222; font-family: 'Playfair Display', serif; }
         .install-subtitle { font-size: 13px; text-align: center; color: #666; margin-bottom: 30px; font-family: serif; }
@@ -8236,6 +8237,7 @@ function generateForgeSuccessEmail(skillData) {
                   <p>Domain: ${domain}</p>
                 </div>
                 <div class="card-divider"></div>
+                <div class="card-tagline">想法是最后的基础设施</div>
                 <div class="card-footer">www.the42post.com</div>
               </div>
             </div>
