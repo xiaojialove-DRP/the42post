@@ -2048,8 +2048,26 @@
         return;
       }
 
+      // Find available (unused) tasks in this repo
+      const availableTasks = repo.tasks.filter(task => {
+        const taskDisplay = getTaskDisplay(task);
+        const scenarioId = `${repo.id}::${taskDisplay.title}`;
+        return !usedScenarioBatch.has(scenarioId);
+      });
+
+      // If all tasks in this repo have been used, show warning
+      if (availableTasks.length === 0) {
+        alert(isCn
+          ? '你已经体验了这个分类的所有场景！试试其他分类吧 🎯'
+          : 'You\'ve explored all scenarios in this category! Try another one 🎯');
+        return;
+      }
+
       twinScenarioCount++;
-      const task = repo.tasks[Math.floor(Math.random() * repo.tasks.length)];
+      const task = availableTasks[Math.floor(Math.random() * availableTasks.length)];
+      const taskDisplay = getTaskDisplay(task);
+      const scenarioId = `${repo.id}::${taskDisplay.title}`;
+      usedScenarioBatch.add(scenarioId);
       spawnCard(task, repo);
     }
 
