@@ -2477,6 +2477,57 @@ function initSkillForge() {
   }
 
   // Homepage Idea to Forge Pipeline
+  // 检查用户输入是否有意义（不是随机字符）
+  function isContentMeaningful(text) {
+    if (!text || text.length === 0) return false;
+
+    // 检测重复字符太多（如"拦拦拦拦拦"或"aaaaaa"）
+    const repeatedCharRegex = /(.)\1{5,}/g;
+    if (repeatedCharRegex.test(text)) {
+      console.log("❌ Detected excessive repeated characters");
+      return false;
+    }
+
+    // 检测中文随机字符模式（连续的无意义字符组合）
+    const isChinese = /[一-鿿]/.test(text);
+    if (isChinese) {
+      // 计算汉字密度 - 如果大部分是汉字但没有标点或结构，可能是随机的
+      const chineseChars = text.match(/[一-鿿]/g) || [];
+      const chineseDensity = chineseChars.length / text.length;
+
+      // 如果汉字密度太高（>90%）且文本比较长，可能是随机字符
+      if (chineseDensity > 0.9 && text.length >= 12) {
+        // 检查是否有一些常见的词汇或合理的字符组合
+        // 简单启发式：如果只有几个不同的汉字，可能是随意重复
+        const uniqueChars = new Set(text.match(/[一-鿿]/g) || []);
+        if (uniqueChars.size <= 3 && text.length >= 12) {
+          console.log("❌ Detected random characters with low variety");
+          return false;
+        }
+      }
+    }
+
+    // 检测英文随机字符（无意义的字母组合）
+    const isEnglish = /[a-zA-Z]/.test(text);
+    if (isEnglish && !isChinese) {
+      // 检查是否有常见的英文词汇模式（空格、常见词汇等）
+      const hasSpaces = /\s/.test(text);
+      const hasCommonWords = /\b(the|and|or|is|are|a|an|to|for|of|in|on|at|by|be|been|be|have|has|do|does|did|will|would|could|should|may|might|can|must|shall)\b/i.test(text);
+
+      // 如果没有空格且没有常见词汇，且全是字母，可能是随机的
+      if (!hasSpaces && !hasCommonWords && /^[a-zA-Z]+$/.test(text) && text.length >= 12) {
+        // 检查字母重复
+        const uniqueLetters = new Set(text.toLowerCase().match(/[a-z]/g) || []);
+        if (uniqueLetters.size <= 3) {
+          console.log("❌ Detected random English characters with low variety");
+          return false;
+        }
+      }
+    }
+
+    return true;
+  }
+
   // Share按钮处理 (btnTest是首页的Share按钮)
   const btnTest = document.getElementById("btnTest");
   console.log("initSkillForge: btnTest =", btnTest);
@@ -2532,7 +2583,43 @@ function initSkillForge() {
         }
         return;
       }
-      // 字数检查通过，显示确认信息然后打开forge
+
+      // ✅ 内容有意性检查 (检测随意打入的无意义字符)
+      if (!isContentMeaningful(ideaText)) {
+        console.log("❌ Content meaningfulness check FAILED");
+        const ethicsResult = document.getElementById('ethicsResult');
+        const ethicsShortText = document.getElementById('ethicsShortText');
+        const ethicsShortMsg = document.getElementById('ethicsShortMsg');
+        const ethicsPass = document.getElementById('ethicsPass');
+        const ethicsFail = document.getElementById('ethicsFail');
+
+        if (ethicsResult && ethicsShortText && ethicsShortMsg) {
+          // Detect language
+          const isCn = ideaText.match(/[一-龥]/);
+          if (isCn) {
+            ethicsShortMsg.textContent = "这看起来不是一个真实的想法😊 能分享你真正想对AI说的话吗？";
+          } else {
+            ethicsShortMsg.textContent = "This doesn't look like a real idea 😊 Could you share what you truly want to tell AI?";
+          }
+
+          // Show warning
+          ethicsResult.classList.add('visible', 'warning-mode');
+          ethicsShortText.style.display = 'flex';
+          ethicsShortText.classList.add('visible');
+          if (ethicsPass) ethicsPass.classList.remove('visible');
+          if (ethicsFail) ethicsFail.classList.remove('visible');
+
+          // Auto-hide warning after 3 seconds
+          setTimeout(() => {
+            ethicsResult.classList.remove('visible', 'warning-mode');
+            ethicsShortText.classList.remove('visible');
+            ethicsShortText.style.display = 'none';
+          }, 3000);
+        }
+        return;
+      }
+
+      // 字数和内容检查都通过，显示确认信息然后打开forge
       window.homepageIdea = { text: ideaInput.value, creatorName: creatorNameInput ? creatorNameInput.value : "" };
 
       // 显示确认✓和文案 (保留: We heard you...)
