@@ -6864,7 +6864,7 @@ button.generating {
 }
 
 .minimal-input {
-  padding: 14px 16px;
+  padding: 12px 14px;
   border: 1.5px solid #ddd;
   background: #ffffff;
   border-radius: 10px;
@@ -6873,6 +6873,8 @@ button.generating {
   font-family: var(--font-serif);
   color: #333;
   transition: all 0.3s ease;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .minimal-input::placeholder {
@@ -6900,7 +6902,7 @@ button.generating {
 }
 
 .minimal-textarea {
-  padding: 16px 18px;
+  padding: 12px 14px;
   border: 1.5px solid #ddd;
   background: #ffffff;
   border-radius: 10px;
@@ -6912,6 +6914,8 @@ button.generating {
   transition: all 0.3s ease;
   resize: none;
   overflow: hidden;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .minimal-textarea::placeholder {
