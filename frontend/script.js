@@ -2707,12 +2707,13 @@ function initSkillForge() {
       const probeSelected = document.getElementById('probeSelected');
       const probeSelectedText = document.getElementById('probeSelectedText');
       
+      const isChineseMode = currentLang === 'cn';
       const labels = {
-        'a': 'A · 舒适区 / Comfort Zone',
-        'b': 'B · 反题 / Opposition',
-        'c': 'C · 道德边界 / Moral Edge'
+        'a': isChineseMode ? 'A · 主流派' : 'A · Mainstream',
+        'b': isChineseMode ? 'B · 情景派' : 'B · Contextual',
+        'c': isChineseMode ? 'C · 实验派' : 'C · Experimental'
       };
-      
+
       probeSelectedText.textContent = labels[choice];
       probeSelected.style.display = 'block';
       
@@ -2907,10 +2908,11 @@ function initSkillForge() {
   document.querySelectorAll('.probe-choice').forEach(choice => {
     choice.addEventListener('click', function() {
       const selectedChoice = this.dataset.choice;
+      const isChineseMode = currentLang === 'cn';
       const labels = {
-        'a': 'A · 舒适区 / Comfort Zone',
-        'b': 'B · 反题 / Opposition',
-        'c': 'C · 道德边界 / Moral Edge'
+        'a': isChineseMode ? 'A · 主流派' : 'A · Mainstream',
+        'b': isChineseMode ? 'B · 情景派' : 'B · Contextual',
+        'c': isChineseMode ? 'C · 实验派' : 'C · Experimental'
       };
 
       // Highlight selection
@@ -3025,16 +3027,41 @@ function initSkillForge() {
         }
 
         const newSkill = await probeResponse.json();
+        console.log('✨ Regenerated skill:', newSkill);
 
         // 更新技能内容
         window.forgeData.generatedSkill = newSkill.data || newSkill;
 
         // 刷新显示
-        document.getElementById('reviewSkillName').value = newSkill.data?.name || newSkill.name || '';
-        document.getElementById('reviewSkillDef').value = newSkill.data?.definition || newSkill.definition || '';
-        document.getElementById('skillFeedback').value = '';
+        const nameEl = document.getElementById('reviewSkillName');
+        const defEl = document.getElementById('reviewSkillDef');
+        const feedbackEl = document.getElementById('skillFeedback');
 
-        alert('✓ 已重新生成！请查看上面的新内容');
+        const newName = newSkill.data?.name || newSkill.name || '';
+        const newDef = newSkill.data?.definition || newSkill.definition || '';
+
+        if (nameEl) nameEl.value = newName;
+        if (defEl) defEl.value = newDef;
+        if (feedbackEl) feedbackEl.value = '';
+
+        // 添加视觉反馈 - 闪烁效果表示内容已更新
+        if (nameEl) {
+          nameEl.style.background = '#fffacd';
+          setTimeout(() => { nameEl.style.background = ''; }, 600);
+        }
+        if (defEl) {
+          defEl.style.background = '#fffacd';
+          setTimeout(() => { defEl.style.background = ''; }, 600);
+        }
+
+        // 滚动到编辑区域，使用户能看到新内容
+        const reviewSection = document.getElementById('skillReviewStep') || nameEl?.closest('.forge-step');
+        if (reviewSection) {
+          reviewSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        const isCn = (typeof currentLang !== 'undefined' && currentLang === 'cn');
+        alert(isCn ? '✓ 已重新生成！请查看上面的新内容' : '✓ Regenerated! Check the new content above');
       } catch (error) {
         console.error('重新生成失败:', error);
         alert('重新生成失败，请重试');
@@ -4315,13 +4342,13 @@ function initSkillForge() {
         initSkillsFeed();
         initSlotGrid();
 
-        publishBtn.textContent = `✓ FORGED | ${hash}`;
+        publishBtn.textContent = `✓ FORGED | ${forgedSkillData.soulHash}`;
         publishBtn.style.background = 'var(--accent-green)';
         publishBtn.style.color = '#fff';
         publishBtn.style.borderColor = 'var(--accent-green)';
 
         // Show completion section with commemorative card
-        showForgeCompletion(forgedSkillData, hash);
+        showForgeCompletion(forgedSkillData, forgedSkillData.soulHash);
 
         // Store skill data globally for reference
         window.currentForgedSkill = forgedSkillData;
@@ -4454,22 +4481,39 @@ function showForgeCompletion(skillData, soulHash) {
           btnViewDashboard.textContent = '⏳ Loading...';
 
           // 从后端获取skill统计数据
-          const response = await fetch(
-            `${ApiClient.BASE_URL}/skills/${skillData.id}/stats`
-          );
+          const skillId = skillData.id || skillData.backendId;
+          if (!skillId) {
+            throw new Error('Skill ID not available');
+          }
+
+          const url = `${ApiClient.BASE_URL}/skills/${skillId}/stats`;
+          console.log('📊 Loading dashboard from:', url);
+
+          const response = await fetch(url);
 
           if (!response.ok) {
-            throw new Error('Failed to load dashboard');
+            const errorData = await response.json().catch(() => ({}));
+            console.error('Dashboard API error:', errorData);
+            throw new Error(`HTTP ${response.status}: ${errorData.message || response.statusText}`);
           }
 
           const result = await response.json();
+          console.log('📊 Dashboard data loaded:', result);
+
+          if (!result.stats) {
+            throw new Error('Invalid dashboard data format');
+          }
+
           showImpactDashboard(result.stats, skillData);
 
           btnViewDashboard.textContent = '📊 Impact Dashboard';
           btnViewDashboard.disabled = false;
         } catch (error) {
-          console.error('Dashboard load error:', error);
-          alert('Failed to load dashboard. Please try again.');
+          console.error('❌ Dashboard load error:', error);
+          const isCn = (typeof currentLang !== 'undefined' && currentLang === 'cn');
+          alert(isCn
+            ? `数据面板加载失败: ${error.message}\n请刷新页面后重试。`
+            : `Failed to load dashboard: ${error.message}\nPlease refresh and try again.`);
           btnViewDashboard.textContent = '📊 Impact Dashboard';
           btnViewDashboard.disabled = false;
         }
