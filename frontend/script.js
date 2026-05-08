@@ -342,7 +342,7 @@ function initSkillGrids() {
         
         <!-- Soul Hash -->
         <div class="skill-card-hash">
-          <code class="soul-hash">${skill.soul_hash || 'SH-GENERATED'}</code>
+          <code class="soul-hash">${skill.soul_hash ? (skill.soul_hash.length > 16 ? skill.soul_hash.substring(0, 16) : skill.soul_hash) : 'SH-GENERATED'}</code>
         </div>
         
         <!-- Description -->
