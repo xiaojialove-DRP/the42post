@@ -345,6 +345,7 @@ app.post('/api/admin/seed-apply', async (req, res) => {
 
     let executed = 0;
     let failed = 0;
+    const errors = [];
 
     for (let i = 0; i < statements.length; i++) {
       const stmt = statements[i].trim() + ';';
@@ -353,11 +354,9 @@ app.post('/api/admin/seed-apply', async (req, res) => {
         executed++;
       } catch (err) {
         failed++;
-        console.warn(`[seed-apply] Stmt ${i} failed: ${err.message?.substring(0, 80)}`);
-        if (failed > 5) {
-          console.warn('[seed-apply] Too many failures, stopping early');
-          break;
-        }
+        const errMsg = err.message || err.toString();
+        errors.push(`Stmt ${i}: ${errMsg.substring(0, 120)}`);
+        console.warn(`[seed-apply] Stmt ${i} failed: ${errMsg}`);
       }
     }
 
@@ -428,6 +427,45 @@ app.get('/api/admin/diagnostics', async (req, res) => {
     });
   } catch (err) {
     res.status(500).json({ error: err.message, stack: err.stack });
+  }
+});
+
+// Nuke all skills (dangerous — requires confirmation)
+app.post('/api/admin/nuke-skills', async (req, res) => {
+  const { confirm } = req.body;
+
+  if (confirm !== 'DELETE_ALL_SKILLS') {
+    return res.status(400).json({
+      error: 'Confirmation required',
+      message: 'Send { "confirm": "DELETE_ALL_SKILLS" } to proceed'
+    });
+  }
+
+  try {
+    console.log('[nuke-skills] Starting skill deletion...');
+
+    // Delete in correct order (respect FK constraints)
+    await db.query('DELETE FROM skill_usage_logs WHERE 1=1');
+    console.log('[nuke-skills] Deleted skill_usage_logs');
+
+    await db.query('DELETE FROM user_skill_interactions WHERE 1=1');
+    console.log('[nuke-skills] Deleted user_skill_interactions');
+
+    await db.query('DELETE FROM skills WHERE 1=1');
+    console.log('[nuke-skills] Deleted skills');
+
+    // Verify
+    const result = await db.query('SELECT COUNT(*) as count FROM skills');
+    const remaining = parseInt(result.rows[0]?.count || 0, 10);
+
+    res.json({
+      success: remaining === 0,
+      message: `All skills deleted. Remaining: ${remaining}`,
+      timestamp: new Date().toISOString()
+    });
+  } catch (err) {
+    console.error('[nuke-skills] Error:', err);
+    res.status(500).json({ error: err.message });
   }
 });
 
