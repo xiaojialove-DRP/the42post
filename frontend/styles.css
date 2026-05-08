@@ -5961,7 +5961,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
     max-width: calc(100vw - 12px) !important;
     margin-left: 6px !important;
     margin-right: 6px !important;
-    width: auto !important;
+    width: calc(100vw - 12px) !important;
     /* Increased padding for spacious feel */
     padding: 28px 20px !important;
     border-radius: 16px !important;
