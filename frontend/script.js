@@ -910,7 +910,7 @@ const I18N = {
     arena_back_home: '← BACK TO POST',
     arena_all_creations: 'ALL CREATIONS',
     arena_canvas_empty_title: 'Your canvas awaits.',
-    arena_canvas_empty_hint: 'TAP A SKILL CARD BELOW TO SPAWN A TASK',
+    arena_canvas_empty_hint: 'TAP A SCENARIO CARD BELOW TO START A GAME',
     arena_taste_question: 'TASTE QUESTION',
     arena_pick_skills: 'PICK 2 TASTE-SKILLS TO COMBINE',
     arena_skill_a: 'SKILL A',
