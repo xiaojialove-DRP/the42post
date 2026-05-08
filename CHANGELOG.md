@@ -2,6 +2,43 @@
 
 All notable changes to THE 42 POST.
 
+## [1.1.0] — 2026-05-08
+
+### 🎯 Playground Enhancement Sprint
+
+**Content Expansion**
+- Expanded Playground question library from 32 → 70 questions
+- Added 38 new high-quality test scenarios across 10 domains
+- 7 questions per domain (up from 3-4 per domain)
+- Focus on semantic capital: values, aesthetics, ethics, cultural significance
+- New scenario coverage: voice cloning, job displacement, data privacy, authorship rights, tradition vs AI
+
+**Content Validation**
+- Implemented content meaningfulness detection on homepage
+- Detects random/meaningless input: repeated characters, low-entropy text
+- Bilingual support (English/Chinese) with friendly error messages
+- 3-second auto-hide warning for failed validation
+
+**UI/UX Improvements**
+- Fixed Playground textarea sizing for consistent Chinese/English rendering
+- Updated font to 'Noto Serif SC', 'Noto Serif JP' for proper bilingual display
+- Increased textarea min-height (80px → 100px) for better usability
+- Improved padding (10px → 12px) for comfortable interaction
+
+**Architecture Cleanup**
+- Consolidated Playground functionality: deleted arena.html, kept playground.html as single source of truth
+- Updated all navigation links to use /playground instead of /arena.html
+- Removed deprecated SAMPLE_PLAYGROUND_TASKS from script.js
+- Added /playground route to backend for proper URL handling
+
+**Code Quality**
+- All new questions fully support bilingual (English/Chinese)
+- Consistent difficulty levels (REAL/FUN) and skill mappings
+- Maintained existing question quality standards
+- Removed misleading/"pretentious" language (e.g., "AI with taste")
+
+---
+
 ## [1.0.0] — 2026-04-24
 
 ### 🎉 Launch
@@ -82,5 +119,5 @@ All notable changes to THE 42 POST.
 ---
 
 **Status**: Production Ready ✅  
-**Version**: 1.0.0  
-**Last Updated**: 2026-04-24
+**Version**: 1.1.0  
+**Last Updated**: 2026-05-08
