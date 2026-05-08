@@ -5916,14 +5916,6 @@ function initAboutHowTo() {
       if (e.target === howtoOverlay) howtoOverlay.classList.remove('active');
     });
   }
-
-  // Footer Learn More link (opens Medium)
-  const footerLearnMoreBtn = document.getElementById('footerLearnMoreBtn');
-  if (footerLearnMoreBtn) {
-    footerLearnMoreBtn.addEventListener('click', () => {
-      window.open('https://medium.com/@the42post', '_blank');
-    });
-  }
 }
 
 /* ═══ SKILLS FEED — dynamic display of latest skills ═══ */
