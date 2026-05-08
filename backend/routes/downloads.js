@@ -237,15 +237,15 @@ This is **not just a prompt** — it's a complete **Semantic Capital Skill** fro
 
 ---
 
-## 🎯 Layer 1 · PRINCIPLE / 核心原则
+## 🎯 Layer 1 · PRINCIPLE
 
 **Why this skill exists — the philosophy behind it:**
 
-${fiveLayer ? fiveLayer.principle : (skillData.desc || 'A skill forged in The 42 Post')}
+${fiveLayer && fiveLayer.principle ? fiveLayer.principle : (skillData.desc || 'A skill forged in The 42 Post')}
 
 ---
 
-## 📌 Layer 2 · EXEMPLARS / 实例演示
+## 📌 Layer 2 · EXEMPLARS
 
 **Before/after examples showing this skill in action:**
 `;
@@ -274,7 +274,7 @@ ${ex.without_skill || 'Standard response without skill'}
     md += `\n*No exemplars generated yet — complete the Intuition Probe to generate comparative examples.*\n`;
   }
 
-  md += `\n---\n\n## 🚧 Layer 3 · BOUNDARIES / 应用边界\n\n**When to use this, when not to, and the gray areas:**\n`;
+  md += `\n---\n\n## 🚧 Layer 3 · BOUNDARIES\n\n**When to use this, when not to, and the gray areas:**\n`;
 
   if (fiveLayer && fiveLayer.boundaries) {
     const b = fiveLayer.boundaries;
@@ -295,7 +295,7 @@ ${ex.without_skill || 'Standard response without skill'}
     md += `**Disallowed uses:** ${skillData.disallowedUses || 'Harmful, illegal, or deceptive purposes'}\n`;
   }
 
-  md += `\n---\n\n## ✔️ Layer 4 · EVALUATION / 验证标准\n\n**How to know if this skill is working:**\n`;
+  md += `\n---\n\n## ✔️ Layer 4 · EVALUATION\n\n**How to know if this skill is working:**\n`;
 
   if (fiveLayer && fiveLayer.evaluation && fiveLayer.evaluation.test_cases) {
     fiveLayer.evaluation.test_cases.forEach((tc, i) => {
@@ -311,7 +311,7 @@ ${ex.without_skill || 'Standard response without skill'}
     md += `\n*No evaluation test cases generated yet — complete the Intuition Probe to auto-generate.*\n`;
   }
 
-  md += `\n---\n\n## 🌍 Layer 5 · CULTURAL VARIANTS / 文化适配\n\n**Localized versions for different languages and cultures:**\n`;
+  md += `\n---\n\n## 🌍 Layer 5 · CULTURAL VARIANTS\n\n**Localized versions for different languages and cultures:**\n`;
 
   if (fiveLayer && fiveLayer.cultural_variants) {
     for (const [locale, variant] of Object.entries(fiveLayer.cultural_variants)) {
