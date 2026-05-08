@@ -2546,36 +2546,54 @@ function initSkillForge() {
       const chineseDensity = chineseChars.length / text.length;
 
       // 如果汉字密度 > 85%（纯中文或中文为主），检查是否为无意义输入
-      if (chineseDensity > 0.85 && text.length >= 12) {
-        const uniqueChars = new Set(text.match(/[一-鿿]/g) || []);
+      if (chineseDensity > 0.85) {
+        // 常见的有意义中文词汇和虚词
+        const meaningfulWordsPattern = /我|你|他|她|它|们|是|有|这|那|在|了|不|能|会|想|说|做|去|来|给|和|或|因为|所以|但是|如果|当|虽然|然而|为什么|什么|哪|怎|多少|比如|例如|个|人|事|时|要|非常|真|很|特别|只|又|还|也|再|却|就|才|既|或者|以及|对|关于|关系|认为|看起来|感觉|似乎|也许|可能|应该|需要|希望|愿意|开始|继续|结束|发生|发现|开发|创建|建立|改进|改变|解决|推动|推进|支持|帮助|教导|引导|指导|影响|改善|完善|增强/;
+
+        const hasMeaningfulWords = meaningfulWordsPattern.test(text);
+        const uniqueChars = new Set(chineseChars);
+        const uniqueRatio = uniqueChars.size / chineseChars.length;
+
+        // 短文本（12-20字）的严格检查
+        if (text.length >= 12 && text.length <= 20) {
+          // 如果没有常见词汇，且字符多样性不足，则拒绝
+          if (!hasMeaningfulWords && uniqueRatio < 0.7) {
+            console.log("❌ Detected random Chinese characters in short text (no meaningful words, low diversity)");
+            return false;
+          }
+          // 即使字符多样，如果完全没有标点和常见词汇，也要拒绝
+          const hasPunctuation = /[，。！？；：""''（）【】《》…·~]/g.test(text);
+          if (!hasPunctuation && !hasMeaningfulWords) {
+            console.log("❌ Detected random Chinese characters (no punctuation, no meaningful words)");
+            return false;
+          }
+        }
+
+        // 中等文本（21-40字）检查
+        if (text.length > 20 && text.length <= 40) {
+          if (!hasMeaningfulWords && uniqueRatio < 0.6) {
+            console.log("❌ Detected random Chinese characters in medium text (no meaningful words, low diversity)");
+            return false;
+          }
+        }
 
         // 更严格的检查：
         // - 如果unique char太少（≤4个），可能是随意重复
-        // - 如果整个文本的unique char占比太低（≤30%），可能是随意拼凑
-        const uniqueRatio = uniqueChars.size / chineseChars.length;
-
-        if (uniqueChars.size <= 4 || uniqueRatio <= 0.3) {
+        // - 如果整个文本的unique char占比太低（≤25%），可能是随意拼凑
+        if (uniqueChars.size <= 4 || uniqueRatio <= 0.25) {
           console.log("❌ Detected random Chinese characters (low diversity)");
           return false;
         }
 
-        // 检查是否完全没有标点、逗号、句号（真实中文通常有）
-        const hasPunctuation = /[，。！？；：""''（）【】《》…]/g.test(text);
-        const hasSpaces = /\s/g.test(text);
-
-        // 如果是12-20字的纯汉字，没有标点也没有空格，可能是无意义
-        if (text.length <= 20 && chineseDensity > 0.95 && !hasPunctuation && !hasSpaces) {
-          // 检查字符是否是简单重复模式
-          // 例如：12个字中，最常见的字出现了5次以上
-          const charFreq = {};
-          for (let char of chineseChars) {
-            charFreq[char] = (charFreq[char] || 0) + 1;
-          }
-          const maxFreq = Math.max(...Object.values(charFreq));
-          if (maxFreq >= chineseChars.length * 0.4) {
-            console.log("❌ Detected repetitive Chinese pattern (one char appears 40%+ of the time)");
-            return false;
-          }
+        // 检查字符频率：如果某个字符出现频率太高（40%+），可能是无意义
+        const charFreq = {};
+        for (let char of chineseChars) {
+          charFreq[char] = (charFreq[char] || 0) + 1;
+        }
+        const maxFreq = Math.max(...Object.values(charFreq));
+        if (maxFreq >= chineseChars.length * 0.4) {
+          console.log("❌ Detected repetitive Chinese pattern (one char appears 40%+ of the time)");
+          return false;
         }
       }
     }
