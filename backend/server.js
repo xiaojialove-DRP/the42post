@@ -146,6 +146,12 @@ app.use(express.static(frontendPath, {
   }
 }));
 
+// ═══ PLAYGROUND ROUTE ═══
+// Serve playground page (previously arena.html)
+app.get('/playground', (req, res) => {
+  res.sendFile(join(frontendPath, 'playground.html'));
+});
+
 // Root route - return API info if frontend not found
 app.get('/', (req, res) => {
   console.log('GET / request received');
