@@ -7703,107 +7703,25 @@ async function initAgentArchiveView() {
     });
   }
   
-  // Domain Grid
+  // Domain Grid - Display only domain categories (no skill data)
   function initDomainGrid() {
     const grid = document.getElementById('domainGrid');
-    const starredSkills = JSON.parse(localStorage.getItem('starred_skills') || '{}');
 
     grid.innerHTML = '';
     ARCHIVE_DOMAINS.forEach(dom => {
-      const domSkills = allSkills.filter(s => mapDomain(s.domain) === dom.key);
       const cell = document.createElement('div');
-      cell.className = 'domain-cell';
-
-      const openSeats = Math.max(0, 2 - domSkills.length);
-      let html = domSkills.map(s => {
-        const hash = soulHash(s.id + s.title);
-        const isStarred = starredSkills[s.id] === true;
-        const canDownload = isStarred;
-        // Language-aware fields: use description_cn/title_cn from DB or fallbacks
-        const titleEn = s.title || s.titleEn || '';
-        const titleCn = s.title_cn || s.titleCn || s.title || '';
-        const descEn = s.description || s.desc || '';
-        const descCn = s.description_cn || s.descCn || s.desc || '';
-        const fullDomain = getFullDomain(s.domain);
-        return `
-          <div class="domain-skill" data-skill-id="${s.id}">
-            <div class="domain-skill-title text-en">${titleEn}</div>
-            <div class="domain-skill-title-cn text-cn">${titleCn}</div>
-            <div class="domain-skill-agent">${s.agent || ''}</div>
-            <div class="domain-skill-desc text-en">${descEn}</div>
-            <div class="domain-skill-desc text-cn">${descCn}</div>
-            <div class="domain-skill-meta">
-              <span class="hash-val">${hash}</span>
-              <span class="domain-tag">${fullDomain}</span>
-              <span>★ ${s.starlight || 0}</span>
-            </div>
-            <div class="domain-skill-actions">
-              <button class="btn-skill-star" data-skill-id="${s.id}" title="Star this skill">
-                ${isStarred ? '⭐' : '☆'} ${s.stars || 0}
-              </button>
-              <button class="btn-skill-download" data-skill-id="${s.id}"
-                      ${!canDownload ? 'disabled' : ''}
-                      title="${canDownload ? 'Download' : 'Star first'}">
-                📥 ${s.downloads || 0}
-              </button>
-              <!-- One-click jump into the Playground with this skill
-                   pre-selected. playground.html?skill=<id> reads the param on
-                   load and auto-spawns a Twin Test card with this skill,
-                   skipping the picker. -->
-              <button class="btn-skill-play" data-skill-id="${s.id}"
-                      title="Play this skill in the Playground"
-                      onclick="event.stopPropagation(); window.location.href='playground.html?skill=${encodeURIComponent(s.id)}'">
-                <span class="text-en">▶ Play</span><span class="text-cn">▶ 试玩</span>
-              </button>
-            </div>
-          </div>`;
-      }).join('');
-
-      // DEBUG: Log the first skill to verify descriptions are present
-      if (domSkills.length > 0) {
-        const firstSkill = domSkills[0];
-        console.log(`🔍 DEBUG: Domain "${dom.key}" first skill:`, {
-          title: firstSkill.title,
-          description: firstSkill.description,
-          desc: firstSkill.desc,
-          id: firstSkill.id
-        });
-      }
-
-      for (let i = 0; i < openSeats; i++) {
-        html += `
-          <div class="domain-skill domain-open-seat">
-            <div class="domain-skill-title text-en">Open Seat</div>
-            <div class="domain-skill-title text-cn">虚位以待</div>
-            <div class="domain-skill-desc text-en">Awaiting alignment contribution.</div>
-            <div class="domain-skill-desc text-cn">等待对齐贡献。</div>
-          </div>`;
-      }
+      cell.className = 'domain-cell domain-category-only';
 
       cell.innerHTML = `
         <div class="domain-title text-cn">${dom.cn}</div>
         <div class="domain-title-en text-en">${dom.en}</div>
-        ${html}
+        <div class="domain-placeholder">
+          <div class="domain-placeholder-text text-cn">虚位以待</div>
+          <div class="domain-placeholder-text text-en">Coming Soon</div>
+        </div>
       `;
       grid.appendChild(cell);
     }); // end ARCHIVE_DOMAINS.forEach
-
-    // DEBUG: Check if descriptions are actually rendered in the DOM
-    setTimeout(() => {
-      const descElements = document.querySelectorAll('.domain-skill-desc');
-      if (descElements.length > 0) {
-        const firstDesc = descElements[0];
-        console.log(`🔍 DEBUG: First .domain-skill-desc element:`, {
-          textContent: firstDesc.textContent,
-          innerHTML: firstDesc.innerHTML,
-          className: firstDesc.className,
-          computedDisplay: window.getComputedStyle(firstDesc).display,
-          computedColor: window.getComputedStyle(firstDesc).color
-        });
-      } else {
-        console.log('🔍 DEBUG: No .domain-skill-desc elements found!');
-      }
-    }, 100);
   } // end initDomainGrid
 
   // Initialize
