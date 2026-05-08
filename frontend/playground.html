@@ -2254,7 +2254,19 @@
       fetchHotSkills().catch(() => {});
 
       const params = new URLSearchParams(window.location.search);
-      const skillId = params.get('skill');
+      let skillId = params.get('skill');
+      let selectedSkillData = params.get('selectedSkill');
+
+      // Handle selectedSkill from archive.html (JSON-encoded skill info)
+      if (selectedSkillData && !skillId) {
+        try {
+          const skillInfo = JSON.parse(decodeURIComponent(selectedSkillData));
+          skillId = skillInfo.id;
+        } catch (e) {
+          console.warn('Failed to parse selectedSkill:', e.message);
+        }
+      }
+
       if (!skillId) return; // dock click will let user pick a skill in the card
 
       try {

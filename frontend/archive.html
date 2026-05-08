@@ -407,7 +407,7 @@
             <button class="skill-btn" onclick="likeSkill('${skill.id}', this)">
               ${i18n[currentLang].archive_like}
             </button>
-            <button class="skill-btn skill-btn-primary">
+            <button class="skill-btn skill-btn-primary" onclick="goToPlaygroundWithSkill('${skill.id}', '${skill.title}')">
               ${i18n[currentLang].archive_test}
             </button>
           </div>
@@ -432,6 +432,15 @@
       button.textContent = isLiked ?
         i18n[currentLang].archive_liked :
         i18n[currentLang].archive_like;
+    }
+
+    function goToPlaygroundWithSkill(skillId, skillTitle) {
+      // Encode skill info and pass to playground
+      const skillData = encodeURIComponent(JSON.stringify({
+        id: skillId,
+        title: skillTitle
+      }));
+      window.location.href = `/playground?selectedSkill=${skillData}`;
     }
 
     // Search functionality

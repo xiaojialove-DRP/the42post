@@ -5263,7 +5263,7 @@ function initAgentView() {
   const btn = document.getElementById('btnAgentView');
   if (!btn) return;
   btn.addEventListener('click', () => {
-    showAgentArchive();
+    window.location.href = '/archive';
   });
 
   // Back button in Agent Archive
