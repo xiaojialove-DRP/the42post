@@ -131,6 +131,9 @@
 
   /* Increase font sizes slightly on desktop for better readability on larger screens */
   .forge-input, .minimal-input { font-size: 14px; }
+
+  /* Increase chat bubble padding on desktop for wider input */
+  .chat-bubble-wrap { padding: 36px 44px; }
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -1446,7 +1449,7 @@ body[data-lang="cn"] .voices-header-text {
   background: linear-gradient(180deg, #ffffff 0%, #fcfbf8 100%);
   border: 1.5px solid #e4e0d9;
   border-radius: 24px;
-  padding: 36px 44px;
+  padding: 36px 24px;
   display: flex;
   flex-direction: column;
   gap: 0;
@@ -1461,18 +1464,6 @@ body[data-lang="cn"] .voices-header-text {
     0 0 35px rgba(106, 142, 186, 0.05);
 }
 
-/* Subtle AI-era accent: thin gradient line at the top */
-.chat-bubble-wrap::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 24px;
-  right: 24px;
-  height: 2px;
-  background: linear-gradient(90deg, transparent 0%, var(--coral) 20%, var(--periwinkle) 50%, var(--teal) 80%, transparent 100%);
-  opacity: 0.5;
-  border-radius: 2px;
-}
 
 /* State: has content being edited */
 .chat-bubble-wrap.is-focused {
@@ -2118,9 +2109,9 @@ body[data-lang="cn"] .voices-header-text {
   gap: 12px !important;
   padding: 16px 20px !important;
   border-radius: 12px !important;
-  background: #f0f9ec !important;
-  border: 1px solid #c5e1b3 !important;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08), 0 2px 6px rgba(107, 157, 92, 0.12);
+  background: #ecf3ff !important;
+  border: 1px solid #b3d4e1 !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08), 0 2px 6px rgba(92, 142, 157, 0.12);
   width: 100%;
   max-width: 380px;
   animation: toast-slide-in 0.4s cubic-bezier(0.16, 1, 0.3, 1);
@@ -2131,13 +2122,13 @@ body[data-lang="cn"] .voices-header-text {
 }
 .ethics-short-text .ethics-icon {
   font-size: 16px;
-  color: #6b9d5c;
+  color: #4a7a9d;
   flex-shrink: 0;
   margin-top: 1px;
 }
 .ethics-short-text .ethics-msg {
   font-size: var(--font-sm);
-  color: #2d4a23;
+  color: #234a5c;
   line-height: 1.55;
   font-weight: 500;
   font-family: var(--font-serif);
@@ -2149,7 +2140,7 @@ body[data-lang="cn"] .voices-header-text {
   flex-shrink: 0;
 }
 
-.ethics-pass .ethics-icon { color: #6b9d5c; }
+.ethics-pass .ethics-icon { color: #4a7a9d; }
 .ethics-fail .ethics-icon { color: var(--coral); }
 
 .ethics-msg {
