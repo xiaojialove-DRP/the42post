@@ -10,11 +10,10 @@
  * @param {string} skillData.author - Creator name
  * @param {string} skillData.email - Creator email
  * @param {string} soulHash - Soul-Hash identifier
- * @param {string} invitationCode - Invitation code
  * @param {string} createdDate - Creation date (ISO format)
  * @returns {string} - HTML content of the certificate
  */
-export function generateCertificateHTML(skillData, soulHash, invitationCode, createdDate) {
+export function generateCertificateHTML(skillData, soulHash, createdDate) {
   const title = skillData.title || 'Untitled Skill';
   const author = skillData.author || skillData.username || 'Creator';
   const formattedDate = new Date(createdDate).toLocaleDateString('en-US', {
@@ -271,7 +270,6 @@ export function generateCertificateHTML(skillData, soulHash, invitationCode, cre
  * Generate email template HTML with certificate card
  * @param {Object} skillData - Skill data
  * @param {string} soulHash - Soul-Hash identifier
- * @param {string} invitationCode - Invitation code
  * @param {string} createdDate - Creation date
  * @param {Object} downloadUrls - Download URLs for different formats
  * @param {string} cardImageBase64 - Optional card image as base64 PNG
@@ -280,7 +278,6 @@ export function generateCertificateHTML(skillData, soulHash, invitationCode, cre
 export function generateEmailTemplate(
   skillData,
   soulHash,
-  invitationCode,
   createdDate,
   downloadUrls = {},
   cardImageBase64 = null

@@ -895,8 +895,6 @@ const I18N = {
     forge_oath_3: 'I commit to no intentional harm.',
     forge_back: '← BACK',
     forge_publish_btn: '⚔  PUBLISH & FORGE',
-    forge_invite_label: 'INVITATION CODE',
-    forge_invite_desc: 'Share this with those who share our values',
     forge_email_sent: '📧  All files sent to your email',
     card_certificate: 'Creator\'s Certificate',
     forge_dashboard: '📊  Impact Dashboard',
@@ -1081,8 +1079,6 @@ const I18N = {
     forge_oath_3: '承诺无主观恶意伤害。',
     forge_back: '← 返回',
     forge_publish_btn: '⚔  发布并铸造',
-    forge_invite_label: '邀请码',
-    forge_invite_desc: '用邀请码分享给志同道合的伙伴',
     forge_email_sent: '📧  所有文件已发送到你的邮件',
     card_certificate: '创作者证书',
     forge_dashboard: '📊  数据面板',
@@ -4084,7 +4080,6 @@ function initSkillForge() {
 
       setTimeout(async () => {
         const hash = 'SOUL_' + Math.random().toString(16).slice(2, 10);
-        const inviteCode = generateInviteCode();
 
         // Collect skill data from form
         let skillNameValue = 'Unnamed Skill';
@@ -4406,7 +4401,6 @@ function showForgeCompletion(skillData, soulHash) {
           skillTitle: skillData.title,
           skillId: skillData.id,
           soulHash: soulHash,
-          invitationCode: window.currentInvitationCode || generateInviteCode(),
           createdDate: new Date().toISOString(),
           cardImageBase64: cardImageBase64
         });
@@ -4442,11 +4436,6 @@ function showForgeCompletion(skillData, soulHash) {
     if (cardSoulHash) cardSoulHash.textContent = 'Soul-Hash: ' + soulHash;
     if (cardCreator) cardCreator.textContent = 'Created by: ' + (skillData.author || skillData.username || 'Creator');
     if (cardDate) cardDate.textContent = 'Forged: ' + new Date().toLocaleDateString('en-US', {year: 'numeric', month: 'short', day: 'numeric'});
-
-    // Generate and save invitation code
-    const invitationCode = generateInviteCode();
-    window.currentInvitationCode = invitationCode;
-    if (cardInviteCode) cardInviteCode.textContent = invitationCode;
 
     if (completionEmail) completionEmail.textContent = skillData.email || '[Your Email]';
 
@@ -4531,7 +4520,6 @@ async function sendForgeSuccessEmail(options) {
     skillTitle = 'Untitled Skill',
     skillId,
     soulHash,
-    invitationCode,
     createdDate = new Date().toISOString(),
     cardImageBase64
   } = options;
@@ -4550,7 +4538,6 @@ async function sendForgeSuccessEmail(options) {
           skillTitle,
           skillId,
           soulHash,
-          invitationCode,
           createdDate,
           cardImageBase64
         })
@@ -4762,15 +4749,6 @@ async function downloadCreatorCard(skillData, soulHash) {
 }
 
 /* ═══ KNIGHT CARD GENERATOR ═══ */
-function generateInviteCode() {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  let code = '42-';
-  for (let i = 0; i < 4; i++) code += chars[Math.floor(Math.random() * chars.length)];
-  code += '-';
-  for (let i = 0; i < 4; i++) code += chars[Math.floor(Math.random() * chars.length)];
-  return code;
-}
-
 function generateKnightCard(soulHash, inviteCode) {
   const canvas = document.getElementById('knightCardCanvas');
   if (!canvas) return;
@@ -4871,26 +4849,12 @@ function generateKnightCard(soulHash, inviteCode) {
   ctx.fillStyle = '#d0cec8';
   ctx.fillRect(30, 274, w - 60, 1);
 
-  // Invite code section
-  ctx.font = '9px "JetBrains Mono", monospace';
-  ctx.fillStyle = '#888';
-  ctx.fillText('INVITATION CODE · 邀请码', w / 2, 294);
-
-  ctx.font = 'bold 22px "JetBrains Mono", monospace';
-  ctx.fillStyle = '#1a1a1a';
-  ctx.fillText(inviteCode, w / 2, 322);
-
-  ctx.font = '9px "JetBrains Mono", monospace';
-  ctx.fillStyle = '#aaa';
-  ctx.fillText('Share this code with those who share our values', w / 2, 342);
-  ctx.fillText('将此邀请码分享给认同我们价值观的朋友', w / 2, 354);
-
   // Bottom line
   ctx.fillStyle = '#1a1a1a';
-  ctx.fillRect(30, 362, w - 60, 1);
+  ctx.fillRect(30, 294, w - 60, 1);
   ctx.font = '8px "JetBrains Mono", monospace';
   ctx.fillStyle = '#aaa';
-  ctx.fillText('THE 42 POST · PROTOCOL CAMELOT · HUMAN VALUES ALIGNMENT', w / 2, 370);
+  ctx.fillText('THE 42 POST · PROTOCOL CAMELOT · HUMAN VALUES ALIGNMENT', w / 2, 310);
 
   // Show preview as image
   setTimeout(() => {

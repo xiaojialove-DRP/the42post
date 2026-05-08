@@ -22,7 +22,6 @@ router.post('/send-forge-success', async (req, res, next) => {
       skillTitle,
       skillId,
       soulHash,
-      invitationCode,
       createdDate,
       cardImageBase64
     } = req.body;
@@ -42,10 +41,10 @@ router.post('/send-forge-success', async (req, res, next) => {
       });
     }
 
-    if (!skillTitle || !soulHash || !invitationCode) {
+    if (!skillTitle || !soulHash) {
       return res.status(400).json({
         error: 'Missing input',
-        message: 'skillTitle, soulHash, and invitationCode are required'
+        message: 'skillTitle and soulHash are required'
       });
     }
 
@@ -67,7 +66,6 @@ router.post('/send-forge-success', async (req, res, next) => {
     const emailHtml = generateEmailTemplate(
       skillData,
       soulHash,
-      invitationCode,
       createdDate || new Date().toISOString(),
       downloadUrls,
       cardImageBase64
@@ -79,7 +77,6 @@ router.post('/send-forge-success', async (req, res, next) => {
       recipientName: recipientName || 'Creator',
       skillTitle,
       soulHash,
-      invitationCode,
       emailHtml
     });
 
@@ -139,7 +136,6 @@ router.post('/test', async (req, res, next) => {
       recipientName: 'Test User',
       skillTitle: '测试技能 | Test Skill',
       soulHash: 'SOUL_TEST_' + Math.random().toString(16).slice(2, 8),
-      invitationCode: 'TEST-CODE-42',
       emailHtml: `
         <h2>🧪 THE 42 POST 邮件配置测试</h2>
         <p>这是一封测试邮件，用于验证 SMTP 配置是否正确。</p>
@@ -190,10 +186,6 @@ router.get('/certificate/:skill_id', async (req, res, next) => {
 
     const skill = skillResult.rows[0];
 
-    // Generate invitation code (this should be stored in DB, but for now generate it)
-    // In a real implementation, this would be fetched from the database
-    const invitationCode = `42-${Math.random().toString(36).substr(2, 4).toUpperCase()}-${Math.random().toString(36).substr(2, 4).toUpperCase()}`;
-
     const skillData = {
       title: skill.title,
       author: skill.username || 'Creator',
@@ -203,7 +195,6 @@ router.get('/certificate/:skill_id', async (req, res, next) => {
     const certificateHtml = generateCertificateHTML(
       skillData,
       skill.soul_hash,
-      invitationCode,
       skill.created_at
     );
 

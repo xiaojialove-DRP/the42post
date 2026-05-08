@@ -135,7 +135,6 @@ export async function sendForgeSuccessEmail(options) {
     recipientName = 'Creator',
     skillTitle = 'Untitled Skill',
     soulHash,
-    invitationCode,
     emailHtml
   } = options;
 
@@ -152,7 +151,6 @@ export async function sendForgeSuccessEmail(options) {
 
 标题: ${skillTitle}
 Soul-Hash: ${soulHash}
-邀请码: ${invitationCode}
 
 所有文件已发送到此邮件。
 
