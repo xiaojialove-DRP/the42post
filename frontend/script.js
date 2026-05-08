@@ -7682,7 +7682,7 @@ async function initAgentArchiveView() {
 
     grid.innerHTML = '';
     ARCHIVE_DOMAINS.forEach(dom => {
-      const domSkills = allSkills.filter(s => s.domain === dom.key);
+      const domSkills = allSkills.filter(s => mapDomain(s.domain) === dom.key);
       const cell = document.createElement('div');
       cell.className = 'domain-cell';
 
