@@ -6175,6 +6175,25 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 .tt-meta { display: flex; gap: 14px; margin-top: 6px; font-size: 9px; }
 .tt-meta span { color: #8a7a6e; }
 
+/* Tooltip info row - creator and hash on same line */
+.tt-info-row { display: flex; gap: 12px; margin: 4px 0; align-items: center; justify-content: space-between; }
+.tt-agent { font-size: 10px; color: #7a6a5e; font-weight: 500; }
+.tt-hash { font-size: 9px; color: #d4726a; letter-spacing: 1px; font-weight: 600; }
+
+/* Archive Skills Grid Card Styles */
+.skill-item .skill-info-row { display: flex; gap: 12px; margin: 6px 0; align-items: center; justify-content: space-between; }
+.skill-item .skill-creator { font-size: 11px; color: #7a6a5e; font-weight: 500; }
+.skill-item .skill-info-row .skill-hash { font-size: 10px; color: #d4726a; letter-spacing: 1px; font-weight: 600; font-family: 'JetBrains Mono', monospace; }
+.skill-item .skill-hash::before { content: ''; }
+.skill-item .skill-desc { font-size: 12px; color: #666; line-height: 1.5; margin: 6px 0; }
+.skill-item .skill-actions { display: flex; gap: 6px; margin-top: 10px; }
+.skill-item .skill-action-btn {
+  background: none; border: none; cursor: pointer; font-size: 16px;
+  transition: transform 0.2s, opacity 0.2s; padding: 2px 4px;
+}
+.skill-item .skill-action-btn:hover { transform: scale(1.2); opacity: 0.8; }
+.skill-item .skill-action-btn:active { transform: scale(0.95); }
+
 /* Tooltip action buttons */
 .tt-actions { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
 .tt-action-btn {

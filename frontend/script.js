@@ -7773,10 +7773,18 @@ async function initAgentArchiveView() {
           const creatorName = skill.agent && skill.agent.startsWith('creator_')
             ? skill.agent.substring(8)
             : (skill.creatorName || skill.creator_name || '');
+          // Get soul hash (shortened to 16 chars)
+          const soulHashFull = skill.soul_hash || skill.soulHash || '';
+          const soulHashShort = soulHashFull && soulHashFull.length > 16
+            ? soulHashFull.substring(0, 16)
+            : soulHashFull;
           return `
             <div class="skill-item" data-skill-id="${skill.id}">
               <div class="skill-title">${title}</div>
-              ${creatorName ? `<div class="skill-creator">by ${creatorName}</div>` : ''}
+              <div class="skill-info-row">
+                <div class="skill-creator">${creatorName ? `by ${creatorName}` : ''}</div>
+                <div class="skill-hash">${soulHashShort}</div>
+              </div>
               <div class="skill-desc">${shortDesc}</div>
               <div class="skill-actions">
                 <button class="skill-action-btn star-btn" data-skill-id="${skill.id}" title="Star">⭐</button>
