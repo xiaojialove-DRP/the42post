@@ -7706,9 +7706,15 @@ async function initAgentArchiveView() {
   // Domain Grid - Display only domain categories (no skill data)
   function initDomainGrid() {
     const grid = document.getElementById('domainGrid');
+    if (!grid) {
+      console.error('❌ Domain Grid: #domainGrid element not found');
+      return;
+    }
 
+    console.log('🔧 Domain Grid: Initializing with', ARCHIVE_DOMAINS.length, 'domains');
     grid.innerHTML = '';
-    ARCHIVE_DOMAINS.forEach(dom => {
+
+    ARCHIVE_DOMAINS.forEach((dom, idx) => {
       const cell = document.createElement('div');
       cell.className = 'domain-cell domain-category-only';
 
@@ -7721,7 +7727,10 @@ async function initAgentArchiveView() {
         </div>
       `;
       grid.appendChild(cell);
+      console.log(`  ✓ Domain ${idx + 1}: ${dom.cn} (${dom.en})`);
     }); // end ARCHIVE_DOMAINS.forEach
+
+    console.log('✓ Domain Grid: Rendered', ARCHIVE_DOMAINS.length, 'domain categories');
   } // end initDomainGrid
 
   // Initialize
