@@ -4661,7 +4661,9 @@ function showForgeCompletion(skillData, soulHash) {
     const completionEmail = document.getElementById('completionEmail');
 
     if (cardTitle) cardTitle.textContent = skillData.title || skillData.titleCn || '[Skill Title]';
-    if (cardSoulHash) cardSoulHash.textContent = 'Soul-Hash: ' + soulHash;
+    // Shorten soul hash display (show only first 16 chars)
+    const shortSoulHash = soulHash && soulHash.length > 16 ? soulHash.substring(0, 16) : soulHash;
+    if (cardSoulHash) cardSoulHash.textContent = 'Soul-Hash: ' + shortSoulHash;
     if (cardCreator) cardCreator.textContent = 'Created by: ' + (skillData.author || skillData.username || 'Creator');
     if (cardDate) cardDate.textContent = 'Forged: ' + new Date().toLocaleDateString('en-US', {year: 'numeric', month: 'short', day: 'numeric'});
 
@@ -7546,7 +7548,9 @@ async function initAgentArchiveView() {
       document.getElementById('ttAgent').textContent = n.agent || '';
       // Description: show appropriate language based on currentLang
       document.getElementById('ttDesc').textContent = lang === 'cn' ? (n.descCn || n.desc || '') : (n.desc || n.descCn || '');
-      document.getElementById('ttHash').textContent = n.hash;
+      // Shorten soul hash display (show only first 20 chars + ...)
+      const hashDisplay = n.hash && n.hash.length > 20 ? n.hash.substring(0, 20) + '...' : n.hash;
+      document.getElementById('ttHash').textContent = hashDisplay;
       document.getElementById('ttStarlight').textContent = '★ ' + n.starlight;
       document.getElementById('ttDomain').textContent = n.domain;
       tooltip.style.left = Math.min(e.clientX - rect.left + 16, cw - 300) + 'px';
@@ -7638,7 +7642,9 @@ async function initAgentArchiveView() {
         document.getElementById('ttNameCn').textContent = n.titleCn || n.title || '';
         document.getElementById('ttAgent').textContent = n.agent || '';
         document.getElementById('ttDesc').textContent = lang === 'cn' ? (n.descCn || n.desc || '') : (n.desc || n.descCn || '');
-        document.getElementById('ttHash').textContent = n.hash;
+        // Shorten soul hash display
+        const hashDisplay = n.hash && n.hash.length > 20 ? n.hash.substring(0, 20) + '...' : n.hash;
+        document.getElementById('ttHash').textContent = hashDisplay;
         document.getElementById('ttStarlight').textContent = '★ ' + n.starlight;
         document.getElementById('ttDomain').textContent = n.domain;
         tooltip.style.left = Math.min(tapCandidate.x - rect.left + 16, cw - 300) + 'px';
@@ -7716,7 +7722,7 @@ async function initAgentArchiveView() {
     });
   }
   
-  // Domain Grid - Display only domain categories (no skill data)
+  // Archive Skills Grid - Display skills organized by domain with action buttons
   function initDomainGrid() {
     const grid = document.getElementById('domainGrid');
     if (!grid) {
@@ -7724,89 +7730,108 @@ async function initAgentArchiveView() {
       return;
     }
 
-    console.log('🔧 Domain Grid: Initializing with', ARCHIVE_DOMAINS.length, 'domains');
+    const lang = (typeof currentLang !== 'undefined' ? currentLang : 'en');
+    console.log('🔧 Domain Grid: Initializing skills organized by domain');
     grid.innerHTML = '';
 
+    // Group allSkills by domain
+    const skillsByDomain = {};
+    ARCHIVE_DOMAINS.forEach(dom => {
+      skillsByDomain[dom.id] = [];
+    });
+
+    allSkills.forEach(skill => {
+      const domain = mapDomain(skill.domain) || 'ideas';
+      if (skillsByDomain[domain]) {
+        skillsByDomain[domain].push(skill);
+      }
+    });
+
+    // Render each domain with its skills
     ARCHIVE_DOMAINS.forEach((dom, idx) => {
       const cell = document.createElement('div');
-      cell.className = 'domain-cell domain-category-only';
+      cell.className = 'domain-cell';
+
+      const domainSkills = skillsByDomain[dom.id] || [];
+      const domainTitle = lang === 'cn' ? dom.cn : dom.en;
+
+      let skillsHTML = '';
+      if (domainSkills.length > 0) {
+        skillsHTML = domainSkills.slice(0, 3).map(skill => {
+          const title = lang === 'cn' ? (skill.title_cn || skill.titleCn || skill.title) : (skill.title || skill.title_cn || skill.titleCn);
+          const desc = lang === 'cn' ? (skill.description_cn || skill.descCn || skill.desc || '') : (skill.description || skill.desc || skill.description_cn || '');
+          const shortDesc = desc.substring(0, 60) + (desc.length > 60 ? '...' : '');
+          return `
+            <div class="skill-item" data-skill-id="${skill.id}">
+              <div class="skill-title">${title}</div>
+              <div class="skill-desc">${shortDesc}</div>
+              <div class="skill-actions">
+                <button class="skill-action-btn star-btn" data-skill-id="${skill.id}" title="Star">⭐</button>
+                <button class="skill-action-btn download-btn" data-skill-id="${skill.id}" title="Download">📥</button>
+                <button class="skill-action-btn play-btn" data-skill-id="${skill.id}" title="Play">🎮</button>
+              </div>
+            </div>
+          `;
+        }).join('');
+      } else {
+        skillsHTML = `
+          <div class="domain-placeholder">
+            <div class="domain-placeholder-text text-cn">虚位以待</div>
+            <div class="domain-placeholder-text text-en">Coming Soon</div>
+          </div>
+        `;
+      }
 
       cell.innerHTML = `
         <div class="domain-title text-cn">${dom.cn}</div>
         <div class="domain-title-en text-en">${dom.en}</div>
-        <div class="domain-placeholder">
-          <div class="domain-placeholder-text text-cn">虚位以待</div>
-          <div class="domain-placeholder-text text-en">Coming Soon</div>
-        </div>
+        <div class="skills-container">${skillsHTML}</div>
       `;
       grid.appendChild(cell);
-      console.log(`  ✓ Domain ${idx + 1}: ${dom.cn} (${dom.en})`);
+      console.log(`  ✓ Domain ${idx + 1}: ${dom.cn} (${domainSkills.length} skills)`);
     }); // end ARCHIVE_DOMAINS.forEach
 
-    console.log('✓ Domain Grid: Rendered', ARCHIVE_DOMAINS.length, 'domain categories');
+    // Attach skill action button listeners
+    setTimeout(() => {
+      attachArchiveSkillListeners();
+    }, 100);
+
+    console.log('✓ Domain Grid: Rendered', ARCHIVE_DOMAINS.length, 'domains with skills');
   } // end initDomainGrid
 
-  // Helper function to star a skill from archive
-  function starSkillFromArchive(skillId) {
-    starSkillById(skillId, nodes);
-  }
-
-  // Helper function to download skill markdown from archive
-  function downloadSkillMarkdownFromArchive(skillId, title) {
-    const skill = findSkillById(skillId);
-    if (!skill) {
-      console.warn('Skill not found for download:', skillId);
-      return;
-    }
-    const markdown = generateDomainSkillMarkdown(skill);
-    downloadMarkdownFile(markdown, skillId, title || skill.title);
-  }
-
-  // Setup tooltip action buttons handler
-  const ttStarBtn = document.getElementById('ttStarBtn');
-  const ttDownloadBtn = document.getElementById('ttDownloadBtn');
-  const ttPlayBtn = document.getElementById('ttPlayBtn');
-
-  function setupTooltipButtons(nodeIdx) {
-    if (nodeIdx === null || nodeIdx >= nodes.length) return;
-    const n = nodes[nodeIdx];
-    const skillId = n.id;
-
-    // Star button
-    if (ttStarBtn) {
-      ttStarBtn.onclick = (e) => {
+  // Attach listeners to skill action buttons in archive grid
+  function attachArchiveSkillListeners() {
+    // Star buttons
+    document.querySelectorAll('.domain-cell .star-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
         e.stopPropagation();
-        starSkillFromArchive(skillId);
-      };
-    }
+        const skillId = btn.dataset.skillId;
+        starSkillById(skillId);
+      });
+    });
 
-    // Download button
-    if (ttDownloadBtn) {
-      ttDownloadBtn.onclick = (e) => {
+    // Download buttons
+    document.querySelectorAll('.domain-cell .download-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
         e.stopPropagation();
-        downloadSkillMarkdownFromArchive(skillId, n.title);
-      };
-    }
+        const skillId = btn.dataset.skillId;
+        const skill = findSkillById(skillId);
+        if (skill) {
+          const markdown = generateDomainSkillMarkdown(skill);
+          downloadMarkdownFile(markdown, skillId, skill.title);
+        }
+      });
+    });
 
-    // Play button
-    if (ttPlayBtn) {
-      ttPlayBtn.onclick = (e) => {
+    // Play buttons
+    document.querySelectorAll('.domain-cell .play-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
         e.stopPropagation();
+        const skillId = btn.dataset.skillId;
         window.location.href = `playground.html?skill=${encodeURIComponent(skillId)}`;
-      };
-    }
+      });
+    });
   }
-
-  // Monitor clickedNode changes to update button handlers
-  const originalRender = render;
-  let lastClickedNode = null;
-  render = function() {
-    if (clickedNode !== lastClickedNode) {
-      lastClickedNode = clickedNode;
-      setupTooltipButtons(clickedNode);
-    }
-    return originalRender.call(this);
-  };
 
   // Initialize
   resizeCanvas();
