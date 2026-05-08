@@ -1346,7 +1346,7 @@ const getAllSkillsForVibe = () => {
     // 优先使用数据库中的技能，其次使用硬编码的技能
     const base = (typeof SkillStore !== 'undefined' && SkillStore.size() > 0)
                   ? SkillStore.all()
-                  : (DB_SKILLS.length > 0 ? DB_SKILLS : (typeof ALL_SKILLS !== 'undefined' ? ALL_SKILLS : SHARED_SKILLS)) || [];
+                  : ((typeof DB_SKILLS !== 'undefined' && DB_SKILLS.length > 0) ? DB_SKILLS : (typeof ALL_SKILLS !== 'undefined' ? ALL_SKILLS : [])) || [];
     const allSkills = [...base, ...forgedSkills];
     // Sort by starlight descending to show most popular skills first
     return allSkills.sort((a, b) => (b.starlight || 0) - (a.starlight || 0));
@@ -1354,7 +1354,7 @@ const getAllSkillsForVibe = () => {
     console.error('Error in getAllSkillsForVibe:', e);
     return (typeof SkillStore !== 'undefined' && SkillStore.size() > 0)
            ? SkillStore.all()
-           : (DB_SKILLS.length > 0 ? DB_SKILLS : (typeof ALL_SKILLS !== 'undefined' ? ALL_SKILLS : SHARED_SKILLS)) || [];
+           : ((typeof DB_SKILLS !== 'undefined' && DB_SKILLS.length > 0) ? DB_SKILLS : (typeof ALL_SKILLS !== 'undefined' ? ALL_SKILLS : [])) || [];
   }
 };
 
@@ -7271,7 +7271,7 @@ async function initAgentArchiveView() {
       // This ensures 42 skills always display even if database wasn't seeded
       if (baseSkills.length < 40) {
         console.warn(`⚠️ Archive: API returned only ${baseSkills.length} skills, supplementing with local fallback for 42 display`);
-        const fallbackSkills = (typeof SkillStore !== 'undefined' && SkillStore.size() > 0) ? SkillStore.all() : (typeof ALL_SKILLS !== 'undefined' ? ALL_SKILLS : SHARED_SKILLS) || [];
+        const fallbackSkills = (typeof SkillStore !== 'undefined' && SkillStore.size() > 0) ? SkillStore.all() : (typeof ALL_SKILLS !== 'undefined' ? ALL_SKILLS : []) || [];
         // Merge: keep API skills, add fallback skills that don't duplicate
         const existingIds = new Set(baseSkills.map(s => s.id));
         const additional = fallbackSkills.filter(s => !existingIds.has(s.id));
@@ -7280,19 +7280,19 @@ async function initAgentArchiveView() {
       }
     } else {
       // Fallback to hardcoded skills if API fails
-      console.warn(`⚠️ Archive: API request failed (${response.status}), falling back to local SHARED_SKILLS/ALL_SKILLS`);
-      baseSkills = (typeof SkillStore !== 'undefined' && SkillStore.size() > 0) ? SkillStore.all() : (typeof ALL_SKILLS !== 'undefined' ? ALL_SKILLS : SHARED_SKILLS) || [];
+      console.warn(`⚠️ Archive: API request failed (${response.status}), falling back to local ALL_SKILLS`);
+      baseSkills = (typeof SkillStore !== 'undefined' && SkillStore.size() > 0) ? SkillStore.all() : (typeof ALL_SKILLS !== 'undefined' ? ALL_SKILLS : []) || [];
     }
   } catch (error) {
     console.error('❌ Archive: Error fetching skills from API:', error.message);
     // Fallback to hardcoded skills
-    baseSkills = (typeof SkillStore !== 'undefined' && SkillStore.size() > 0) ? SkillStore.all() : (typeof ALL_SKILLS !== 'undefined' ? ALL_SKILLS : SHARED_SKILLS) || [];
+    baseSkills = (typeof SkillStore !== 'undefined' && SkillStore.size() > 0) ? SkillStore.all() : (typeof ALL_SKILLS !== 'undefined' ? ALL_SKILLS : []) || [];
   }
 
   // Safety: ensure we always have at least some skills to display
   if (!baseSkills || baseSkills.length === 0) {
-    console.warn('⚠️ No skills available from API or fallback, using SHARED_SKILLS');
-    baseSkills = (typeof SkillStore !== 'undefined' && SkillStore.size() > 0) ? SkillStore.all() : (typeof SHARED_SKILLS !== 'undefined' ? SHARED_SKILLS : []);
+    console.warn('⚠️ No skills available from API or fallback');
+    baseSkills = (typeof SkillStore !== 'undefined' && SkillStore.size() > 0) ? SkillStore.all() : (typeof ALL_SKILLS !== 'undefined' ? ALL_SKILLS : []);
   }
 
   // Normalize attribution: API rows expose creator_name (from users JOIN),
