@@ -2035,8 +2035,20 @@
       setTimeout(() => card.classList.remove('spawning'), 350);
     }
 
-    /* ── Spawn random from repo ── */
+    /* ── Spawn random from repo (with anti-addiction limit check) ── */
     function spawnRandomFromRepo(repo) {
+      const isCn = (typeof currentLang !== 'undefined' && currentLang === 'cn');
+
+      // Check if we've reached the scenario limit
+      if (twinScenarioCount >= TWIN_SCENARIO_LIMIT) {
+        // Show a toast-like notification
+        alert(isCn
+          ? '你已经完成了 7 个场景，很棒了。休息一下吧 ☕️'
+          : 'You\'ve explored 7 scenarios — well played. Time for a break ☕️');
+        return;
+      }
+
+      twinScenarioCount++;
       const task = repo.tasks[Math.floor(Math.random() * repo.tasks.length)];
       spawnCard(task, repo);
     }
@@ -2063,8 +2075,6 @@
         }
         return;
       }
-
-      twinScenarioCount++;
 
       // Mark current scenario as used
       const currentTitle = currentCard.querySelector('.twin-scenario-title')?.textContent;
@@ -2097,6 +2107,9 @@
         }
         return;
       }
+
+      // Increment counter and check if we've now hit the limit
+      twinScenarioCount++;
 
       // Pick a random unused scenario
       const { task, repo: selectedRepo, scenarioId } = allCandidates[Math.floor(Math.random() * allCandidates.length)];
