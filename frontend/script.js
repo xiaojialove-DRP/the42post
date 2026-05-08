@@ -4354,12 +4354,37 @@ function initSkillForge() {
         const creatorRawName = (usernameValue && usernameValue.trim()) || 'anonymous';
         const creatorLabel = `creator_${creatorRawName}`;
 
+        // ═══ LANGUAGE DETECTION & PROPER BILINGUAL HANDLING ═══
+        // Detect if user input is Chinese or English
+        const chineseRegex = /[一-鿿]/g;
+        const titleHasChinese = chineseRegex.test(skillNameValue);
+        const descHasChinese = chineseRegex.test(skillDesc);
+
+        let titleEn = skillNameValue;
+        let titleCn = skillNameValue;
+        let descEn = skillDesc;
+        let descCn = skillDesc;
+
+        // If user wrote in Chinese, put it in the CN fields
+        // Backend will auto-translate to English
+        if (titleHasChinese) {
+          titleEn = ''; // Empty - backend will translate CN to EN
+          titleCn = skillNameValue; // Chinese input
+        }
+
+        if (descHasChinese) {
+          descEn = ''; // Empty - backend will translate CN to EN
+          descCn = skillDesc; // Chinese input
+        }
+
+        console.log(`🌐 Language detection: Title CN=${titleHasChinese}, Desc CN=${descHasChinese}`);
+
         // Prepare skill data
         const forgedSkillData = {
-          title: skillNameValue,
-          titleCn: skillNameValue,
-          desc: skillDesc,
-          descCn: skillDesc,
+          title: titleEn,
+          titleCn: titleCn,
+          desc: descEn,
+          descCn: descCn,
           domain: selectedDomain || 'ideas',
           soulHash: hash,
           agent: creatorLabel,
@@ -4395,10 +4420,10 @@ function initSkillForge() {
           }
 
           const backendPayload = {
-            title: skillNameValue,
-            title_cn: skillNameValue,
-            description: skillDesc,
-            description_cn: skillDesc,
+            title: titleEn,
+            title_cn: titleCn,
+            description: descEn,
+            description_cn: descCn,
             domain: selectedDomain || 'ideas',
             five_layer: window.agent42StructuredData || {},
             // forge_mode removed - agents are no longer part of the product
@@ -7511,10 +7536,16 @@ async function initAgentArchiveView() {
       const rect = canvasWrap.getBoundingClientRect();
       // Display text according to current language (global currentLang)
       const lang = (typeof currentLang !== 'undefined' ? currentLang : 'en');
-      document.getElementById('ttName').textContent = n.title || '';
+
+      // ═══ Bilingual display ═══
+      // Set English title (shown when data-lang="en")
+      document.getElementById('ttName').textContent = n.title || n.titleCn || '';
+      // Set Chinese title (shown when data-lang="cn")
       document.getElementById('ttNameCn').textContent = n.titleCn || n.title || '';
+
       document.getElementById('ttAgent').textContent = n.agent || '';
-      document.getElementById('ttDesc').textContent = lang === 'cn' ? (n.descCn || n.desc || '') : (n.desc || '');
+      // Description: show appropriate language based on currentLang
+      document.getElementById('ttDesc').textContent = lang === 'cn' ? (n.descCn || n.desc || '') : (n.desc || n.descCn || '');
       document.getElementById('ttHash').textContent = n.hash;
       document.getElementById('ttStarlight').textContent = '★ ' + n.starlight;
       document.getElementById('ttDomain').textContent = n.domain;
@@ -7602,10 +7633,11 @@ async function initAgentArchiveView() {
         const n = nodes[idx];
         const rect = canvasWrap.getBoundingClientRect();
         const lang = (typeof currentLang !== 'undefined' ? currentLang : 'en');
-        document.getElementById('ttName').textContent = n.title || '';
+        // ═══ Bilingual display ═══
+        document.getElementById('ttName').textContent = n.title || n.titleCn || '';
         document.getElementById('ttNameCn').textContent = n.titleCn || n.title || '';
         document.getElementById('ttAgent').textContent = n.agent || '';
-        document.getElementById('ttDesc').textContent = lang === 'cn' ? (n.descCn || n.desc || '') : (n.desc || '');
+        document.getElementById('ttDesc').textContent = lang === 'cn' ? (n.descCn || n.desc || '') : (n.desc || n.descCn || '');
         document.getElementById('ttHash').textContent = n.hash;
         document.getElementById('ttStarlight').textContent = '★ ' + n.starlight;
         document.getElementById('ttDomain').textContent = n.domain;
