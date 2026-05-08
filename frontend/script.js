@@ -7714,6 +7714,68 @@ async function initAgentArchiveView() {
     console.log('✓ Domain Grid: Rendered', ARCHIVE_DOMAINS.length, 'domain categories');
   } // end initDomainGrid
 
+  // Helper function to star a skill from archive
+  function starSkillFromArchive(skillId) {
+    starSkillById(skillId, nodes);
+  }
+
+  // Helper function to download skill markdown from archive
+  function downloadSkillMarkdownFromArchive(skillId, title) {
+    const skill = findSkillById(skillId);
+    if (!skill) {
+      console.warn('Skill not found for download:', skillId);
+      return;
+    }
+    const markdown = generateDomainSkillMarkdown(skill);
+    downloadMarkdownFile(markdown, skillId, title || skill.title);
+  }
+
+  // Setup tooltip action buttons handler
+  const ttStarBtn = document.getElementById('ttStarBtn');
+  const ttDownloadBtn = document.getElementById('ttDownloadBtn');
+  const ttPlayBtn = document.getElementById('ttPlayBtn');
+
+  function setupTooltipButtons(nodeIdx) {
+    if (nodeIdx === null || nodeIdx >= nodes.length) return;
+    const n = nodes[nodeIdx];
+    const skillId = n.id;
+
+    // Star button
+    if (ttStarBtn) {
+      ttStarBtn.onclick = (e) => {
+        e.stopPropagation();
+        starSkillFromArchive(skillId);
+      };
+    }
+
+    // Download button
+    if (ttDownloadBtn) {
+      ttDownloadBtn.onclick = (e) => {
+        e.stopPropagation();
+        downloadSkillMarkdownFromArchive(skillId, n.title);
+      };
+    }
+
+    // Play button
+    if (ttPlayBtn) {
+      ttPlayBtn.onclick = (e) => {
+        e.stopPropagation();
+        window.location.href = `playground.html?skill=${encodeURIComponent(skillId)}`;
+      };
+    }
+  }
+
+  // Monitor clickedNode changes to update button handlers
+  const originalRender = render;
+  let lastClickedNode = null;
+  render = function() {
+    if (clickedNode !== lastClickedNode) {
+      lastClickedNode = clickedNode;
+      setupTooltipButtons(clickedNode);
+    }
+    return originalRender.call(this);
+  };
+
   // Initialize
   resizeCanvas();
   window.addEventListener('resize', () => { resizeCanvas(); initNodes(); });
@@ -7780,6 +7842,44 @@ function initTop42Grid() {
    TOP 42 SKILL INTERACTIVE SYSTEM
    Attach event listeners to star/download buttons on top42 cards
    ═══════════════════════════════════════════════════════════ */
+
+/* ═══ UTILITY FUNCTIONS FOR SKILL INTERACTIONS ═══ */
+function starSkillById(skillId, nodesArray = null) {
+  const starredSkills = JSON.parse(localStorage.getItem('starred_skills') || '{}');
+  const isStarred = starredSkills[skillId] === true;
+  const newStarred = !isStarred;
+
+  // Update local storage
+  if (newStarred) {
+    starredSkills[skillId] = true;
+  } else {
+    delete starredSkills[skillId];
+  }
+  localStorage.setItem('starred_skills', JSON.stringify(starredSkills));
+
+  // Sync to backend
+  try {
+    fetch(`${ApiClient.BASE_URL}/skills/${skillId}/star`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Anonymous-Id': getAnonymousId() },
+      body: JSON.stringify({ starred: newStarred })
+    }).then(resp => {
+      if (resp.ok) {
+        console.log(`✓ Skill ${newStarred ? 'starred' : 'unstarred'}: ${skillId}`);
+        return resp.json();
+      }
+    }).then(result => {
+      if (result && typeof result.totalStars !== 'undefined') {
+        console.log(`📊 Total stars: ${result.totalStars}`);
+        // Update nodes if available (for archive display)
+        if (nodesArray) {
+          const node = nodesArray.find(n => n.id === skillId);
+          if (node) node.starlight = result.totalStars;
+        }
+      }
+    }).catch(err => console.warn('Star sync failed:', err.message));
+  } catch (err) { console.warn('Star API error:', err.message); }
+}
 
 function attachTop42SkillListeners() {
   console.log('🔧 Attaching top42 skill listeners...');

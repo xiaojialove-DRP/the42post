@@ -6175,6 +6175,17 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 .tt-meta { display: flex; gap: 14px; margin-top: 6px; font-size: 9px; }
 .tt-meta span { color: #8a7a6e; }
 
+/* Tooltip action buttons */
+.tt-actions { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
+.tt-action-btn {
+  padding: 4px 8px; font-size: 9px; border: 1px solid #d4c8a8;
+  background: #fdfaf3; color: #5a5048; border-radius: 3px;
+  cursor: pointer; transition: all 0.2s; font-weight: 600;
+  flex: 1; min-width: 60px; text-align: center;
+}
+.tt-action-btn:hover { background: #f5f0e8; border-color: #c4b89a; }
+.tt-action-btn:active { transform: scale(0.95); }
+
 /* ═══ HONOR PANEL ═══ */
 .honor-panel {
   width: 380px;
