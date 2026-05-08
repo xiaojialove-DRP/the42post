@@ -8237,7 +8237,7 @@ function generateForgeSuccessEmail(skillData) {
                   <p>Domain: ${domain}</p>
                 </div>
                 <div class="card-divider"></div>
-                <div class="card-tagline">想法是最后的基础设施</div>
+                <div class="card-tagline">Forging Human Wisdom for a Better AI Future</div>
                 <div class="card-footer">www.the42post.com</div>
               </div>
             </div>

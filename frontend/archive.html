@@ -5,457 +5,139 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>想法档案馆 — THE 42 POST</title>
   <link rel="stylesheet" href="styles.css">
-  <style>
-    /* Archive-specific styles */
-    .archive-container {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 40px 20px;
-    }
-
-    .archive-header {
-      text-align: center;
-      margin-bottom: 60px;
-      border-bottom: 1px solid #ddd;
-      padding-bottom: 40px;
-    }
-
-    .archive-title {
-      font-size: 36px;
-      font-weight: 600;
-      margin-bottom: 12px;
-      color: #2a2520;
-    }
-
-    .archive-subtitle {
-      font-size: 14px;
-      color: #999;
-      font-weight: 400;
-    }
-
-    .archive-filters {
-      display: flex;
-      gap: 12px;
-      margin-bottom: 40px;
-      flex-wrap: wrap;
-      justify-content: center;
-    }
-
-    .filter-btn {
-      padding: 8px 16px;
-      border: 1px solid #d4c8a8;
-      background: #fdfaf3;
-      color: #5a5048;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 12px;
-      font-weight: 500;
-      transition: all 0.2s ease;
-    }
-
-    .filter-btn.active {
-      background: #2a2520;
-      color: #fdfaf3;
-      border-color: #2a2520;
-    }
-
-    .filter-btn:hover {
-      border-color: #2a2520;
-    }
-
-    .search-box {
-      width: 100%;
-      max-width: 400px;
-      margin: 0 auto 40px;
-      padding: 12px 16px;
-      border: 1px solid #d4c8a8;
-      border-radius: 4px;
-      font-size: 14px;
-    }
-
-    .skill-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-      gap: 24px;
-      margin-bottom: 60px;
-    }
-
-    .skill-card {
-      background: #fff;
-      border: 1px solid #e8dcc8;
-      border-radius: 6px;
-      padding: 24px;
-      transition: all 0.2s ease;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .skill-card:hover {
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-      border-color: #d4c8a8;
-    }
-
-    .skill-title {
-      font-size: 18px;
-      font-weight: 600;
-      color: #2a2520;
-      margin-bottom: 8px;
-    }
-
-    .skill-creator {
-      font-size: 12px;
-      color: #999;
-      margin-bottom: 12px;
-    }
-
-    .skill-description {
-      font-size: 13px;
-      color: #666;
-      line-height: 1.6;
-      margin-bottom: 16px;
-      min-height: 40px;
-      flex-grow: 1;
-    }
-
-    .skill-tags {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 16px;
-      flex-wrap: wrap;
-    }
-
-    .skill-tag {
-      display: inline-block;
-      padding: 4px 10px;
-      background: #f0f0f0;
-      color: #666;
-      border-radius: 3px;
-      font-size: 11px;
-    }
-
-    .skill-hash {
-      font-size: 11px;
-      color: #999;
-      background: #f8f8f8;
-      padding: 8px;
-      border-radius: 3px;
-      margin-bottom: 12px;
-      word-break: break-all;
-      font-family: 'Courier New', monospace;
-    }
-
-    .skill-stats {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 12px;
-      color: #999;
-      margin-bottom: 16px;
-      border-top: 1px solid #f0f0f0;
-      padding-top: 12px;
-    }
-
-    .skill-actions {
-      display: flex;
-      gap: 8px;
-    }
-
-    .skill-btn {
-      flex: 1;
-      padding: 10px;
-      border: 1px solid #d4c8a8;
-      background: #fdfaf3;
-      color: #5a5048;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 12px;
-      font-weight: 500;
-      transition: all 0.2s ease;
-    }
-
-    .skill-btn:hover {
-      background: #f5f0e8;
-    }
-
-    .skill-btn-primary {
-      background: #2a2520;
-      color: #fdfaf3;
-      border-color: #2a2520;
-    }
-
-    .skill-btn-primary:hover {
-      background: #403930;
-    }
-
-    .archive-empty {
-      text-align: center;
-      padding: 60px 20px;
-      color: #999;
-    }
-
-    .archive-empty-icon {
-      font-size: 48px;
-      margin-bottom: 20px;
-    }
-
-    .archive-empty-title {
-      font-size: 18px;
-      margin-bottom: 10px;
-      color: #666;
-    }
-
-    .archive-stats {
-      text-align: center;
-      margin-bottom: 40px;
-      padding-bottom: 20px;
-      border-bottom: 1px solid #eee;
-    }
-
-    .stat-number {
-      font-size: 32px;
-      font-weight: 600;
-      color: #2a2520;
-    }
-
-    .stat-label {
-      font-size: 12px;
-      color: #999;
-      margin-top: 4px;
-    }
-
-    .lang-toggle {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      padding: 8px 16px;
-      border: 1px solid #d4c8a8;
-      background: #fdfaf3;
-      color: #5a5048;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 12px;
-      font-weight: 600;
-      transition: all 0.2s ease;
-    }
-
-    .lang-toggle:hover {
-      background: #f5f0e8;
-    }
-
-    @media (max-width: 768px) {
-      .archive-container {
-        padding: 24px 12px;
-      }
-
-      .archive-title {
-        font-size: 24px;
-      }
-
-      .skill-grid {
-        grid-template-columns: 1fr;
-      }
-    }
-  </style>
 </head>
-<body>
-  <button class="lang-toggle" id="langToggle">EN</button>
-
-  <div class="archive-container">
-    <div class="archive-header">
-      <div class="archive-title" data-i18n="archive_title">想法档案馆</div>
-      <div class="archive-subtitle" data-i18n="archive_subtitle">社区创意 · 品味探险</div>
+<body data-lang="cn">
+  <!-- ═══════════════ SECTION: AGENT ARCHIVE (Taste Archive) ═══════════════ -->
+  <section id="sectionAgentArchive" style="display: block;">
+    <!-- HEADER -->
+    <div class="av-header">
+      <span class="av-title" data-i18n="archive_title">THE 42 POST · TASTE ARCHIVE</span>
+      <button id="btnBackFromArchive" style="background: none; border: none; color: var(--ink-muted); font-size: 11px; text-decoration: none; letter-spacing: 1px; cursor: pointer; transition: color 0.2s;" data-i18n="archive_back_home">← Back Home</button>
     </div>
 
-    <div class="archive-stats">
-      <div class="stat-number" id="skillCount">0</div>
-      <div class="stat-label" data-i18n="archive_skills_count">个想法被锻造</div>
-    </div>
+    <!-- CELESTIAL MAP -->
+    <div class="av-celestial">
+      <div class="av-celestial-inner">
+        <div class="av-canvas-wrap" id="canvasWrap">
+          <canvas id="celestialCanvas"></canvas>
 
-    <input
-      type="text"
-      id="searchInput"
-      class="search-box"
-      placeholder="搜索想法..."
-      data-i18n-placeholder="archive_search"
-    >
+          <!-- Tooltip -->
+          <div class="star-tooltip" id="starTooltip">
+            <div class="tt-name text-en" id="ttName"></div>
+            <div class="tt-name-cn text-cn" id="ttNameCn"></div>
+            <div class="tt-agent" id="ttAgent"></div>
+            <div class="tt-desc" id="ttDesc"></div>
+            <div class="tt-hash" id="ttHash"></div>
+            <div class="tt-meta">
+              <span id="ttStarlight"></span>
+              <span id="ttDomain"></span>
+            </div>
+          </div>
 
-    <div class="archive-filters" id="filterContainer">
-      <!-- Filters will be generated here -->
-    </div>
+          <!-- Zoom -->
+          <div class="zoom-controls">
+            <button class="zoom-btn" id="zoomIn">+</button>
+            <button class="zoom-btn" id="zoomOut">−</button>
+            <button class="zoom-btn" id="zoomReset" style="font-size:9px;">⊙</button>
+            <span class="zoom-info" id="zoomInfo">100%</span>
+          </div>
 
-    <div class="skill-grid" id="skillGrid">
-      <div class="archive-empty">
-        <div class="archive-empty-icon">☉</div>
-        <div class="archive-empty-title" data-i18n="archive_loading">加载中...</div>
+          <!-- Open toggle (visible when panel is collapsed) -->
+          <button class="honor-toggle-open" id="honorToggleOpen">★</button>
+        </div>
+
+        <!-- Honor panel -->
+        <div class="honor-panel" id="honorPanel">
+          <div class="honor-panel-header">
+            <div class="honor-panel-title">
+              <span class="star-icon">★</span> <span data-i18n="archive_most_starred">Most Starred Skills 42</span>
+              <button class="honor-toggle" id="honorToggle" title="Collapse">✕</button>
+            </div>
+            <div class="honor-panel-subtitle" data-i18n="archive_honor_subtitle">Community ranked · Starlight voting</div>
+          </div>
+          <div class="honor-list" id="honorList"></div>
+        </div>
       </div>
     </div>
-  </div>
+
+    <!-- READABLE LAYER (Domain Grid) -->
+    <div class="av-readable">
+      <div class="av-readable-header">
+        <span class="av-readable-title" data-i18n="archive_readable_title">The Archive of Skills</span>
+        <span class="av-readable-subtitle" data-i18n="archive_readable_subtitle">Creative Domains · Community Curated</span>
+      </div>
+      <div class="av-readable-rule"></div>
+      <div class="domain-grid" id="domainGrid"></div>
+    </div>
+
+    <!-- FOOTER -->
+    <div class="av-footer">
+      <div class="av-footer-rule"></div>
+      <div class="av-footer-text">THE 42 POST · Forging Human Wisdom for a Better AI Future</div>
+    </div>
+  </section>
 
   <script src="script.js"></script>
   <script>
-    // Archive page specific functionality
-    let allSkills = [];
-    let currentLang = 'cn';
+    // Archive page: Initialize on page load
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Initialize archive view (celestial canvas, honor panel, domain grid)
+      await initAgentArchiveView();
+    });
 
-    const i18n = {
-      cn: {
-        archive_title: '想法档案馆',
-        archive_subtitle: '社区创意 · 品味探险',
-        archive_skills_count: '个想法被锻造',
-        archive_search: '搜索想法...',
-        archive_loading: '加载中...',
-        archive_empty: '还没有想法被分享',
-        archive_empty_desc: '成为第一个锻造想法的人吧',
-        archive_by: '创作者',
-        archive_test: '试玩',
-        archive_like: '❤️ 点赞',
-        archive_liked: '❤️ 已赞',
-        archive_difficulty: '难度',
-        archive_real: '现实',
-        archive_fun: '趣味'
-      },
-      en: {
-        archive_title: 'Skill Archive',
-        archive_subtitle: 'Community Ideas · Taste Exploration',
-        archive_skills_count: 'ideas forged',
-        archive_search: 'Search ideas...',
-        archive_loading: 'Loading...',
-        archive_empty: 'No ideas shared yet',
-        archive_empty_desc: 'Be the first to forge an idea',
-        archive_by: 'Creator',
-        archive_test: 'Test',
-        archive_like: '❤️ Like',
-        archive_liked: '❤️ Liked',
-        archive_difficulty: 'Difficulty',
-        archive_real: 'Real',
-        archive_fun: 'Fun'
-      }
-    };
+    // Language toggle
+    const langToggleBtn = document.createElement('button');
+    langToggleBtn.className = 'btn-lang';
+    langToggleBtn.id = 'langToggle';
+    langToggleBtn.textContent = 'EN';
+    langToggleBtn.style.cssText = 'position: fixed; top: 20px; right: 20px; padding: 8px 16px; border: 1px solid #d4c8a8; background: #fdfaf3; color: #5a5048; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 600; z-index: 1000;';
+    document.body.appendChild(langToggleBtn);
 
-    // Initialize language toggle
     document.getElementById('langToggle').addEventListener('click', () => {
-      currentLang = currentLang === 'cn' ? 'en' : 'cn';
-      document.getElementById('langToggle').textContent = currentLang === 'cn' ? 'EN' : '中文';
-      updateUI();
+      const currentLang = document.documentElement.getAttribute('data-lang');
+      const newLang = currentLang === 'cn' ? 'en' : 'cn';
+      document.documentElement.setAttribute('data-lang', newLang);
+      document.getElementById('langToggle').textContent = newLang === 'cn' ? 'EN' : '中文';
     });
 
-    // Load skills from API
-    async function loadSkills() {
-      try {
-        const response = await fetch('/api/skills');
-        if (!response.ok) throw new Error('Failed to load skills');
-        allSkills = await response.json();
+    // Back to home button
+    document.getElementById('btnBackFromArchive').addEventListener('click', () => {
+      window.location.href = '/';
+    });
 
-        // Filter out test data (creator_42, creator_anonymous)
-        allSkills = allSkills.filter(skill => {
-          const creator = skill.creator || '';
-          return !creator.includes('42') && !creator.includes('anonymous');
-        });
+    // Load skills with recently forged skill support
+    function loadArchiveWithRecent() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const selectedSkillParam = urlParams.get('selectedSkill');
 
-        displaySkills(allSkills);
-        updateStats();
-      } catch (error) {
-        console.error('Error loading skills:', error);
-        document.getElementById('skillGrid').innerHTML = `
-          <div class="archive-empty">
-            <div class="archive-empty-title">${i18n[currentLang].archive_empty}</div>
-            <div class="archive-empty-desc">${i18n[currentLang].archive_empty_desc}</div>
-          </div>
-        `;
+      if (selectedSkillParam) {
+        try {
+          const skillData = JSON.parse(decodeURIComponent(selectedSkillParam));
+          if (skillData && skillData.id) {
+            sessionStorage.setItem('selectedSkill', JSON.stringify(skillData));
+          }
+        } catch (e) {
+          console.error('Failed to parse selected skill:', e);
+        }
+      }
+
+      const recentSkill = localStorage.getItem('lastForgedSkill');
+      if (recentSkill) {
+        try {
+          const skill = JSON.parse(recentSkill);
+          if (Date.now() - skill.timestamp < 3600000) {
+            sessionStorage.setItem('selectedSkill', JSON.stringify({
+              id: skill.id,
+              title: skill.title
+            }));
+          }
+        } catch (e) {
+          console.error('Failed to parse recent skill:', e);
+        }
       }
     }
 
-    function displaySkills(skills) {
-      if (skills.length === 0) {
-        document.getElementById('skillGrid').innerHTML = `
-          <div class="archive-empty" style="grid-column: 1 / -1;">
-            <div class="archive-empty-icon">☉</div>
-            <div class="archive-empty-title">${i18n[currentLang].archive_empty}</div>
-            <div class="archive-empty-desc">${i18n[currentLang].archive_empty_desc}</div>
-          </div>
-        `;
-        return;
-      }
-
-      document.getElementById('skillGrid').innerHTML = skills.map(skill => `
-        <div class="skill-card">
-          <div class="skill-title">${skill.title || 'Untitled'}</div>
-          <div class="skill-creator">
-            ${i18n[currentLang].archive_by}: ${skill.creator || 'Anonymous'}
-          </div>
-
-          <div class="skill-description">
-            ${skill.description || skill.principle || 'No description available'}
-          </div>
-
-          ${skill.tags ? `
-            <div class="skill-tags">
-              ${skill.tags.map(tag => `<span class="skill-tag">${tag}</span>`).join('')}
-            </div>
-          ` : ''}
-
-          ${skill.soul_hash ? `
-            <div class="skill-hash">Soul: ${skill.soul_hash}</div>
-          ` : ''}
-
-          <div class="skill-stats">
-            <span>❤️ ${skill.likes || 0}</span>
-            <span>⬇️ ${skill.downloads || 0}</span>
-          </div>
-
-          <div class="skill-actions">
-            <button class="skill-btn" onclick="likeSkill('${skill.id}', this)">
-              ${i18n[currentLang].archive_like}
-            </button>
-            <button class="skill-btn skill-btn-primary" onclick="goToPlaygroundWithSkill('${skill.id}', '${skill.title}')">
-              ${i18n[currentLang].archive_test}
-            </button>
-          </div>
-        </div>
-      `).join('');
-    }
-
-    function updateStats() {
-      document.getElementById('skillCount').textContent = allSkills.length;
-    }
-
-    function updateUI() {
-      document.querySelector('.archive-title').textContent = i18n[currentLang].archive_title;
-      document.querySelector('.archive-subtitle').textContent = i18n[currentLang].archive_subtitle;
-      displaySkills(allSkills);
-    }
-
-    function likeSkill(skillId, button) {
-      // Toggle like state
-      button.classList.toggle('skill-btn-primary');
-      const isLiked = button.classList.contains('skill-btn-primary');
-      button.textContent = isLiked ?
-        i18n[currentLang].archive_liked :
-        i18n[currentLang].archive_like;
-    }
-
-    function goToPlaygroundWithSkill(skillId, skillTitle) {
-      // Encode skill info and pass to playground
-      const skillData = encodeURIComponent(JSON.stringify({
-        id: skillId,
-        title: skillTitle
-      }));
-      window.location.href = `/playground?selectedSkill=${skillData}`;
-    }
-
-    // Search functionality
-    document.getElementById('searchInput').addEventListener('input', (e) => {
-      const query = e.target.value.toLowerCase();
-      const filtered = allSkills.filter(skill =>
-        (skill.title || '').toLowerCase().includes(query) ||
-        (skill.description || '').toLowerCase().includes(query) ||
-        (skill.creator || '').toLowerCase().includes(query)
-      );
-      displaySkills(filtered);
-    });
-
-    // Load on page load
-    loadSkills();
+    loadArchiveWithRecent();
   </script>
 </body>
 </html>
