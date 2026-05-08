@@ -7126,16 +7126,16 @@ function initArchiveBackButton() {
 
 // Domain metadata
 const ARCHIVE_DOMAINS = [
-  { key: 'safety',     cn: '安全与治理', en: 'Safety & Governance' },
-  { key: 'science',    cn: '科技与人文', en: 'Science & Humanities' },
-  { key: 'narrative',  cn: '叙事与修辞', en: 'Narrative & Rhetoric' },
-  { key: 'design',     cn: '设计与思辨', en: 'Design & Critique' },
-  { key: 'visual',     cn: '视觉与美学', en: 'Visuals & Aesthetics' },
-  { key: 'experience', cn: '交互与体验', en: 'Experience & Interaction' },
-  { key: 'sound',      cn: '声音与节律', en: 'Sound & Rhythm' },
-  { key: 'ideas',      cn: '观念与感知', en: 'Ideas & Perception' },
-  { key: 'history',    cn: '历史与哲学', en: 'History & Philosophy' },
-  { key: 'fun',        cn: '纯粹乐趣', en: 'Just for Fun' },
+  { id: 'safety',     cn: '安全与治理', en: 'Safety & Governance' },
+  { id: 'science',    cn: '科技与人文', en: 'Science & Humanities' },
+  { id: 'narrative',  cn: '叙事与修辞', en: 'Narrative & Rhetoric' },
+  { id: 'design',     cn: '设计与思辨', en: 'Design & Critique' },
+  { id: 'visual',     cn: '视觉与美学', en: 'Visuals & Aesthetics' },
+  { id: 'experience', cn: '交互与体验', en: 'Experience & Interaction' },
+  { id: 'sound',      cn: '声音与节律', en: 'Sound & Rhythm' },
+  { id: 'ideas',      cn: '观念与感知', en: 'Ideas & Perception' },
+  { id: 'history',    cn: '历史与哲学', en: 'History & Philosophy' },
+  { id: 'fun',        cn: '纯粹乐趣', en: 'Just for Fun' },
 ];
 
 // Map database domain keys to display colors
