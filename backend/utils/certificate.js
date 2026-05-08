@@ -231,22 +231,18 @@ export function generateCertificateHTML(skillData, soulHash, invitationCode, cre
             <p>Created by: ${author}</p>
           </div>
 
-          <!-- Rights Info -->
+          <!-- Soul Hash (Prominent) -->
+          <div class="card-divider-bottom"></div>
+          <div class="card-soul-hash-prominent">
+            <div style="font-size: 11px; color: #999; letter-spacing: 2px; margin-bottom: 6px; text-transform: uppercase;">Soul-Hash</div>
+            <div style="font-size: 18px; font-family: 'JetBrains Mono', monospace; font-weight: 600; letter-spacing: 1px; color: #333; word-break: break-all;">${soulHash}</div>
+          </div>
+
+          <!-- Rights Info and Date -->
           <div class="card-rights">
             License: ⊕ Open · Remix: ✓
           </div>
-
-          <!-- Soul Hash and Date -->
-          <div class="card-soul-hash">Soul-Hash: ${soulHash}</div>
           <div class="card-forged-date">Forged: ${formattedDate}</div>
-
-          <!-- Divider -->
-          <div class="card-divider-bottom"></div>
-
-          <!-- Invitation Code -->
-          <div class="invitation-section">INVITATION CODE · 邀请码</div>
-          <div class="invitation-code">${invitationCode}</div>
-          <div class="invitation-note">Share this code with those who share our values<br/>用邀请码分享给志同道合的伙伴</div>
 
           <!-- Divider -->
           <div class="card-divider-bottom"></div>
@@ -664,17 +660,18 @@ export function generateEmailTemplate(
                 License: ⊕ Open · Remix: ✓
               </div>
 
-              <!-- Soul Hash and Date -->
-              <div class="card-soul-hash">Soul-Hash: ${soulHash}</div>
-              <div class="card-forged-date">Forged: ${formattedDate}</div>
-
-              <!-- Divider -->
+              <!-- Soul Hash (Prominent) -->
               <div class="card-divider-bottom"></div>
+              <div style="text-align: center; margin: 12px 0;">
+                <div style="font-size: 9px; color: #999; letter-spacing: 2px; margin-bottom: 6px; text-transform: uppercase;">Soul-Hash</div>
+                <div style="font-size: 16px; font-family: 'JetBrains Mono', monospace; font-weight: 600; letter-spacing: 1px; color: #333; word-break: break-all;">${soulHash}</div>
+              </div>
 
-              <!-- Invitation Code -->
-              <div style="font-size: 10px; color: #bbb; margin: 8px 0; letter-spacing: 1px;">INVITATION CODE · 邀请码</div>
-              <div style="font-size: 14px; font-weight: bold; color: #222; margin: 4px 0; font-family: 'Courier New', monospace; letter-spacing: 2px;">${invitationCode}</div>
-              <div style="font-size: 9px; color: #ccc; margin: 6px 0; line-height: 1.5;">Share this code with those who share our values<br/>用邀请码分享给志同道合的伙伴</div>
+              <!-- Rights Info and Date -->
+              <div style="font-size: 10px; color: #888; text-align: center; margin: 8px 0;">
+                License: ⊕ Open · Remix: ✓
+              </div>
+              <div class="card-forged-date">Forged: ${formattedDate}</div>
 
               <!-- Divider -->
               <div class="card-divider-bottom"></div>
