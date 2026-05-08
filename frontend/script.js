@@ -2599,18 +2599,22 @@ function initSkillForge() {
       }
     }
 
-    // 3️⃣ 检测英文随机字符
+    // 3️⃣ 检测英文随机字符（包括包含符号的随意输入）
     const isEnglish = /[a-zA-Z]/.test(text);
     if (isEnglish && !isChinese) {
       const hasSpaces = /\s/.test(text);
       const hasCommonWords = /\b(the|and|or|is|are|a|an|to|for|of|in|on|at|by|be|been|have|has|do|does|did|will|would|could|should|may|might|can|must|shall|about|after|before|between|during|from|should|would|could|must|may|might|can|will|shall)\b/i.test(text);
 
-      // 对于短文本（12字以下）或者纯英文字母的随意输入，进行检查
-      if (!hasSpaces && !hasCommonWords && /^[a-zA-Z]+$/.test(text)) {
+      // 检查纯字母和包含符号的随意输入
+      const isPureLetters = /^[a-zA-Z]+$/.test(text);
+      const hasOnlyLettersAndSymbols = /^[a-zA-Z;|.,\-_:!?'"]+$/.test(text);
+
+      if (!hasSpaces && !hasCommonWords && (isPureLetters || hasOnlyLettersAndSymbols)) {
         const uniqueLetters = new Set(text.toLowerCase().match(/[a-z]/g) || []);
+
         // 对短文本（<20字）和长文本的字母多样性要求不同
         if (text.length < 20 && uniqueLetters.size <= 4) {
-          console.log("❌ Detected random English characters with low variety");
+          console.log("❌ Detected random English characters with low variety (including symbols)");
           return false;
         }
         if (text.length >= 20 && uniqueLetters.size <= 3) {
