@@ -157,7 +157,6 @@ body {
 .inspiration-question,
 .inspiration-context,
 .chat-bubble-invite,
-.chat-bubble-input,
 .the-textarea,
 .ethics-msg,
 .voice-quote,
@@ -166,6 +165,16 @@ body {
 .btn-enter-forge,
 .creator-name-input {
   font-family: var(--font-serif-cn), var(--font-serif);
+}
+
+/* Use Playfair Display for input by default (English) */
+.chat-bubble-input {
+  font-family: var(--font-serif) !important;
+}
+
+/* Use Noto Serif SC for input in Chinese mode */
+body[data-lang="cn"] .chat-bubble-input {
+  font-family: var(--font-serif-cn) !important;
 }
 
 /* When in Chinese mode, enforce Noto Serif SC globally */
@@ -1561,7 +1570,7 @@ body[data-lang="cn"] .voices-header-text {
   background: transparent;
   border: none;
   color: var(--ink);
-  font-family: 'Noto Serif SC', 'Noto Serif JP', 'Noto Serif', var(--font-serif), serif;
+  font-family: var(--font-serif);
   font-size: 14px;
   line-height: 1.6;
   padding: 12px 0;
@@ -5660,6 +5669,13 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
     max-height: 40vh !important;
     padding: 14px 0 !important;
     line-height: 1.6 !important;
+    font-family: 'Noto Serif SC', 'STSong', serif !important;
+  }
+  body[data-lang="cn"] .chat-bubble-input {
+    font-family: 'Noto Serif SC', 'STSong', serif !important;
+  }
+  body[data-lang="en"] .chat-bubble-input {
+    font-family: 'Playfair Display', Georgia, serif !important;
   }
   .chat-bubble-invite {
     font-size: 14px !important;
