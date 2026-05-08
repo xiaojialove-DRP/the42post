@@ -739,7 +739,9 @@ const I18N = {
     masthead_subtitle: 'AI grows smarter every day.<br>But is it making our lives better?',
     btn_connect: '✕ CONNECT YOUR AI',
     btn_agent_view: 'TASTE ARCHIVE',
-    btn_about: 'ABOUT',
+    btn_about: 'ABOUT US',
+    btn_learn_more: 'LEARN MORE ABOUT US',
+    footer_learn_more_text: 'Research plans & weekly updates on Medium',
     footer_about_text: 'An open research community where anyone can forge AI values.',
     about_main_text: 'An open research community where anyone can turn personal values and fragments of thought into verifiable AI Skills.',
     btn_howto: 'HOW IT WORKS',
@@ -949,7 +951,9 @@ const I18N = {
     masthead_subtitle: 'AI 每天都在变得更聪明。<br>但它有让我们的生活更好吗？',
     btn_connect: '✕ 连接你的 AI',
     btn_agent_view: '想法档案馆',
-    btn_about: '关于',
+    btn_about: '关于我们',
+    btn_learn_more: '更多了解我们',
+    footer_learn_more_text: '研究计划和每周更新，敬请关注 Medium',
     footer_about_text: '一个人人可参与锻造 AI 价值观的开放研究社区。',
     about_main_text: '一个所有人都可以参与AI价值观塑造的开放研究社区。',
     btn_howto: '如何开始',
@@ -5910,6 +5914,14 @@ function initAboutHowTo() {
     howtoClose.addEventListener('click', () => howtoOverlay.classList.remove('active'));
     howtoOverlay.addEventListener('click', (e) => {
       if (e.target === howtoOverlay) howtoOverlay.classList.remove('active');
+    });
+  }
+
+  // Footer Learn More link (opens Medium)
+  const footerLearnMoreBtn = document.getElementById('footerLearnMoreBtn');
+  if (footerLearnMoreBtn) {
+    footerLearnMoreBtn.addEventListener('click', () => {
+      window.open('https://medium.com/@the42post', '_blank');
     });
   }
 }
