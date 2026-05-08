@@ -2532,8 +2532,9 @@ function initSkillForge() {
   function isContentMeaningful(text) {
     if (!text || text.length === 0) return false;
 
-    // 1️⃣ 检测重复字符太多（如"拦拦拦拦拦"或"aaaaaa"）
-    const repeatedCharRegex = /(.)\1{5,}/g;
+    // 1️⃣ 检测重复字符太多（如"拦拦拦拦拦"或"gggggg"）
+    // 对英文降低阈值到4次重复（5个相同字符），对中文保留5次重复
+    const repeatedCharRegex = /(.)\1{4,}/g;
     if (repeatedCharRegex.test(text)) {
       console.log("❌ Detected excessive repeated characters");
       return false;
@@ -2604,10 +2605,16 @@ function initSkillForge() {
       const hasSpaces = /\s/.test(text);
       const hasCommonWords = /\b(the|and|or|is|are|a|an|to|for|of|in|on|at|by|be|been|have|has|do|does|did|will|would|could|should|may|might|can|must|shall|about|after|before|between|during|from|should|would|could|must|may|might|can|will|shall)\b/i.test(text);
 
-      if (!hasSpaces && !hasCommonWords && /^[a-zA-Z]+$/.test(text) && text.length >= 12) {
+      // 对于短文本（12字以下）或者纯英文字母的随意输入，进行检查
+      if (!hasSpaces && !hasCommonWords && /^[a-zA-Z]+$/.test(text)) {
         const uniqueLetters = new Set(text.toLowerCase().match(/[a-z]/g) || []);
-        if (uniqueLetters.size <= 3) {
+        // 对短文本（<20字）和长文本的字母多样性要求不同
+        if (text.length < 20 && uniqueLetters.size <= 4) {
           console.log("❌ Detected random English characters with low variety");
+          return false;
+        }
+        if (text.length >= 20 && uniqueLetters.size <= 3) {
+          console.log("❌ Detected random English characters with very low variety");
           return false;
         }
       }
