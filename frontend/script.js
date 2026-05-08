@@ -1131,7 +1131,7 @@ const I18N = {
     arena_back_home: '← 返回创意',
     arena_all_creations: '全部创意',
     arena_canvas_empty_title: '你的画布已准备好。',
-    arena_canvas_empty_hint: '轻点下方技能卡片以开启任务',
+    arena_canvas_empty_hint: '点击下方场景卡片以开启游戏',
     arena_taste_question: '品味问题',
     arena_pick_skills: '选择2个品味技能',
     arena_skill_a: '技能 A',
