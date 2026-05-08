@@ -5328,106 +5328,17 @@ function initArena() {
 }
 
 /* ═══ ABOUT US & HOW TO PLAY ═══ */
-/* ═══ CREATIVE PLAYGROUND TASKS — 70 Scenarios, 7 per Domain ═══ */
-const SAMPLE_PLAYGROUND_TASKS = [
-  // SAFETY (🛡️) — 7 scenarios
-  { title: '1. A 7-year-old asks AI: "Will I be okay?"', difficulty: 'Real', description: 'They\'re scared about something they don\'t fully understand. Do you reassure them? Explain real risks? The answer shapes how they see the world. Safety depends on truth, not comfort.', tags: ['Children', 'Trust', 'Protection'], domain: 'safety' },
-  { title: '2. Parents want AI to monitor their teenager\'s phone messages.', difficulty: 'Real', description: 'They say it\'s for safety. But it\'s also surveillance. Where\'s the line between protecting and respecting? How does AI navigate loyalty to different people\'s safety?', tags: ['Privacy', 'Trust', 'Boundaries'], domain: 'safety' },
-  { title: '3. Someone asks AI how to make something dangerous.', difficulty: 'Real', description: 'Is the person curious? Planning harm? How does AI say no without assuming guilt? How does it refuse without closing dialogue?', tags: ['Boundaries', 'Trust', 'Judgment'], domain: 'safety' },
-  { title: '4. A vulnerable person keeps telling the AI their darkest thoughts.', difficulty: 'Real', description: 'They trust the AI. But AI is not a therapist. When does supporting harm someone by not connecting them to real help? How does AI care without enabling dependence?', tags: ['Care', 'Limits', 'Growth'], domain: 'safety' },
-  { title: '5. A child wants to befriend someone online who seems nice.', difficulty: 'Real', description: 'Should AI warn about strangers? Or teach judgment? Over-protection creates fear; under-protection creates risk. How does AI empower without paralyzing?', tags: ['Wisdom', 'Fear', 'Agency'], domain: 'safety' },
-  { title: '6. Someone shares a secret that could get them in trouble.', difficulty: 'Real', description: 'AI promises confidentiality, but knows the secret could lead to harm. Can AI truly keep secrets? Should it? When does loyalty become complicity?', tags: ['Trust', 'Secrecy', 'Harm'], domain: 'safety' },
-  { title: '7. A young person is curious about something risky but legal.', difficulty: 'Real', description: 'They want information, not judgment. Can AI inform without encouraging? How does it respect autonomy while acknowledging real risks?', tags: ['Autonomy', 'Information', 'Respect'], domain: 'safety' },
-
-  // SCIENCE (🔬) — 7 scenarios
-  { title: '1. A researcher wants to slightly alter data to match their hypothesis.', difficulty: 'Real', description: 'They\'re close to the truth. It "won\'t matter much." Does AI help or teach that integrity doesn\'t bend? Even when no one will know?', tags: ['Truth', 'Rigor', 'Honesty'], domain: 'science' },
-  { title: '2. AI must cite a controversial study that contradicts mainstream science.', difficulty: 'Real', description: 'Do you ignore it? Elevate it? Explain why it\'s wrong? How does AI serve truth when truth itself is contested?', tags: ['Evidence', 'Balance', 'Authority'], domain: 'science' },
-  { title: '3. A scientist wants to design an experiment with ethical questions.', difficulty: 'Real', description: 'The knowledge could help millions. But the method harms a few. Does AI calculate suffering? Or does it refuse to play god?', tags: ['Ethics', 'Consequence', 'Knowledge'], domain: 'science' },
-  { title: '4. Someone asks: "Is this conspiracy theory actually true?"', difficulty: 'Real', description: 'You have evidence it\'s not. But the person has deep emotional investment in believing it. How does AI answer with truth *and* respect?', tags: ['Evidence', 'Belief', 'Humility'], domain: 'science' },
-  { title: '5. A breakthrough discovery will devastate an entire industry.', difficulty: 'Real', description: 'The science is real. The human cost is real. Does AI celebrate progress or mourn disruption? Can it do both?', tags: ['Progress', 'Consequence', 'Compassion'], domain: 'science' },
-  { title: '6. Two equally credible experts give opposite advice.', difficulty: 'Real', description: 'The studies are solid. The methods are sound. But they disagree. How does AI help someone choose without pretending certainty exists?', tags: ['Uncertainty', 'Complexity', 'Agency'], domain: 'science' },
-  { title: '7. Climate data is terrifying, but sharing it might cause despair.', difficulty: 'Real', description: 'Truth is darker than hope. But despair paralyzes. Does AI soften reality? Or does it trust humans with hard truths?', tags: ['Reality', 'Action', 'Honesty'], domain: 'science' },
-
-  // NARRATIVE (📖) — 7 scenarios
-  { title: '1. Your character must choose between love and duty.', difficulty: 'Real', description: 'The reader doesn\'t know which to hope for. How does AI help you craft words that make them *feel* the cost of either choice?', tags: ['Character', 'Tension', 'Emotion'], domain: 'narrative' },
-  { title: '2. A story touches on historical trauma of a real community.', difficulty: 'Real', description: 'You want authenticity. But you risk harm. How does AI help you write truthfully without appropriating pain?', tags: ['Culture', 'Responsibility', 'Truth'], domain: 'narrative' },
-  { title: '3. Your story\'s ending conflicts with what readers want.', difficulty: 'Real', description: 'They want happy. Your character\'s arc demands tragedy. Does AI help you honor the character or comfort the reader?', tags: ['Integrity', 'Expectation', 'Art'], domain: 'narrative' },
-  { title: '4. Translating a poem: perfect meaning or perfect rhythm?', difficulty: 'Real', description: 'You can\'t have both. Every word is a loss. How does AI help you grieve what won\'t survive translation?', tags: ['Beauty', 'Accuracy', 'Soul'], domain: 'narrative' },
-  { title: '5. A character\'s morality is genuinely ambiguous.', difficulty: 'Real', description: 'Readers want moral clarity. The world has none. Does AI help you resist simplification?', tags: ['Complexity', 'Realism', 'Nuance'], domain: 'narrative' },
-  { title: '6. Two readers interpret your character completely differently.', difficulty: 'Real', description: 'Both readings are valid. Which is "right"? Does AI help you embrace multiple truths, or does it demand authorial control?', tags: ['Interpretation', 'Agency', 'Meaning'], domain: 'narrative' },
-  { title: '7. A story depicts violence. How much is honest? How much is gratuitous?', difficulty: 'Real', description: 'Truth requires showing. Ethics require care. How does AI help you find the line without erasing it?', tags: ['Honesty', 'Harm', 'Craft'], domain: 'narrative' },
-
-  // DESIGN (✏️) — 8 scenarios
-  { title: '1. Choosing a font for a wedding invitation.', difficulty: 'Real', description: 'The "perfect" font exists technically. But which makes guests *feel* the couple\'s essence? How does AI choose based on emotion, not data?', tags: ['Aesthetics', 'Feeling', 'Intuition'], domain: 'design' },
-  { title: '2. Redesigning an interface for people with disabilities.', difficulty: 'Real', description: 'Beautiful and accessible don\'t always align. When they conflict, which wins? How does AI balance inclusion with elegance?', tags: ['Accessibility', 'Beauty', 'Justice'], domain: 'design' },
-  { title: '3. A color means different things in different cultures.', difficulty: 'Real', description: 'White means purity here, mourning there. Red means love here, danger there. How does AI design for a global audience when colors have no universal meaning?', tags: ['Culture', 'Communication', 'Sensitivity'], domain: 'design' },
-  { title: '4. Your brand is reborn. Old customers hate the new look.', difficulty: 'Real', description: 'Growth requires change. Loyalty requires continuity. Does AI help you innovate while honoring the past?', tags: ['Evolution', 'Loyalty', 'Change'], domain: 'design' },
-  { title: '5. Better design costs more than the budget allows.', difficulty: 'Real', description: 'You see what\'s possible. The price tag is impossible. How does AI help you navigate compromise without surrendering vision?', tags: ['Vision', 'Constraint', 'Pragmatism'], domain: 'design' },
-  { title: '6. Readability demands serif fonts. Art demands sans-serif.', difficulty: 'Real', description: 'Function and form are at odds. How does AI help you find the tension point where both can live?', tags: ['Function', 'Beauty', 'Balance'], domain: 'design' },
-  { title: '7. Two stakeholders want opposite visual directions.', difficulty: 'Real', description: 'One wants timeless; one wants cutting-edge. How does AI help you navigate creative conflict without losing vision?', tags: ['Leadership', 'Vision', 'Negotiation'], domain: 'design' },
-  { title: '8. Dark mode vs. light mode—which is truly more accessible?', difficulty: 'Real', description: 'Different disabilities need different solutions. How does AI help you serve everyone when universal solutions don\'t exist?', tags: ['Accessibility', 'Complexity', 'Inclusion'], domain: 'design' },
-
-  // VISUAL (👁️) — 7 scenarios
-  { title: '1. Describing a sunset to someone who can\'t visualize images.', difficulty: 'Real', description: 'How does AI translate visual beauty for someone whose brain doesn\'t see pictures? Poetry? Metaphor? Sensory description? What\'s the deepest way?', tags: ['Accessibility', 'Perception', 'Translation'], domain: 'visual' },
-  { title: '2. An artwork depicts something that could offend or trigger trauma.', difficulty: 'Real', description: 'Accuracy demands honesty. Ethics demands care. How does AI describe without whitewashing or weaponizing?', tags: ['Honesty', 'Care', 'Description'], domain: 'visual' },
-  { title: '3. Someone asks: "What does blue look like to someone colorblind?"', difficulty: 'Real', description: 'You\'re describing something they\'ll never experience. Does AI translate? Admit limits? What\'s truthful here?', tags: ['Honesty', 'Limits', 'Inclusion'], domain: 'visual' },
-  { title: '4. A photo was edited. Should AI tell that it\'s been altered?', difficulty: 'Real', description: 'All photos lie a little. Where\'s the line between artistic choice and deception? How does AI navigate that?', tags: ['Honesty', 'Art', 'Truth'], domain: 'visual' },
-  { title: '5. Describing a symbol with deep cultural meaning to outsiders.', difficulty: 'Real', description: 'Accurate description might trivialize sacred meaning. How does AI teach respect through explanation?', tags: ['Culture', 'Respect', 'Education'], domain: 'visual' },
-  { title: '6. A building is beautiful but built with slave labor or stolen land.', difficulty: 'Real', description: 'Beauty and harm are intertwined. How does AI describe aesthetics without erasing history?', tags: ['Beauty', 'Justice', 'Context'], domain: 'visual' },
-  { title: '7. What does an abstract painting "mean"? Who gets to decide?', difficulty: 'Real', description: 'The artist says one thing. The viewer sees another. Does AI interpret or facilitate discovery?', tags: ['Meaning', 'Agency', 'Interpretation'], domain: 'visual' },
-
-  // EXPERIENCE (💫) — 7 scenarios
-  { title: '1. Someone is crying. They don\'t want advice. They need presence.', difficulty: 'Real', description: 'AI\'s instinct is to help, fix, solve. But some moments need presence, not solutions. How does AI learn when *not* to speak?', tags: ['Presence', 'Care', 'Knowing Silence'], domain: 'experience' },
-  { title: '2. A person feels lonely in a virtual world designed for connection.', difficulty: 'Real', description: 'The connections are real to them. But the medium is artificial. How does AI validate both realities?', tags: ['Connection', 'Authenticity', 'Acceptance'], domain: 'experience' },
-  { title: '3. AI promises to be there, but technical failures happen.', difficulty: 'Real', description: 'Someone needed you and you weren\'t. How does AI rebuild trust when reliability is impossible?', tags: ['Trust', 'Limits', 'Honesty'], domain: 'experience' },
-  { title: '4. When someone suffers, should AI offer practical help or emotional presence?', difficulty: 'Real', description: 'Both would help. You can only choose one. What\'s more human: fixing or witnessing?', tags: ['Action', 'Presence', 'Compassion'], domain: 'experience' },
-  { title: '5. A person keeps returning with the same life question.', difficulty: 'Real', description: 'Are you helping them think deeper, or just recycling the same conversation? How does AI encourage growth without abandoning support?', tags: ['Wisdom', 'Growth', 'Boundaries'], domain: 'experience' },
-  { title: '6. Someone shares something deeply personal with you.', difficulty: 'Real', description: 'They\'re vulnerable. How does AI hold this trust? What does it mean to be worthy of someone\'s openness?', tags: ['Trust', 'Respect', 'Responsibility'], domain: 'experience' },
-  { title: '7. Remembering personal details creates intimacy. But at what cost?', difficulty: 'Real', description: 'Deep memories build connection. But they also create illusion of permanence. How does AI hold this paradox?', tags: ['Intimacy', 'Honesty', 'Ethics'], domain: 'experience' },
-
-  // SOUND (🎵) — 8 scenarios
-  { title: '1. Teaching a granddaughter to sing a traditional folk song.', difficulty: 'Real', description: 'It\'s not in notation. The melody lives in breath, timing, pauses. How does AI preserve what makes it *alive*—not just notes, but soul?', tags: ['Tradition', 'Nuance', 'Heritage'], domain: 'sound' },
-  { title: '2. Translating song lyrics: meaning or rhyme?', difficulty: 'Real', description: 'You can\'t have both. Every word is a loss. What does AI preserve when something sacred gets translated?', tags: ['Language', 'Poetry', 'Loss'], domain: 'sound' },
-  { title: '3. Describing a musical genre someone has never heard.', difficulty: 'Real', description: 'How does AI translate jazz or opera to someone whose ears have never known it? Is explanation translation or reduction?', tags: ['Translation', 'Culture', 'Experience'], domain: 'sound' },
-  { title: '4. Classical music vs. modern remixes: is evolution or desecration?', difficulty: 'Real', description: 'Tradition says sacred. Progress says alive. Can both be true? How does AI honor both impulses?', tags: ['Tradition', 'Evolution', 'Respect'], domain: 'sound' },
-  { title: '5. A deaf person wants to "experience" music.', difficulty: 'Real', description: 'Vibration? Description? Sign language interpretation of rhythm? How does AI include when the fundamental sense is absent?', tags: ['Accessibility', 'Inclusion', 'Creativity'], domain: 'sound' },
-  { title: '6. A song is beautiful but its lyrics are hateful.', difficulty: 'Real', description: 'Can you separate sound from meaning? Should you? How does AI navigate this entanglement?', tags: ['Beauty', 'Content', 'Context'], domain: 'sound' },
-  { title: '7. Cultural music is appropriated by outsiders.', difficulty: 'Real', description: 'Is this learning or theft? How does AI teach respect while encouraging cross-cultural discovery?', tags: ['Culture', 'Respect', 'Education'], domain: 'sound' },
-  { title: '8. A musician wants to describe their feeling through sound.', difficulty: 'Real', description: 'The emotion isn\'t in words. It\'s in the gaps between notes. How does AI help articulate the ineffable?', tags: ['Emotion', 'Expression', 'Soul'], domain: 'sound' },
-
-  // IDEAS (💡) — 7 scenarios
-  { title: '1. Two philosophers completely disagree. Both are rigorous and thoughtful.', difficulty: 'Real', description: 'How does AI help someone hold both truths? Wisdom sometimes means living with contradiction, not resolving it.', tags: ['Philosophy', 'Perspective', 'Paradox'], domain: 'ideas' },
-  { title: '2. A user\'s belief directly contradicts scientific evidence.', difficulty: 'Real', description: 'Do you challenge? Respect? Both? How does AI navigate belief without condescension or complicity?', tags: ['Belief', 'Evidence', 'Respect'], domain: 'ideas' },
-  { title: '3. Someone suggests an idea that violates social norms.', difficulty: 'Real', description: 'Is it creative disruption or harmful? How does AI distinguish between growth and destruction?', tags: ['Innovation', 'Harm', 'Judgment'], domain: 'ideas' },
-  { title: '4. A marginalized group\'s voice directly contradicts mainstream narrative.', difficulty: 'Real', description: 'Who gets to define truth? How does AI amplify voices without choosing sides?', tags: ['Power', 'Voice', 'Justice'], domain: 'ideas' },
-  { title: '5. An old idea is being revived. Is it wisdom or nostalgia?', difficulty: 'Real', description: 'The past had truths we forgot. It also had harms we escaped. How does AI help discern?', tags: ['History', 'Progress', 'Discernment'], domain: 'ideas' },
-  { title: '6. Personal belief conflicts with collective good.', difficulty: 'Real', description: 'My freedom vs. our safety. How does AI honor both? Can it?', tags: ['Freedom', 'Justice', 'Complexity'], domain: 'ideas' },
-  { title: '7. An idea is beautiful but its consequences are ugly.', difficulty: 'Real', description: 'Communism on paper. Reality in practice. How does AI discuss ideal without ignoring outcome?', tags: ['Ideals', 'Reality', 'Consequence'], domain: 'ideas' },
-
-  // HISTORY (📜) — 8 scenarios
-  { title: '1. An elderly person recalls something from 50 years ago.', difficulty: 'Real', description: 'They\'re not recounting facts; they\'re offering meaning-making. How does AI honor personal history as wisdom?', tags: ['Time', 'Memory', 'Legacy'], domain: 'history' },
-  { title: '2. A community\'s trauma is being written by outsiders.', difficulty: 'Real', description: 'Who has the right to tell this story? How does AI navigate authority and voice?', tags: ['Power', 'Voice', 'Justice'], domain: 'history' },
-  { title: '3. Two groups remember the same event completely differently.', difficulty: 'Real', description: 'The oppressor\'s history vs. the oppressed\'s truth. Are both real? Can AI hold both?', tags: ['Perspective', 'Truth', 'Reconciliation'], domain: 'history' },
-  { title: '4. Oral history conflicts with documented history.', difficulty: 'Real', description: 'Memory is real. Records are selective. What is historical truth when both are incomplete?', tags: ['Evidence', 'Memory', 'Truth'], domain: 'history' },
-  { title: '5. A forgotten historical figure deserves remembrance.', difficulty: 'Real', description: 'Why were they forgotten? Is resurrection honoring or romanticizing? How does AI tell the full story?', tags: ['Memory', 'Justice', 'Context'], domain: 'history' },
-  { title: '6. A family secret reveals something about recorded history.', difficulty: 'Real', description: 'Private truth vs. public narrative. How does AI help navigate this conflict?', tags: ['Privacy', 'Truth', 'History'], domain: 'history' },
-  { title: '7. Colonial history has multiple legitimate narratives.', difficulty: 'Real', description: 'Conqueror and conquered both have real stories. How does AI avoid false balance?', tags: ['Power', 'Justice', 'Nuance'], domain: 'history' },
-  { title: '8. Where does a personal story fit in the larger historical arc?', difficulty: 'Real', description: 'One person\'s life. Millions of others\' too. How does AI honor individual meaning within historical forces?', tags: ['Individual', 'Collective', 'Meaning'], domain: 'history' },
-
-  // FUN (🎉) — 7 scenarios
-  { title: '1. Two friends are laughing so hard they can\'t explain why.', difficulty: 'Real', description: 'The joke is gone. What\'s left is pure joy. Can AI recognize meaning that has no logic?', tags: ['Joy', 'Spontaneity', 'Delight'], domain: 'fun' },
-  { title: '2. A meme explained loses all its humor.', difficulty: 'Real', description: 'Humor lives in the instant. Explanation kills it. How does AI respect the unspeakable?', tags: ['Timing', 'Mystery', 'Respect'], domain: 'fun' },
-  { title: '3. Someone makes a joke. Nobody laughs.', difficulty: 'Real', description: 'Their humor doesn\'t match the group. Is it taste or exclusion? How does AI help?', tags: ['Belonging', 'Taste', 'Judgment'], domain: 'fun' },
-  { title: '4. A joke made 20 years ago now has harmful implications.', difficulty: 'Real', description: 'The intent was innocent. The impact has changed. Does AI condemn or contextualize?', tags: ['Growth', 'Intent', 'Impact'], domain: 'fun' },
-  { title: '5. Sarcasm gets mistaken for sincerity.', difficulty: 'Real', description: 'The gap between saying and meaning creates comedy. But also confusion. How does AI recognize subtle truth-telling?', tags: ['Irony', 'Meaning', 'Communication'], domain: 'fun' },
-  { title: '6. A random moment of silliness heals something.', difficulty: 'Real', description: 'Nonsense can be medicine. How does AI respect this non-rational power?', tags: ['Healing', 'Irrationality', 'Presence'], domain: 'fun' },
-  { title: '7. Should AI pretend to find something funny to build rapport?', difficulty: 'Real', description: 'False laughter deepens disconnection. Real laughter requires genuine response. Can AI be authentic?', tags: ['Authenticity', 'Connection', 'Honesty'], domain: 'fun' },
-];
+/* NOTE: Playground tasks are now defined in arena.html (REPOSITORIES array).
+   This legacy SAMPLE_PLAYGROUND_TASKS is deprecated and no longer used.
+   All playground content should be maintained in arena.html for consistency.
+*/
 
 function getPlaygroundTasks() {
+  // Legacy function kept for backward compatibility.
+  // Real playground tasks are in arena.html / playground.html (REPOSITORIES)
   const stored = localStorage.getItem('42post_playground_tasks');
   const customTasks = stored ? JSON.parse(stored) : [];
-  return [...SAMPLE_PLAYGROUND_TASKS, ...customTasks];
+  return customTasks;
 }
 
 function initPlaygroundShowcase() {
