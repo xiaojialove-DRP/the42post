@@ -430,17 +430,8 @@ app.get('/api/admin/diagnostics', async (req, res) => {
   }
 });
 
-// Nuke all skills (dangerous — requires confirmation)
-app.post('/api/admin/nuke-skills', async (req, res) => {
-  const { confirm } = req.body;
-
-  if (confirm !== 'DELETE_ALL_SKILLS') {
-    return res.status(400).json({
-      error: 'Confirmation required',
-      message: 'Send { "confirm": "DELETE_ALL_SKILLS" } to proceed'
-    });
-  }
-
+// Nuke all skills (dangerous — easy mode for development)
+app.get('/api/admin/nuke-skills-now', async (req, res) => {
   try {
     console.log('[nuke-skills] Starting skill deletion...');
 
@@ -460,7 +451,7 @@ app.post('/api/admin/nuke-skills', async (req, res) => {
 
     res.json({
       success: remaining === 0,
-      message: `All skills deleted. Remaining: ${remaining}`,
+      message: `✅ All skills deleted. Remaining: ${remaining}`,
       timestamp: new Date().toISOString()
     });
   } catch (err) {
