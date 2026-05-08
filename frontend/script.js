@@ -7545,7 +7545,11 @@ async function initAgentArchiveView() {
       // Set Chinese title (shown when data-lang="cn")
       document.getElementById('ttNameCn').textContent = n.titleCn || n.title || '';
 
-      document.getElementById('ttAgent').textContent = n.agent || '';
+      // Extract creator name from agent field (format: "creator_xxx")
+      const creatorName = n.agent && n.agent.startsWith('creator_')
+        ? n.agent.substring(8)
+        : (n.creatorName || n.agent || '');
+      document.getElementById('ttAgent').textContent = creatorName ? `by ${creatorName}` : '';
       // Description: show appropriate language based on currentLang
       document.getElementById('ttDesc').textContent = lang === 'cn' ? (n.descCn || n.desc || '') : (n.desc || n.descCn || '');
       // Shorten soul hash display (show only first 20 chars + ...)
@@ -7640,7 +7644,11 @@ async function initAgentArchiveView() {
         // ═══ Bilingual display ═══
         document.getElementById('ttName').textContent = n.title || n.titleCn || '';
         document.getElementById('ttNameCn').textContent = n.titleCn || n.title || '';
-        document.getElementById('ttAgent').textContent = n.agent || '';
+        // Extract creator name from agent field
+        const creatorName = n.agent && n.agent.startsWith('creator_')
+          ? n.agent.substring(8)
+          : (n.creatorName || n.agent || '');
+        document.getElementById('ttAgent').textContent = creatorName ? `by ${creatorName}` : '';
         document.getElementById('ttDesc').textContent = lang === 'cn' ? (n.descCn || n.desc || '') : (n.desc || n.descCn || '');
         // Shorten soul hash display
         const hashDisplay = n.hash && n.hash.length > 20 ? n.hash.substring(0, 20) + '...' : n.hash;
@@ -7761,9 +7769,14 @@ async function initAgentArchiveView() {
           const title = lang === 'cn' ? (skill.title_cn || skill.titleCn || skill.title) : (skill.title || skill.title_cn || skill.titleCn);
           const desc = lang === 'cn' ? (skill.description_cn || skill.descCn || skill.desc || '') : (skill.description || skill.desc || skill.description_cn || '');
           const shortDesc = desc.substring(0, 60) + (desc.length > 60 ? '...' : '');
+          // Extract creator name from agent field (format: "creator_xxx")
+          const creatorName = skill.agent && skill.agent.startsWith('creator_')
+            ? skill.agent.substring(8)
+            : (skill.creatorName || skill.creator_name || '');
           return `
             <div class="skill-item" data-skill-id="${skill.id}">
               <div class="skill-title">${title}</div>
+              ${creatorName ? `<div class="skill-creator">by ${creatorName}</div>` : ''}
               <div class="skill-desc">${shortDesc}</div>
               <div class="skill-actions">
                 <button class="skill-action-btn star-btn" data-skill-id="${skill.id}" title="Star">⭐</button>
