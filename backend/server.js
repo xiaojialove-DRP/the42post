@@ -152,6 +152,11 @@ app.get('/playground', (req, res) => {
   res.sendFile(join(frontendPath, 'playground.html'));
 });
 
+// Serve archive.html at /archive
+app.get('/archive', (req, res) => {
+  res.sendFile(join(frontendPath, 'archive.html'));
+});
+
 // Root route - return API info if frontend not found
 app.get('/', (req, res) => {
   console.log('GET / request received');
