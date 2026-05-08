@@ -1476,6 +1476,13 @@ body[data-lang="cn"] .voices-header-text {
 /* State: has content being edited */
 .chat-bubble-wrap.is-focused {
   background: rgba(255, 255, 255, 0.99);
+  border-color: var(--coral);
+  box-shadow:
+    0 1px 4px rgba(0, 0, 0, 0.03),
+    0 12px 48px rgba(0, 0, 0, 0.06),
+    0 0 40px rgba(212, 114, 106, 0.15),
+    0 0 70px rgba(212, 114, 106, 0.12),
+    0 0 50px rgba(106, 142, 186, 0.08);
 }
 
 /* State: has user content */
@@ -1580,6 +1587,8 @@ body[data-lang="cn"] .voices-header-text {
   outline: none;
   transition: color 0.2s ease;
   box-sizing: border-box;
+  vertical-align: top;
+  align-self: flex-start;
 }
 
 .chat-bubble-input::placeholder {
