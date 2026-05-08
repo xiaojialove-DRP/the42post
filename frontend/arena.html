@@ -2341,7 +2341,7 @@
 
           <div class="twin-stage twin-loading" hidden>
             <span class="twin-spinner">⟳</span>
-            <span>${isCn ? '正在生成两个回应…' : 'generating two responses…'}</span>
+            <span class="twin-loading-text">generating two responses…</span>
           </div>
 
           <!-- Reveal-mode rating stage. Replaces the legacy blind-pick UI:
@@ -2368,22 +2368,22 @@
               </div>
             </div>
             <div class="twin-rate-diagnostic" data-rate-diag hidden></div>
-            <div class="twin-rate-question">${isCn ? '这个 Skill 效果怎么样？' : 'How was this Skill?'}</div>
+            <div class="twin-rate-question">How was this Skill?</div>
             <div class="twin-rate-buttons">
               <button class="twin-rate-btn" data-rating="better">
                 <span class="twin-rate-emoji">🔥</span>
-                <span class="twin-rate-word">${isCn ? '明显更好' : 'Clearly better'}</span>
+                <span class="twin-rate-word">Clearly better</span>
               </button>
               <!-- Negative slot is "worse" rather than the original
                    "neutral" — the research side needs a real negative
                    signal to detect skills that hurt rather than help. -->
               <button class="twin-rate-btn" data-rating="worse">
                 <span class="twin-rate-emoji">😕</span>
-                <span class="twin-rate-word">${isCn ? '不大好' : 'Not great'}</span>
+                <span class="twin-rate-word">Not great</span>
               </button>
               <button class="twin-rate-btn" data-rating="no_diff">
                 <span class="twin-rate-emoji">🤔</span>
-                <span class="twin-rate-word">${isCn ? '没感觉到区别' : "Can't tell"}</span>
+                <span class="twin-rate-word">Can't tell</span>
               </button>
             </div>
             <!-- Always-visible optional note. The textarea sits in
@@ -2714,6 +2714,20 @@
           data.skill_side === 'B' ? skillTagText : baselineTagText;
         stageRate.querySelector('[data-side="A"]').classList.toggle('twin-rate-skill', data.skill_side === 'A');
         stageRate.querySelector('[data-side="B"]').classList.toggle('twin-rate-skill', data.skill_side === 'B');
+
+        // Update UI text based on language
+        stageRate.querySelector('.twin-loading-text').textContent =
+          isCn ? '正在生成两个回应…' : 'generating two responses…';
+        stageRate.querySelector('.twin-rate-question').textContent =
+          isCn ? '这个 Skill 效果怎么样？' : 'How was this Skill?';
+        const btnTexts = [
+          isCn ? '明显更好' : 'Clearly better',
+          isCn ? '不大好' : 'Not great',
+          isCn ? '没感觉到区别' : "Can't tell"
+        ];
+        stageRate.querySelectorAll('.twin-rate-word').forEach((el, i) => {
+          if (i < btnTexts.length) el.textContent = btnTexts[i];
+        });
 
         // The diagnostic was generated server-side comparing the two
         // responses. Show it as a soft hint between the cards and the
