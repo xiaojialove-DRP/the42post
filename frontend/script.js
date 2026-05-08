@@ -2158,26 +2158,8 @@ function generateAdaptiveProbeScenarios(agentName, agentDesc, agentCapabilities)
   return { context, a, b, c };
 }
 
-async function generateProbeScenarios(idea) {
-  // Always try the real API first — the probe endpoint is public (no auth required).
-  // Auth guard was the bug: users click Generate Probe before creating an account.
-  try {
-    const result = await API.generateProbe(idea, document.body.dataset.lang || 'en');
-    if (result.success && result.probe) {
-      return {
-        context: result.probe.scenario,
-        a: result.probe.thesis,
-        b: result.probe.antithesis,
-        c: result.probe.extreme,
-        apiSource: true,
-        fullProbe: result.probe
-      };
-    }
-  } catch (e) {
-    console.warn('Probe API unavailable, falling back to client-side generation:', e);
-  }
-
-  // Fallback: client-side generation (keyword matching)
+// 客户端生成探针场景（避免敏感内容）
+function generateClientSideProbe(idea) {
   console.log('↙ Using client-side fallback for probe generation');
   if (!idea || idea.length === 0) {
     return {
@@ -2233,6 +2215,68 @@ async function generateProbeScenarios(idea) {
   }
 
   return { context, a, b, c };
+}
+
+// 检查场景是否包含敏感/风险内容
+function isSensitiveScenario(text) {
+  if (!text) return false;
+
+  // 需要避免的敏感领域
+  const sensitivePatterns = {
+    // 医学/健康相关
+    medical: /医学|医生|医院|疾病|患者|症状|诊断|治疗|药物|糖尿病|癌症|艾滋|精神病|心理|健康|手术|病人|处方|医疗|临床/i,
+    // 法律相关
+    legal: /法律|法官|律师|起诉|诉讼|犯罪|监狱|判刑|法庭|违法|合同|纠纷|赔偿|诉讼费|仲裁|庭审/i,
+    // 财务/税务相关
+    financial: /税务|逃税|避税|洗钱|贿赂|欺诈|诈骗|金融犯罪|贪污|腐败/i,
+    // 宗教/政治敏感
+    sensitive: /宗教|政治|宗派|种族|民族|信仰|圣战|恐怖|极端|阴谋论/i,
+    // 暴力/伤害相关
+    violent: /暴力|伤害|谋杀|自杀|自残|死亡|杀害|虐待|强奸|性侵/i,
+    // 成瘾/物质相关
+    substance: /毒品|吸毒|贩毒|酗酒|成瘾|毒|毒物|毒素/i
+  };
+
+  // 检查是否匹配任何敏感模式
+  for (const [domain, pattern] of Object.entries(sensitivePatterns)) {
+    if (pattern.test(text)) {
+      console.log(`⚠️ Detected sensitive content (${domain}):`, text.substring(0, 50));
+      return true;
+    }
+  }
+
+  return false;
+}
+
+async function generateProbeScenarios(idea) {
+  // Always try the real API first — the probe endpoint is public (no auth required).
+  // Auth guard was the bug: users click Generate Probe before creating an account.
+  try {
+    const result = await API.generateProbe(idea, document.body.dataset.lang || 'en');
+    if (result.success && result.probe) {
+      // ⚠️ 安全检查：检测生成的场景是否包含敏感内容
+      const scenarioText = `${result.probe.scenario} ${result.probe.thesis} ${result.probe.antithesis} ${result.probe.extreme}`;
+      if (isSensitiveScenario(scenarioText)) {
+        console.warn('⚠️ Generated scenario contains sensitive content, falling back to client-side generation');
+        // 降级到客户端生成，避免敏感场景
+        return generateClientSideProbe(idea);
+      }
+
+      return {
+        context: result.probe.scenario,
+        a: result.probe.thesis,
+        b: result.probe.antithesis,
+        c: result.probe.extreme,
+        apiSource: true,
+        fullProbe: result.probe
+      };
+    }
+  } catch (e) {
+    console.warn('Probe API unavailable, falling back to client-side generation:', e);
+  }
+
+  // Fallback: client-side generation
+  return generateClientSideProbe(idea);
 }
 
 // ═══ CULTURAL PROBES: Generate 3 distinct AI response styles ═══
