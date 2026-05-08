@@ -2532,42 +2532,61 @@ function initSkillForge() {
   function isContentMeaningful(text) {
     if (!text || text.length === 0) return false;
 
-    // 检测重复字符太多（如"拦拦拦拦拦"或"aaaaaa"）
+    // 1️⃣ 检测重复字符太多（如"拦拦拦拦拦"或"aaaaaa"）
     const repeatedCharRegex = /(.)\1{5,}/g;
     if (repeatedCharRegex.test(text)) {
       console.log("❌ Detected excessive repeated characters");
       return false;
     }
 
-    // 检测中文随机字符模式（连续的无意义字符组合）
+    // 2️⃣ 检测中文随机字符
     const isChinese = /[一-鿿]/.test(text);
     if (isChinese) {
-      // 计算汉字密度 - 如果大部分是汉字但没有标点或结构，可能是随机的
       const chineseChars = text.match(/[一-鿿]/g) || [];
       const chineseDensity = chineseChars.length / text.length;
 
-      // 如果汉字密度太高（>90%）且文本比较长，可能是随机字符
-      if (chineseDensity > 0.9 && text.length >= 12) {
-        // 检查是否有一些常见的词汇或合理的字符组合
-        // 简单启发式：如果只有几个不同的汉字，可能是随意重复
+      // 如果汉字密度 > 85%（纯中文或中文为主），检查是否为无意义输入
+      if (chineseDensity > 0.85 && text.length >= 12) {
         const uniqueChars = new Set(text.match(/[一-鿿]/g) || []);
-        if (uniqueChars.size <= 3 && text.length >= 12) {
-          console.log("❌ Detected random characters with low variety");
+
+        // 更严格的检查：
+        // - 如果unique char太少（≤4个），可能是随意重复
+        // - 如果整个文本的unique char占比太低（≤30%），可能是随意拼凑
+        const uniqueRatio = uniqueChars.size / chineseChars.length;
+
+        if (uniqueChars.size <= 4 || uniqueRatio <= 0.3) {
+          console.log("❌ Detected random Chinese characters (low diversity)");
           return false;
+        }
+
+        // 检查是否完全没有标点、逗号、句号（真实中文通常有）
+        const hasPunctuation = /[，。！？；：""''（）【】《》…]/g.test(text);
+        const hasSpaces = /\s/g.test(text);
+
+        // 如果是12-20字的纯汉字，没有标点也没有空格，可能是无意义
+        if (text.length <= 20 && chineseDensity > 0.95 && !hasPunctuation && !hasSpaces) {
+          // 检查字符是否是简单重复模式
+          // 例如：12个字中，最常见的字出现了5次以上
+          const charFreq = {};
+          for (let char of chineseChars) {
+            charFreq[char] = (charFreq[char] || 0) + 1;
+          }
+          const maxFreq = Math.max(...Object.values(charFreq));
+          if (maxFreq >= chineseChars.length * 0.4) {
+            console.log("❌ Detected repetitive Chinese pattern (one char appears 40%+ of the time)");
+            return false;
+          }
         }
       }
     }
 
-    // 检测英文随机字符（无意义的字母组合）
+    // 3️⃣ 检测英文随机字符
     const isEnglish = /[a-zA-Z]/.test(text);
     if (isEnglish && !isChinese) {
-      // 检查是否有常见的英文词汇模式（空格、常见词汇等）
       const hasSpaces = /\s/.test(text);
-      const hasCommonWords = /\b(the|and|or|is|are|a|an|to|for|of|in|on|at|by|be|been|be|have|has|do|does|did|will|would|could|should|may|might|can|must|shall)\b/i.test(text);
+      const hasCommonWords = /\b(the|and|or|is|are|a|an|to|for|of|in|on|at|by|be|been|have|has|do|does|did|will|would|could|should|may|might|can|must|shall|about|after|before|between|during|from|should|would|could|must|may|might|can|will|shall)\b/i.test(text);
 
-      // 如果没有空格且没有常见词汇，且全是字母，可能是随机的
       if (!hasSpaces && !hasCommonWords && /^[a-zA-Z]+$/.test(text) && text.length >= 12) {
-        // 检查字母重复
         const uniqueLetters = new Set(text.toLowerCase().match(/[a-z]/g) || []);
         if (uniqueLetters.size <= 3) {
           console.log("❌ Detected random English characters with low variety");
