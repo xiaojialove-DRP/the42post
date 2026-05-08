@@ -38,6 +38,21 @@
   --spacing-sm: 8px;
   --spacing-md: 12px;
   --spacing-lg: 16px;
+
+  /* Mobile-first responsive variables */
+  --mobile-padding: 12px;
+  --mobile-gap: 8px;
+  --touch-target-min: 48px;
+
+  /* Font size scale (Mobile-first) */
+  --font-xs: 10px;      /* Auxiliary text */
+  --font-sm: 12px;      /* Small text */
+  --font-base: 14px;    /* Body text */
+  --font-lg: 16px;      /* Large text */
+  --font-xl: 20px;      /* Section heading */
+  --font-2xl: 28px;     /* Masthead on mobile */
+  --font-3xl: 36px;     /* Large masthead */
+
   /* Typography — DIE ZEIT editorial serif */
   --font-head: 'Playfair Display', 'Georgia', serif;
   --font-mono: 'JetBrains Mono', 'SF Mono', 'Consolas', monospace;
@@ -49,6 +64,73 @@
   --gap: 20px;
   --section-pad: 40px 0;
   --max-w: min(1520px, calc(100vw - 48px));
+}
+
+/* Tablet responsive adjustments (480px+) */
+@media (min-width: 480px) {
+  :root {
+    --mobile-padding: 24px;
+    --mobile-gap: 12px;
+    --font-xl: 24px;      /* Larger section heading on tablet */
+  }
+}
+
+/* Desktop responsive adjustments (1024px+) */
+@media (min-width: 1024px) {
+  :root {
+    --mobile-padding: 40px;
+    --mobile-gap: 20px;
+    --font-xl: 26px;      /* Standard section heading on desktop */
+  }
+}
+
+/* ════════════════════════════════════════════════════════
+   Tablet Responsive (480px+): Element-level optimizations
+   ════════════════════════════════════════════════════════ */
+@media (min-width: 480px) {
+  /* Headers and buttons remain accessible but can reduce slightly on tablet */
+  .btn-connect, .btn-agent-view, .btn-settings, .btn-about, .btn-howto, .btn-lang {
+    font-size: 11px;
+    padding: 8px 12px;
+  }
+
+  /* Input fields can remain at 16px or reduce to 14px on tablet (keeping 16px for safety) */
+  .forge-input, .minimal-input {
+    font-size: 14px;
+  }
+
+  /* Grid layouts expand to 2 columns on tablet */
+  .vibe-grid { grid-template-columns: repeat(2, 1fr); }
+  .probe-cards { grid-template-columns: repeat(2, 1fr); }
+  .about-modules { grid-template-columns: repeat(2, 1fr); }
+  .howto-paths { grid-template-columns: repeat(2, 1fr); }
+
+  /* Task tags can reduce padding on tablet */
+  .task-tag { padding: 4px 8px; }
+
+  /* Section heading spacing improvements */
+  .section-heading { margin-bottom: 12px; }
+}
+
+/* ════════════════════════════════════════════════════════
+   Desktop Responsive (1024px+): Full layout optimizations
+   ════════════════════════════════════════════════════════ */
+@media (min-width: 1024px) {
+  /* Desktop grids are 3+ columns */
+  .vibe-grid { grid-template-columns: repeat(3, 1fr); }
+  .probe-cards { grid-template-columns: repeat(3, 1fr); }
+  .about-modules { grid-template-columns: repeat(3, 1fr); }
+  .howto-paths { grid-template-columns: repeat(3, 1fr); }
+
+  /* Skill detail modal back to 2-column on desktop */
+  .skill-detail-body { grid-template-columns: 60% 40%; }
+  .skill-detail-right { border-left: 1px solid #f0e8d8; padding-left: 32px; border-top: none; }
+
+  /* Creative triptych (3-column) */
+  .creative-triptych { grid-template-columns: repeat(3, 1fr); }
+
+  /* Increase font sizes slightly on desktop for better readability on larger screens */
+  .forge-input, .minimal-input { font-size: 14px; }
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -90,7 +172,7 @@ body[data-lang="cn"] {
 
 body[data-lang="cn"] .voices-header-text {
   font-family: var(--font-serif-cn);
-  font-size: 13px;
+  font-size: var(--font-sm);
   letter-spacing: 1px;
   text-transform: none;
   color: var(--ink-muted);
@@ -108,7 +190,7 @@ body[data-lang="cn"] .voices-header-text {
   justify-content: space-between;
   padding: 8px 0;
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--font-xs);
   letter-spacing: 2px;
   color: var(--ink-muted);
   text-transform: uppercase;
@@ -178,7 +260,7 @@ body[data-lang="cn"] .voices-header-text {
 
 .masthead-vol {
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--font-xs);
   letter-spacing: 2px;
   color: var(--ink-muted);
   text-transform: uppercase;
@@ -186,7 +268,7 @@ body[data-lang="cn"] .voices-header-text {
 
 .masthead-subtitle {
   font-family: var(--font-serif);
-  font-size: 13px;
+  font-size: var(--font-sm);
   color: var(--ink-light);
   text-align: center;
   line-height: 1.5;
@@ -195,7 +277,7 @@ body[data-lang="cn"] .voices-header-text {
 
 .masthead-protocol {
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--font-xs);
   letter-spacing: 2px;
   color: var(--accent-green);
   text-transform: uppercase;
@@ -223,9 +305,12 @@ body[data-lang="cn"] .voices-header-text {
   border: 1px solid var(--rule);
   color: var(--ink);
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--font-sm);
   letter-spacing: 1.5px;
-  padding: 5px 12px;
+  padding: 8px 14px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
   cursor: pointer;
   transition: background 0.25s ease, color 0.25s ease, border-color 0.25s ease, opacity 0.25s ease, transform 0.25s ease;
   text-transform: uppercase;
@@ -301,10 +386,13 @@ body[data-lang="cn"] .voices-header-text {
 
 .task-tag {
   font-family: var(--font-mono);
-  font-size: 8px;
+  font-size: var(--font-xs);
   letter-spacing: 1px;
   text-transform: uppercase;
-  padding: 2px 8px;
+  padding: 4px 10px;
+  min-height: 28px;
+  display: inline-flex;
+  align-items: center;
   border: 1px solid color-mix(in srgb, var(--teal) 20%, #e8e0d8);
   color: var(--teal);
 }
@@ -329,7 +417,7 @@ body[data-lang="cn"] .voices-header-text {
   color: var(--ink-faint);
   font-style: italic;
   opacity: 0.6;
-  font-size: 13px;
+  font-size: var(--font-sm);
 }
 
 .the-textarea:focus {
@@ -342,7 +430,7 @@ body[data-lang="cn"] .voices-header-text {
   border: 1px solid var(--ink);
   color: var(--paper);
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--font-xs);
   letter-spacing: 2px;
   padding: 10px 24px;
   cursor: pointer;
@@ -358,7 +446,7 @@ body[data-lang="cn"] .voices-header-text {
 
 .input-hint {
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--font-xs);
   color: var(--ink-faint);
   letter-spacing: 0.5px;
 }
@@ -408,7 +496,7 @@ body[data-lang="cn"] .voices-header-text {
 
 .manifesto-values {
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--font-xs);
   letter-spacing: 1.5px;
   color: var(--ink-muted);
 }
@@ -453,7 +541,7 @@ body[data-lang="cn"] .voices-header-text {
 
 .inspiration-label {
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--font-xs);
   letter-spacing: 2px;
   text-transform: uppercase;
   color: var(--ink-muted);
@@ -476,7 +564,7 @@ body[data-lang="cn"] .voices-header-text {
 
 .inspiration-context {
   font-family: var(--font-serif);
-  font-size: 13px;
+  font-size: var(--font-sm);
   color: var(--ink-light);
   line-height: 1.6;
 }
@@ -555,7 +643,7 @@ body[data-lang="cn"] .voices-header-text {
 
 .taste-card-label {
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--font-xs);
   letter-spacing: 2px;
   color: var(--teal);
   text-transform: uppercase;
@@ -564,7 +652,7 @@ body[data-lang="cn"] .voices-header-text {
 
 .taste-card-id {
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--font-xs);
   color: var(--ink-faint);
   letter-spacing: 1px;
 }
@@ -588,7 +676,7 @@ body[data-lang="cn"] .voices-header-text {
 
 .taste-tag {
   font-family: var(--font-mono);
-  font-size: 8px;
+  font-size: var(--font-xs);
   letter-spacing: 1px;
   text-transform: uppercase;
   padding: 2px 8px;
@@ -613,7 +701,7 @@ body[data-lang="cn"] .voices-header-text {
 
 .taste-card-license {
   font-family: var(--font-mono);
-  font-size: 8px;
+  font-size: var(--font-xs);
   color: var(--ink-faint);
   letter-spacing: 1px;
 }
@@ -628,7 +716,7 @@ body[data-lang="cn"] .voices-header-text {
   border: 1px solid var(--teal);
   color: var(--teal);
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--font-xs);
   letter-spacing: 1.5px;
   padding: 10px 24px;
   cursor: pointer;
@@ -666,7 +754,7 @@ body[data-lang="cn"] .voices-header-text {
 
 .feed-card-type {
   font-family: var(--font-mono);
-  font-size: 8px;
+  font-size: var(--font-xs);
   letter-spacing: 1.5px;
   text-transform: uppercase;
   color: var(--ink-faint);
@@ -702,7 +790,7 @@ body[data-lang="cn"] .voices-header-text {
 
 .feed-card-author {
   font-family: var(--font-serif);
-  font-size: 10px;
+  font-size: var(--font-xs);
   font-style: italic;
   color: var(--ink-muted);
 }
@@ -716,7 +804,7 @@ body[data-lang="cn"] .voices-header-text {
 
 .feed-card-stars {
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--font-xs);
   color: #d4a017;
 }
 
@@ -729,7 +817,7 @@ body[data-lang="cn"] .voices-header-text {
 
 .score-awaiting {
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--font-xs);
   letter-spacing: 2px;
   color: var(--ink-muted);
   margin-bottom: 4px;
@@ -751,7 +839,7 @@ body[data-lang="cn"] .voices-header-text {
 
 .score-formula {
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--font-xs);
   letter-spacing: 1px;
   color: var(--ink-muted);
   margin-bottom: 14px;
@@ -775,7 +863,7 @@ body[data-lang="cn"] .voices-header-text {
 
 .dim-label {
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--font-xs);
   color: var(--ink-muted);
   width: 36px;
   letter-spacing: 1px;
@@ -796,7 +884,7 @@ body[data-lang="cn"] .voices-header-text {
 
 .dim-val {
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--font-xs);
   color: var(--ink);
   width: 28px;
   text-align: right;
@@ -817,7 +905,7 @@ body[data-lang="cn"] .voices-header-text {
   border: 1px solid var(--rule);
   color: var(--ink-muted);
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--font-xs);
   padding: 7px;
   cursor: pointer;
   margin-bottom: 14px;
@@ -849,7 +937,7 @@ body[data-lang="cn"] .voices-header-text {
   border: none;
   color: #fff;
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--font-xs);
   letter-spacing: 2px;
   padding: 11px 16px;
   cursor: pointer;
@@ -898,7 +986,7 @@ body[data-lang="cn"] .voices-header-text {
 
 .lamp-text {
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--font-xs);
   letter-spacing: 1px;
   color: var(--ink-muted);
 }
@@ -913,7 +1001,7 @@ body[data-lang="cn"] .voices-header-text {
 
 .why-log-title {
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--font-xs);
   letter-spacing: 2px;
   color: var(--ink);
   margin-bottom: 6px;
@@ -980,7 +1068,7 @@ body[data-lang="cn"] .voices-header-text {
 
 .panel-desc {
   font-family: var(--font-serif);
-  font-size: 13px;
+  font-size: var(--font-sm);
   color: var(--ink-light);
   line-height: 1.8;
 }
@@ -1028,7 +1116,7 @@ body[data-lang="cn"] .voices-header-text {
 
 .tuner-info {
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--font-xs);
   color: var(--ink-muted);
 }
 
@@ -1048,7 +1136,7 @@ body[data-lang="cn"] .voices-header-text {
 
 .vibe-meta-line {
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--font-xs);
   letter-spacing: 1.5px;
   color: var(--ink-muted);
   line-height: 1.8;
@@ -1099,7 +1187,7 @@ body[data-lang="cn"] .voices-header-text {
 
 .guild-icon-label {
   font-family: var(--font-mono);
-  font-size: 7px;
+  font-size: var(--font-xs);
   letter-spacing: 1px;
   color: var(--ink-muted);
   text-transform: uppercase;
@@ -1137,7 +1225,7 @@ body[data-lang="cn"] .voices-header-text {
 
 .slot-number {
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--font-xs);
   color: var(--ink);
   letter-spacing: 1px;
   font-weight: 700;
@@ -1145,7 +1233,7 @@ body[data-lang="cn"] .voices-header-text {
 
 .slot-status {
   font-family: var(--font-mono);
-  font-size: 7px;
+  font-size: var(--font-xs);
   letter-spacing: 1.5px;
   font-weight: 700;
   padding: 2px 6px;
@@ -1173,7 +1261,7 @@ body[data-lang="cn"] .voices-header-text {
 }
 
 .slot-desc {
-  font-size: 10px;
+  font-size: var(--font-xs);
   color: var(--ink-light);
   line-height: 1.6;
   flex: 1;
@@ -1204,7 +1292,7 @@ body[data-lang="cn"] .voices-header-text {
 .license-author {
   font-family: var(--font-serif);
   font-style: italic;
-  font-size: 9px;
+  font-size: var(--font-xs);
   color: var(--ink-muted);
 }
 
@@ -1218,7 +1306,7 @@ body[data-lang="cn"] .voices-header-text {
 
 .slot-agent {
   font-family: var(--font-mono);
-  font-size: 8px;
+  font-size: var(--font-xs);
   color: var(--ink-muted);
   letter-spacing: 1px;
   margin-top: 6px;
@@ -1244,7 +1332,7 @@ body[data-lang="cn"] .voices-header-text {
 
 .slot-deploy .slot-deploy-sub {
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--font-xs);
   color: var(--ink-muted);
   letter-spacing: 1.5px;
   text-transform: uppercase;
@@ -1277,7 +1365,7 @@ body[data-lang="cn"] .voices-header-text {
 
 .starlight-count {
   font-family: var(--font-mono);
-  font-size: 8px;
+  font-size: var(--font-xs);
   color: var(--ink-muted);
   letter-spacing: 1px;
 }
@@ -1516,7 +1604,7 @@ body[data-lang="cn"] .voices-header-text {
 
 .forge-mode-label {
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--font-xs);
   letter-spacing: 1.5px;
   color: #8a7a6e;
   margin-bottom: 10px;
@@ -1566,7 +1654,7 @@ body[data-lang="cn"] .voices-header-text {
 }
 
 .mode-desc {
-  font-size: 9px;
+  font-size: var(--font-xs);
   color: #b8a89a;
   font-style: italic;
 }
@@ -1604,7 +1692,7 @@ body[data-lang="cn"] .voices-header-text {
   border: none;
   color: #fff;
   font-family: var(--font-serif);
-  font-size: 13px;
+  font-size: var(--font-sm);
   font-weight: 600;
   letter-spacing: 0.5px;
   padding: 10px 24px;
@@ -1694,7 +1782,7 @@ body[data-lang="cn"] .voices-header-text {
 }
 
 .voice-attribution {
-  font-size: 10px;
+  font-size: var(--font-xs);
   color: var(--ink-muted);
   font-family: var(--font-mono);
   letter-spacing: 0.3px;
@@ -1721,7 +1809,7 @@ body[data-lang="cn"] .voices-header-text {
   display: inline-block;
   margin-left: 4px;
   padding: 1px 6px;
-  font-size: 8px;
+  font-size: var(--font-xs);
   letter-spacing: 1px;
   text-transform: uppercase;
   color: var(--coral);
@@ -1751,7 +1839,7 @@ body[data-lang="cn"] .voices-header-text {
 .voices-header-text {
   flex-shrink: 0;
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--font-xs);
   letter-spacing: 2.5px;
   text-transform: uppercase;
   color: var(--ink-light);
@@ -1761,7 +1849,7 @@ body[data-lang="cn"] .voices-header-text {
 /* When page is in Chinese, use serif font and different sizing */
 body[data-lang="cn"] .voices-header-text {
   font-family: var(--font-serif-cn);
-  font-size: 13px;
+  font-size: var(--font-sm);
   letter-spacing: 2px;
   text-transform: none;
   color: var(--ink-muted);
@@ -1878,7 +1966,7 @@ body[data-lang="cn"] .voices-header-text {
   border-bottom: 1px solid var(--rule);
   color: var(--ink);
   font-family: var(--font-serif);
-  font-size: 13px;
+  font-size: var(--font-sm);
   padding: 6px 0;
   margin-bottom: 8px;
   transition: border-color 0.25s;
@@ -1900,7 +1988,7 @@ body[data-lang="cn"] .voices-header-text {
   border-bottom: 1px solid var(--rule);
   color: var(--ink);
   font-family: var(--font-serif);
-  font-size: 13px;
+  font-size: var(--font-sm);
   padding: 6px 0;
   width: 200px;
   transition: border-color 0.25s;
@@ -2040,7 +2128,7 @@ body[data-lang="cn"] .voices-header-text {
   margin-top: 1px;
 }
 .ethics-short-text .ethics-msg {
-  font-size: 13px;
+  font-size: var(--font-sm);
   color: #2d4a23;
   line-height: 1.55;
   font-weight: 500;
@@ -2215,7 +2303,7 @@ body[data-lang="cn"] .voices-header-text {
 
 .tri-task-tags .task-tag {
   font-family: var(--font-mono);
-  font-size: 7px;
+  font-size: var(--font-xs);
   letter-spacing: 1px;
   text-transform: uppercase;
   padding: 2px 6px;
@@ -2225,7 +2313,7 @@ body[data-lang="cn"] .voices-header-text {
 
 .tri-fiction-header, .tri-dialogue-header {
   font-family: var(--font-mono);
-  font-size: 8px;
+  font-size: var(--font-xs);
   letter-spacing: 2px;
   color: var(--ink-faint);
   text-transform: uppercase;
@@ -2267,7 +2355,7 @@ body[data-lang="cn"] .voices-header-text {
 
 .tri-dialogue-speaker {
   font-family: var(--font-mono);
-  font-size: 7px;
+  font-size: var(--font-xs);
   letter-spacing: 1.5px;
   text-transform: uppercase;
   display: block;
@@ -2295,7 +2383,7 @@ body[data-lang="cn"] .voices-header-text {
   border: 1px solid var(--rule);
   color: var(--ink-muted);
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--font-xs);
   letter-spacing: 1.5px;
   padding: 7px 20px;
   cursor: pointer;
@@ -2337,7 +2425,7 @@ body[data-lang="cn"] .voices-header-text {
 
 .footer-section-title {
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--font-xs);
   letter-spacing: 2px;
   color: var(--ink);
   margin-bottom: 12px;
@@ -2381,7 +2469,7 @@ body[data-lang="cn"] .voices-header-text {
 
 .footer-step-num {
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--font-xs);
   font-weight: 700;
   color: #6b9d5c;
   flex-shrink: 0;
@@ -2480,7 +2568,7 @@ body[data-lang="cn"] .footer-text-muted {
 
 .footer-logo-the {
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--font-xs);
   letter-spacing: 2px;
   color: var(--ink-muted);
   text-transform: uppercase;
@@ -2495,7 +2583,7 @@ body[data-lang="cn"] .footer-text-muted {
 
 .footer-logo-text {
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--font-xs);
   letter-spacing: 2px;
   color: var(--ink-muted);
   text-transform: uppercase;
@@ -2522,7 +2610,7 @@ body[data-lang="cn"] .footer-text-muted {
 
 .footer-copy {
   font-family: var(--font-mono);
-  font-size: 8px;
+  font-size: var(--font-xs);
   letter-spacing: 2px;
   color: var(--ink-faint);
   text-transform: uppercase;
@@ -2770,7 +2858,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
   padding: 4px 8px;
   background: var(--rule-light);
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--font-xs);
   color: var(--ink-muted);
   text-transform: uppercase;
   border-radius: 2px;
@@ -2849,14 +2937,14 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 }
 
 .slot-instruction {
-  font-size: 10px;
+  font-size: var(--font-xs);
   color: var(--ink-faint);
   font-style: italic;
 }
 
 .selected-skill-name {
   font-family: var(--font-serif);
-  font-size: 13px;
+  font-size: var(--font-sm);
   font-weight: 600;
   color: var(--teal);
 }
@@ -2916,7 +3004,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
   background: var(--paper);
   border: 1px solid var(--rule);
   font-family: var(--font-serif);
-  font-size: 13px;
+  font-size: var(--font-sm);
   color: var(--ink);
   border-radius: 2px;
   margin-bottom: 16px;
@@ -2966,7 +3054,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
   background: var(--paper);
   border: 1px solid var(--rule);
   font-family: var(--font-serif);
-  font-size: 13px;
+  font-size: var(--font-sm);
   line-height: 1.6;
   color: var(--ink);
   resize: vertical;
@@ -3093,7 +3181,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 
 .forge-title {
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--font-xs);
   letter-spacing: 1.6px;
   color: #999;
   text-transform: uppercase;
@@ -3146,12 +3234,12 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 
 .forge-step.active .step-num {
   color: #333;
-  font-size: 13px;
+  font-size: var(--font-sm);
 }
 
 .step-label {
   font-family: var(--font-mono);
-  font-size: 7px;
+  font-size: var(--font-xs);
   letter-spacing: 1px;
   color: #ccc;
   text-transform: uppercase;
@@ -3180,7 +3268,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 
 .forge-page-title {
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--font-xs);
   letter-spacing: 1.4px;
   color: #aaa;
   margin-bottom: 14px;
@@ -3214,7 +3302,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 .forge-field label {
   display: block;
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--font-xs);
   letter-spacing: 1px;
   color: #aaa;
   margin-bottom: 7px;
@@ -3228,8 +3316,9 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
   border: 1px solid #e8e8e8;
   color: #333;
   font-family: var(--font-serif);
-  font-size: 13px;
-  padding: 10px 12px;
+  font-size: 16px;
+  padding: 12px 14px;
+  min-height: 44px;
   border-radius: 6px;
   transition: all 0.25s ease;
 }
@@ -3255,7 +3344,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
   border: 1px solid #e8e8e8;
   color: #333;
   font-family: var(--font-serif);
-  font-size: 13px;
+  font-size: var(--font-sm);
   line-height: 1.6;
   padding: 11px 12px;
   border-radius: 6px;
@@ -3288,7 +3377,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
   border: 1px solid var(--accent-green);
   color: var(--accent-green);
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--font-xs);
   letter-spacing: 2px;
   text-transform: uppercase;
 }
@@ -3325,7 +3414,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 .forge-next, .forge-prev {
   background: transparent;
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--font-xs);
   letter-spacing: 1.2px;
   padding: 8px 16px;
   cursor: pointer;
@@ -3362,7 +3451,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
   border: none;
   color: white;
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--font-xs);
   letter-spacing: 1.2px;
   padding: 9px 20px;
   cursor: pointer;
@@ -3403,7 +3492,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 
 .oath-title {
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--font-xs);
   letter-spacing: 2px;
   color: var(--ink);
   margin-bottom: 10px;
@@ -3437,7 +3526,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 
 .rights-title {
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--font-xs);
   letter-spacing: 2px;
   color: var(--ink);
   margin-bottom: 12px;
@@ -3451,7 +3540,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
   border: 1px solid var(--rule);
   color: var(--ink);
   font-family: var(--font-serif);
-  font-size: 13px;
+  font-size: var(--font-sm);
   padding: 10px 14px;
   cursor: pointer;
   appearance: none;
@@ -3465,7 +3554,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 .tag-hint {
   font-weight: 400;
   color: var(--ink-faint);
-  font-size: 8px;
+  font-size: var(--font-xs);
 }
 
 /* Shadow Extract Button */
@@ -3475,7 +3564,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
   border: 1px solid var(--accent-green);
   color: var(--accent-green);
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--font-xs);
   letter-spacing: 1.5px;
   padding: 8px 16px;
   cursor: pointer;
@@ -3514,7 +3603,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
   border: 1px dashed var(--rule);
   color: var(--ink-muted);
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--font-xs);
   letter-spacing: 1.5px;
   cursor: pointer;
   transition: background 0.25s, color 0.25s, border-color 0.25s, opacity 0.25s, transform 0.25s;
@@ -3529,7 +3618,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 
 .forge-file-name {
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--font-xs);
   color: var(--accent-green);
   margin-top: 4px;
   letter-spacing: 1px;
@@ -3540,7 +3629,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 
 .forge-path-title {
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--font-xs);
   letter-spacing: 2px;
   color: var(--ink);
   margin-bottom: 12px;
@@ -3607,7 +3696,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 
 .domain-name {
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--font-xs);
   letter-spacing: 1px;
   text-transform: uppercase;
   font-weight: 600;
@@ -3615,7 +3704,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 
 .path-badge {
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--font-xs);
   letter-spacing: 3px;
   color: var(--accent-green);
   font-weight: 700;
@@ -3647,7 +3736,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 
 .path-time {
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--font-xs);
   color: #b8a89a;
   letter-spacing: 0.5px;
   display: block;
@@ -3656,7 +3745,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 
 .forge-path-helper {
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--font-xs);
   color: #8a7a6e;
   letter-spacing: 1px;
   text-align: center;
@@ -3676,7 +3765,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 
 .notice-badge {
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--font-xs);
   letter-spacing: 2px;
   color: var(--accent-green);
   font-weight: 700;
@@ -3804,7 +3893,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 
 .about-text-cn {
   font-family: var(--font-serif-cn);
-  font-size: 13px;
+  font-size: var(--font-sm);
   color: var(--ink-muted);
   line-height: 1.8;
   margin-bottom: 4px;
@@ -3904,7 +3993,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 
 .path-label {
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--font-xs);
   letter-spacing: 2px;
   color: var(--accent-green);
   font-weight: 700;
@@ -3943,7 +4032,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
   border: 1px solid var(--ink);
   color: var(--paper);
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--font-xs);
   letter-spacing: 2px;
   padding: 8px 24px;
   cursor: pointer;
@@ -4020,14 +4109,14 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 }
 
 .format-subtitle {
-  font-size: 9px;
+  font-size: var(--font-xs);
   color: var(--ink-muted);
   letter-spacing: 0.5px;
   text-align: center;
 }
 
 .format-desc {
-  font-size: 10px;
+  font-size: var(--font-xs);
   color: var(--ink-light);
   line-height: 1.5;
   margin-bottom: 12px;
@@ -4040,7 +4129,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
   border: 1px solid var(--ink);
   color: white;
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--font-xs);
   letter-spacing: 1.5px;
   padding: 10px 12px;
   cursor: pointer;
@@ -4060,7 +4149,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 }
 
 .package-note {
-  font-size: 10px;
+  font-size: var(--font-xs);
   color: var(--ink-muted);
   text-align: center;
   padding: 12px;
@@ -4074,7 +4163,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
   border: 1px solid var(--ink);
   color: var(--paper);
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--font-xs);
   letter-spacing: 2px;
   padding: 8px 24px;
   cursor: pointer;
@@ -4098,7 +4187,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
   font-weight: 700;
   color: #8a6a2e;
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--font-xs);
   letter-spacing: 2px;
   text-transform: uppercase;
   transition: all 0.3s;
@@ -4118,7 +4207,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 }
 .probe-title {
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--font-xs);
   letter-spacing: 3px;
   color: var(--ink);
   text-transform: uppercase;
@@ -4144,7 +4233,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 }
 .probe-scenario-label {
   font-family: var(--font-mono);
-  font-size: 8px;
+  font-size: var(--font-xs);
   letter-spacing: 2px;
   color: #b8a89a;
   margin-bottom: 6px;
@@ -4183,7 +4272,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 
 .probe-card-badge {
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--font-xs);
   letter-spacing: 2px;
   color: #3a9a8c;
   font-weight: 700;
@@ -4194,7 +4283,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 .probe-card-badge.badge-extreme { color: #d4726a; }
 
 .probe-card-label {
-  font-size: 10px;
+  font-size: var(--font-xs);
   color: #8a7a6e;
   margin-bottom: 10px;
   font-style: italic;
@@ -4249,7 +4338,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 }
 .probe-summary-title {
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--font-xs);
   letter-spacing: 3px;
   color: #8a6a2e;
   font-weight: 700;
@@ -4272,13 +4361,13 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 }
 .probe-progress {
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--font-xs);
   letter-spacing: 1px;
   color: #8a7a6e;
   font-weight: 600;
 }
 .probe-hint {
-  font-size: 10px;
+  font-size: var(--font-xs);
   color: #b8a89a;
   font-style: italic;
 }
@@ -4297,7 +4386,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 }
 .skill-preview-title {
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--font-xs);
   letter-spacing: 3px;
   color: var(--ink);
   text-transform: uppercase;
@@ -4325,7 +4414,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 
 .generation-title {
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--font-xs);
   letter-spacing: 3px;
   color: var(--ink);
   text-transform: uppercase;
@@ -4364,7 +4453,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 
 .progress-label {
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--font-xs);
   letter-spacing: 1px;
   color: #8a7a6e;
 }
@@ -4392,7 +4481,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
   border: 1px solid #d4c8bc;
   color: #6a5a4e;
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--font-xs);
   letter-spacing: 1.5px;
   cursor: pointer;
   transition: all 0.2s;
@@ -4405,7 +4494,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
   border: 1px solid var(--ink);
   color: var(--paper);
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--font-xs);
   letter-spacing: 1.5px;
   cursor: pointer;
   transition: all 0.2s;
@@ -4526,7 +4615,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 
 .detail-heading {
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--font-xs);
   letter-spacing: 2px;
   color: #8a7a6e;
   font-weight: 700;
@@ -4624,7 +4713,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
   background: transparent;
   color: #6a5a4e;
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--font-xs);
   letter-spacing: 1.5px;
   cursor: pointer;
   transition: all 0.2s;
@@ -4721,7 +4810,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
   height: 20px;
   border: 1px solid var(--ink-muted);
   border-radius: 50%;
-  font-size: 10px;
+  font-size: var(--font-xs);
   flex-shrink: 0;
 }
 
@@ -4762,7 +4851,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 
 .tri-panel-label {
   font-family: var(--font-mono);
-  font-size: 8px;
+  font-size: var(--font-xs);
   letter-spacing: 2px;
   color: var(--ink-faint);
   text-transform: uppercase;
@@ -4797,7 +4886,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 
 .tri-badge {
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--font-xs);
   letter-spacing: 2px;
   color: var(--coral);
   margin-bottom: 6px;
@@ -4823,7 +4912,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
   display: flex;
   gap: 12px;
   font-family: var(--font-mono);
-  font-size: 8px;
+  font-size: var(--font-xs);
   color: var(--ink-muted);
   letter-spacing: 1px;
   margin-bottom: 10px;
@@ -4836,7 +4925,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 
 .tri-why-label {
   font-family: var(--font-mono);
-  font-size: 8px;
+  font-size: var(--font-xs);
   letter-spacing: 2px;
   color: var(--ink-faint);
   margin-bottom: 4px;
@@ -4864,7 +4953,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 
 .tri-speaker {
   font-family: var(--font-mono);
-  font-size: 7px;
+  font-size: var(--font-xs);
   letter-spacing: 1.5px;
   text-transform: uppercase;
   display: block;
@@ -4918,7 +5007,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 
 .tri-fiction-meta {
   font-family: var(--font-mono);
-  font-size: 7px;
+  font-size: var(--font-xs);
   letter-spacing: 1.5px;
   color: var(--ink-faint);
   text-transform: uppercase;
@@ -4937,7 +5026,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 
 .community-title {
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--font-xs);
   letter-spacing: 2px;
   color: var(--ink-muted);
   margin-bottom: 0;
@@ -4959,7 +5048,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 
 .note-text {
   font-family: var(--font-serif);
-  font-size: 13px;
+  font-size: var(--font-sm);
   color: var(--ink);
   line-height: 1.6;
   margin-bottom: 4px;
@@ -4967,7 +5056,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 
 .note-author {
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--font-xs);
   color: var(--ink-faint);
   letter-spacing: 0.5px;
 }
@@ -5004,7 +5093,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
   border: 1px solid var(--ink);
   color: var(--ink);
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--font-xs);
   letter-spacing: 2px;
   padding: 7px 16px;
   cursor: pointer;
@@ -5023,7 +5112,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
   color: #fff;
   border: 1px solid var(--accent);
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--font-xs);
   letter-spacing: 2px;
   padding: 6px 14px;
   cursor: pointer;
@@ -5050,7 +5139,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 .forge-form-group label {
   display: block;
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--font-xs);
   letter-spacing: 1.5px;
   color: var(--ink-light);
   margin-bottom: 8px;
@@ -5064,7 +5153,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
   border: 1px solid var(--rule);
   color: var(--ink);
   font-family: var(--font-serif);
-  font-size: 13px;
+  font-size: var(--font-sm);
   padding: 10px 14px;
   border-radius: 2px;
   transition: border-color 0.25s;
@@ -5147,7 +5236,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 
 .status-badge {
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--font-xs);
   letter-spacing: 1px;
   color: var(--ink-muted);
   padding: 6px 12px;
@@ -5176,7 +5265,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
   background: transparent;
   color: var(--ink-light);
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--font-xs);
   letter-spacing: 1px;
   text-transform: uppercase;
   cursor: pointer;
@@ -5229,7 +5318,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 }
 
 .file-upload-area p:first-of-type {
-  font-size: 13px;
+  font-size: var(--font-sm);
   color: var(--ink);
   font-weight: 600;
 }
@@ -5332,7 +5421,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
   gap: 10px;
   margin-bottom: 12px;
   cursor: pointer;
-  font-size: 13px;
+  font-size: var(--font-sm);
   color: var(--ink-light);
   line-height: 1.6;
 }
@@ -5469,10 +5558,10 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
     min-height: 140px;
   }
   .voice-quote {
-    font-size: 13px;
+    font-size: var(--font-sm);
   }
   .voice-attribution {
-    font-size: 9px;
+    font-size: var(--font-xs);
   }
 
   /* ═══ MOBILE FONT SIZE ADJUSTMENTS FOR NEW RESPONSIVE DESIGN ═══ */
@@ -5501,7 +5590,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
     font-size: 16px;
   }
   .task-description {
-    font-size: 13px;
+    font-size: var(--font-sm);
   }
 }
 
@@ -5606,7 +5695,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
     gap: 12px;
   }
   .voices-header-text {
-    font-size: 9px;
+    font-size: var(--font-xs);
     letter-spacing: 2px;
   }
   body[data-lang="cn"] .voices-header-text {
@@ -5634,10 +5723,10 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
     font-size: 11px;
   }
   .masthead-vol, .masthead-protocol {
-    font-size: 8px;
+    font-size: var(--font-xs);
   }
   .header-status-bar {
-    font-size: 8px;
+    font-size: var(--font-xs);
     letter-spacing: 1.5px;
   }
   .header-actions {
@@ -5651,7 +5740,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
     -webkit-overflow-scrolling: touch;
   }
   .btn-arena, .btn-agent-view, .btn-lang {
-    font-size: 10px;
+    font-size: var(--font-xs);
     padding: 5px 8px;
     white-space: nowrap;
     flex-shrink: 0;
@@ -5680,7 +5769,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
     font-size: 18px;
   }
   .forge-page-subtitle {
-    font-size: 13px;
+    font-size: var(--font-sm);
   }
 
   /* Agent Archive tooltip */
@@ -5876,10 +5965,10 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
     font-size: 11px;
   }
   .domain-label {
-    font-size: 10px;
+    font-size: var(--font-xs);
   }
   .playground-tag {
-    font-size: 10px;
+    font-size: var(--font-xs);
     padding: 5px 8px;
   }
 
@@ -5918,7 +6007,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
     border-radius: 10px !important;
   }
   .forge-step-label {
-    font-size: 6px;
+    font-size: var(--font-xs);
     letter-spacing: 0.5px;
   }
   .forge-page-title {
@@ -6116,7 +6205,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 
 .honor-panel-title {
   font-family: var(--font-serif);
-  font-size: 13px;
+  font-size: var(--font-sm);
   color: var(--ink);
   letter-spacing: 0.3px;
   display: flex; align-items: center; gap: 6px;
@@ -6130,7 +6219,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 }
 
 .honor-panel-subtitle {
-  font-size: 8px;
+  font-size: var(--font-xs);
   color: #8a7a6e;
   letter-spacing: 1px;
   margin-top: 4px;
@@ -6141,7 +6230,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
   grid-template-columns: 32px 1fr 80px 35px;
   align-items: center;
   padding: 10px 14px;
-  font-size: 10px;
+  font-size: var(--font-xs);
   cursor: pointer;
   transition: background 0.15s, padding 0.15s;
   gap: 8px;
@@ -6163,7 +6252,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 .honor-star {
   color: #d4a43c;
   text-align: center;
-  font-size: 10px;
+  font-size: var(--font-xs);
   font-weight: 600;
   min-width: 40px;
 }
@@ -6203,7 +6292,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 }
 .zoom-btn:hover { color: var(--ink); border-color: #b8a89a; }
 .zoom-info {
-  font-size: 8px;
+  font-size: var(--font-xs);
   color: #b8a89a;
   letter-spacing: 1px;
   margin-left: 6px;
@@ -6218,7 +6307,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
   border-right: 1px solid #d4c8bc;
 }
 .av-obs-label span {
-  font-size: 8px;
+  font-size: var(--font-xs);
   letter-spacing: 2.5px;
   color: #b8a99a;
   text-transform: uppercase;
@@ -6247,7 +6336,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 }
 
 .av-readable-subtitle {
-  font-size: 10px;
+  font-size: var(--font-xs);
   color: #8a7a6e;
   letter-spacing: 1px;
 }
@@ -6283,7 +6372,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 
 .domain-title-en {
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--font-xs);
   color: #8a7a6e;
   letter-spacing: 1.5px;
   margin-bottom: 18px;
@@ -6315,7 +6404,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 }
 
 .domain-skill-agent {
-  font-size: 9px;
+  font-size: var(--font-xs);
   color: #8a7a6e;
   margin-bottom: 4px;
   letter-spacing: 0.5px;
@@ -6331,7 +6420,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 .domain-skill-meta {
   display: flex;
   gap: 14px;
-  font-size: 8px;
+  font-size: var(--font-xs);
   color: #b8a89a;
   letter-spacing: 1px;
 }
@@ -6366,7 +6455,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
   border: 1px solid #d4c8bc;
   border-radius: 5px;
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--font-xs);
   letter-spacing: 0.5px;
   color: #6b5c4e;
   cursor: pointer;
@@ -6425,7 +6514,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 }
 .av-footer-text {
   text-align: center;
-  font-size: 9px;
+  font-size: var(--font-xs);
   color: #8a7a6e;
   letter-spacing: 2px;
   text-transform: uppercase;
@@ -6468,7 +6557,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 }
 
 .forge-instruction {
-  font-size: 13px;
+  font-size: var(--font-sm);
   color: #999;
   margin-bottom: 16px;
   line-height: 1.6;
@@ -6517,7 +6606,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 }
 
 .probe-scenario {
-  font-size: 13px;
+  font-size: var(--font-sm);
   line-height: 1.6;
   color: #555;
   margin-bottom: 16px;
@@ -6530,7 +6619,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
   background: white;
   border-radius: 3px;
   cursor: pointer;
-  font-size: 13px;
+  font-size: var(--font-sm);
   font-weight: 500;
   transition: all 0.2s;
   width: 100%;
@@ -6700,7 +6789,7 @@ button.generating {
 }
 
 .layer-name {
-  font-size: 13px;
+  font-size: var(--font-sm);
   font-weight: 600;
   color: #333;
 }
@@ -6748,7 +6837,7 @@ button.generating {
 }
 
 .minimal-label {
-  font-size: 9px;
+  font-size: var(--font-xs);
   text-transform: uppercase;
   letter-spacing: 1px;
   color: #aaa;
@@ -6764,11 +6853,12 @@ button.generating {
 }
 
 .minimal-input {
-  padding: 10px 12px;
+  padding: 12px 14px;
   border: 1px solid #e8e8e8;
   background: #ffffff;
   border-radius: 6px;
-  font-size: 13px;
+  font-size: 16px;
+  min-height: 44px;
   font-family: var(--font-serif);
   color: #333;
   transition: all 0.25s ease;
@@ -6801,7 +6891,7 @@ button.generating {
   border: 1px solid #e8e8e8;
   background: #ffffff;
   border-radius: 6px;
-  font-size: 13px;
+  font-size: var(--font-sm);
   font-family: var(--font-serif);
   line-height: 1.6;
   min-height: 100px;
@@ -6983,7 +7073,7 @@ button.generating {
 }
 
 .scenario-label {
-  font-size: 9px;
+  font-size: var(--font-xs);
   text-transform: uppercase;
   letter-spacing: 0.8px;
   color: #aaa;
@@ -6993,7 +7083,7 @@ button.generating {
 }
 
 .scenario-text {
-  font-size: 13px;
+  font-size: var(--font-sm);
   line-height: 1.6;
   color: #333;
   font-weight: 500;
@@ -7058,7 +7148,7 @@ button.generating {
 }
 
 .choice-type {
-  font-size: 9px;
+  font-size: var(--font-xs);
   text-transform: uppercase;
   letter-spacing: 0.6px;
   color: #aaa;
@@ -7139,7 +7229,7 @@ button.generating {
 }
 
 .skill-item-label {
-  font-size: 10px;
+  font-size: var(--font-xs);
   text-transform: uppercase;
   letter-spacing: 0.7px;
   color: #888;
@@ -7287,7 +7377,7 @@ button.generating {
 
 .preview-item label {
   display: block;
-  font-size: 13px;
+  font-size: var(--font-sm);
   color: #666;
   margin-bottom: 8px;
   font-weight: 500;
@@ -7368,7 +7458,7 @@ button.generating {
   border-left: 4px solid #6b9d5c;
   border-radius: 6px;
   font-family: var(--font-mono);
-  font-size: 13px;
+  font-size: var(--font-sm);
   line-height: 1.65;
   color: #2a2620;
   resize: vertical;
@@ -7405,7 +7495,7 @@ button.generating {
   border-radius: 6px;
   padding: 8px 16px;
   font-family: var(--font-serif);
-  font-size: 13px;
+  font-size: var(--font-sm);
   font-weight: 600;
   cursor: pointer;
   transition: background 0.2s ease, transform 0.15s ease;
@@ -7480,7 +7570,7 @@ button.generating {
   padding: 12px 16px;
   border-radius: 6px;
   border: none;
-  font-size: 13px;
+  font-size: var(--font-sm);
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -7687,7 +7777,7 @@ button.generating {
   background: rgba(212, 200, 188, 0.15);
   border-radius: 4px;
   font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
+  font-size: var(--font-xs);
   color: #8a7a6e;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -7695,7 +7785,7 @@ button.generating {
 }
 
 .soul-hash {
-  font-size: 10px;
+  font-size: var(--font-xs);
   color: #999;
   letter-spacing: 0.5px;
 }
@@ -7984,7 +8074,7 @@ button.generating {
   font-family: 'Playfair Display', Georgia, serif;
   line-height: 1.8;
   color: #333;
-  font-size: 13px;
+  font-size: var(--font-sm);
 }
 
 .domain-modal-body h1 {
@@ -8084,7 +8174,7 @@ button.generating {
 }
 
 .dashboard-card .soul-hash {
-  font-size: 10px;
+  font-size: var(--font-xs);
   color: #999;
   font-family: 'JetBrains Mono', monospace;
   margin-bottom: 12px;
@@ -8218,7 +8308,7 @@ button.generating {
 }
 
 .card-skill-name {
-  font-size: 13px;
+  font-size: var(--font-sm);
   font-style: italic;
   color: #666;
   margin: 6px 0;
@@ -8238,7 +8328,7 @@ button.generating {
 }
 
 .card-rights {
-  font-size: 10px;
+  font-size: var(--font-xs);
   color: #bbb;
   margin: 4px 0;
   font-family: 'JetBrains Mono', monospace;
@@ -8246,7 +8336,7 @@ button.generating {
 }
 
 .card-soul-hash {
-  font-size: 13px;
+  font-size: var(--font-sm);
   color: #222;
   margin: 6px 0;
   word-break: break-all;
@@ -8270,7 +8360,7 @@ button.generating {
 }
 
 .card-footer {
-  font-size: 9px;
+  font-size: var(--font-xs);
   color: #222;
   font-weight: bold;
   letter-spacing: 0.5px;
@@ -9469,7 +9559,7 @@ button.generating {
 /* ─── Invitation code block (was all inline) ─── */
 .invite-code-label {
   font-family: var(--font-mono);
-  font-size: 8px;
+  font-size: var(--font-xs);
   letter-spacing: 1.2px;
   color: rgba(138,124,110,0.6);
   margin: 7px 0 3px;
@@ -9477,7 +9567,7 @@ button.generating {
 }
 .invite-code-value {
   font-family: 'Courier New', monospace;
-  font-size: 13px;
+  font-size: var(--font-sm);
   font-weight: 700;
   color: var(--wc-charcoal);
   letter-spacing: 2px;
@@ -9485,7 +9575,7 @@ button.generating {
   word-break: break-all;
 }
 .invite-code-desc {
-  font-size: 8px;
+  font-size: var(--font-xs);
   color: rgba(138,124,110,0.55);
   margin: 4px 0 6px;
   line-height: 1.5;
@@ -9504,7 +9594,7 @@ button.generating {
   border: none;
   border-radius: 24px;
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--font-xs);
   font-weight: 600;
   letter-spacing: 1.2px;
   cursor: pointer;
@@ -9531,14 +9621,14 @@ button.generating {
 }
 .email-block-main {
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--font-xs);
   letter-spacing: 0.3px;
   color: var(--wc-charcoal);
   margin-bottom: 3px;
 }
 .email-block-addr {
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--font-xs);
   color: var(--wc-muted);
   word-break: break-all;
 }
@@ -9620,7 +9710,7 @@ button.generating {
 
 .regen-label {
   font-family: var(--font-mono, monospace);
-  font-size: 8px;
+  font-size: var(--font-xs);
   letter-spacing: 0.5px;
   font-weight: 600;
   color: var(--wc-charcoal, #3c3028);
@@ -9674,7 +9764,7 @@ button.generating {
 .commemorative-card::after {
   content: '✦';
   position: absolute;
-  font-size: 7px;
+  font-size: var(--font-xs);
   color: rgba(138,124,110,0.30);
   line-height: 1;
   pointer-events: none;
@@ -9692,7 +9782,7 @@ button.generating {
 }
 .sq-brand {
   font-family: var(--font-mono, 'JetBrains Mono', monospace);
-  font-size: 8px;
+  font-size: var(--font-xs);
   font-weight: 700;
   letter-spacing: 3px;
   color: var(--wc-charcoal, #3c3028);
@@ -9700,7 +9790,7 @@ button.generating {
 }
 .sq-cert {
   font-family: var(--font-serif, 'Playfair Display', serif);
-  font-size: 9px;
+  font-size: var(--font-xs);
   font-style: italic;
   color: var(--wc-muted, #8a7c6e);
   letter-spacing: 0.3px;
@@ -9727,7 +9817,7 @@ button.generating {
 /* ── Creator role badge ── */
 .sq-creator-role {
   font-family: var(--font-mono, 'JetBrains Mono', monospace);
-  font-size: 7px;
+  font-size: var(--font-xs);
   letter-spacing: 2.2px;
   color: var(--wc-muted, #8a7c6e);
   text-transform: uppercase;
@@ -9749,14 +9839,14 @@ button.generating {
   justify-content: space-between;
   width: 88%;
   font-family: var(--font-mono, 'JetBrains Mono', monospace);
-  font-size: 7px;
+  font-size: var(--font-xs);
   color: var(--wc-muted, #8a7c6e);
 }
 
 /* ── Soul-Hash ── */
 .sq-hash-line {
   font-family: var(--font-mono, 'JetBrains Mono', monospace);
-  font-size: 7px;
+  font-size: var(--font-xs);
   color: rgba(60,48,40,0.40);
   letter-spacing: 0.3px;
 }
@@ -10051,7 +10141,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .honor-desc {
-  font-size: 9px;
+  font-size: var(--font-xs);
   color: #8a7a6e;
   line-height: 1.4;
   overflow: hidden;
@@ -10062,14 +10152,14 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .honor-creator {
-  font-size: 9px;
+  font-size: var(--font-xs);
   color: #a89a8e;
   white-space: nowrap;
   text-align: right;
 }
 
 .honor-stars {
-  font-size: 10px;
+  font-size: var(--font-xs);
   color: #d4a574;
   font-weight: 600;
   text-align: right;
