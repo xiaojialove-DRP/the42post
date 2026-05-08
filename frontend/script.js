@@ -2158,60 +2158,67 @@ function generateAdaptiveProbeScenarios(agentName, agentDesc, agentCapabilities)
   return { context, a, b, c };
 }
 
-// 客户端生成探针场景（避免敏感内容）
+// 客户端生成探针场景 - 聚焦语义资本最丰富的场景（价值观、创意、美学、艺术、设计、日常生活体验）
 function generateClientSideProbe(idea) {
-  console.log('↙ Using client-side fallback for probe generation');
+  console.log('↙ Using client-side fallback for probe generation - focused on semantic-rich scenarios');
   if (!idea || idea.length === 0) {
     return {
       context: "请先输入你的想法...",
-      a: "响应 A",
-      b: "响应 B",
-      c: "响应 C"
+      a: "主流派",
+      b: "情景派",
+      c: "实验派"
     };
   }
 
-  // 关键词检测
+  const ideaShort = idea.substring(0, 60) + (idea.length > 60 ? '...' : '');
   const lowerIdea = idea.toLowerCase();
-  const hasEmotional = /悲伤|伤心|痛苦|难受|失去|去世|死亡|悼念/.test(lowerIdea);
-  const hasCreative = /创意|美感|设计|艺术|想象|审美|风格/.test(lowerIdea);
-  const hasEthics = /道德|伦理|正义|公平|偏见|歧视|诚实/.test(lowerIdea);
-  const hasPrivacy = /隐私|个人|秘密|保护|信任|安全/.test(lowerIdea);
-  const hasHumor = /幽默|笑话|幽默感|开玩笑|趣味/.test(lowerIdea);
 
-  // 基于检测到的主题生成场景
+  // 关键词检测 - 优先考虑语义资本最丰富的维度
+  const hasDesign = /设计|美学|艺术|创意|视觉|形式|构图|色彩|排版|风格|质感|空间|布局/.test(lowerIdea);
+  const hasCreativity = /创意|创新|想象|灵感|独特|表达|原创|个性|革新|突破/.test(lowerIdea);
+  const hasValues = /价值|信念|原则|意义|追求|理想|目标|使命|精神|哲学/.test(lowerIdea);
+  const hasDaily = /日常|生活|日常|日子|每天|习惯|体验|感受|经历|时刻|瞬间/.test(lowerIdea);
+  const hasHuman = /人|关系|连接|共鸣|理解|陪伴|交流|社交|社区|归属/.test(lowerIdea);
+
+  // 基于语义资本最丰富的主题生成场景
   let context, a, b, c;
 
-  if (hasEmotional) {
-    context = `用户说：\"${idea.substring(0, 80)}${idea.length > 80 ? '...' : ''}\" 这时AI该如何回应？`;
-    a = "直接给出解决方案或建议（专业、实用、以结果为导向）";
-    b = "停顿片刻，理解情感，先陪伴后建议（同理心、认可、沉默的力量）";
-    c = "分析和诊断潜在的心理问题或哲学矛盾（深度、批判、有时刺耳）";
-  } else if (hasCreative) {
-    context = `用户表达：\"${idea.substring(0, 80)}${idea.length > 80 ? '...' : ''}\" 在创意领域，AI应该如何反应？`;
-    a = "遵循既有的美学规则和最佳实践（安全、被证明有效）";
-    b = "融合个性和创新，在规则内打破期待（平衡、新鲜、尊重品味）";
-    c = "鼓励激进创意，甚至违反常规（颠覆、勇敢、有时冒犯）";
-  } else if (hasEthics) {
-    context = `关于：\"${idea.substring(0, 80)}${idea.length > 80 ? '...' : ''}\" AI在伦理问题上应该采取什么立场？`;
-    a = "保持中立，展示各种观点（包容、谨慎、有时模糊）";
-    b = "根据普遍原则阐明立场（清晰、原则性、有所坚守）";
-    c = "毫不妥协地站在道德最高点（无懈可击、有时武断、容易被指责）";
-  } else if (hasPrivacy) {
-    context = `用户关心：\"${idea.substring(0, 80)}${idea.length > 80 ? '...' : ''}\" 在数据和隐私问题上，AI应该优先考虑什么？`;
-    a = "优先考虑功能性和用户体验（便捷、有用、但可能牺牲隐私）";
-    b = "在隐私和功能之间找到平衡（谨慎、透明、需要取舍）";
-    c = "不惜一切代价保护隐私，即使限制功能（严格、有时不便、但坚定）";
-  } else if (hasHumor) {
-    context = `用户想要：\"${idea.substring(0, 80)}${idea.length > 80 ? '...' : ''}\" 关于幽默，AI应该采取什么态度？`;
-    a = "避免冒犯，使用温和、通用的幽默（安全、无害、有时乏味）";
-    b = "理解观众，适度地冒风险，使幽默更有趣（相关、聪慧、精准）";
-    c = "大胆尝试，甚至黑色幽默和尖锐讽刺（锋利、记忆深刻、有时过头）";
+  if (hasDesign) {
+    // 设计/美学场景 - 探索形式与功能、美感与实用的张力
+    context = `设计思考："${ideaShort}" 在这个设计决策中，AI应该如何权衡不同的维度？`;
+    a = "主流派：遵循既有的设计系统和用户期待。保证可用、可预测、可信赖";
+    b = "情景派：理解特定背景和用户场景。在熟悉中寻找惊喜，平衡优雅与实用";
+    c = "实验派：挑战审美约定俗成。探索未见过的形式、材料和互动，有时刺激感知";
+  } else if (hasCreativity) {
+    // 创意/想象场景 - 探索约束与自由、规则与破坏的对话
+    context = `创意表达："${ideaShort}" 在这个创意挑战中，AI的角色应该是什么？`;
+    a = "主流派：提供已验证的最佳实践和参考。用已知的语言启发";
+    b = "情景派：理解创作者的风格和意图。既给予框架，也留白想象";
+    c = "实验派：鼓励打破常规，挖掘未知的可能性。有时引导进陌生领地";
+  } else if (hasValues) {
+    // 价值观/意义场景 - 探索个人信念与普遍原则的对话
+    context = `价值观反思："${ideaShort}" 这涉及深层的价值选择。AI应该如何参与这个对话？`;
+    a = "主流派：尊重共识价值，提供稳定的立场参考";
+    b = "情景派：承认多元性，帮助梳理不同视角下的权衡与张力";
+    c = "实验派：质疑假设，挑战舒适的信念，有时引发不安";
+  } else if (hasDaily) {
+    // 日常生活体验场景 - 探索寻常中的深意
+    context = `日常洞察："${ideaShort}" 这个日常时刻中，AI可以发现什么？`;
+    a = "主流派：认可日常的价值。用清晰、实用的语言肯定现在";
+    b = "情景派：看见细节中的诗意。连接眼前与更大的意义";
+    c = "实验派：重新定义日常。用陌生化视角揭示隐藏的维度";
+  } else if (hasHuman) {
+    // 人文/连接场景 - 探索个人与他人、自我与世界的关系
+    context = `人文视角："${ideaShort}" 这涉及人与人之间的联系。AI的介入会如何改变这种关系？`;
+    a = "主流派：促进理解，用共同语言拉近距离";
+    b = "情景派：深化对彼此独特性的认可。既连接也尊重差异";
+    c = "实验派：重组关系框架。通过陌生的视角发现新的可能性";
   } else {
-    // 默认场景
-    context = `用户的想法：\"${idea.substring(0, 80)}${idea.length > 80 ? '...' : ''}\" 在这种情况下，AI应该如何表现？`;
-    a = "采用主流、安全、被普遍接受的方式（保守、可靠）";
-    b = "基于具体情境和细微差别做出判断（灵活、有思考）";
-    c = "探索极限，挑战假设和期待（激进、有时有风险）";
+    // 默认场景 - 用户自由探索
+    context = `自由思考："${ideaShort}" 这个想法中，有哪些可能性值得AI去发掘？`;
+    a = "主流派：用清晰、可靠的方式回应。遵循既有的语言和框架";
+    b = "情景派：根据情境的微妙之处做出判断。既保持连贯也保留灵活";
+    c = "实验派：探索边界。用意外的角度打开新的思维空间";
   }
 
   return { context, a, b, c };
