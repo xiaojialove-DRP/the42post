@@ -1561,7 +1561,7 @@ body[data-lang="cn"] .voices-header-text {
   background: transparent;
   border: none;
   color: var(--ink);
-  font-family: var(--font-serif);
+  font-family: 'Noto Serif SC', 'Noto Serif JP', 'Noto Serif', var(--font-serif), serif;
   font-size: 14px;
   line-height: 1.6;
   padding: 12px 0;
@@ -1570,6 +1570,7 @@ body[data-lang="cn"] .voices-header-text {
   max-height: 120px;
   outline: none;
   transition: color 0.2s ease;
+  box-sizing: border-box;
 }
 
 .chat-bubble-input::placeholder {
