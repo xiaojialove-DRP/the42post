@@ -147,7 +147,7 @@ app.use(express.static(frontendPath, {
 }));
 
 // ═══ PLAYGROUND ROUTE ═══
-// Serve playground page (previously arena.html)
+// Serve playground.html at /playground
 app.get('/playground', (req, res) => {
   res.sendFile(join(frontendPath, 'playground.html'));
 });

@@ -634,7 +634,7 @@ function attachSkillCardListeners() {
           return;
         }
         console.log('Opening Playground with skill:', skillId);
-        window.location.href = `arena.html?skill=${encodeURIComponent(skillId)}`;
+        window.location.href = `playground.html?skill=${encodeURIComponent(skillId)}`;
       });
     });
   }
@@ -701,7 +701,7 @@ function showSkillModal(skill) {
   const ctaBtn = modal.querySelector('.modal-playground-btn');
   if (ctaBtn) {
     ctaBtn.addEventListener('click', () => {
-      window.location.href = `arena.html?skill=${encodeURIComponent(skill.id)}`;
+      window.location.href = `playground.html?skill=${encodeURIComponent(skill.id)}`;
     });
   }
 
@@ -1253,7 +1253,7 @@ let DB_SKILLS = []; // legacy cache — SkillStore is the authoritative source
 function findSkillById(id) {
   if (!id) return null;
   if (typeof SkillStore !== 'undefined') return SkillStore.find(id);
-  // Fallback for pages that don't load skillStore.js (e.g. arena.html)
+  // Fallback for pages that don't load skillStore.js (e.g. playground.html)
   const pools = [
     typeof DB_SKILLS !== 'undefined' ? DB_SKILLS : [],
     typeof SHARED_SKILLS !== 'undefined' ? SHARED_SKILLS : [],
@@ -4664,8 +4664,8 @@ function showForgeCompletion(skillData, soulHash) {
         // so the author can immediately see whether their skill changes AI behavior.
         const sid = skillData?.id;
         window.location.href = sid
-          ? `arena.html?skill=${encodeURIComponent(sid)}`
-          : 'arena.html';
+          ? `playground.html?skill=${encodeURIComponent(sid)}`
+          : 'playground.html';
       });
     }
 
@@ -5237,7 +5237,7 @@ function initAgentView() {
     });
   }
 
-  // Deep-link: arena.html sends users back via index.html#archive after a
+  // Deep-link: playground.html sends users back via index.html#archive after a
   // Twin Test reveal. Auto-open the archive view when that hash is present.
   if (window.location.hash === '#archive') {
     showAgentArchive();
@@ -5323,19 +5323,19 @@ function initArena() {
   const btn = document.getElementById('btnArena');
   if (!btn) return;
   btn.addEventListener('click', () => {
-    window.location.href = 'arena.html';
+    window.location.href = 'playground.html';
   });
 }
 
 /* ═══ ABOUT US & HOW TO PLAY ═══ */
-/* NOTE: Playground tasks are now defined in arena.html (REPOSITORIES array).
+/* NOTE: Playground tasks are now defined in playground.html (REPOSITORIES array).
    This legacy SAMPLE_PLAYGROUND_TASKS is deprecated and no longer used.
-   All playground content should be maintained in arena.html for consistency.
+   All playground content should be maintained in playground.html for consistency.
 */
 
 function getPlaygroundTasks() {
   // Legacy function kept for backward compatibility.
-  // Real playground tasks are in arena.html / playground.html (REPOSITORIES)
+  // Real playground tasks are in playground.html / playground.html (REPOSITORIES)
   const stored = localStorage.getItem('42post_playground_tasks');
   const customTasks = stored ? JSON.parse(stored) : [];
   return customTasks;
@@ -5394,10 +5394,8 @@ function initPlayground() {
   // Open playground
   if (btnArena) {
     btnArena.addEventListener('click', () => {
-      if (playgroundOverlay) {
-        playgroundOverlay.classList.add('active');
-        displayRandomPlaygroundTask('playground');
-      }
+      // Navigate directly to playground page
+      window.location.href = 'playground.html';
     });
   }
 
@@ -7672,12 +7670,12 @@ async function initAgentArchiveView() {
                 📥 ${s.downloads || 0}
               </button>
               <!-- One-click jump into the Playground with this skill
-                   pre-selected. arena.html?skill=<id> reads the param on
+                   pre-selected. playground.html?skill=<id> reads the param on
                    load and auto-spawns a Twin Test card with this skill,
                    skipping the picker. -->
               <button class="btn-skill-play" data-skill-id="${s.id}"
                       title="Play this skill in the Playground"
-                      onclick="event.stopPropagation(); window.location.href='arena.html?skill=${encodeURIComponent(s.id)}'">
+                      onclick="event.stopPropagation(); window.location.href='playground.html?skill=${encodeURIComponent(s.id)}'">
                 <span class="text-en">▶ Play</span><span class="text-cn">▶ 试玩</span>
               </button>
             </div>
