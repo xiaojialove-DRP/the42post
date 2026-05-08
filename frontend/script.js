@@ -4598,29 +4598,14 @@ function showForgeCompletion(skillData, soulHash) {
   if (skillData && skillData.email) {
     (async () => {
       try {
-        const cardElement = document.querySelector('.commemorative-card');
-        let cardImageBase64 = null;
-
-        // Generate card image if available
-        if (cardElement && window.html2canvas) {
-          const canvas = await html2canvas(cardElement, {
-            scale: 2,
-            backgroundColor: '#f0ebe2',
-            logging: false,
-            useCORS: true,
-            allowTaint: true
-          });
-          cardImageBase64 = canvas.toDataURL('image/png');
-        }
-
+        // Send forge success email (without card image to avoid size issues)
         const emailResult = await sendForgeSuccessEmail({
           recipientEmail: skillData.email,
           recipientName: skillData.author || skillData.username,
           skillTitle: skillData.title,
           skillId: skillData.id,
           soulHash: soulHash,
-          createdDate: new Date().toISOString(),
-          cardImageBase64: cardImageBase64
+          createdDate: new Date().toISOString()
         });
 
         // Show confirmation banner on success, hint on failure
@@ -7232,20 +7217,13 @@ async function initAgentArchiveView() {
     const cacheParam = forceRefresh ? `&nocache=${now}` : '';
     const apiUrl = `${ApiClient.BASE_URL}/skills?limit=100${cacheParam}`;
 
-    const fetchOptions = {
-      method: 'GET',
-      headers: {
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
-        'Pragma': 'no-cache',
-        'Expires': '0'
-      }
-    };
-
     if (forceRefresh) {
       console.log('🔄 Archive: Force refreshing due to recent skill publication');
     }
 
-    const response = await fetch(apiUrl, fetchOptions);
+    console.log('✓ Archive: Fetching from', apiUrl);
+
+    const response = await fetch(apiUrl);
 
     if (response.ok) {
       const result = await response.json();
@@ -7374,6 +7352,9 @@ async function initAgentArchiveView() {
       const titleCn = s.title_cn || s.titleCn || s.title || '';
       const desc = s.description || s.desc || '';
       const descCn = s.description_cn || s.descCn || s.desc || '';
+      // Use stored soul_hash from API (soul_hash) or localStorage (soulHash), fallback to generated hash
+      const storedHash = s.soul_hash || s.soulHash || '';
+      const hashValue = storedHash || soulHash(s.id + title);
       return {
         x, y, baseX: x, baseY: y,
         size: 3.5 + (s.starlight || 5) * 0.2,
@@ -7382,7 +7363,7 @@ async function initAgentArchiveView() {
         desc, descCn,
         agent: s.agent || '',
         domain: s.domain, id: s.id,
-        hash: soulHash(s.id + title),
+        hash: hashValue,
         color, phase: Math.random() * Math.PI * 2,
       };
     });

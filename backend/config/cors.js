@@ -13,8 +13,10 @@ const WHITELISTED_ORIGINS = [
   // Development
   'http://localhost:8000',
   'http://localhost:3000',
+  'http://localhost:8765',
   'http://127.0.0.1:8000',
   'http://127.0.0.1:3000',
+  'http://127.0.0.1:8765',
 
   // Production (Railway)
   'https://the42post.railway.app',

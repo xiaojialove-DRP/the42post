@@ -79,25 +79,19 @@
   <script src="script.js"></script>
   <script>
     // Archive page: Initialize on page load
-    document.addEventListener('DOMContentLoaded', async () => {
+    async function initArchivePage() {
       // Initialize archive view (celestial canvas, honor panel, domain grid)
       await initAgentArchiveView();
-    });
+    }
 
-    // Language toggle
-    const langToggleBtn = document.createElement('button');
-    langToggleBtn.className = 'btn-lang';
-    langToggleBtn.id = 'langToggle';
-    langToggleBtn.textContent = 'EN';
-    langToggleBtn.style.cssText = 'position: fixed; top: 20px; right: 20px; padding: 8px 16px; border: 1px solid #d4c8a8; background: #fdfaf3; color: #5a5048; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 600; z-index: 1000;';
-    document.body.appendChild(langToggleBtn);
+    // If DOM is already loaded, call directly; otherwise wait for DOMContentLoaded
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initArchivePage);
+    } else {
+      // DOM is already loaded (document.readyState === 'interactive' or 'complete')
+      initArchivePage();
+    }
 
-    document.getElementById('langToggle').addEventListener('click', () => {
-      const currentLang = document.documentElement.getAttribute('data-lang');
-      const newLang = currentLang === 'cn' ? 'en' : 'cn';
-      document.documentElement.setAttribute('data-lang', newLang);
-      document.getElementById('langToggle').textContent = newLang === 'cn' ? 'EN' : '中文';
-    });
 
     // Back to home button
     document.getElementById('btnBackFromArchive').addEventListener('click', () => {
