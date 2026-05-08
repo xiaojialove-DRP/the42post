@@ -660,16 +660,19 @@ router.delete('/cleanup', async (req, res, next) => {
       });
     }
 
-    // Delete all forged skills that:
-    // 1. author_id = anonymous-user-001 (forged by anonymous users)
-    // 2. creator_anonymous_id IS NULL (no proper creator name)
-    // OR creator_anonymous_id like 'anonymous%' (default/auto-generated)
+    // Delete all test/demo skills created by creator_42 and creator_anonymous
+    // This includes:
+    // 1. All anonymous user skills with no proper creator name
+    // 2. All skills created by user with username 'creator_42'
+    // 3. All skills with creator_anonymous_id = 'creator_anonymous'
     const deleteResult = await db.query(
-      `DELETE FROM skills
-       WHERE author_id = 'anonymous-user-001'
-       AND (creator_anonymous_id IS NULL
-            OR creator_anonymous_id LIKE 'anonymous%'
-            OR creator_anonymous_id LIKE 'shadow_knight_%')`,
+      `DELETE FROM skills s
+       WHERE (author_id = 'anonymous-user-001'
+              AND (creator_anonymous_id IS NULL
+                   OR creator_anonymous_id LIKE 'anonymous%'
+                   OR creator_anonymous_id LIKE 'shadow_knight_%'
+                   OR creator_anonymous_id = 'creator_anonymous'))
+       OR author_id = (SELECT id FROM users WHERE username = 'creator_42')`,
       []
     );
 
@@ -677,7 +680,7 @@ router.delete('/cleanup', async (req, res, next) => {
 
     res.json({
       success: true,
-      message: `✓ 已删除 ${deletedCount} 个低质量forged skills`,
+      message: `✓ 已删除 ${deletedCount} 个测试/演示 skills`,
       deletedCount: deletedCount,
       nextStep: '前端localStorage中的数据会在下次刷新时自动清空'
     });
