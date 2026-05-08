@@ -4528,6 +4528,18 @@ function initSkillForge() {
         // Store skill data globally for reference
         window.currentForgedSkill = forgedSkillData;
 
+        // Save to localStorage so Playground can auto-load it
+        try {
+          const skillDataForPlayground = {
+            id: forgedSkillData.id || forgedSkillData.backendId,
+            title: forgedSkillData.title,
+            timestamp: Date.now()
+          };
+          localStorage.setItem('lastForgedSkill', JSON.stringify(skillDataForPlayground));
+        } catch (e) {
+          console.warn('Failed to save forged skill to localStorage:', e.message);
+        }
+
         // Log success for debugging
         console.log(`✅ Skill "${forgedSkillData.title}" published successfully`);
         console.log(`📊 Skill ID: ${forgedSkillData.id || forgedSkillData.backendId}`);
@@ -4699,10 +4711,8 @@ function showForgeCompletion(skillData, soulHash) {
       btnTryPlayground.addEventListener('click', () => {
         // Navigate to playground in twin-test mode for THIS just-forged skill
         // so the author can immediately see whether their skill changes AI behavior.
-        const sid = skillData?.id;
-        window.location.href = sid
-          ? `playground.html?skill=${encodeURIComponent(sid)}`
-          : 'playground.html';
+        // The playground will auto-load this skill as Skill A thanks to localStorage
+        window.location.href = '/playground';
       });
     }
 

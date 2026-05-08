@@ -2267,6 +2267,23 @@
         }
       }
 
+      // Check for recently forged skill from localStorage (user's own skill)
+      if (!skillId) {
+        try {
+          const lastForgedSkill = localStorage.getItem('lastForgedSkill');
+          if (lastForgedSkill) {
+            const skillInfo = JSON.parse(lastForgedSkill);
+            // Only use it if it's recent (within 1 hour)
+            if (Date.now() - skillInfo.timestamp < 3600000) {
+              skillId = skillInfo.id;
+              console.log(`Loading user's recently forged skill: ${skillInfo.title}`);
+            }
+          }
+        } catch (e) {
+          console.warn('Failed to load forged skill from localStorage:', e.message);
+        }
+      }
+
       if (!skillId) return; // dock click will let user pick a skill in the card
 
       try {
