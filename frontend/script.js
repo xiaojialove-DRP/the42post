@@ -7122,7 +7122,7 @@ const ARCHIVE_DOMAINS = [
 // Map database domain keys to display colors
 function mapDomain(dbDomain) {
   if (!dbDomain) return 'ideas';
-  
+
   const domainMap = {
     '01-narrative-language': 'narrative',
     '02-logic-reasoning': 'science',
@@ -7146,8 +7146,36 @@ function mapDomain(dbDomain) {
     'safety': 'safety',
     'fun': 'fun',
   };
-  
+
   return domainMap[dbDomain] || 'ideas';
+}
+
+function getFullDomain(domain) {
+  if (!domain) return '';
+
+  // If already in full format, return as-is
+  if (domain.startsWith('01-') || domain.startsWith('02-') || domain.startsWith('03-') ||
+      domain.startsWith('04-') || domain.startsWith('05-') || domain.startsWith('06-') ||
+      domain.startsWith('07-') || domain.startsWith('08-') || domain.startsWith('09-') ||
+      domain.startsWith('10-')) {
+    return domain;
+  }
+
+  // Map simplified format back to full format
+  const reverseMap = {
+    'narrative': '01-narrative-language',
+    'science': '02-logic-reasoning',
+    'design': '03-ethics-values',
+    'history': '04-history-tradition',
+    'experience': '07-culture-understanding',
+    'visual': '09-silence-space',
+    'sound': '10-labor-value',
+    'ideas': 'ideas',
+    'safety': 'safety',
+    'fun': 'fun',
+  };
+
+  return reverseMap[domain] || domain;
 }
 
 const DOMAIN_COLORS = {
@@ -7696,6 +7724,7 @@ async function initAgentArchiveView() {
         const titleCn = s.title_cn || s.titleCn || s.title || '';
         const descEn = s.description || s.desc || '';
         const descCn = s.description_cn || s.descCn || s.desc || '';
+        const fullDomain = getFullDomain(s.domain);
         return `
           <div class="domain-skill" data-skill-id="${s.id}">
             <div class="domain-skill-title text-en">${titleEn}</div>
@@ -7705,6 +7734,7 @@ async function initAgentArchiveView() {
             <div class="domain-skill-desc text-cn">${descCn}</div>
             <div class="domain-skill-meta">
               <span class="hash-val">${hash}</span>
+              <span class="domain-tag">${fullDomain}</span>
               <span>★ ${s.starlight || 0}</span>
             </div>
             <div class="domain-skill-actions">
