@@ -2103,8 +2103,10 @@ body[data-lang="cn"] .voices-header-text {
   visibility: visible;
   opacity: 1;
   transform: translateY(0);
-  background: #e8f5e9;
-  border: 1px solid #a5d6a7;
+  background: var(--paper);
+  border: 2px solid #4CAF50;
+  border-left: 6px solid #4CAF50;
+  box-shadow: 0 4px 16px rgba(76, 175, 80, 0.15);
 }
 .ethics-fail.visible { visibility: visible; opacity: 1; transform: translateY(0); background: var(--paper); }
 
@@ -2157,7 +2159,7 @@ body[data-lang="cn"] .voices-header-text {
   flex-shrink: 0;
 }
 
-.ethics-pass .ethics-icon { color: #4a7a9d; }
+.ethics-pass .ethics-icon { color: #4CAF50; }
 .ethics-fail .ethics-icon { color: var(--coral); }
 
 .ethics-msg {

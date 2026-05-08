@@ -901,7 +901,7 @@ const I18N = {
     card_certificate: 'Creator\'s Certificate',
     forge_dashboard: '📊  Impact Dashboard',
     forge_playground: '🎮  Playground',
-    ethics_pass_msg: 'We heard you. Let\'s turn this idea into a Skill.',
+    ethics_pass_msg: 'Your idea deserves to be seen. Let\'s start forging together.',
     btn_enter_forge: 'Enter Skill Forge',
     /* ── Arena / Playground ── */
     arena_bar_subtitle: 'Taste Playground',
@@ -1087,7 +1087,7 @@ const I18N = {
     card_certificate: '创作者证书',
     forge_dashboard: '📊  数据面板',
     forge_playground: '🎮  探索广场',
-    ethics_pass_msg: '我们听到你了。让我们一起把这个想法变成技能。',
+    ethics_pass_msg: '你的想法值得被看见。让我们一起开始锻造吧。',
     btn_enter_forge: '进入技能铸造',
     /* ── 域名分类 ── */
     forge_domain_safety: '安全',
