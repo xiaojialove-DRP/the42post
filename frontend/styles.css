@@ -6233,8 +6233,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
   font-weight: 600;
   font-family: 'JetBrains Mono', monospace;
   margin-top: 4px;
-  padding-top: 8px;
-  border-top: 1px solid #f0f0f0;
+  margin-bottom: 8px;
 }
 
 .skill-item .skill-footer {

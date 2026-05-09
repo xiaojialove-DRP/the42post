@@ -7820,13 +7820,13 @@ async function initAgentArchiveView() {
               <div class="skill-title">${title}</div>
               <div class="skill-creator">${creatorDisplay}</div>
               <div class="skill-desc">${shortDesc}</div>
+              <div class="skill-hash">${soulHashShort}</div>
               <div class="skill-footer">
                 <div class="skill-meta">
                   <span class="skill-stars">⭐ ${skill.starlight_score || skill.stars || 0}</span>
                   <span class="skill-domain">${skill.domain || 'ideas'}</span>
                 </div>
               </div>
-              <div class="skill-hash">${soulHashShort}</div>
               <!-- Hidden action buttons for interactivity (shown via click handlers) -->
               <button class="skill-action-btn star-btn" data-skill-id="${skill.id}" style="display:none;" title="Star">⭐</button>
               <button class="skill-action-btn download-btn" data-skill-id="${skill.id}" style="display:none;" title="Download">📥</button>
