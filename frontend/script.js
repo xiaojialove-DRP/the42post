@@ -522,11 +522,11 @@ function attachSkillCardListeners() {
         
         // Provide specific error messages
         if (error.message && error.message.includes('404')) {
-          showError('Skill not found. It may have been deleted.');
+          showToastI18n('error_skill_not_found', 'error');
         } else if (error.message && error.message.includes('400')) {
-          showError('Invalid request. Please refresh and try again.');
+          showToastI18n('error_invalid_request', 'error');
         } else {
-          showError('Failed to update star. Please check your connection and try again.');
+          showToastI18n('error_star_failed', 'error');
         }
       } finally {
         btn.disabled = false;
@@ -546,12 +546,12 @@ function attachSkillCardListeners() {
       const skillId = btn.dataset.skillId;
       
       if (!skillId) {
-        showError('Invalid skill ID');
+        showToastI18n('error_invalid_skill_id', 'error');
         return;
       }
       
       if (!starredSkills[skillId]) {
-        showWarning('Please star this skill first to download it');
+        showToastI18n('warning_star_first', 'warning');
         return;
       }
 
@@ -594,7 +594,7 @@ function attachSkillCardListeners() {
           btn.querySelector('.download-count').textContent = skill.downloads;
         }
 
-        showSuccess('Skill downloaded! 📥');
+        showToastI18n('success_skill_downloaded', 'success');
       } catch (error) {
         console.error('Download error:', { skillId, error: error.message, status: error.status });
         const msg = error.message === 'Download error: 404'
@@ -791,7 +791,7 @@ const I18N = {
     forge_modal_title: 'IDEA SKILL FORGE',
     forge_modal_subtitle: 'Turn your idea into a skill',
     forge_title: 'MAKE YOUR IDEA REAL',
-    forge_subtitle: '让你的想法成为现实',
+    forge_subtitle: 'Bring your idea to life',
     path_select: 'CHOOSE HOW TO CONTRIBUTE',
     path_a_name: 'Community Creates',
     path_b_name: 'Your AI Creates',
@@ -946,6 +946,69 @@ const I18N = {
     preview_prompt_hint: '— paste into any AI assistant',
     preview_prompt_note: 'Edit freely. The 5 layers above are the structured form of this same Skill.',
     preview_prompt_copy: '📋 Copy',
+    archive_footer: 'Forging Human Wisdom for a Better AI Future',
+    /* ── Playground UI messages ── */
+    playground_pick_skill: 'Pick a Skill to test',
+    playground_pick_hot_skill: 'Pick a Hot Skill to Test',
+    playground_start_test: '▶ START TEST',
+    playground_thank_you: 'Thank you for your feedback!',
+    playground_generating: 'generating two responses…',
+    playground_with_skill: '🔥 with this Skill',
+    playground_baseline_ai: '◯ baseline AI',
+    playground_load_failed: 'Load failed',
+    playground_no_skills: 'No Skills yet',
+    /* ── Validation messages ── */
+    error_share_idea_first: 'Please share your idea first',
+    error_enter_skill_name: 'Please enter a skill name',
+    error_select_probe_response: 'Please select one intuition probe response',
+    error_enter_username: 'Please enter username',
+    error_enter_email: 'Please enter email',
+    error_share_idea: 'Please share your idea',
+    error_describe_idea: 'Please describe your idea first',
+    error_enter_agent_id: 'Please enter agent ID',
+    error_select_skill_file: 'Please select a skill package file',
+    error_fill_email_username: 'Please fill in email and username',
+    error_enter_change_content: 'Please enter the content you want to change',
+    /* ── Error messages ── */
+    error_session_failed: 'Session failed',
+    error_skill_not_found: 'Skill not found. It may have been deleted.',
+    error_invalid_request: 'Invalid request. Please refresh and try again.',
+    error_star_failed: 'Failed to update star. Please check your connection and try again.',
+    error_invalid_skill_id: 'Invalid skill ID',
+    error_download_failed: 'Failed to download skill. Please try again.',
+    error_copy_clipboard: 'Failed to copy to clipboard',
+    error_card_not_found: 'Certificate card not found',
+    error_card_generation: 'Failed to generate creator card image. Please try again.',
+    error_probe_generation: 'Failed to generate probe',
+    error_regenerate_failed: 'Regeneration failed. Please try again.',
+    error_no_skill_data: 'No skill data available. Please forge a skill first.',
+    /* ── Success messages ── */
+    success_skill_starred: 'Skill starred! ⭐',
+    success_star_removed: 'Star removed',
+    success_skill_downloaded: 'Skill downloaded! �inbox',
+    success_regenerated: 'Regenerated! Check the new content above',
+    success_clip_copied: 'Copied to clipboard!',
+    /* ── Warning messages ── */
+    warning_star_first: 'Please star this skill first to download it',
+    /* ── Info messages ── */
+    info_combining: 'Combining',
+    info_solve: 'to solve:',
+    info_open_canvas: 'Now open the creative canvas to work on this!',
+    /* ── Playground complete messages ── */
+    playground_select: '— Select —',
+    playground_how_skill: 'How was this Skill?',
+    playground_feedback: '💭 Anything else? (optional, 140 chars)',
+    playground_clearly_better: 'Clearly better',
+    playground_not_great: 'Not great',
+    playground_cant_tell: "Can't tell",
+    playground_submit_error: 'Submit failed:',
+    playground_generation_error: 'Generation failed',
+    playground_try_different: '↓ Try a different scenario',
+    playground_first_rater: 'You are the first to rate this Skill ✨',
+    playground_use: 'Use this Skill →',
+    playground_browse: 'Or browse all in Archive →',
+    playground_close: 'Close',
+    console_check: '(check browser console)',
   },
   cn: {
     masthead_subtitle: 'AI 每天都在变得更聪明。<br>但它有让我们的生活更好吗？',
@@ -1003,7 +1066,7 @@ const I18N = {
     forge_modal_title: '想法技能铸造',
     forge_modal_subtitle: '将你的想法变成技能',
     forge_title: '让你的想法成为现实',
-    forge_subtitle: 'MAKE YOUR IDEA REAL',
+    forge_subtitle: '将想法变为生现',
     path_select: '选择贡献方式',
     path_a_name: '社群共创',
     path_b_name: '你的 AI 创作',
@@ -1124,6 +1187,31 @@ const I18N = {
     archive_readable_title: 'Skill 储藏室',
     archive_readable_subtitle: '创意领域 · 社区策划',
     archive_footer: 'THE 42 POST · 智能体档案库 · Soul.MD 协议激活',
+    /* ── Playground UI 消息 ── */
+    playground_pick_skill: '挑一个 Skill 来测',
+    playground_pick_hot_skill: '挑一个热门 Skill 来测',
+    playground_start_test: '▶ 开始测试',
+    playground_thank_you: '感谢你的反馈！',
+    playground_generating: '正在生成两个回应…',
+    playground_with_skill: '🔥 加了 Skill',
+    playground_baseline_ai: '◯ 普通 AI',
+    playground_load_failed: '加载失败',
+    playground_no_skills: '还没有 Skill',
+    /* ── Playground 完整消息 ── */
+    playground_select: '— 选择 —',
+    playground_how_skill: '这个 Skill 效果怎么样？',
+    playground_feedback: '💭 有其他想法？（可选，140字以内）',
+    playground_clearly_better: '明显更好',
+    playground_not_great: '不大好',
+    playground_cant_tell: '没感觉到区别',
+    playground_submit_error: '提交失败：',
+    playground_generation_error: '生成失败',
+    playground_try_different: '↓ 换个场景看看效果',
+    playground_first_rater: '你是第一个反馈这个 Skill 的人 ✨',
+    playground_use: '使用这个 Skill →',
+    playground_browse: '或在 Archive 浏览全部 →',
+    playground_close: '关闭',
+    console_check: '(查看浏览器控制台了解更多)',
     /* ── 创意游乐场 / 品味竞技场 ── */
     arena_bar_subtitle: '创意游乐场',
     arena_clear_all: '✕ 清除全部',
@@ -1167,11 +1255,67 @@ const I18N = {
     preview_prompt_hint: '— 复制到任何 AI 助手即可使用',
     preview_prompt_note: '可自由编辑。上面五层是这同一个 Skill 的结构化形式。',
     preview_prompt_copy: '📋 复制',
+    /* ── 验证消息 ── */
+    error_share_idea_first: '请先分享你的想法',
+    error_enter_skill_name: '请输入技能名称',
+    error_select_probe_response: '请选择直觉探针响应',
+    error_enter_username: '请输入用户名',
+    error_enter_email: '请输入邮箱',
+    error_share_idea: '请分享你的想法',
+    error_describe_idea: '请先描述你的想法',
+    error_enter_agent_id: '请输入智能体 ID',
+    error_select_skill_file: '请选择一个技能包文件',
+    error_fill_email_username: '请填写邮箱和用户名',
+    error_enter_change_content: '请输入你想要改动的内容',
+    /* ── 错误消息 ── */
+    error_session_failed: '无法建立会话',
+    error_skill_not_found: '技能未找到。它可能已被删除。',
+    error_invalid_request: '无效请求。请刷新并重试。',
+    error_star_failed: '更新星标失败。请检查您的连接并重试。',
+    error_invalid_skill_id: '无效的技能 ID',
+    error_download_failed: '下载技能失败。请重试。',
+    error_copy_clipboard: '复制到剪贴板失败',
+    error_card_not_found: '证书卡未找到',
+    error_card_generation: '生成创意卡失败。请重试。',
+    error_probe_generation: '生成直觉探针失败',
+    error_regenerate_failed: '重新生成失败，请重试',
+    error_no_skill_data: '没有技能数据。请先铸造一个技能。',
+    /* ── 成功消息 ── */
+    success_skill_starred: '技能已星标！⭐',
+    success_star_removed: '已移除星标',
+    success_skill_downloaded: '技能已下载！📥',
+    success_regenerated: '已重新生成！请查看上面的新内容',
+    success_clip_copied: '已复制到剪贴板！',
+    /* ── 警告消息 ── */
+    warning_star_first: '请先星标这个技能再下载',
+    /* ── 信息消息 ── */
+    info_combining: '正在结合',
+    info_solve: '来解决:',
+    info_open_canvas: '现在打开创意画布来处理这个！',
   }
 };
 
 // 从 localStorage 读取保存的语言，默认为英文
 let currentLang = localStorage.getItem('42post_lang') || 'en';
+
+/**
+ * Show toast with i18n translation
+ * @param {string} key - Translation key from I18N dictionary
+ * @param {string} type - Toast type: 'success', 'error', 'warning', 'info'
+ */
+function showToastI18n(key, type = 'info') {
+  const message = I18N[currentLang][key] || key;
+  showToast(message, type);
+}
+
+/**
+ * Show alert with i18n translation
+ * @param {string} key - Translation key from I18N dictionary
+ */
+function alertI18n(key) {
+  const message = I18N[currentLang][key] || key;
+  showToast(message, 'info');
+}
 
 function initI18n() {
   // 应用保存的语言
@@ -2645,7 +2789,7 @@ function initSkillForge() {
       const creatorNameInput = document.getElementById("creatorNameInput");
       if (!ideaInput || !ideaInput.value.trim()) {
         console.log("⚠ No idea input found or empty");
-        alert("Please share your idea first");
+        alertI18n('error_share_idea_first');
         return;
       }
       // ✅ 字数限制检查 (最少12个字)
@@ -2821,12 +2965,12 @@ function initSkillForge() {
     btnNextPage2.addEventListener('click', () => {
       const skillName = document.getElementById('forgeSkillName');
       if (!skillName || !skillName.value.trim()) {
-        alert('Please enter a skill name');
+        alertI18n('error_enter_skill_name');
         return;
       }
       // Domain validation removed - domain is selected in Step 3, not Step 2
       if (!window.probeChoice) {
-        alert('Please select one intuition probe response');
+        alertI18n('error_select_probe_response');
         return;
       }
       
@@ -2930,10 +3074,10 @@ function initSkillForge() {
       const probeChoice = window.probeChoice || (window.forgeData?.probeChoice);
 
       // 验证 (Domain selection moved to Step 2)
-      if (!username) { alert('请输入用户名 / Please enter username'); return; }
-      if (!email) { alert('请输入邮箱 / Please enter email'); return; }
-      if (!idea) { alert('请分享你的想法 / Please share your idea'); return; }
-      if (!probeChoice) { alert('请选择直觉探针响应 / Please select a probe response'); return; }
+      if (!username) { alertI18n('error_enter_username'); return; }
+      if (!email) { alertI18n('error_enter_email'); return; }
+      if (!idea) { alertI18n('error_share_idea'); return; }
+      if (!probeChoice) { alertI18n('error_select_probe_response'); return; }
 
       // Establish forge session (zero-friction JWT)
       btnForgeBegin.disabled = true;
@@ -2977,9 +3121,9 @@ function initSkillForge() {
       const email = document.getElementById('forgeEmail').value.trim();
       const idea = document.getElementById('forgeSkillIdea').value.trim();
 
-      if (!username) { alert('请输入用户名 / Please enter username'); return; }
-      if (!email) { alert('请输入邮箱 / Please enter email'); return; }
-      if (!idea) { alert('请分享你的想法 / Please share your idea'); return; }
+      if (!username) { alertI18n('error_enter_username'); return; }
+      if (!email) { alertI18n('error_enter_email'); return; }
+      if (!idea) { alertI18n('error_share_idea'); return; }
 
       // Establish forge session (zero-friction JWT)
       const isCn = (typeof currentLang !== 'undefined' && currentLang === 'cn');
@@ -3132,7 +3276,7 @@ function initSkillForge() {
       // forgeData is already populated by btnGenerateProbe
       // Just validate probe choice was made
       if (!window.forgeData || !window.forgeData.probeChoice) {
-        alert('Please select a probe response');
+        alertI18n('error_select_probe_response');
         return;
       }
 
@@ -3159,7 +3303,7 @@ function initSkillForge() {
       const editedDef = document.getElementById('reviewSkillDef').value;
 
       if (!editedName.trim()) {
-        alert('请输入技能名称 / Please enter skill name');
+        alertI18n('error_enter_skill_name');
         return;
       }
 
@@ -3186,7 +3330,7 @@ function initSkillForge() {
       const feedback = document.getElementById('skillFeedback').value;
 
       if (!feedback.trim()) {
-        alert('请输入你想要改动的内容');
+        alertI18n('error_enter_change_content');
         return;
       }
 
@@ -3270,7 +3414,7 @@ function initSkillForge() {
         alert(isCn ? '✓ 已重新生成！请查看上面的新内容' : '✓ Regenerated! Check the new content above');
       } catch (error) {
         console.error('重新生成失败:', error);
-        alert('重新生成失败，请重试');
+        showToastI18n('error_regenerate_failed', 'error');
       } finally {
         btnRegenerateSkill.disabled = false;
         btnRegenerateSkill.innerHTML = '<span class="regen-emoji">🔄</span><span class="regen-label">重新生成<br>Regen</span>';
@@ -3286,7 +3430,7 @@ function initSkillForge() {
       const editedDef = document.getElementById('reviewSkillDef').value;
 
       if (!editedName.trim()) {
-        alert('请先输入技能名称');
+        alertI18n('error_enter_skill_name');
         return;
       }
 
@@ -3532,10 +3676,10 @@ function initSkillForge() {
         // Mirror to the structured cache so PUBLISH carries the new prompt.
         window.previewFiveLayer = skill;
 
-        alert('✓ 已重新生成！');
+        showToastI18n('success_regenerated', 'success');
       } catch (error) {
         console.error('重新生成失败:', error);
-        alert('重新生成失败，请重试');
+        showToastI18n('error_regenerate_failed', 'error');
       } finally {
         btnRegenerateFromPreview.disabled = false;
         btnRegenerateFromPreview.textContent = '🔄 重新生成 / Regenerate';
@@ -4243,7 +4387,7 @@ function initSkillForge() {
       const agentId = document.getElementById('forgeAgentId').value;
 
       if (!agentId) {
-        alert('Please enter agent ID');
+        alertI18n('error_enter_agent_id');
         return;
       }
 
@@ -4266,7 +4410,7 @@ function initSkillForge() {
   if (btnVerifyFile) {
     btnVerifyFile.addEventListener('click', () => {
       if (!fileInput || !fileInput.files.length) {
-        alert('Please select a skill package file');
+        alertI18n('error_select_skill_file');
         return;
       }
 
@@ -4339,7 +4483,7 @@ function initSkillForge() {
         const usernameValue = usernameInput ? usernameInput.value.trim() : '';
 
         if (!emailValue || !usernameValue) {
-          alert('Please fill in email and username');
+          alertI18n('error_fill_email_username');
           publishBtn.textContent = '⚔ PUBLISH & FORGE';
           publishBtn.style.pointerEvents = 'auto';
           return;
@@ -8576,7 +8720,7 @@ function shareSkill() {
   } else {
     // Fallback: Copy to clipboard
     navigator.clipboard.writeText(text).then(() => {
-      alert('✨ 分享文本已复制到剪贴板！');
+      showToastI18n('success_clip_copied', 'success');
     }).catch(err => console.error('Copy failed:', err));
   }
 }

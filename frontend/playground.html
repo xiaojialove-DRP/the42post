@@ -1476,6 +1476,19 @@
        Draggable task cards on a free canvas
        ═══════════════════════════════════════ */
 
+    /**
+     * Get translated string from I18N dictionary
+     * Requires script.js to be loaded first
+     */
+    function t(key) {
+      if (typeof I18N === 'undefined' || !I18N) {
+        console.warn('I18N not loaded yet for key:', key);
+        return key;
+      }
+      const lang = typeof currentLang !== 'undefined' ? currentLang : 'en';
+      return I18N[lang] && I18N[lang][key] ? I18N[lang][key] : key;
+    }
+
     /* ── Skill Pool — built from shared skills.js ── */
     const ARENA_SKILL_POOL = SHARED_SKILLS.map(s => ({ name: s.title, desc: s.titleCn + ' — ' + s.desc }));
 
@@ -2426,12 +2439,12 @@
           <div class="card-header-left">
             <span class="twin-header-dot">●</span>
             <div class="twin-skill-line" data-skill-line>
-              <span class="twin-skill-placeholder">${isCn ? '挑一个热门 Skill 来测' : 'Pick a Hot Skill to Test'}</span>
+              <span class="twin-skill-placeholder">${t('playground_pick_hot_skill')}</span>
             </div>
           </div>
           <div class="card-header-right" style="display:flex;gap:12px;align-items:center;">
             <span class="twin-vote-counter" data-vote-counter style="font-size:12px;color:#777;font-family:var(--font-mono);"></span>
-            <button class="card-close" title="${isCn ? '关闭' : 'Close'}" style="font-size:14px;cursor:pointer;">✕</button>
+            <button class="card-close" title="${t('playground_close')}" style="font-size:14px;cursor:pointer;">✕</button>
           </div>
         </div>
         <div class="card-body card-body--twin">
@@ -2444,21 +2457,21 @@
           ${td.desc ? `<div class="twin-scenario-desc">${td.desc}</div>` : ''}
 
           <div class="twin-stage twin-pickskill" hidden>
-            <div class="twin-pickskill-label">${isCn ? '挑一个 Skill 来测' : 'Pick a Skill to test'}</div>
+            <div class="twin-pickskill-label">${t('playground_pick_skill')}</div>
             <select class="twin-skill-select" data-skill-select style="width:100%;padding:10px 14px;border:1.5px solid #d4c8a8;border-radius:6px;background:#fdfaf3;font-family:inherit;font-size:clamp(11px, 3vw, 12px);color:#5a5048;cursor:pointer;font-weight:400;line-height:1.6;letter-spacing:0.2px;transition:all 0.15s ease;">
-              <option value="" disabled>${isCn ? '— 选择 —' : '— Select —'}</option>
+              <option value="" disabled>${t('playground_select')}</option>
             </select>
             <button class="twin-pickskill-confirm" data-skill-confirm
                     style="width:100%;margin-top:14px;padding:12px;background:#2a2520;color:#fdfaf3;border:none;border-radius:6px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;transition:background 0.18s ease;"
                     disabled>
-              ${isCn ? '使用这个 Skill →' : 'Use this Skill →'}
+              ${t('playground_use')}
             </button>
-            <a class="twin-pickskill-archive-link" href="index.html#archive" style="display:block;margin-top:12px;">${isCn ? '或在 Archive 浏览全部 →' : 'Or browse all in Archive →'}</a>
+            <a class="twin-pickskill-archive-link" href="index.html#archive" style="display:block;margin-top:12px;">${t('playground_browse')}</a>
           </div>
 
           <div class="twin-stage twin-trigger" hidden>
             <div class="twin-trigger-stats" data-trigger-stats></div>
-            <button class="twin-trigger-btn" data-trigger-btn>${isCn ? '▶ 开始测试' : '▶ START TEST'}</button>
+            <button class="twin-trigger-btn" data-trigger-btn>${t('playground_start_test')}</button>
           </div>
 
           <div class="twin-stage twin-loading" hidden>
@@ -2518,7 +2531,7 @@
                       data-comment
                       maxlength="140"
                       rows="4"
-                      placeholder="${isCn ? '💭 有其他想法？（可选，140字以内）' : '💭 Anything else? (optional, 140 chars)'}"></textarea>
+                      placeholder="${t('playground_feedback')}"></textarea>
             <span class="twin-rate-counter" data-comment-counter>0 / 140</span>
           </div>
 
@@ -2528,10 +2541,10 @@
                user lands back at the picker (with a new random
                scenario), keeping the play loop short. -->
           <div class="twin-stage twin-thanks" hidden>
-            <div class="twin-thanks-headline">${isCn ? '感谢你的反馈！' : 'Thank you for your feedback!'}</div>
+            <div class="twin-thanks-headline">${t('playground_thank_you')}</div>
             <div class="twin-thanks-stats" data-thanks-stats></div>
             <div class="twin-thanks-actions">
-              <button type="button" class="twin-thanks-prompt twin-thanks-btn">${isCn ? '↓ 换个场景看看效果' : '↓ Try a different scenario'}</button>
+              <button type="button" class="twin-thanks-prompt twin-thanks-btn">${t('playground_try_different')}</button>
             </div>
           </div>
         </div>
@@ -2669,7 +2682,10 @@
       const counter = card.querySelector('[data-vote-counter]');
       if (counter) {
         if (votedSkills.length > 0) {
-          counter.textContent = isCn ? `投票 #${votedSkills.length}` : `Vote #${votedSkills.length}`;
+          const voteLabel = I18N && I18N[currentLang] && I18N[currentLang]['playground_vote_label']
+            ? I18N[currentLang]['playground_vote_label']
+            : (currentLang === 'cn' ? '投票 #' : 'Vote #');
+          counter.textContent = voteLabel + votedSkills.length;
         } else {
           counter.textContent = '';
         }
@@ -2686,7 +2702,7 @@
       if (skillLine) {
         skillLine.innerHTML = `
           <span class="twin-skill-icon">🎯</span>
-          <span>${skillTitle || (isCn ? '当前 Skill' : 'Current Skill')}</span>
+          <span>${skillTitle || (t('playground_current_skill'))}</span>
         `;
       }
 
@@ -2717,7 +2733,7 @@
       try {
         const skills = await fetchHotSkills(7);
         if (skills.length === 0) {
-          select.innerHTML = `<option disabled>${isCn ? '还没有 Skill' : 'No Skills yet'}</option>`;
+          select.innerHTML = `<option disabled>${t('playground_no_skills')}</option>`;
           return;
         }
 
@@ -2729,9 +2745,14 @@
           const opt = document.createElement('option');
           opt.value = s.id;
           const baseLabel = `${getSkillTitle(s)} · ${s.domain || '—'} (⭐${s.starlight_score || 0})`;
-          opt.textContent = s.is_mine
-            ? (isCn ? `👋 你刚锻造的：${baseLabel}` : `👋 Your latest forge — ${baseLabel}`)
-            : baseLabel;
+          if (s.is_mine) {
+            const latestPrefix = I18N && I18N[currentLang] && I18N[currentLang]['playground_latest_forge']
+              ? I18N[currentLang]['playground_latest_forge']
+              : (currentLang === 'cn' ? '👋 你刚锻造的：' : '👋 Your latest forge — ');
+            opt.textContent = latestPrefix + baseLabel;
+          } else {
+            opt.textContent = baseLabel;
+          }
           opt.dataset.skill = JSON.stringify(s);
           select.appendChild(opt);
         });
@@ -2769,7 +2790,7 @@
         });
       } catch (err) {
         console.error('Skill picker error:', err);
-        select.innerHTML = `<option disabled>${isCn ? '加载失败' : 'Load failed'}</option>`;
+        select.innerHTML = `<option disabled>${t('playground_load_failed')}</option>`;
       }
     }
 
@@ -2801,7 +2822,7 @@
           skill_id: skill.id,
           scenario: { title: td.title, description: td.desc, domain: repo.id, key: `${repo.id}::${td.title}` },
           anonymous_id: anonId,
-          language: isCn ? 'zh' : 'en'
+          language: (typeof currentLang !== 'undefined' && currentLang === 'cn') ? 'zh' : 'en'
         };
 
         const resp = await fetch('/api/playground/test', {
@@ -2828,8 +2849,8 @@
         stageRate.querySelector('[data-text-a]').textContent = data.response_a;
         stageRate.querySelector('[data-text-b]').textContent = data.response_b;
 
-        const skillTagText = isCn ? '🔥 加了 Skill' : '🔥 with this Skill';
-        const baselineTagText = isCn ? '◯ 普通 AI' : '◯ baseline AI';
+        const skillTagText = t('playground_with_skill');
+        const baselineTagText = t('playground_baseline_ai');
         stageRate.querySelector('[data-tag-a]').textContent =
           data.skill_side === 'A' ? skillTagText : baselineTagText;
         stageRate.querySelector('[data-tag-b]').textContent =
@@ -2839,13 +2860,13 @@
 
         // Update UI text based on language
         stageLoading.querySelector('.twin-loading-text').textContent =
-          isCn ? '正在生成两个回应…' : 'generating two responses…';
+          t('playground_generating');
         stageRate.querySelector('.twin-rate-question').textContent =
-          isCn ? '这个 Skill 效果怎么样？' : 'How was this Skill?';
+          t('playground_how_skill');
         const btnTexts = [
-          isCn ? '明显更好' : 'Clearly better',
-          isCn ? '不大好' : 'Not great',
-          isCn ? '没感觉到区别' : "Can't tell"
+          t('playground_clearly_better'),
+          t('playground_not_great'),
+          t('playground_cant_tell')
         ];
         stageRate.querySelectorAll('.twin-rate-word').forEach((el, i) => {
           if (i < btnTexts.length) el.textContent = btnTexts[i];
@@ -2886,9 +2907,9 @@
       } catch (err) {
         console.error('❌ Twin Test error:', err);
         stageLoading.innerHTML = `<div style="color:#b85a4a;font-size:12px;line-height:1.5;">
-          <strong>${isCn ? '生成失败' : 'Generation failed'}</strong><br/>
+          <strong>${t('playground_generation_error')}</strong><br/>
           ${err.message}<br/>
-          <span style="font-size:11px;color:#8a7a6e;">${isCn ? '(查看浏览器控制台了解更多)' : '(check browser console)'}</span>
+          <span style="font-size:11px;color:#8a7a6e;">${t('console_check')}</span>
         </div>`;
       }
     }
@@ -2956,7 +2977,7 @@
             ? `🎯 ${betterPct}% 的测试者觉得这个 Skill <strong>明显更好</strong> · 共 ${total} 次反馈`
             : `🎯 ${betterPct}% of testers said this Skill was <strong>clearly better</strong> · ${total} feedbacks`;
         } else {
-          statsEl.textContent = isCn ? '你是第一个反馈这个 Skill 的人 ✨' : 'You are the first to rate this Skill ✨';
+          statsEl.textContent = t('playground_first_rater');
         }
 
         stageRate.hidden = true;
@@ -2971,7 +2992,7 @@
         // restore; clearing the submitting flag is enough.
         delete stageRate.dataset.submitting;
         stageRate.querySelectorAll('.twin-rate-btn').forEach(b => b.disabled = false);
-        alert((isCn ? '提交失败：' : 'Submit failed: ') + err.message);
+        alert((t('playground_submit_error')) + err.message);
       }
     }
   </script>
