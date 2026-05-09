@@ -957,6 +957,7 @@ const I18N = {
     playground_baseline_ai: '◯ baseline AI',
     playground_load_failed: 'Load failed',
     playground_no_skills: 'No Skills yet',
+    playground_reset_success: '✨ Reset! You have 7 fresh tests ahead',
     /* ── Validation messages ── */
     error_share_idea_first: 'Please share your idea first',
     error_enter_skill_name: 'Please enter a skill name',
@@ -1197,6 +1198,7 @@ const I18N = {
     playground_baseline_ai: '◯ 普通 AI',
     playground_load_failed: '加载失败',
     playground_no_skills: '还没有 Skill',
+    playground_reset_success: '✨ 已重置！你又有 7 个新的测试机会了',
     /* ── Playground 完整消息 ── */
     playground_select: '— 选择 —',
     playground_how_skill: '这个 Skill 效果怎么样？',

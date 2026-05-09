@@ -2226,7 +2226,14 @@
           setTimeout(() => card.remove(), 300);
         }, i * 60);
       });
-      setTimeout(checkEmpty, cards.length * 60 + 400);
+      setTimeout(() => {
+        // Reset test counter and used scenarios — give user a fresh start!
+        twinScenarioCount = 0;
+        usedScenarioBatch.clear();
+        checkEmpty();
+        // Show a friendly reset message
+        showToastI18n('playground_reset_success', true);
+      }, cards.length * 60 + 400);
     });
 
     /* ── Random Task ── */
