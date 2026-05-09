@@ -10443,3 +10443,33 @@ h1, h2, h3, h4, h5, h6 {
   text-align: right;
   white-space: nowrap;
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   MOBILE OPTIMIZATION: About & How to Play Modals
+   ═══════════════════════════════════════════════════════════════ */
+
+@media (max-width: 559px) {
+  /* Reduce padding for modals on small screens */
+  .about-panel,
+  .howto-panel {
+    padding: 24px;  /* from 40px: 40% reduction */
+  }
+
+  /* Tighten rule spacing on mobile */
+  .howto-rule {
+    margin-bottom: 12px;   /* from 20px: 40% reduction */
+    padding-bottom: 8px;   /* from 16px: 50% reduction */
+    border-bottom: none;   /* hide dividers on mobile to reduce visual clutter */
+  }
+
+  /* Improve readability with tighter line-height */
+  .howto-rule p {
+    font-size: 11px;        /* from 12px: save space */
+    line-height: 1.6;       /* from 1.8: tighter leading */
+  }
+
+  /* Restore bottom border for last rule if needed for visual separation */
+  .howto-rule:last-child {
+    border-bottom: none;
+  }
+}
