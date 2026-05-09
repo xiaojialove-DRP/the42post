@@ -2746,10 +2746,12 @@
           opt.value = s.id;
           const baseLabel = `${getSkillTitle(s)} · ${s.domain || '—'} (⭐${s.starlight_score || 0})`;
           if (s.is_mine) {
+            // Mark user's own forged skills
             const latestPrefix = I18N && I18N[currentLang] && I18N[currentLang]['playground_latest_forge']
               ? I18N[currentLang]['playground_latest_forge']
               : (currentLang === 'cn' ? '👋 你刚锻造的：' : '👋 Your latest forge — ');
             opt.textContent = latestPrefix + baseLabel;
+            opt.dataset.isMine = 'true';
           } else {
             opt.textContent = baseLabel;
           }
@@ -2759,11 +2761,24 @@
 
         const confirmBtn = stage.querySelector('[data-skill-confirm]');
         if (skills.length > 0) {
-          // Auto-select: prioritize Archive-sourced skill, fallback to first
+          // Auto-select based on entry path:
+          // Path 1: From Archive (window.TWIN_TEST_SKILL) → prioritize selected skill
+          // Path 2: Direct entry → prioritize user's own forged skill (is_mine=true)
+          let selectedSkillId = skills[0].id;
+
+          // Check if coming from Archive
           const preloadedSkillId = window.TWIN_TEST_SKILL?.id;
-          const selectedSkillId = preloadedSkillId && skills.some(s => s.id === preloadedSkillId)
-            ? preloadedSkillId
-            : skills[0].id;
+          if (preloadedSkillId && skills.some(s => s.id === preloadedSkillId)) {
+            // Path 1: From Archive → show the selected skill first
+            selectedSkillId = preloadedSkillId;
+          } else {
+            // Path 2: Direct entry → show user's own forged skill first
+            const userOwnSkill = skills.find(s => s.is_mine);
+            if (userOwnSkill) {
+              selectedSkillId = userOwnSkill.id;
+            }
+            // Otherwise fall back to first skill
+          }
 
           select.value = selectedSkillId;
           confirmBtn.disabled = false;

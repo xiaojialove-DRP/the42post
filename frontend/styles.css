@@ -6188,78 +6188,175 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 .tt-hash { font-size: 9px; color: #d4726a; letter-spacing: 1px; font-weight: 600; }
 
 /* Archive Skills Grid Card Styles */
+/* ═══════════════════════════════════════════════════════════════
+   PROFESSIONAL UI REDESIGN - SKILL CARDS (Archive Grid)
+   ═══════════════════════════════════════════════════════════════ */
+
 .domain-cell .skill-item {
-  padding: 16px;
-  background: white;
-  border: 1px solid #f0f0f0;
-  border-radius: 8px;
+  padding: 14px 16px;
+  background: #ffffff;
+  border: 1px solid #efefef;
+  border-radius: 6px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  transition: box-shadow 0.2s, transform 0.2s;
+  gap: 10px;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.domain-cell .skill-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #d4726a 0%, transparent 100%);
+  opacity: 0;
+  transition: opacity 0.25s ease;
 }
 
 .domain-cell .skill-item:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  transform: translateY(-2px);
+  border-color: #ddd;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  transform: translateY(-3px);
+}
+
+.domain-cell .skill-item:hover::before {
+  opacity: 1;
+}
+
+/* Skill Header: Title + Soul Hash */
+.skill-item .skill-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
 }
 
 .skill-item .skill-title {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 700;
-  color: #111;
-  line-height: 1.3;
+  color: #1a1a1a;
+  line-height: 1.35;
   margin: 0;
-}
-
-.skill-item .skill-creator {
-  font-size: 13px;
-  color: #999;
-  font-weight: 400;
-}
-
-.skill-item .skill-desc {
-  font-size: 14px;
-  color: #555;
-  line-height: 1.6;
-  margin: 4px 0;
+  flex: 1;
+  letter-spacing: -0.3px;
 }
 
 .skill-item .skill-hash {
-  font-size: 11px;
+  font-size: 10px;
   color: #d4726a;
-  letter-spacing: 0.5px;
+  letter-spacing: 1px;
   font-weight: 600;
-  font-family: 'JetBrains Mono', monospace;
-  margin-top: 4px;
-  margin-bottom: 8px;
+  font-family: 'Courier New', monospace;
+  background: #fef5f4;
+  padding: 4px 6px;
+  border-radius: 3px;
+  flex-shrink: 0;
+  border: 1px solid #f0ddd9;
+  text-transform: uppercase;
+}
+
+.skill-item .skill-creator {
+  font-size: 12px;
+  color: #888;
+  font-weight: 400;
+  letter-spacing: 0.2px;
+}
+
+.skill-item .skill-desc {
+  font-size: 13px;
+  color: #666;
+  line-height: 1.55;
+  margin: 2px 0;
 }
 
 .skill-item .skill-footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-top: 8px;
-  padding-top: 8px;
-  border-top: 1px solid #f0f0f0;
+  margin-top: 4px;
+  padding-top: 10px;
+  border-top: 1px solid #f5f5f5;
 }
 
 .skill-item .skill-meta {
   display: flex;
-  gap: 16px;
+  gap: 12px;
   align-items: center;
-  font-size: 13px;
+  font-size: 12px;
 }
 
 .skill-item .skill-stars {
-  color: #666;
-  font-weight: 500;
+  color: #d4726a;
+  font-weight: 600;
+  letter-spacing: -0.2px;
 }
 
-.skill-item .skill-domain {
-  color: #999;
-  font-size: 12px;
+/* ═══ SKILL ACTIONS (Star, Download, Play buttons) ═══ */
+.skill-item .skill-actions {
+  display: flex;
+  gap: 6px;
+  margin-left: auto;
+  flex-shrink: 0;
+  align-items: center;
+}
+
+.skill-action-btn {
+  background: none;
+  border: 1px solid transparent;
+  padding: 6px 8px;
+  font-size: 15px;
+  cursor: pointer;
+  opacity: 0.55;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  line-height: 1;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #666;
+}
+
+.skill-action-btn:not(.disabled):hover {
+  opacity: 1;
+  transform: scale(1.12);
+  background: #f9f9f9;
+  border-color: #e8e8e8;
+}
+
+.skill-action-btn:not(.disabled):active {
+  transform: scale(0.98);
+}
+
+/* Star button - filled state */
+.skill-action-btn.star-btn.starred {
+  color: #d4726a;
+  opacity: 1;
+  background: #fef5f4;
+  border-color: #f0ddd9;
+}
+
+.skill-action-btn.star-btn.starred:hover {
+  background: #fde9e5;
+  border-color: #e8ccc4;
+}
+
+/* Download button - disabled state */
+.skill-action-btn.download-btn.disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  color: #ccc;
+}
+
+.skill-action-btn.download-btn.disabled:hover {
+  opacity: 0.3;
+  transform: none;
+  background: none;
+  border-color: transparent;
 }
 
 /* Tooltip action buttons */
@@ -6362,13 +6459,13 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 
 .honor-row {
   display: grid;
-  grid-template-columns: 32px 1fr 80px 35px;
+  grid-template-columns: 32px 1fr 90px 35px;
   align-items: center;
   padding: 10px 14px;
   font-size: var(--font-xs);
   cursor: pointer;
   transition: background 0.15s, padding 0.15s;
-  gap: 8px;
+  gap: 10px;
   border-bottom: 1px solid rgba(44,36,32,0.04);
 }
 .honor-row:hover {
@@ -6382,6 +6479,36 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
   font-weight: 700;
   font-size: 11px;
   min-width: 32px;
+  letter-spacing: 0.5px;
+}
+
+.honor-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  flex: 1;
+}
+
+.honor-name {
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+  font-size: 12px;
+  line-height: 1.2;
+}
+
+.honor-desc {
+  color: #999;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 400;
+  font-size: 10px;
+  line-height: 1.2;
+  letter-spacing: 0.2px;
 }
 
 .honor-star {
@@ -6390,15 +6517,6 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
   font-size: var(--font-xs);
   font-weight: 600;
   min-width: 40px;
-}
-
-.honor-name {
-  color: var(--ink);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-weight: 500;
-  font-size: 11px;
 }
 
 .honor-starlight {

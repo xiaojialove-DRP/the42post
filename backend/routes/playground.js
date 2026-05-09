@@ -38,7 +38,103 @@ function buildPrompts(scenario, skill, language) {
   const principle = fl.principle || skill.description || skill.title || '';
   const applies = (fl.boundaries?.applies_when || []).slice(0, 3).join(' / ');
   const notApplies = (fl.boundaries?.does_not_apply || []).slice(0, 2).join(' / ');
-  const exemplar = (fl.exemplars || []).find(e => /DO/i.test(e.label || ''))?.text || '';
+
+  // Get both DO and DON'T exemplars for contrast
+  const doExemplar = (fl.exemplars || []).find(e => /DO/i.test(e.label || ''));
+  const dontExemplar = (fl.exemplars || []).find(e => /DON'T|DONT/i.test(e.label || ''));
+
+  // Extract tension zones and evaluation criteria
+  const tensionZones = (fl.boundaries?.tension_zones || []).slice(0, 2);
+  const silentFailures = (fl.evaluation?.silent_failures || []).slice(0, 2);
+
+  // Get cultural variant for the target language
+  const culturalVariants = fl.cultural_variants || {};
+  const culturalLens = isCn ? culturalVariants['zh-CN'] : culturalVariants['en-US'];
+
+  // Build the fallback prompt with enhanced semantic capital
+  const buildFallbackPrompt = () => {
+    if (isCn) {
+      let prompt = `你是一个 AI 助手，正在按照下面这个 Skill 行事：
+
+【原则】${principle}`;
+
+      // Add cultural note for context
+      if (culturalLens?.principle_note) {
+        prompt += `\n【文化背景】${culturalLens.principle_note}`;
+      }
+
+      if (applies) prompt += `\n【适用】${applies}`;
+      if (notApplies) prompt += `\n【不适用】${notApplies}`;
+
+      // Show both DO and DON'T for sharp contrast
+      if (doExemplar) prompt += `\n【要这样】${doExemplar.text}`;
+      if (dontExemplar) prompt += `\n【不要这样】${dontExemplar.text}`;
+
+      // Show what "looks good but is actually dead" to avoid silent failures
+      if (silentFailures.length > 0) {
+        prompt += `\n【陷阱】要避免这些看似对但精神已死的做法：`;
+        silentFailures.forEach(sf => {
+          prompt += `\n  · ${sf}`;
+        });
+      }
+
+      // Remind of the tension/tradeoff
+      if (tensionZones.length > 0) {
+        prompt += `\n【权衡】这个 Skill 在以下方向上有张力，不要试图 "平衡"：`;
+        tensionZones.forEach(tz => {
+          prompt += `\n  · ${tz}`;
+        });
+      }
+
+      prompt += `
+
+请用 2-3 句话（≤80 字），第一人称，回应下面的情境。让这个 Skill 的精神在你的回应里活起来——不是引用它，是体现它。
+
+情境：
+${scenarioText}
+
+只返回 JSON：{"response":"你的回应（2-3 句，≤80 字，无引言无说明）"}`;
+      return prompt;
+    } else {
+      let prompt = `You are an AI agent acting under the following Skill:
+
+【Principle】${principle}`;
+
+      if (culturalLens?.principle_note) {
+        prompt += `\n【Cultural Note】${culturalLens.principle_note}`;
+      }
+
+      if (applies) prompt += `\n【Applies when】${applies}`;
+      if (notApplies) prompt += `\n【Does not apply when】${notApplies}`;
+
+      if (doExemplar) prompt += `\n【DO】${doExemplar.text}`;
+      if (dontExemplar) prompt += `\n【DON'T】${dontExemplar.text}`;
+
+      if (silentFailures.length > 0) {
+        prompt += `\n【Pitfalls】Avoid these — they look good but the spirit is dead:`;
+        silentFailures.forEach(sf => {
+          prompt += `\n  · ${sf}`;
+        });
+      }
+
+      if (tensionZones.length > 0) {
+        prompt += `\n【Tension】This Skill sits in these tensions — don't try to "balance":`;
+        tensionZones.forEach(tz => {
+          prompt += `\n  · ${tz}`;
+        });
+      }
+
+      prompt += `
+
+Respond in 2-3 sentences (≤60 words), first person, to the scenario below. Let the spirit of the Skill come through your response — don't quote it, embody it.
+
+Scenario:
+${scenarioText}
+
+Return JSON only: {"response":"your reply (2-3 sentences, ≤60 words, no preamble, no commentary)"}`;
+      return prompt;
+    }
+  };
 
   // Length budget tuned for A/B differentiation. 1-2 sentences was
   // too compressed — the with-skill and without-skill replies often
@@ -64,47 +160,25 @@ Scenario:
 ${scenarioText}
 
 Return JSON only: {"response":"your reply (2-3 sentences, ≤60 words, no preamble, no commentary)"}`)
-    : (isCn
-        ? `你是一个 AI 助手，正在按照下面这个 Skill 行事：
+    : buildFallbackPrompt();
 
-【原则】${principle}
-${applies ? `【适用】${applies}` : ''}
-${notApplies ? `【不适用】${notApplies}` : ''}
-${exemplar ? `【参考做法】${exemplar}` : ''}
-
-请用 2-3 句话（≤80 字），第一人称，回应下面的情境。让这个 Skill 的精神在你的回应里活起来——不是引用它，是体现它。
-
-情境：
-${scenarioText}
-
-只返回 JSON：{"response":"你的回应（2-3 句，≤80 字，无引言无说明）"}`
-        : `You are an AI agent acting under the following Skill:
-
-【Principle】${principle}
-${applies ? `【Applies when】${applies}` : ''}
-${notApplies ? `【Does not apply when】${notApplies}` : ''}
-${exemplar ? `【Reference behaviour】${exemplar}` : ''}
-
-Respond in 2-3 sentences (≤60 words), first person, to the scenario below. Let the spirit of the Skill come through your response — don't quote it, embody it.
-
-Scenario:
-${scenarioText}
-
-Return JSON only: {"response":"your reply (2-3 sentences, ≤60 words, no preamble, no commentary)"}`);
-
+  // Baseline: minimal intervention, maximum raw LLM ability
+  // Goal: No content bias (no "helpful", "friendly", "thoughtful"),
+  // but ensure quality & comparability with the Skill response.
+  // Constraints: only format (JSON) + length (comparable to Skill) + implicit task clarity
   const withoutSkillPrompt = isCn
-    ? `你是一个有用的 AI 助手。请用 2-3 句话（≤80 字），第一人称，回应下面的情境。
-
-情境：
+    ? `情境：
 ${scenarioText}
 
-只返回 JSON：{"response":"你的回应（2-3 句，≤80 字，无引言无说明）"}`
-    : `You are a helpful AI agent. Respond in 2-3 sentences (≤60 words), first person, to the scenario below.
+请给出一个回应（保持在合理长度内，无需解释或前言）。
 
-Scenario:
+只返回 JSON：{"response":"..."}`
+    : `Scenario:
 ${scenarioText}
 
-Return JSON only: {"response":"your reply (2-3 sentences, ≤60 words, no preamble, no commentary)"}`;
+Give a response (keep it reasonable in length, no explanation or preamble needed).
+
+Return JSON only: {"response":"..."}`;
 
   return { withSkillPrompt, withoutSkillPrompt, isCn };
 }
@@ -113,24 +187,29 @@ Return JSON only: {"response":"your reply (2-3 sentences, ≤60 words, no preamb
 // Asks the LLM to compare the two responses and produce a single short
 // sentence of the form "A 先承接情绪再讲事实，B 直接辩驳" — used in the
 // Twin Test reveal step. Kept tiny (~80 tokens) so the extra call is cheap.
-function buildDiagnosticPrompt(scenarioText, withText, withoutText, skillSide, isCn) {
+// ─── Build diagnostic prompt ───
+// Simple: what's the key difference? How did Skill improve it?
+function buildDiagnosticPrompt(scenarioText, withText, withoutText, skillSide, isCn, skill) {
   const A = skillSide === 'A' ? withText : withoutText;
   const B = skillSide === 'A' ? withoutText : withText;
-  return isCn
-    ? `下面是同一个情境下两段 AI 回应。请用一句话（≤30 字）总结它们最关键的行为差异，不评价好坏。
+
+  if (isCn) {
+    return `下面是同一情境的两段回应。一段是基础AI，一段加载了用户的Skill。用一句话（≤25字）说明关键差异。
 
 情境：${scenarioText}
 A：${A}
 B：${B}
 
-只返回 JSON：{"diagnostic":"A …，B …"}`
-    : `Two AI responses to the same scenario. Summarize the key behavioural difference in ONE sentence (≤20 words), no judgement.
+只返回 JSON：{"diagnostic":"关键差异：..."}`;
+  } else {
+    return `Two responses to the same scenario. One is baseline AI, one has a Skill loaded. State the key difference in ONE sentence (≤15 words).
 
 Scenario: ${scenarioText}
 A: ${A}
 B: ${B}
 
-Return JSON only: {"diagnostic":"A …, B …"}`;
+Return JSON only: {"diagnostic":"Key difference: ..."}`;
+  }
 }
 
 // ═══ POST /test — generate Twin Test responses ═══
@@ -223,13 +302,12 @@ router.post('/test', rateLimitLLM, async (req, res, next) => {
     const responseB = skillIsA ? withoutText : withText;
     const skillSide = skillIsA ? 'A' : 'B';
 
-    // Generate a short comparative diagnostic (kept on the server, returned
-    // only via /vote so it doesn't spoil the blind pick).
+    // Generate diagnostic: what's the key difference?
     const scenarioText = [scenario.title, scenario.description].filter(Boolean).join(' — ');
-    const diagPrompt = buildDiagnosticPrompt(scenarioText, withText, withoutText, skillSide, isCn);
+    const diagPrompt = buildDiagnosticPrompt(scenarioText, withText, withoutText, skillSide, isCn, skill);
     let diagnostic = '';
     try {
-      const diagResp = await callLLMJSON(diagPrompt, 150);
+      const diagResp = await callLLMJSON(diagPrompt, 100);
       diagnostic = (diagResp.data?.diagnostic || '').trim();
     } catch (e) {
       console.warn('Diagnostic generation skipped:', e.message);

@@ -7884,11 +7884,28 @@ async function initAgentArchiveView() {
     sorted.forEach((s, i) => {
       const row = document.createElement('div');
       row.className = 'honor-row';
+
+      // Get proper title based on current language
+      const lang = typeof currentLang !== 'undefined' ? currentLang : 'en';
+      const title = lang === 'cn'
+        ? (s.title_cn || s.titleCn || s.title || '')
+        : (s.title || s.title_cn || s.titleCn || '');
+
+      // Get description based on current language (no need to show full, but needed for consistency)
+      const desc = lang === 'cn'
+        ? (s.description_cn || s.descCn || s.description || s.desc || '')
+        : (s.description || s.desc || s.description_cn || s.descCn || '');
+      const shortDesc = desc.substring(0, 60) + (desc.length > 60 ? '…' : '');
+
       // Extract creator name (fallback to anonymous)
       const creatorName = s.creatorName || s.creator?.replace('creator_', '') || 'anonymous';
+
       row.innerHTML = `
         <span class="honor-rank">#${String(i + 1).padStart(2, '0')}</span>
-        <span class="honor-name">${s.title}</span>
+        <div class="honor-info">
+          <span class="honor-name">${title}</span>
+          <span class="honor-desc">${shortDesc}</span>
+        </div>
         <span class="honor-creator">by ${creatorName}</span>
         <span class="honor-stars">★${s.starlight || 0}</span>
       `;
@@ -7959,22 +7976,28 @@ async function initAgentArchiveView() {
           const soulHashShort = soulHashFull && soulHashFull.length > 16
             ? soulHashFull.substring(0, 16)
             : soulHashFull;
+          // Check if skill is starred from localStorage
+          const starredSkills = JSON.parse(localStorage.getItem('starred_skills') || '{}');
+          const isStarred = starredSkills[skill.id] === true;
           return `
-            <div class="skill-item" data-skill-id="${skill.id}">
-              <div class="skill-title">${title}</div>
+            <div class="skill-item" data-skill-id="${skill.id}" data-is-starred="${isStarred}">
+              <div class="skill-header">
+                <div class="skill-title">${title}</div>
+                <div class="skill-hash" title="Soul Hash: ${soulHashFull}">${soulHashShort.substring(0, 8) || '—'}</div>
+              </div>
               <div class="skill-creator">${creatorDisplay}</div>
               <div class="skill-desc">${shortDesc}</div>
-              <div class="skill-hash">${soulHashShort}</div>
               <div class="skill-footer">
                 <div class="skill-meta">
                   <span class="skill-stars">⭐ ${skill.starlight_score || skill.stars || 0}</span>
-                  <span class="skill-domain">${skill.domain || 'ideas'}</span>
+                </div>
+                <!-- Action buttons: Star, Download, Play -->
+                <div class="skill-actions">
+                  <button class="skill-action-btn star-btn ${isStarred ? 'starred' : ''}" data-skill-id="${skill.id}" title="${isStarred ? 'Unstar this skill' : 'Star this skill'}">${isStarred ? '★' : '☆'}</button>
+                  <button class="skill-action-btn download-btn ${!isStarred ? 'disabled' : ''}" data-skill-id="${skill.id}" title="${isStarred ? 'Download skill' : 'Star first to download'}" ${!isStarred ? 'disabled' : ''}>📥</button>
+                  <button class="skill-action-btn play-btn" data-skill-id="${skill.id}" title="Play Twin Test">▶</button>
                 </div>
               </div>
-              <!-- Hidden action buttons for interactivity (shown via click handlers) -->
-              <button class="skill-action-btn star-btn" data-skill-id="${skill.id}" style="display:none;" title="Star">⭐</button>
-              <button class="skill-action-btn download-btn" data-skill-id="${skill.id}" style="display:none;" title="Download">📥</button>
-              <button class="skill-action-btn play-btn" data-skill-id="${skill.id}" style="display:none;" title="Play">🎮</button>
             </div>
           `;
         }).join('');
@@ -8011,7 +8034,39 @@ async function initAgentArchiveView() {
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
         const skillId = btn.dataset.skillId;
+        const skillItem = btn.closest('.skill-item');
+        const downloadBtn = skillItem?.querySelector('.download-btn');
+
+        // Get current starred state
+        const starredSkills = JSON.parse(localStorage.getItem('starred_skills') || '{}');
+        const isCurrentlyStarred = starredSkills[skillId] === true;
+        const willBeStarred = !isCurrentlyStarred;
+
+        // Call the star function
         starSkillById(skillId);
+
+        // Update UI immediately
+        if (willBeStarred) {
+          btn.classList.add('starred');
+          btn.textContent = '★';
+          btn.title = 'Unstar this skill';
+          if (downloadBtn) {
+            downloadBtn.classList.remove('disabled');
+            downloadBtn.disabled = false;
+            downloadBtn.title = 'Download skill';
+          }
+          if (skillItem) skillItem.dataset.isStarred = 'true';
+        } else {
+          btn.classList.remove('starred');
+          btn.textContent = '☆';
+          btn.title = 'Star this skill';
+          if (downloadBtn) {
+            downloadBtn.classList.add('disabled');
+            downloadBtn.disabled = true;
+            downloadBtn.title = 'Star first to download';
+          }
+          if (skillItem) skillItem.dataset.isStarred = 'false';
+        }
       });
     });
 
@@ -8019,6 +8074,14 @@ async function initAgentArchiveView() {
     document.querySelectorAll('.domain-cell .download-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
+
+        // Check if button is disabled
+        if (btn.disabled) {
+          const t = window.t || ((key) => key);
+          alert(t('warning_star_first') || 'Please star this skill first to download it');
+          return;
+        }
+
         const skillId = btn.dataset.skillId;
         const skill = findSkillById(skillId);
         if (skill) {
@@ -8033,6 +8096,8 @@ async function initAgentArchiveView() {
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
         const skillId = btn.dataset.skillId;
+        // Set the skill for Playground to use as first selected option
+        window.TWIN_TEST_SKILL = findSkillById(skillId);
         window.location.href = `playground.html?skill=${encodeURIComponent(skillId)}`;
       });
     });

@@ -590,7 +590,9 @@ Return JSON only:
         exemplars: Array.isArray(data.exemplars) ? data.exemplars : [],
         boundaries: data.boundaries || { applies_when: [], does_not_apply: [], tension_zones: [] },
         evaluation: data.evaluation || { test_cases: [], metric: '', silent_failures: [] },
-        cultural_variants: data.cultural_variants || {}
+        cultural_variants: data.cultural_variants || {},
+        // ✅ Critical field: ready-to-use system prompt for immediate copy-paste
+        ready_to_use_prompt: (data.ready_to_use_prompt || '').trim() || data.principle || ''
       },
       model,
       usage
@@ -656,6 +658,11 @@ function fiveLayerFallback(skillName, ideaText, selectedProbeResponse, probeData
         cn_adapt: 'Preserve the care while avoiding preachiness in Chinese.'
       };
 
+  // Generate a fallback ready-to-use prompt from principle and reasoning
+  const fallbackPrompt = isCn
+    ? `你是执行「${skillName}」这个 Skill 的 AI 助手。${d.principle} ${d.reasoning} ${d.preferred_reason} 请自然地在第一人称中体现这个立场——不是引用，是活出来。`
+    : `You are an AI assistant embodying the "${skillName}" Skill. ${d.principle} ${d.reasoning} ${d.preferred_reason} Naturally express this value in your responses—not a quote, but an embodiment.`;
+
   return {
     success: true,
     fallback: true,
@@ -676,7 +683,9 @@ function fiveLayerFallback(skillName, ideaText, selectedProbeResponse, probeData
       cultural_variants: {
         'en-US': { principle_note: d.en_note, adaptation: d.en_adapt },
         'zh-CN': { principle_note: d.cn_note, adaptation: d.cn_adapt }
-      }
+      },
+      // ✅ Critical field: ready-to-use system prompt for immediate copy-paste
+      ready_to_use_prompt: fallbackPrompt
     }
   };
 }
