@@ -2220,6 +2220,7 @@
     document.getElementById('btnClearAll').addEventListener('click', () => {
       const canvas = document.getElementById('workshopCanvas');
       const cards = canvas.querySelectorAll('.task-card');
+      const wasLimitReached = twinScenarioCount >= TWIN_SCENARIO_LIMIT;
       cards.forEach((card, i) => {
         setTimeout(() => {
           card.classList.add('minimizing');
@@ -2227,12 +2228,14 @@
         }, i * 60);
       });
       setTimeout(() => {
-        // Reset test counter and used scenarios — give user a fresh start!
+        // Reset test counter and used scenarios
         twinScenarioCount = 0;
         usedScenarioBatch.clear();
         checkEmpty();
-        // Show a friendly reset message
-        showToastI18n('playground_reset_success', true);
+        // Show reset buff only if user had exhausted their tests—pleasant surprise!
+        if (wasLimitReached) {
+          showToastI18n('playground_reset_success', true);
+        }
       }, cards.length * 60 + 400);
     });
 
