@@ -1253,7 +1253,12 @@ let DB_SKILLS = []; // legacy cache — SkillStore is the authoritative source
 function findSkillById(id) {
   if (!id) return null;
   if (typeof SkillStore !== 'undefined') return SkillStore.find(id);
-  // Fallback for pages that don't load skillStore.js (e.g. playground.html)
+  // Fallback for pages that don't load skillStore.js (e.g. playground.html, archive.html)
+  // Archive page stores API-fetched skills in window.allSkills (from initAgentArchiveView)
+  if (typeof window.allSkills !== 'undefined' && Array.isArray(window.allSkills)) {
+    const found = window.allSkills.find(s => s.id === id);
+    if (found) return found;
+  }
   const pools = [
     typeof DB_SKILLS !== 'undefined' ? DB_SKILLS : [],
     typeof SHARED_SKILLS !== 'undefined' ? SHARED_SKILLS : [],
@@ -7367,7 +7372,11 @@ async function initAgentArchiveView() {
   }));
 
   const allSkills = [...baseSkills, ...forgedSkillsWithStarlight];
-  
+
+  // Expose allSkills to window so findSkillById can access them
+  // This is critical for Archive action buttons (star, download, play) to work
+  window.allSkills = allSkills;
+
   function resizeCanvas() {
     const rect = canvasWrap.getBoundingClientRect();
     cw = rect.width;
