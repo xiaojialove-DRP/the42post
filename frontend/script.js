@@ -7587,9 +7587,8 @@ async function initAgentArchiveView() {
       document.getElementById('ttAgent').textContent = creatorName ? `by ${creatorName}` : '';
       // Description: show appropriate language based on currentLang
       document.getElementById('ttDesc').textContent = lang === 'cn' ? (n.descCn || n.desc || '') : (n.desc || n.descCn || '');
-      // Shorten soul hash display (show only first 20 chars + ...)
-      const hashDisplay = n.hash && n.hash.length > 20 ? n.hash.substring(0, 20) + '...' : n.hash;
-      document.getElementById('ttHash').textContent = hashDisplay;
+      // Soul hash is shown only in the full card detail, not in this tooltip
+      document.getElementById('ttHash').textContent = '';
       document.getElementById('ttStarlight').textContent = '★ ' + n.starlight;
       document.getElementById('ttDomain').textContent = n.domain;
       tooltip.style.left = Math.min(e.clientX - rect.left + 16, cw - 300) + 'px';
@@ -7685,9 +7684,8 @@ async function initAgentArchiveView() {
           : (n.creatorName || n.agent || '');
         document.getElementById('ttAgent').textContent = creatorName ? `by ${creatorName}` : '';
         document.getElementById('ttDesc').textContent = lang === 'cn' ? (n.descCn || n.desc || '') : (n.desc || n.descCn || '');
-        // Shorten soul hash display
-        const hashDisplay = n.hash && n.hash.length > 20 ? n.hash.substring(0, 20) + '...' : n.hash;
-        document.getElementById('ttHash').textContent = hashDisplay;
+        // Soul hash is shown only in the full card detail, not in this tooltip
+        document.getElementById('ttHash').textContent = '';
         document.getElementById('ttStarlight').textContent = '★ ' + n.starlight;
         document.getElementById('ttDomain').textContent = n.domain;
         tooltip.style.left = Math.min(tapCandidate.x - rect.left + 16, cw - 300) + 'px';
@@ -7803,11 +7801,15 @@ async function initAgentArchiveView() {
         skillsHTML = domainSkills.slice(0, 3).map(skill => {
           const title = lang === 'cn' ? (skill.title_cn || skill.titleCn || skill.title) : (skill.title || skill.title_cn || skill.titleCn);
           const desc = lang === 'cn' ? (skill.description_cn || skill.descCn || skill.desc || '') : (skill.description || skill.desc || skill.description_cn || '');
-          const shortDesc = desc.substring(0, 60) + (desc.length > 60 ? '...' : '');
-          // Extract creator name from agent field (format: "creator_xxx")
-          const creatorName = skill.agent && skill.agent.startsWith('creator_')
-            ? skill.agent.substring(8)
-            : (skill.creatorName || skill.creator_name || '');
+          const shortDesc = desc.substring(0, 120) + (desc.length > 120 ? '...' : '');
+          // Extract creator name - handle both "creator_xxx" format and plain name
+          let creatorDisplay = 'creator_anonymous';
+          if (skill.agent && skill.agent.startsWith('creator_')) {
+            creatorDisplay = skill.agent;
+          } else if (skill.creatorName || skill.creator_name) {
+            const name = skill.creatorName || skill.creator_name;
+            creatorDisplay = name.startsWith('creator_') ? name : `creator_${name}`;
+          }
           // Get soul hash (shortened to 16 chars)
           const soulHashFull = skill.soul_hash || skill.soulHash || '';
           const soulHashShort = soulHashFull && soulHashFull.length > 16
@@ -7816,15 +7818,15 @@ async function initAgentArchiveView() {
           return `
             <div class="skill-item" data-skill-id="${skill.id}">
               <div class="skill-title">${title}</div>
-              <div class="skill-creator">${creatorName ? `creator_${creatorName}` : 'creator_anonymous'}</div>
+              <div class="skill-creator">${creatorDisplay}</div>
               <div class="skill-desc">${shortDesc}</div>
-              <div class="skill-hash">${soulHashShort}</div>
               <div class="skill-footer">
                 <div class="skill-meta">
                   <span class="skill-stars">⭐ ${skill.starlight_score || skill.stars || 0}</span>
                   <span class="skill-domain">${skill.domain || 'ideas'}</span>
                 </div>
               </div>
+              <div class="skill-hash">${soulHashShort}</div>
               <!-- Hidden action buttons for interactivity (shown via click handlers) -->
               <button class="skill-action-btn star-btn" data-skill-id="${skill.id}" style="display:none;" title="Star">⭐</button>
               <button class="skill-action-btn download-btn" data-skill-id="${skill.id}" style="display:none;" title="Download">📥</button>
