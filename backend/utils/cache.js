@@ -19,15 +19,25 @@ const CACHE_TTL = {
 
 // ═══ IN-MEMORY CACHE ═══
 class MemoryCache {
-  constructor() {
+  constructor(maxSize = 5000) {
     this.store = new Map();
     this.timers = new Map();
+    this.maxSize = maxSize;
+    this.accessOrder = []; // LRU tracking
   }
 
   set(key, value, ttlMs = 5 * 60 * 1000) {
     // Clear existing timer
     if (this.timers.has(key)) {
       clearTimeout(this.timers.get(key));
+    }
+
+    // Capacity check: evict LRU entry if necessary
+    if (!this.store.has(key) && this.store.size >= this.maxSize) {
+      const lruKey = this.accessOrder.shift();
+      if (lruKey) {
+        this.delete(lruKey);
+      }
     }
 
     // Store value
@@ -37,10 +47,15 @@ class MemoryCache {
       expiresAt: Date.now() + ttlMs
     });
 
+    // Update access order for LRU
+    this.accessOrder = this.accessOrder.filter(k => k !== key);
+    this.accessOrder.push(key);
+
     // Set expiration timer
     const timer = setTimeout(() => {
       this.store.delete(key);
       this.timers.delete(key);
+      this.accessOrder = this.accessOrder.filter(k => k !== key);
     }, ttlMs);
 
     this.timers.set(key, timer);

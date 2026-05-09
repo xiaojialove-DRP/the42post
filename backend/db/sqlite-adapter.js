@@ -33,15 +33,33 @@ export class SqlitePool {
     try {
       // Handle multiple statement queries
       if (sql.includes(';') && sql.trim().split(';').length > 2) {
-        // Multiple statements
+        // Multiple statements — must prepare each individually
         const statements = sql.split(';').filter(s => s.trim());
+        const results = [];
+
         for (const stmt of statements) {
           const s = stmt.trim();
-          if (s) {
-            this.db.exec(s);
+          if (!s) continue;
+
+          let normalizedStmt = s
+            .replace(/\$(\d+)/g, () => '?')
+            .replace(/\bNOW\s*\(\s*\)/gi, 'CURRENT_TIMESTAMP');
+
+          try {
+            const prepared = this.db.prepare(normalizedStmt);
+            const upper = normalizedStmt.trim().toUpperCase();
+
+            if (upper.startsWith('SELECT')) {
+              results.push(prepared.all(...params));
+            } else {
+              prepared.run(...params);
+            }
+          } catch (err) {
+            console.error(`Multi-statement execution failed at: ${s}`);
+            throw new Error(`Multi-statement failed: ${err.message}`);
           }
         }
-        return { rows: [] };
+        return { rows: results[0] || [] };
       }
 
       // Normalize SQL for SQLite

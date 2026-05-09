@@ -563,18 +563,24 @@ startServer();
 process.on('SIGTERM', () => {
   console.log('SIGTERM received, shutting down gracefully...');
 
-  // Wait for database pool to close before exiting
-  db.end(() => {
-    console.log('✓ Database pool closed');
-    process.exit(0);
-  });
+  try {
+    // Close the database connection (better-sqlite3 is synchronous)
+    if (db && typeof db.close === 'function') {
+      db.close();
+      console.log('✓ Database connection closed');
+    }
+  } catch (err) {
+    console.error('⚠ Error closing database:', err.message);
+  }
 
-  // Force exit after 10 seconds to prevent hanging
-  // if database connection is stuck
+  // Give the server time to finish pending requests (max 10 seconds)
   setTimeout(() => {
-    console.error('⚠ Forced shutdown after timeout - database pool still draining');
+    console.error('⚠ Forced shutdown after timeout - pending requests still draining');
     process.exit(1);
   }, 10000);
+
+  // Process exit after graceful shutdown
+  process.exit(0);
 });
 
 // Export for use in other modules

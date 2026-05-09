@@ -202,21 +202,53 @@ export const rateLimitForge = (req, res, next) => {
 };
 
 /**
- * Cleanup old IPs from memory periodically (every 10 minutes)
- * This prevents unbounded memory growth
+ * Cleanup configuration
+ */
+const MAX_IPS_TRACKED = 10000;
+const CLEANUP_INTERVAL = 5 * 60 * 1000; // 5 minutes (more frequent)
+
+/**
+ * Cleanup old IPs from memory periodically
+ * This prevents unbounded memory growth and maintains consistent performance
  */
 setInterval(() => {
   const now = Date.now();
+
+  // Step 1: Clean expired timestamps
   for (const [ip, data] of requestTimestamps.entries()) {
     let hasData = false;
     for (const key in data) {
       data[key] = cleanOldTimestamps(data[key], now);
       if (data[key].length > 0) {
         hasData = true;
+      } else {
+        delete data[key];
       }
     }
     if (!hasData) {
       requestTimestamps.delete(ip);
     }
   }
-}, 10 * 60 * 1000);
+
+  // Step 2: Enforce capacity limit with LRU eviction
+  if (requestTimestamps.size > MAX_IPS_TRACKED) {
+    // Find the oldest entries based on their minimum timestamp
+    const ipsArray = Array.from(requestTimestamps.entries());
+    ipsArray.sort((a, b) => {
+      const aOldest = Math.min(
+        ...Object.values(a[1]).flatMap(arr => arr).filter(ts => typeof ts === 'number')
+      );
+      const bOldest = Math.min(
+        ...Object.values(b[1]).flatMap(arr => arr).filter(ts => typeof ts === 'number')
+      );
+      return (aOldest || Infinity) - (bOldest || Infinity);
+    });
+
+    // Evict oldest IPs until we're back to 90% of capacity
+    const targetSize = Math.floor(MAX_IPS_TRACKED * 0.9);
+    const toEvict = ipsArray.length - targetSize;
+    for (let i = 0; i < toEvict && i < ipsArray.length; i++) {
+      requestTimestamps.delete(ipsArray[i][0]);
+    }
+  }
+}, CLEANUP_INTERVAL);

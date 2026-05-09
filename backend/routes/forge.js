@@ -17,6 +17,18 @@ import {
 
 const router = express.Router();
 
+// ═══ TIMEOUT WRAPPER FOR GENERATION FUNCTIONS ═══
+// Protects against infinite hangs even if the LLM call succeeds
+// but the response parsing hangs
+async function withGenerationTimeout(generationFn, timeoutMs = 120000) {
+  return Promise.race([
+    generationFn(),
+    new Promise((_, reject) =>
+      setTimeout(() => reject(new Error(`Generation timeout after ${timeoutMs}ms`)), timeoutMs)
+    )
+  ]);
+}
+
 // ═══ GENERATE INTUITION PROBE ═══
 // No auth required — probe is called before account creation (Step 1 of forge)
 // Rate limited to protect LLM API quota
@@ -32,11 +44,20 @@ router.post('/probe', rateLimitLLM, async (req, res, next) => {
       });
     }
 
-    // Generate probe using Claude API
-    const probeResult = await generateProbeWithClaude(
-      idea_text.trim(),
-      language || 'en'
-    );
+    // Generate probe using Claude API with timeout protection (120 second hard limit)
+    let probeResult;
+    try {
+      probeResult = await withGenerationTimeout(
+        () => generateProbeWithClaude(idea_text.trim(), language || 'en'),
+        120000
+      );
+    } catch (timeoutErr) {
+      console.error('❌ Probe generation timeout:', timeoutErr.message);
+      return res.status(504).json({
+        error: 'Generation timeout',
+        message: 'Probe generation took too long. Please try again.'
+      });
+    }
 
     if (!probeResult.success) {
       return res.status(500).json({
@@ -86,12 +107,24 @@ router.post('/preview-from-probe', rateLimitLLM, async (req, res, next) => {
       return res.status(400).json({ error: 'Invalid input', message: 'selected_response must be thesis | antithesis | extreme' });
     }
 
-    const result = await generatePreviewWithClaude(
-      idea_text.trim(),
-      selected_response,
-      probe_data,
-      language || 'en'
-    );
+    let result;
+    try {
+      result = await withGenerationTimeout(
+        () => generatePreviewWithClaude(
+          idea_text.trim(),
+          selected_response,
+          probe_data,
+          language || 'en'
+        ),
+        120000
+      );
+    } catch (timeoutErr) {
+      console.error('❌ Preview generation timeout:', timeoutErr.message);
+      return res.status(504).json({
+        error: 'Generation timeout',
+        message: 'Preview generation took too long. Please try again.'
+      });
+    }
 
     if (!result.success) {
       return res.status(500).json({ error: 'Preview generation failed', message: result.message });
@@ -146,14 +179,26 @@ router.post('/generate', rateLimitLLM, optionalAuth, async (req, res, next) => {
       });
     }
 
-    // Generate five-layer skill using Claude API
-    const generationResult = await generateFiveLayerWithClaude(
-      skill_name.trim(),
-      idea_text.trim(),
-      selected_response,
-      probe_data,
-      language || 'en'
-    );
+    // Generate five-layer skill using Claude API with timeout protection (150 second hard limit)
+    let generationResult;
+    try {
+      generationResult = await withGenerationTimeout(
+        () => generateFiveLayerWithClaude(
+          skill_name.trim(),
+          idea_text.trim(),
+          selected_response,
+          probe_data,
+          language || 'en'
+        ),
+        150000
+      );
+    } catch (timeoutErr) {
+      console.error('❌ Five-layer generation timeout:', timeoutErr.message);
+      return res.status(504).json({
+        error: 'Generation timeout',
+        message: 'Five-layer generation took too long. Please try again.'
+      });
+    }
 
     if (!generationResult.success) {
       return res.status(500).json({
@@ -208,13 +253,25 @@ router.post('/preview', rateLimitLLM, optionalAuth, async (req, res, next) => {
       });
     }
 
-    const result = await generateFlatFiveLayerWithClaude(
-      name.trim(),
-      definition.trim(),
-      domain || 'ideas',
-      feedback || '',
-      language || 'en'
-    );
+    let result;
+    try {
+      result = await withGenerationTimeout(
+        () => generateFlatFiveLayerWithClaude(
+          name.trim(),
+          definition.trim(),
+          domain || 'ideas',
+          feedback || '',
+          language || 'en'
+        ),
+        120000
+      );
+    } catch (timeoutErr) {
+      console.error('❌ Flat five-layer generation timeout:', timeoutErr.message);
+      return res.status(504).json({
+        error: 'Generation timeout',
+        message: 'Preview generation took too long. Please try again.'
+      });
+    }
 
     if (!result.success) {
       return res.status(500).json({

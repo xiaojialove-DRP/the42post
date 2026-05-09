@@ -36,6 +36,28 @@ function isRetryable(msg) {
 
 async function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
+// ─── Timeout wrapper for fetch calls ───
+// Prevents infinite hangs if the API server never responds
+async function fetchWithTimeout(url, options = {}, timeoutMs = 60000) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    const response = await fetch(url, {
+      ...options,
+      signal: controller.signal
+    });
+    return response;
+  } catch (error) {
+    if (error.name === 'AbortError') {
+      throw new Error(`Request timeout after ${timeoutMs}ms`);
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
 // ─── Single-model call (no retry) ───
 async function callDeepSeekSingle(modelName, prompt, maxTokens) {
   const body = {
@@ -46,14 +68,18 @@ async function callDeepSeekSingle(modelName, prompt, maxTokens) {
     response_format: { type: 'json_object' }
   };
 
-  const resp = await fetch(DEEPSEEK_ENDPOINT, {
+  // Set timeout to 90 seconds per individual attempt
+  // (Most responses complete in 5-15 seconds, 90s allows for network latency and larger prompts)
+  const CALL_TIMEOUT = 90000;
+
+  const resp = await fetchWithTimeout(DEEPSEEK_ENDPOINT, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${DEEPSEEK_KEY}`
     },
     body: JSON.stringify(body)
-  });
+  }, CALL_TIMEOUT);
 
   if (!resp.ok) {
     const errText = await resp.text().catch(() => '');

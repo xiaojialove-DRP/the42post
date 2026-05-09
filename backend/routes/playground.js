@@ -166,24 +166,55 @@ router.post('/test', rateLimitLLM, async (req, res, next) => {
 
     const { withSkillPrompt, withoutSkillPrompt, isCn } = buildPrompts(scenario, skill, language);
 
-    // Call DeepSeek twice in parallel (reduced max_tokens for faster generation).
-    const [withResp, withoutResp] = await Promise.all([
-      callLLMJSON(withSkillPrompt, 400).catch(e => ({ error: e.message })),
-      callLLMJSON(withoutSkillPrompt, 400).catch(e => ({ error: e.message }))
-    ]);
+    // Call DeepSeek twice in parallel with timeout protection (reduced max_tokens for faster generation).
+    const GENERATION_TIMEOUT = 30000; // 30 seconds max per request
+
+    let withResp, withoutResp;
+    try {
+      [withResp, withoutResp] = await Promise.race([
+        Promise.all([
+          callLLMJSON(withSkillPrompt, 400)
+            .catch(e => ({ error: e.message, code: 'GENERATION_ERROR' })),
+          callLLMJSON(withoutSkillPrompt, 400)
+            .catch(e => ({ error: e.message, code: 'GENERATION_ERROR' }))
+        ]),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Generation timeout')), GENERATION_TIMEOUT)
+        )
+      ]);
+    } catch (timeoutErr) {
+      console.error('❌ Playground generation timeout:', timeoutErr.message);
+      return res.status(504).json({
+        error: 'Generation timeout',
+        message: 'The generation took too long. Please try again.'
+      });
+    }
+
+    // Validate responses
+    if (!withResp || !withoutResp) {
+      console.error('❌ Playground generation returned null response');
+      return res.status(502).json({
+        error: 'Invalid response',
+        message: 'Generation returned invalid data'
+      });
+    }
 
     if (withResp.error || withoutResp.error) {
       console.error('❌ Playground twin-test generation error:', withResp.error || withoutResp.error);
       return res.status(502).json({
         error: 'Generation failed',
-        message: withResp.error || withoutResp.error
+        message: withResp.error || withoutResp.error || 'Unknown generation error'
       });
     }
 
     const withText = (withResp.data?.response || '').trim();
     const withoutText = (withoutResp.data?.response || '').trim();
     if (!withText || !withoutText) {
-      return res.status(502).json({ error: 'Empty response', message: 'One of the responses came back empty' });
+      console.error('❌ Playground generation produced empty response');
+      return res.status(502).json({
+        error: 'Empty response',
+        message: 'One of the responses came back empty'
+      });
     }
 
     // Randomize A/B so the user can't guess which is which.
