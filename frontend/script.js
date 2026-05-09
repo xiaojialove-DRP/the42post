@@ -3221,13 +3221,20 @@ function initSkillForge() {
         // 刷新显示
         const nameEl = document.getElementById('reviewSkillName');
         const defEl = document.getElementById('reviewSkillDef');
+        const useWhenEl = document.getElementById('reviewUseWhen');
+        const refuseWhenEl = document.getElementById('reviewRefuseWhen');
         const feedbackEl = document.getElementById('skillFeedback');
 
-        const newName = newSkill.data?.name || newSkill.name || '';
-        const newDef = newSkill.data?.definition || newSkill.definition || '';
+        const skillData = newSkill.data || newSkill;
+        const newName = skillData.name || '';
+        const newDef = skillData.definition || '';
+        const newDefining = skillData.defining || '';
+        const newFencing = skillData.fencing || '';
 
         if (nameEl) nameEl.value = newName;
         if (defEl) defEl.value = newDef;
+        if (useWhenEl) useWhenEl.textContent = newDefining;
+        if (refuseWhenEl) refuseWhenEl.textContent = newFencing;
         if (feedbackEl) feedbackEl.value = '';
 
         // 添加视觉反馈 - 闪烁效果表示内容已更新
@@ -3238,6 +3245,14 @@ function initSkillForge() {
         if (defEl) {
           defEl.style.background = '#fffacd';
           setTimeout(() => { defEl.style.background = ''; }, 600);
+        }
+        if (useWhenEl) {
+          useWhenEl.style.background = '#fffacd';
+          setTimeout(() => { useWhenEl.style.background = ''; }, 600);
+        }
+        if (refuseWhenEl) {
+          refuseWhenEl.style.background = '#fffacd';
+          setTimeout(() => { refuseWhenEl.style.background = ''; }, 600);
         }
 
         // 滚动到编辑区域，使用户能看到新内容
