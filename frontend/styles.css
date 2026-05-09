@@ -6188,18 +6188,77 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 .tt-hash { font-size: 9px; color: #d4726a; letter-spacing: 1px; font-weight: 600; }
 
 /* Archive Skills Grid Card Styles */
-.skill-item .skill-info-row { display: flex; gap: 12px; margin: 6px 0; align-items: center; justify-content: space-between; }
-.skill-item .skill-creator { font-size: 11px; color: #7a6a5e; font-weight: 500; }
-.skill-item .skill-info-row .skill-hash { font-size: 10px; color: #d4726a; letter-spacing: 1px; font-weight: 600; font-family: 'JetBrains Mono', monospace; }
-.skill-item .skill-hash::before { content: ''; }
-.skill-item .skill-desc { font-size: 12px; color: #666; line-height: 1.5; margin: 6px 0; }
-.skill-item .skill-actions { display: flex; gap: 6px; margin-top: 10px; }
-.skill-item .skill-action-btn {
-  background: none; border: none; cursor: pointer; font-size: 16px;
-  transition: transform 0.2s, opacity 0.2s; padding: 2px 4px;
+.domain-cell .skill-item {
+  padding: 16px;
+  background: white;
+  border: 1px solid #f0f0f0;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: box-shadow 0.2s, transform 0.2s;
+  cursor: pointer;
 }
-.skill-item .skill-action-btn:hover { transform: scale(1.2); opacity: 0.8; }
-.skill-item .skill-action-btn:active { transform: scale(0.95); }
+
+.domain-cell .skill-item:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
+}
+
+.skill-item .skill-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #111;
+  line-height: 1.3;
+  margin: 0;
+}
+
+.skill-item .skill-creator {
+  font-size: 13px;
+  color: #999;
+  font-weight: 400;
+}
+
+.skill-item .skill-desc {
+  font-size: 14px;
+  color: #555;
+  line-height: 1.6;
+  margin: 4px 0;
+}
+
+.skill-item .skill-hash {
+  font-size: 11px;
+  color: #d4726a;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.skill-item .skill-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.skill-item .skill-meta {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  font-size: 13px;
+}
+
+.skill-item .skill-stars {
+  color: #666;
+  font-weight: 500;
+}
+
+.skill-item .skill-domain {
+  color: #999;
+  font-size: 12px;
+}
 
 /* Tooltip action buttons */
 .tt-actions { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
@@ -6433,6 +6492,15 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 .domain-cell {
   background: #f8f4ee;
   padding: 24px;
+  display: flex;
+  flex-direction: column;
+}
+
+.skills-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 4px;
 }
 
 .domain-title {

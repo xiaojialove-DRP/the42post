@@ -7816,16 +7816,19 @@ async function initAgentArchiveView() {
           return `
             <div class="skill-item" data-skill-id="${skill.id}">
               <div class="skill-title">${title}</div>
-              <div class="skill-info-row">
-                <div class="skill-creator">${creatorName ? `by ${creatorName}` : ''}</div>
-                <div class="skill-hash">${soulHashShort}</div>
-              </div>
+              <div class="skill-creator">${creatorName ? `creator_${creatorName}` : 'creator_anonymous'}</div>
               <div class="skill-desc">${shortDesc}</div>
-              <div class="skill-actions">
-                <button class="skill-action-btn star-btn" data-skill-id="${skill.id}" title="Star">⭐</button>
-                <button class="skill-action-btn download-btn" data-skill-id="${skill.id}" title="Download">📥</button>
-                <button class="skill-action-btn play-btn" data-skill-id="${skill.id}" title="Play">🎮</button>
+              <div class="skill-hash">${soulHashShort}</div>
+              <div class="skill-footer">
+                <div class="skill-meta">
+                  <span class="skill-stars">⭐ ${skill.starlight_score || skill.stars || 0}</span>
+                  <span class="skill-domain">${skill.domain || 'ideas'}</span>
+                </div>
               </div>
+              <!-- Hidden action buttons for interactivity (shown via click handlers) -->
+              <button class="skill-action-btn star-btn" data-skill-id="${skill.id}" style="display:none;" title="Star">⭐</button>
+              <button class="skill-action-btn download-btn" data-skill-id="${skill.id}" style="display:none;" title="Download">📥</button>
+              <button class="skill-action-btn play-btn" data-skill-id="${skill.id}" style="display:none;" title="Play">🎮</button>
             </div>
           `;
         }).join('');
