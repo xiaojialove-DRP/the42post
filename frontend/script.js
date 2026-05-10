@@ -8438,7 +8438,7 @@ function generateDomainSkillMarkdown(skill) {
   markdown += `*${skill.titleCn || skill.title}*\n\n`;
 
   markdown += `**Forger:** ${skill.author}\n`;
-  markdown += `**Soul-Hash:** ${soulHash(skill.id + skill.title)}\n`;
+  markdown += `**Soul-Hash:** ${skill.soul_hash || skill.soulHash || 'SOUL_UNKNOWN'}\n`;
   markdown += `**Domain:** ${skill.domain}\n`;
   markdown += `**⭐ Starlight:** ${skill.starlight || 0}\n`;
   markdown += `**📥 Downloads:** ${skill.downloads || 0}\n\n`;
