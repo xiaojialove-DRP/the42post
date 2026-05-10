@@ -2891,7 +2891,7 @@ function initSkillForge() {
       }
 
       // 字数和内容检查都通过，显示确认信息然后打开forge
-      window.homepageIdea = { text: ideaInput.value, creatorName: creatorNameInput ? creatorNameInput.value : "" };
+      window.homepageIdea = { text: ideaInput.value, creator_name: creatorNameInput ? creatorNameInput.value : "" };
 
       // 显示确认✓和文案 (保留: We heard you...)
       const ethicsResult = document.getElementById('ethicsResult');
@@ -2922,8 +2922,8 @@ function initSkillForge() {
           }
           // 预填creator name到Step 1的Username输入框（如果有）
           const usernameEl = document.getElementById("forgeUsername");
-          if (usernameEl && window.homepageIdea.creatorName) {
-            usernameEl.value = window.homepageIdea.creatorName;
+          if (usernameEl && window.homepageIdea.creator_name) {
+            usernameEl.value = window.homepageIdea.creator_name;
           }
         }, 600);
       } else {
@@ -6506,7 +6506,7 @@ function saveForgedSkill(skillData) {
   let recentSkills = JSON.parse(localStorage.getItem('42post_recent_forges') || '[]');
 
   // Get creator name from skillData or ask user
-  let creatorName = skillData.creatorName || skillData.author || null;
+  let creatorName = skillData.creator_name || skillData.creatorName || skillData.author || null;
   if (!creatorName) {
     // Prompt user for creator name if not provided
     creatorName = prompt('请输入你的创作者名字 / Enter your creator name:', 'anonymous');
@@ -7633,7 +7633,7 @@ async function initAgentArchiveView() {
       ...s,
       agent,
       creator: agent,
-      creatorName,
+      creator_name: creatorName,  // Use snake_case for consistency
       desc,
       descCn,
       author: creatorName,  // Normalize author field
@@ -7649,15 +7649,16 @@ async function initAgentArchiveView() {
   const forgedSkills = getRecentForges();
   const forgedSkillsWithStarlight = forgedSkills.map(s => {
     // Ensure forged skills also follow the standard format
+    const creatorName = s.creator_name || s.creatorName || s.author || 'Anonymous';
     return {
       ...s,
       starlight: s.starlight || 5,
       titleCn: s.titleCn || s.title || 'Unknown Skill',
       desc: s.desc || '',
       descCn: s.descCn || s.desc || '',
-      agent: s.agent && /^creator_/.test(s.agent) ? s.agent : `creator_${s.author || s.creatorName || 'Anonymous'}`,
-      author: s.author || s.creatorName || 'Anonymous',
-      creatorName: s.creatorName || s.author || 'Anonymous'
+      agent: s.agent && /^creator_/.test(s.agent) ? s.agent : `creator_${creatorName}`,
+      author: creatorName,
+      creator_name: creatorName
     };
   });
 
@@ -7742,8 +7743,8 @@ async function initAgentArchiveView() {
         starlight: s.starlight || 5,
         title, titleCn,
         desc, descCn,
-        agent: s.agent || `creator_${s.creatorName || 'Anonymous'}`,
-        creatorName: s.creatorName || 'Anonymous',
+        agent: s.agent || `creator_${s.creator_name || 'Anonymous'}`,
+        creator_name: s.creator_name || 'Anonymous',
         domain: s.domain, id: s.id,
         hash: hashValue,
         color, phase: phaseRand * Math.PI * 2,
@@ -7903,8 +7904,8 @@ async function initAgentArchiveView() {
       // Set Chinese title (shown when data-lang="cn")
       document.getElementById('ttNameCn').textContent = n.titleCn || n.title || '';
 
-      // Use creatorName field directly (already normalized in initAgentArchiveView)
-      const creatorName = n.creatorName || (n.agent && n.agent.startsWith('creator_')
+      // Use creator_name field directly (already normalized in initAgentArchiveView)
+      const creatorName = n.creator_name || (n.agent && n.agent.startsWith('creator_')
         ? n.agent.substring(8)
         : 'Anonymous');
       document.getElementById('ttAgent').textContent = creatorName && creatorName !== 'Anonymous' ? `by ${creatorName}` : '';
@@ -8001,11 +8002,11 @@ async function initAgentArchiveView() {
         // ═══ Bilingual display ═══
         document.getElementById('ttName').textContent = n.title || n.titleCn || '';
         document.getElementById('ttNameCn').textContent = n.titleCn || n.title || '';
-        // Extract creator name from agent field
-        const creatorName = n.agent && n.agent.startsWith('creator_')
+        // Extract creator name from creator_name field
+        const creatorName = n.creator_name || (n.agent && n.agent.startsWith('creator_')
           ? n.agent.substring(8)
-          : (n.creatorName || n.agent || '');
-        document.getElementById('ttAgent').textContent = creatorName ? `by ${creatorName}` : '';
+          : 'Anonymous');
+        document.getElementById('ttAgent').textContent = creatorName && creatorName !== 'Anonymous' ? `by ${creatorName}` : '';
         document.getElementById('ttDesc').textContent = lang === 'cn' ? (n.descCn || n.desc || '') : (n.desc || n.descCn || '');
         // Soul hash is shown only in the full card detail, not in this tooltip
         document.getElementById('ttHash').textContent = '';
@@ -8077,7 +8078,7 @@ async function initAgentArchiveView() {
       const shortDesc = desc.substring(0, 60) + (desc.length > 60 ? '…' : '');
 
       // Extract creator name (fallback to anonymous)
-      const creatorName = s.creatorName || s.creator?.replace('creator_', '') || 'anonymous';
+      const creatorName = s.creator_name || s.agent?.replace('creator_', '') || 'anonymous';
 
       row.innerHTML = `
         <span class="honor-rank">#${String(i + 1).padStart(2, '0')}</span>
@@ -8146,8 +8147,8 @@ async function initAgentArchiveView() {
           let creatorDisplay = 'creator_anonymous';
           if (skill.agent && skill.agent.startsWith('creator_')) {
             creatorDisplay = skill.agent;
-          } else if (skill.creatorName || skill.creator_name) {
-            const name = skill.creatorName || skill.creator_name;
+          } else if (skill.creator_name || skill.creatorName) {
+            const name = skill.creator_name || skill.creatorName;
             creatorDisplay = name.startsWith('creator_') ? name : `creator_${name}`;
           }
           // Get soul hash (shortened to 16 chars)
