@@ -4865,7 +4865,9 @@ function showForgeCompletion(skillData, soulHash) {
     if (cardCreator) cardCreator.textContent = 'Created by: ' + (skillData.author || skillData.username || 'Creator');
     if (cardDate) cardDate.textContent = 'Forged: ' + new Date().toLocaleDateString('en-US', {year: 'numeric', month: 'short', day: 'numeric'});
 
-    if (completionEmail) completionEmail.textContent = skillData.email || '[Your Email]';
+    // Don't display actual email for privacy - just show placeholder
+    // The message "All files sent to your email" is enough context
+    if (completionEmail) completionEmail.textContent = '[Sent to your email]';
 
     // Setup action buttons
     const btnViewDashboard = document.getElementById('btnViewDashboard');
