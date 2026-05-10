@@ -1067,7 +1067,7 @@ const I18N = {
     forge_modal_title: '想法技能铸造',
     forge_modal_subtitle: '将你的想法变成技能',
     forge_title: '让你的想法成为现实',
-    forge_subtitle: '将想法变为生现',
+    forge_subtitle: '将想法变为现实',
     path_select: '选择贡献方式',
     path_a_name: '社群共创',
     path_b_name: '你的 AI 创作',
