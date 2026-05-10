@@ -8240,10 +8240,10 @@ async function initAgentArchiveView() {
             const name = skill.creator_name || skill.creatorName;
             creatorDisplay = name.startsWith('creator_') ? name : `creator_${name}`;
           }
-          // Get soul hash (shortened to 16 chars)
+          // Get soul hash (shortened to 14 chars for UI display)
           const soulHashFull = skill.soul_hash || skill.soulHash || '';
-          const soulHashShort = soulHashFull && soulHashFull.length > 16
-            ? soulHashFull.substring(0, 16)
+          const soulHashShort = soulHashFull && soulHashFull.length > 14
+            ? soulHashFull.substring(0, 14)
             : soulHashFull;
           // Check if skill is starred from localStorage
           const starredSkills = JSON.parse(localStorage.getItem('starred_skills') || '{}');
@@ -8252,7 +8252,7 @@ async function initAgentArchiveView() {
             <div class="skill-item" data-skill-id="${skill.id}" data-is-starred="${isStarred}">
               <div class="skill-header">
                 <div class="skill-title">${title}</div>
-                <div class="skill-hash" title="Soul Hash: ${soulHashFull}">${soulHashShort.substring(0, 14) || '—'}</div>
+                <div class="skill-hash" title="Soul Hash: ${soulHashFull}">${soulHashShort || '—'}</div>
               </div>
               <div class="skill-creator">${creatorDisplay}</div>
               <div class="skill-desc">${shortDesc}</div>
