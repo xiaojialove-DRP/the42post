@@ -1603,6 +1603,9 @@ function initSlotGrid() {
     return scoreB - scoreA;
   });
 
+  // ═══ LOAD SAVED STARLIGHT DATA FROM LOCALSTORAGE ═══
+  const starlightData = JSON.parse(localStorage.getItem('skill_starlight') || '{}');
+
   for (let i = 0; i < Math.min(42, popularSkills.length); i++) {
     const slot = document.createElement('div');
     slot.className = 'slot';
@@ -1619,11 +1622,14 @@ function initSlotGrid() {
         ? data.desc.substring(0, 70) + '...'
         : data.desc;
 
-      const popularityScore = (data.starlight || 0) + (data.downloads || 0);
+      // ═══ USE SAVED STARLIGHT OR DEFAULT ═══
+      const savedStarlight = starlightData[data.id] !== undefined ? starlightData[data.id] : (data.starlight || 0);
+      const popularityScore = savedStarlight + (data.downloads || 0);
+
       slot.innerHTML = `
         <div class="slot-header">
           <span class="slot-number">★ #${i + 1}</span>
-          <span class="slot-status active">★${data.starlight || 0}</span>
+          <span class="slot-status active">★${savedStarlight}</span>
         </div>
         <div class="slot-title">${data.title}</div>
         <div class="slot-desc" title="${escapeHtml(data.desc)}">${escapeHtml(descDisplay)}</div>
@@ -1633,7 +1639,7 @@ function initSlotGrid() {
         </div>
         <div class="slot-starlight">
           <button class="starlight-btn" data-slot="${data.id}" title="Light Up">&#9733;</button>
-          <span class="starlight-count">${data.starlight > 0 ? data.starlight : ''} ⬇${data.downloads || 0}</span>
+          <span class="starlight-count">${savedStarlight > 0 ? savedStarlight : ''} ⬇${data.downloads || 0}</span>
         </div>
       `;
 
@@ -1659,21 +1665,36 @@ function initSlotGrid() {
     grid.appendChild(slot);
   }
 
-  // Starlight click handler
+  // Starlight click handler with localStorage persistence
   grid.addEventListener('click', (e) => {
     const btn = e.target.closest('.starlight-btn');
     if (!btn) return;
     e.stopPropagation();
+
+    const skillId = btn.dataset.slot;
+    if (!skillId) return;
+
+    // Load current starlight data from localStorage
+    const starlightData = JSON.parse(localStorage.getItem('skill_starlight') || '{}');
+
     btn.classList.toggle('lit');
     const countEl = btn.nextElementSibling;
     if (!countEl) return; // Guard: countEl must exist
+
     let count = parseInt(countEl.textContent) || 0;
     if (btn.classList.contains('lit')) {
       count++;
     } else {
       count = Math.max(0, count - 1);
     }
+
+    // Update UI
     countEl.textContent = count > 0 ? count : '';
+
+    // ═══ PERSIST TO LOCALSTORAGE ═══
+    starlightData[skillId] = count;
+    localStorage.setItem('skill_starlight', JSON.stringify(starlightData));
+    console.log(`✓ Starlight saved: skill ${skillId} = ${count} stars`);
   });
 }
 
