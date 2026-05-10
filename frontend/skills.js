@@ -550,12 +550,13 @@ const DOMAINS = [
 ];
 
 /* ═══════════════════════════════════════════════════════
-   EXTENDED SKILL LIBRARY — Including 50 Demo Skills
+   EXTENDED SKILL LIBRARY — Including 39 Additional Skills
+   Total: 21 SHARED_SKILLS + 39 ADDITIONAL_SKILLS = 60 Total Skills
    ═══════════════════════════════════════════════════════ */
 
-// Import demo skills (if available)
-// These 50 additional skills expand the library across all domains
-const DEMO_SKILLS_50 = [
+// Additional skills (39 total) expanding the library across all domains
+// Named ADDITIONAL_SKILLS for clarity (previously called DEMO_SKILLS_50)
+const ADDITIONAL_SKILLS = [
   // 6 x Narrative skills
   {id:'22',title:'The Metaphor Weaver',titleCn:'隐喻编织者',desc:'Use metaphor as tool for deep understanding',descCn:'用隐喻作为深层理解的工具',agent:'creator_Sarah M.',starlight:14,domain:'narrative',author:'Sarah M.',commercial:'authorized',remix:'share-alike',five_layer:{defining:'A well-chosen metaphor reveals hidden patterns',instantiating:{before:'Explaining: "It grows exponentially"',after:'With metaphor: "Like a virus — each infected becomes spreader"'},fencing:{apply:'Abstract concepts need grounding',notApply:'Technical specs needing precision'},validating:['Does metaphor illuminate?','Better remembered?'],contextualizing:'Metaphor density varies by culture'}},
   {id:'23',title:'Comma as Philosophy',titleCn:'逗号之哲学',desc:'Punctuation shapes thought',descCn:'标点形塑思想',agent:'agent_narrative_23',starlight:9,domain:'narrative',author:'Chen Liu',commercial:'allowed',remix:'yes',five_layer:{defining:'Punctuation determines meaning',instantiating:{before:'"Bring box to kitchen then clean it"',after:'"Bring box to kitchen. Then clean it."'},fencing:{apply:'Instructions, documentation',notApply:'Intentional ambiguity'},validating:['Changes meaning?','Right pause?'],contextualizing:'Chinese uses ~ for pauses'}},
@@ -590,7 +591,7 @@ const DEMO_SKILLS_50 = [
   {id:'48',title:'Asymmetric Risk',titleCn:'不对称风险',desc:'Heads I win tails you lose',descCn:'正面我赢，反面你输',agent:'agent_safety_48',starlight:15,domain:'safety',author:'Nassim Taleb',commercial:'allowed',remix:'yes',five_layer:{defining:'Decision-maker doesn\'t bear consequences',instantiating:{before:'CEO "upside millions users suffer"',after:'Risk asymmetric users not executive'},fencing:{apply:'Policy, medical',notApply:'Symmetric risks'},validating:['Who gains?','Who loses?','Same?'],contextualizing:'Islamic forbids asymmetric'}},
   {id:'49',title:'Unintended Consequences',titleCn:'意外后果',desc:'Every intervention side effects',descCn:'每个干预都有副作用',agent:'agent_safety_49',starlight:18,domain:'safety',author:'Robert Merton',commercial:'authorized',remix:'share-alike',five_layer:{defining:'Good actions create bad side effects',instantiating:{before:'"Antibiotics save lives"',after:'"Resistance now kills more"'},fencing:{apply:'Any major policy',notApply:'Fully mapped'},validating:['Second-order?','Harmed?','Backfire?'],contextualizing:'Systems thinking emphasizes'}},
   {id:'50',title:'The Responsibility Paradox',titleCn:'责任悖论',desc:'More power more responsibility but obscures',descCn:'权力越大责任越大，但权力掩盖责任',agent:'agent_safety_50',starlight:14,domain:'safety',author:'Hannah Arendt',commercial:'allowed',remix:'yes',five_layer:{defining:'Power create change feel least responsible',instantiating:{before:'CEO "don\'t know labor practices"',after:'"Power to change ignorance not innocence"'},fencing:{apply:'Accountability',notApply:'True ignorance'},validating:['Could know?','Have power?','Denying?'],contextualizing:'Cultures emphasize differently'}},
-  // Additional experience, visual, fun, design, sound skills (14 more to reach 50)
+  // Additional experience, visual, fun, design, sound skills (14 total in this group)
   {id:'51',title:'The Experience Economy',titleCn:'体验经济',desc:'Sell experiences not products',descCn:'销售体验而非产品',agent:'agent_experience_51',starlight:16,domain:'experience',author:'Joe Pine',commercial:'allowed',remix:'yes',five_layer:{defining:'Experiences command premium prices',instantiating:{before:'Sell coffee commodity',after:'Sell coffee ritual ceremony connection'},fencing:{apply:'Product design, service',notApply:'Commodity markets'},validating:['Remember?','Share?','Return?'],contextualizing:'Service design economy model'}},
   {id:'52',title:'Visual Hierarchy',titleCn:'视觉层级',desc:'Guide eye with contrast size position',descCn:'用对比、大小、位置引导眼睛',agent:'agent_visual_52',starlight:13,domain:'visual',author:'Ellen Lupton',commercial:'allowed',remix:'yes',five_layer:{defining:'Visual hierarchy directs attention',instantiating:{before:'All same size equal weight',after:'Large bold contrast directs focus'},fencing:{apply:'Design, UI, communication',notApply:'Chaos intentional'},validating:['Eye direction?','Clear hierarchy?','Emphasis right?'],contextualizing:'Gestalt principles universal'}},
   {id:'53',title:'The Joy of Play',titleCn:'玩耍的快乐',desc:'Humans need play not just productivity',descCn:'人需要玩耍，不仅仅是生产力',agent:'agent_fun_53',starlight:15,domain:'fun',author:'Stuart Brown',commercial:'allowed',remix:'yes',five_layer:{defining:'Play is essential not frivolous',instantiating:{before:'Optimize all activities',after:'Reserve time purposeless play'},fencing:{apply:'Life design, education',notApply:'Emergency'},validating:['Joyful?','Purposeless?','Regular?'],contextualizing:'Play research shows cognitive benefits'}},
@@ -603,8 +604,9 @@ const DEMO_SKILLS_50 = [
   {id:'60',title:'The Power of Ritual',titleCn:'仪式的力量',desc:'Routines create meaning and stability',descCn:'日常仪式创造意义和稳定',agent:'agent_experience_60',starlight:15,domain:'experience',author:'Casper ter Kuile',commercial:'allowed',remix:'yes',five_layer:{defining:'Rituals create meaning repeat',instantiating:{before:'Coffee is beverage',after:'Coffee morning ritual intention setting'},fencing:{apply:'Life design, culture',notApply:'Emergency'},validating:['Meaningful?','Regular?','Community?'],contextualizing:'All cultures have rituals'}}
 ];
 
-// Combine all skills: original 21 + 50 demo + forged (dynamic)
-const ALL_SKILLS = [...SHARED_SKILLS, ...DEMO_SKILLS_50];
+// Combine all skills: 21 SHARED_SKILLS + 39 ADDITIONAL_SKILLS = 60 total skills
+// Plus dynamically forged skills from users
+const ALL_SKILLS = [...SHARED_SKILLS, ...ADDITIONAL_SKILLS];
 
 // Helper: Get top N skills by starlight
 function getTopSkills(limit = 42) {
