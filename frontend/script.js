@@ -6806,86 +6806,186 @@ function generateSkillMarkdown(skillData) {
   const timestamp = now.toISOString().split('T')[0];
   const fiveLayer = skillData.fiveLayerSkill || null;
 
-  let md = `# SKILL: ${skillData.title}
+  // Use full soul_hash for markdown export
+  const fullSoulHash = skillData.soul_hash || skillData.soulHash || 'SOUL_UNKNOWN';
+  const shortSoulHash = fullSoulHash.substring(0, 14);
+  const creatorName = skillData.created_by || skillData.author || 'The 42 Post Community';
 
-## Metadata
-- **Soul-Hash**: ${skillData.soulHash}
-- **Author**: ${skillData.author}
-- **Domain**: ${skillData.domain}
-- **Version**: 1.0.0
-- **Created**: ${timestamp}
-- **Protocol**: THE 42 POST · Five-Layer Skill Architecture v0.1
-- **License**: Creator Reserved
+  let md = `# ${skillData.title}
+By ${creatorName} | Soul-Hash: ${shortSoulHash}
 
 ---
 
-## Layer 1 · DEFINING / 定义
-${fiveLayer ? fiveLayer.principle : (skillData.desc || 'A skill forged in The 42 Post')}
+## 🚀 READY TO PROMPT
+
+Copy and paste this system prompt directly into your favorite LLM:
+
+\`\`\`
+${skillData.ready_to_use_prompt || 'System prompt to be generated during skill forging'}
+\`\`\`
 
 ---
 
-## Layer 2 · INSTANTIATING / 实例化
-`;
+## 📖 ABOUT THIS SKILL
 
-  if (fiveLayer && fiveLayer.exemplars.length > 0) {
-    fiveLayer.exemplars.forEach((ex, i) => {
-      md += `\n### ${ex.label}\n> ${ex.text}\n\n*→ ${ex.note}*\n`;
-    });
-  } else {
-    md += `*No exemplars generated — complete the Intuition Probe to generate comparative examples.*\n`;
+${skillData.about || (fiveLayer ? fiveLayer.principle : 'A skill forged in The 42 Post that enhances AI reasoning and output quality through structured guidance.')}
+
+---
+
+## 📋 SKILL METADATA
+
+| Field | Value |
+|-------|-------|
+| **Soul-Hash** | \`${fullSoulHash}\` |
+| **Creator** | ${creatorName} |
+| **Created** | ${timestamp} |
+| **Version** | 1.0.0 |
+| **Protocol** | THE 42 POST · Five-Layer Skill Architecture |
+| **License** | Creator Reserved |
+
+---
+
+## ✨ COMPLETE FRAMEWORK
+
+### 🎯 Layer 1: Principle / 定义
+
+${fiveLayer ? fiveLayer.principle : 'The core principle of this skill'}
+
+${fiveLayer && fiveLayer.reasoning ? `*Reasoning: ${fiveLayer.reasoning}*` : ''}
+
+---
+
+### 👥 Layer 2: Exemplars / 实例化
+
+${(() => {
+  if (!fiveLayer || !fiveLayer.exemplars || fiveLayer.exemplars.length === 0) {
+    return '*No exemplars generated — complete the Intuition Probe to generate comparative examples.*';
   }
 
-  md += `\n---\n\n## Layer 3 · FENCING / 围界\n`;
+  let exemplarMd = '';
+  fiveLayer.exemplars.forEach((ex) => {
+    // Check if label indicates DO/DON'T pattern
+    const isNegative = ex.label && (ex.label.toLowerCase().includes('don\'t') || ex.label.toLowerCase().includes('avoid'));
+    const prefix = isNegative ? '**DON\'T:**' : '**DO:**';
+    exemplarMd += `\n${prefix} ${ex.text}\n`;
+    if (ex.note) {
+      exemplarMd += `*→ ${ex.note}*\n`;
+    }
+  });
+  return exemplarMd;
+})()}
 
-  if (fiveLayer) {
-    const b = fiveLayer.boundaries;
-    if (b.applies_when.length) {
-      md += `\n### Applies when:\n`;
-      b.applies_when.forEach(t => { md += `- ✓ ${t}\n`; });
-    }
-    if (b.does_not_apply.length) {
-      md += `\n### Does not apply:\n`;
-      b.does_not_apply.forEach(t => { md += `- ✕ ${t}\n`; });
-    }
-    if (b.tension_zones.length) {
-      md += `\n### Tension zones (gray areas requiring judgment):\n`;
-      b.tension_zones.forEach(t => { md += `- ⚠ ${t}\n`; });
-    }
-  } else {
-    md += `**Allowed use cases:** ${skillData.useCases || 'General creative and professional applications'}\n`;
-    md += `**Disallowed uses:** ${skillData.disallowedUses || 'Harmful, illegal, or deceptive purposes'}\n`;
+---
+
+### 🔒 Layer 3: Boundaries / 围界
+
+${(() => {
+  if (!fiveLayer || !fiveLayer.boundaries) {
+    return 'Boundaries to be defined';
   }
 
-  md += `\n---\n\n## Layer 4 · VALIDATING / 验证\n`;
+  const b = fiveLayer.boundaries;
+  let boundaryMd = '';
 
-  if (fiveLayer) {
-    fiveLayer.evaluation.test_cases.forEach((tc, i) => {
-      md += `\n### Test Case ${i + 1}\n`;
-      md += `- **Prompt:** ${tc.prompt.substring(0, 200)}\n`;
-      md += `- **Expected:** ${tc.expected}\n`;
-      md += `- **Pass criteria:** ${tc.pass_criteria}\n`;
-    });
-    md += `\n**Metric:** \`${fiveLayer.evaluation.metric}\`\n`;
-  } else {
-    md += `*No evaluation test cases — complete the Intuition Probe to auto-generate.*\n`;
+  if (b.applies_when && b.applies_when.length > 0) {
+    boundaryMd += `**Applies when:**\n`;
+    b.applies_when.forEach(t => { boundaryMd += `- ✓ ${t}\n`; });
   }
 
-  md += `\n---\n\n## Layer 5 · CONTEXTUALIZING / 情境化\n`;
-
-  if (fiveLayer) {
-    for (const [locale, variant] of Object.entries(fiveLayer.cultural_variants)) {
-      md += `\n### ${locale}\n`;
-      md += `- **Note:** ${variant.principle_note}\n`;
-      md += `- **Adaptation:** ${variant.adaptation}\n`;
-    }
-  } else {
-    md += `*Cultural adaptation pending — will be generated based on probe responses.*\n`;
+  if (b.does_not_apply && b.does_not_apply.length > 0) {
+    boundaryMd += `\n**Does not apply:**\n`;
+    b.does_not_apply.forEach(t => { boundaryMd += `- ✕ ${t}\n`; });
   }
 
-  md += `\n---\n\n## Creator Rights\n`;
-  md += `- **Commercial Use**: ${skillData.commercial === 'allowed' ? 'Allowed' : skillData.commercial === 'authorized' ? 'Authorization Required' : 'Prohibited'}\n`;
-  md += `- **Remix**: ${skillData.remix === 'yes' ? 'Allowed' : skillData.remix === 'share-alike' ? 'Share-alike Required' : 'Not Allowed'}\n`;
-  md += `\n---\n*Forged with THE 42 POST · Human Semantic Capital Protocol*\n`;
+  if (b.tension_zones && b.tension_zones.length > 0) {
+    boundaryMd += `\n**Tension zones (gray areas requiring judgment):**\n`;
+    b.tension_zones.forEach(t => { boundaryMd += `- ⚠ ${t}\n`; });
+  }
+
+  return boundaryMd || 'No specific boundaries defined';
+})()}
+
+---
+
+### 🧪 Layer 4: Evaluation / 验证
+
+${fiveLayer ? `\n**Metric:** \`${fiveLayer.evaluation.metric}\`\n` : 'No evaluation metric defined'}
+
+${(() => {
+  if (!fiveLayer || !fiveLayer.evaluation.test_cases || fiveLayer.evaluation.test_cases.length === 0) {
+    return '*No test cases generated — complete the Intuition Probe to auto-generate.*';
+  }
+
+  let testMd = '';
+  fiveLayer.evaluation.test_cases.forEach((tc, i) => {
+    testMd += `\n**Test Case ${i + 1}:**\n`;
+    testMd += `- **Prompt:** ${tc.prompt.substring(0, 200)}${tc.prompt.length > 200 ? '...' : ''}\n`;
+    testMd += `- **Expected:** ${tc.expected}\n`;
+    testMd += `- **Pass criteria:** ${tc.pass_criteria}\n`;
+  });
+  return testMd;
+})()}
+
+${fiveLayer && fiveLayer.evaluation.silent_failures && fiveLayer.evaluation.silent_failures.length > 0 ? `
+**Anti-patterns & Silent Failures:**
+${fiveLayer.evaluation.silent_failures.map(failure => `- ${failure}`).join('\n')}
+` : ''}
+
+---
+
+### 🌍 Layer 5: Cultural Variants / 情境化
+
+${(() => {
+  if (!fiveLayer || !fiveLayer.cultural_variants) {
+    return '*Cultural adaptation pending — will be generated based on probe responses.*';
+  }
+
+  let culturalMd = '';
+
+  // Handle en-US
+  if (fiveLayer.cultural_variants['en-US']) {
+    const variant = fiveLayer.cultural_variants['en-US'];
+    culturalMd += `\n**English (en-US)**\n`;
+    if (variant.principle_note) culturalMd += `- **Note:** ${variant.principle_note}\n`;
+    if (variant.adaptation) culturalMd += `- **Adaptation:** ${variant.adaptation}\n`;
+  }
+
+  // Handle zh-CN
+  if (fiveLayer.cultural_variants['zh-CN']) {
+    const variant = fiveLayer.cultural_variants['zh-CN'];
+    culturalMd += `\n**中文 (zh-CN)**\n`;
+    if (variant.principle_note) culturalMd += `- **说明:** ${variant.principle_note}\n`;
+    if (variant.adaptation) culturalMd += `- **本地化:** ${variant.adaptation}\n`;
+  }
+
+  return culturalMd || '*Cultural variants to be defined*';
+})()}
+
+---
+
+## 📚 USING THIS SKILL
+
+To use this skill effectively:
+
+1. **Copy the Ready-to-Prompt section** above and paste it into your preferred Large Language Model (ChatGPT, Claude, or others)
+2. **Provide context or input** relevant to your task
+3. **Follow the skill's principle** to guide the AI's reasoning
+4. **Reference the exemplars** if you need to show the AI what "good" looks like
+5. **Be aware of boundaries** to use the skill appropriately
+
+This skill teaches the AI specific patterns of reasoning and output formatting through the Five-Layer Framework, enabling more consistent and higher-quality results.
+
+---
+
+## Creator Rights
+
+- **Commercial Use**: ${skillData.commercial === 'allowed' ? 'Allowed' : skillData.commercial === 'authorized' ? 'Authorization Required' : 'Prohibited'}
+- **Remix**: ${skillData.remix === 'yes' ? 'Allowed' : skillData.remix === 'share-alike' ? 'Share-alike Required' : 'Not Allowed'}
+
+---
+
+*Forged with THE 42 POST · Human Semantic Capital Protocol*
+*Version: 1.0.0 | License: ${skillData.license || 'Creator Reserved'}*`;
 
   return md;
 }
@@ -7477,10 +7577,9 @@ async function initAgentArchiveView() {
     baseSkills = (typeof SkillStore !== 'undefined' && SkillStore.size() > 0) ? SkillStore.all() : (typeof ALL_SKILLS !== 'undefined' ? ALL_SKILLS : []);
   }
 
-  // Normalize attribution: API rows expose creator_name (from users JOIN),
-  // hardcoded fallbacks already use `agent`. Surface a single
-  // "creator_<name>" label on every skill so the Archive grid no longer
-  // shows the legacy "agent_<id>" string.
+  // ═══ UNIFIED NORMALIZATION ═══
+  // Standardize ALL skills across all sources (API, ALL_SKILLS, forged)
+  // to use consistent field names, ensuring descriptions and creator names display correctly
   baseSkills = baseSkills.map(s => {
     // Map DB field names → UI field names so star/download counts render
     // - starlight_score (DB) → stars + starlight (UI)
@@ -7489,33 +7588,57 @@ async function initAgentArchiveView() {
     const downloads = s.downloads ?? s.download_count ?? 0;
     const starlight = s.starlight ?? s.starlight_score ?? stars;
 
-    if (s.agent && /^creator_/.test(s.agent)) {
-      return { ...s, stars, downloads, starlight };
+    // Normalize description fields across all data sources
+    const desc = s.description || s.desc || '';
+    const descCn = s.description_cn || s.descCn || s.desc || '';
+
+    // Normalize creator name from multiple possible sources
+    let creatorName = 'Anonymous';
+    if (s.creator_name && s.creator_name !== 'Anonymous' && s.creator_name !== 'System') {
+      creatorName = s.creator_name;
+    } else if (s.author && s.author !== 'Anonymous' && s.author !== 'System') {
+      creatorName = s.author;
+    } else if (s.creatorName && s.creatorName !== 'Anonymous') {
+      creatorName = s.creatorName;
+    } else if (s.agent && /^creator_/.test(s.agent)) {
+      // Extract name from existing "creator_Name" format
+      creatorName = s.agent.replace(/^creator_/, '');
     }
-    const rawName = s.creator_name && s.creator_name !== 'Anonymous' && s.creator_name !== 'System'
-      ? s.creator_name
-      : (typeof s.agent === 'string' && s.agent && !/^agent_/i.test(s.agent) ? s.agent : 'anonymous');
-    const creatorLabel = `creator_${rawName}`;
+
+    // Ensure agent field always has "creator_" prefix for consistency
+    const agent = s.agent && /^creator_/.test(s.agent) ? s.agent : `creator_${creatorName}`;
+
     return {
       ...s,
-      agent: creatorLabel,
-      creator: creatorLabel,
-      creatorName: rawName,
+      agent,
+      creator: agent,
+      creatorName,
+      desc,
+      descCn,
+      author: creatorName,  // Normalize author field
+      title: s.title || s.titleCn || 'Unknown Skill',
+      titleCn: s.titleCn || s.title || '未知技能',
       stars,
       downloads,
       starlight
     };
   });
 
-  // Combine published skills with forged skills from localStorage
+  // ═══ FORGED SKILLS NORMALIZATION ═══
   const forgedSkills = getRecentForges();
-  // Add starlight=5 to forged skills so they appear smaller initially
-  const forgedSkillsWithStarlight = forgedSkills.map(s => ({
-    ...s,
-    starlight: s.starlight || 5,
-    titleCn: s.titleCn || s.title,
-    descCn: s.descCn || s.desc
-  }));
+  const forgedSkillsWithStarlight = forgedSkills.map(s => {
+    // Ensure forged skills also follow the standard format
+    return {
+      ...s,
+      starlight: s.starlight || 5,
+      titleCn: s.titleCn || s.title || 'Unknown Skill',
+      desc: s.desc || '',
+      descCn: s.descCn || s.desc || '',
+      agent: s.agent && /^creator_/.test(s.agent) ? s.agent : `creator_${s.author || s.creatorName || 'Anonymous'}`,
+      author: s.author || s.creatorName || 'Anonymous',
+      creatorName: s.creatorName || s.author || 'Anonymous'
+    };
+  });
 
   const allSkills = [...baseSkills, ...forgedSkillsWithStarlight];
 
@@ -7534,35 +7657,64 @@ async function initAgentArchiveView() {
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   }
   
+  // ═══ DETERMINISTIC PSEUDO-RANDOM GENERATOR ═══
+  // Uses skill index + string hash to produce consistent "random" values
+  // Same skill list always produces same layout
+  function seededRandom(index, seed = 0) {
+    // Simple pseudo-random using hash
+    const x = Math.sin((index + seed) * 12.9898) * 43758.5453;
+    return x - Math.floor(x);
+  }
+
   function initNodes() {
     const cx = cw / 2;
     const cy = ch / 2;
 
+    // ═══ STATIC BACKGROUND STARS (no randomization per layout)
     bgStars = [];
     for (let i = 0; i < 200; i++) {
+      const rand1 = seededRandom(i, 1000);
+      const rand2 = seededRandom(i, 1001);
+      const rand3 = seededRandom(i, 1002);
+      const rand4 = seededRandom(i, 1003);
+      const rand5 = seededRandom(i, 1004);
       bgStars.push({
-        x: (Math.random() - 0.5) * cw * 4,
-        y: (Math.random() - 0.5) * ch * 4,
-        size: Math.random() * 1.0 + 0.3,
-        alpha: Math.random() * 0.3 + 0.05,
-        twinkle: Math.random() * Math.PI * 2,
+        x: (rand1 - 0.5) * cw * 4,
+        y: (rand2 - 0.5) * ch * 4,
+        size: rand3 * 1.0 + 0.3,
+        alpha: rand4 * 0.3 + 0.05,
+        twinkle: rand5 * Math.PI * 2,
       });
     }
 
     nodes = allSkills.map((s, i) => {
       const angle = (i / allSkills.length) * Math.PI * 2 + (i * 0.618);
       const spiralR = 80 + i * 13 + Math.sin(i * 2.1) * 50;
-      const x = cx + Math.cos(angle) * spiralR + (Math.random() - 0.5) * 30;
-      const y = cy + Math.sin(angle) * spiralR * 0.65 + (Math.random() - 0.5) * 25;
+
+      // ═══ DETERMINISTIC NODE POSITIONING ═══
+      // Use skill ID as part of seed so same skill always appears in same place
+      const seedX = parseInt(s.id) || i;
+      const seedY = parseInt(s.id) || i;
+      const offsetX = (seededRandom(i, seedX) - 0.5) * 30;
+      const offsetY = (seededRandom(i, seedY + 1) - 0.5) * 25;
+
+      const x = cx + Math.cos(angle) * spiralR + offsetX;
+      const y = cy + Math.sin(angle) * spiralR * 0.65 + offsetY;
       const color = DOMAIN_COLORS[mapDomain(s.domain)] || DOMAIN_COLORS.ideas;
+
       // Normalize fields from DB (title_cn/description_cn) and local (titleCn/descCn)
       const title = s.title || '';
-      const titleCn = s.title_cn || s.titleCn || s.title || '';
-      const desc = s.description || s.desc || '';
-      const descCn = s.description_cn || s.descCn || s.desc || '';
+      const titleCn = s.titleCn || s.title_cn || s.title || '';
+      const desc = s.desc || s.description || '';
+      const descCn = s.descCn || s.description_cn || '';
+
       // Use stored soul_hash from API (soul_hash) or localStorage (soulHash), fallback to generated hash
       const storedHash = s.soul_hash || s.soulHash || '';
       const hashValue = storedHash || soulHash(s.id + title);
+
+      // ═══ DETERMINISTIC ANIMATION PHASE ═══
+      const phaseRand = seededRandom(i, seedX + seedY);
+
       return {
         x, y, baseX: x, baseY: y,
         size: 3.5 + (s.starlight || 5) * 0.2,
@@ -7572,15 +7724,18 @@ async function initAgentArchiveView() {
         agent: s.agent || '',
         domain: s.domain, id: s.id,
         hash: hashValue,
-        color, phase: Math.random() * Math.PI * 2,
+        color, phase: phaseRand * Math.PI * 2,
       };
     });
-    
+
+    // ═══ DETERMINISTIC EDGE GENERATION ═══
     edges = [];
     for (let i = 0; i < nodes.length; i++) {
       for (let j = i + 1; j < nodes.length; j++) {
         const dist = Math.hypot(nodes[i].baseX - nodes[j].baseX, nodes[i].baseY - nodes[j].baseY);
-        if (dist < 160 && Math.random() > 0.45) edges.push([i, j]);
+        // Use seeded random for edge decision (consistent per layout)
+        const edgeRand = seededRandom(i * 1000 + j, 2000);
+        if (dist < 160 && edgeRand > 0.45) edges.push([i, j]);
       }
     }
   }
