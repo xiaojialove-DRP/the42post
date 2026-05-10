@@ -4885,25 +4885,41 @@ function showForgeCompletion(skillData, soulHash) {
             throw new Error('Skill ID not available');
           }
 
-          const url = `${ApiClient.BASE_URL}/skills/${skillId}/stats`;
-          console.log('📊 Loading dashboard from:', url);
+          // Check if this is a forged (local) skill
+          const isForgedSkill = skillId && skillId.startsWith('forged_');
 
-          const response = await fetch(url);
+          if (isForgedSkill) {
+            // For forged skills, show local dashboard with initial stats
+            console.log('📊 Showing local dashboard for forged skill:', skillId);
+            const localStats = {
+              mySkillJourney: skillData.timestamp ? 1 : 0,
+              skillsForged: 1,
+              humanResonance: skillData.stars || 0,
+              totalInteractions: 0
+            };
+            showImpactDashboard(localStats, skillData);
+          } else {
+            // For backend skills, fetch stats from API
+            const url = `${ApiClient.BASE_URL}/skills/${skillId}/stats`;
+            console.log('📊 Loading dashboard from:', url);
 
-          if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
-            console.error('Dashboard API error:', errorData);
-            throw new Error(`HTTP ${response.status}: ${errorData.message || response.statusText}`);
+            const response = await fetch(url);
+
+            if (!response.ok) {
+              const errorData = await response.json().catch(() => ({}));
+              console.error('Dashboard API error:', errorData);
+              throw new Error(`HTTP ${response.status}: ${errorData.message || response.statusText}`);
+            }
+
+            const result = await response.json();
+            console.log('📊 Dashboard data loaded:', result);
+
+            if (!result.stats) {
+              throw new Error('Invalid dashboard data format');
+            }
+
+            showImpactDashboard(result.stats, skillData);
           }
-
-          const result = await response.json();
-          console.log('📊 Dashboard data loaded:', result);
-
-          if (!result.stats) {
-            throw new Error('Invalid dashboard data format');
-          }
-
-          showImpactDashboard(result.stats, skillData);
 
           btnViewDashboard.textContent = '📊 Impact Dashboard';
           btnViewDashboard.disabled = false;
