@@ -7742,7 +7742,8 @@ async function initAgentArchiveView() {
         starlight: s.starlight || 5,
         title, titleCn,
         desc, descCn,
-        agent: s.agent || '',
+        agent: s.agent || `creator_${s.creatorName || 'Anonymous'}`,
+        creatorName: s.creatorName || 'Anonymous',
         domain: s.domain, id: s.id,
         hash: hashValue,
         color, phase: phaseRand * Math.PI * 2,
@@ -7902,11 +7903,11 @@ async function initAgentArchiveView() {
       // Set Chinese title (shown when data-lang="cn")
       document.getElementById('ttNameCn').textContent = n.titleCn || n.title || '';
 
-      // Extract creator name from agent field (format: "creator_xxx")
-      const creatorName = n.agent && n.agent.startsWith('creator_')
+      // Use creatorName field directly (already normalized in initAgentArchiveView)
+      const creatorName = n.creatorName || (n.agent && n.agent.startsWith('creator_')
         ? n.agent.substring(8)
-        : (n.creatorName || n.agent || '');
-      document.getElementById('ttAgent').textContent = creatorName ? `by ${creatorName}` : '';
+        : 'Anonymous');
+      document.getElementById('ttAgent').textContent = creatorName && creatorName !== 'Anonymous' ? `by ${creatorName}` : '';
       // Description: show appropriate language based on currentLang
       document.getElementById('ttDesc').textContent = lang === 'cn' ? (n.descCn || n.desc || '') : (n.desc || n.descCn || '');
       // Soul hash is shown only in the full card detail, not in this tooltip
