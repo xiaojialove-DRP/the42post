@@ -6501,8 +6501,92 @@ const DAILY_HONORS = [
   },
 ];
 
+/* ═══ FORGED SKILL VALIDATION ═══ */
+function validateForgedSkill(skillData) {
+  const errors = [];
+
+  // Quality checks
+  if (!skillData.title || skillData.title.trim().length < 3) {
+    errors.push('Skill title must be at least 3 characters');
+  }
+
+  if (!skillData.desc || skillData.desc.trim().length < 10) {
+    errors.push('Skill description must be at least 10 characters');
+  }
+
+  // Five-layer structure completeness
+  const fiveLayer = skillData.fiveLayerSkill || {};
+  if (!fiveLayer.principle || fiveLayer.principle.trim().length < 5) {
+    errors.push('Layer 1 (Principle) is required and must be substantial');
+  }
+
+  if (!fiveLayer.exemplars || fiveLayer.exemplars.length === 0) {
+    errors.push('Layer 2 (Exemplars) requires at least one example');
+  }
+
+  if (!fiveLayer.boundaries || fiveLayer.boundaries.trim().length < 5) {
+    errors.push('Layer 3 (Boundaries) is required');
+  }
+
+  if (!fiveLayer.evaluation || fiveLayer.evaluation.metric === undefined) {
+    errors.push('Layer 4 (Evaluation) is required with test metrics');
+  }
+
+  if (!fiveLayer.cultural_variants || fiveLayer.cultural_variants.length === 0) {
+    errors.push('Layer 5 (Cultural Variants) requires at least one variant');
+  }
+
+  return errors;
+}
+
+// Check for duplicate skills
+function checkDuplicateSkill(title) {
+  const recentSkills = JSON.parse(localStorage.getItem('42post_recent_forges') || '[]');
+  const demoSkills = window.allSkills || [];
+
+  // Check against recent forges
+  const duplicateRecent = recentSkills.find(s =>
+    s.title && s.title.toLowerCase() === title.toLowerCase()
+  );
+
+  // Check against demo skills
+  const duplicateDemo = demoSkills.find(s =>
+    s.title && s.title.toLowerCase() === title.toLowerCase()
+  );
+
+  return {
+    isDuplicate: !!(duplicateRecent || duplicateDemo),
+    location: duplicateRecent ? 'forged' : duplicateDemo ? 'demo' : null
+  };
+}
+
 /* ═══ RECENTLY FORGED SKILLS STORAGE ═══ */
 function saveForgedSkill(skillData) {
+  // ═══ QUALITY VALIDATION ═══
+  const validationErrors = validateForgedSkill(skillData);
+  if (validationErrors.length > 0) {
+    const isCn = typeof currentLang !== 'undefined' && currentLang === 'cn';
+    const errorMsg = isCn
+      ? '技能质量检查失败:\n' + validationErrors.join('\n')
+      : 'Skill quality check failed:\n' + validationErrors.join('\n');
+    console.error('❌ Skill validation failed:', validationErrors);
+    alert(errorMsg);
+    return null;
+  }
+
+  // ═══ DUPLICATE CHECK ═══
+  const duplicateCheck = checkDuplicateSkill(skillData.title);
+  if (duplicateCheck.isDuplicate) {
+    const isCn = typeof currentLang !== 'undefined' && currentLang === 'cn';
+    const msg = isCn
+      ? `技能 "${skillData.title}" 已存在(${duplicateCheck.location})。\n要继续吗？`
+      : `Skill "${skillData.title}" already exists (${duplicateCheck.location}).\nContinue anyway?`;
+    if (!confirm(msg)) {
+      console.log('⚠️ Duplicate skill creation cancelled by user');
+      return null;
+    }
+  }
+
   let recentSkills = JSON.parse(localStorage.getItem('42post_recent_forges') || '[]');
 
   // Get creator name from skillData or ask user
@@ -6520,10 +6604,10 @@ function saveForgedSkill(skillData) {
     desc: skillData.desc || '',
     descCn: skillData.descCn || '',
     agent: `creator_${creatorName}`,  // ✅ Use creator_ prefix for consistency
+    creator_name: creatorName,  // ✅ Use snake_case for consistency
     domain: skillData.domain || 'ideas',
-    soulHash: skillData.soulHash || 'SOUL_' + Math.random().toString(16).slice(2, 10),
+    soul_hash: skillData.soulHash || 'SOUL_' + Math.random().toString(16).slice(2, 10),
     author: creatorName,  // ✅ Store actual creator name for display
-    creatorName: creatorName,  // ✅ Also store in creatorName field
     email: skillData.email || '',
     commercial: skillData.commercial || 'authorized',
     remix: skillData.remix || 'share-alike',
@@ -6535,9 +6619,12 @@ function saveForgedSkill(skillData) {
     kcs: 0,
     five_layer: skillData.fiveLayerSkill || {},  // ✅ 保存生成的五层结构
   };
+
   recentSkills.unshift(newSkill);
   recentSkills = recentSkills.slice(0, 21); // Keep last 21 forges
   localStorage.setItem('42post_recent_forges', JSON.stringify(recentSkills));
+
+  console.log('✅ Skill saved to localStorage:', newSkill.id, newSkill.title);
   return newSkill;
 }
 
