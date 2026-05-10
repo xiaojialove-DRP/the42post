@@ -1049,7 +1049,7 @@ const I18N = {
     manifesto_1: '',
     manifesto_2: '',
     manifesto_3: '我们珍视：<span class="mv">想象力</span> · <span class="mv">文化多元</span> · <span class="mv">非常规之美</span> · <span class="mv">语义资本</span>',
-    footer_1: '"想法是最后的基础设施。"',
+    footer_1: '"想象力是最后的基础设施。"',
     footer_2: '"AI 时代最稀缺的资源。"',
     footer_3: '"欢迎每一个人。尤其是非工程师。"',
     knight_card_title: '创作者凭证',
