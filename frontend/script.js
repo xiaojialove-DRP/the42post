@@ -342,7 +342,7 @@ function initSkillGrids() {
         
         <!-- Soul Hash -->
         <div class="skill-card-hash">
-          <code class="soul-hash">${skill.soul_hash ? (skill.soul_hash.length > 16 ? skill.soul_hash.substring(0, 16) : skill.soul_hash) : 'SH-GENERATED'}</code>
+          <code class="soul-hash">${skill.soul_hash ? skill.soul_hash.substring(0, 14) : 'SH-GENERATED'}</code>
         </div>
         
         <!-- Description -->
@@ -4838,8 +4838,8 @@ function showForgeCompletion(skillData, soulHash) {
     const completionEmail = document.getElementById('completionEmail');
 
     if (cardTitle) cardTitle.textContent = skillData.title || skillData.titleCn || '[Skill Title]';
-    // Shorten soul hash display (show only first 16 chars)
-    const shortSoulHash = soulHash && soulHash.length > 16 ? soulHash.substring(0, 16) : soulHash;
+    // Shorten soul hash display (show only first 14 chars)
+    const shortSoulHash = soulHash && soulHash.length > 14 ? soulHash.substring(0, 14) : soulHash;
     if (cardSoulHash) cardSoulHash.textContent = 'Soul-Hash: ' + shortSoulHash;
     if (cardCreator) cardCreator.textContent = 'Created by: ' + (skillData.author || skillData.username || 'Creator');
     if (cardDate) cardDate.textContent = 'Forged: ' + new Date().toLocaleDateString('en-US', {year: 'numeric', month: 'short', day: 'numeric'});
@@ -7985,7 +7985,7 @@ async function initAgentArchiveView() {
             <div class="skill-item" data-skill-id="${skill.id}" data-is-starred="${isStarred}">
               <div class="skill-header">
                 <div class="skill-title">${title}</div>
-                <div class="skill-hash" title="Soul Hash: ${soulHashFull}">${soulHashShort.substring(0, 8) || '—'}</div>
+                <div class="skill-hash" title="Soul Hash: ${soulHashFull}">${soulHashShort.substring(0, 14) || '—'}</div>
               </div>
               <div class="skill-creator">${creatorDisplay}</div>
               <div class="skill-desc">${shortDesc}</div>
@@ -8720,7 +8720,7 @@ async function loadAndDisplayDashboardCard(soulHash, token) {
 
     // Populate Dashboard card with Skill data
     document.getElementById('dash-skill-title').textContent = data.title || 'Untitled Skill';
-    document.getElementById('dash-soul-hash').textContent = `Soul-Hash: ${data.id}`;
+    document.getElementById('dash-soul-hash').textContent = `Soul-Hash: ${data.id.substring(0, 14)}`;
     document.getElementById('dash-views-grid').textContent = data.views || 0;
 
     const totalDownloads =
