@@ -254,6 +254,24 @@ export async function initDatabase() {
       await db.query(`CREATE INDEX IF NOT EXISTS idx_skills_moderation_review ON skills(moderation_review_required) WHERE moderation_review_required = 1`);
     } catch (e) { /* index exists */ }
 
+    // ─── Forging History (research data: track skill creation process) ───
+    // Stores complete forging process for research purposes
+    // Includes original idea, AI outputs, final skill structure, user edits
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS forging_histories (
+        id TEXT PRIMARY KEY,
+        skill_id TEXT NOT NULL UNIQUE REFERENCES skills(id) ON DELETE CASCADE,
+        user_email VARCHAR(255),
+        original_idea TEXT,
+        ai_outputs TEXT,
+        final_skill_data TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    await db.query(`CREATE INDEX IF NOT EXISTS idx_forging_histories_skill ON forging_histories(skill_id)`);
+    await db.query(`CREATE INDEX IF NOT EXISTS idx_forging_histories_email ON forging_histories(user_email)`);
+
     // ─── Moderation audit log (full history of every decision) ───
     await db.query(`
       CREATE TABLE IF NOT EXISTS moderation_logs (

@@ -558,6 +558,26 @@ router.post('/', optionalAuth, rateLimitForge, async (req, res, next) => {
         throw new Error('Failed to insert skill version');
       }
 
+      // Save forging history for research purposes
+      // Captures the complete creation process: original idea, AI outputs, final structure
+      try {
+        await client.query(
+          `INSERT INTO forging_histories (id, skill_id, user_email, original_idea, ai_outputs, final_skill_data)
+           VALUES ($1, $2, $3, $4, $5, $6)`,
+          [
+            uuidv4(),
+            skillId,
+            user_email || null,
+            req.body.original_idea || req.body.idea_text || null,
+            JSON.stringify(req.body.ai_outputs || {}),
+            JSON.stringify(five_layer)
+          ]
+        );
+      } catch (historyErr) {
+        console.warn('forging_histories insert failed (non-fatal):', historyErr.message);
+        // Don't fail the entire publish if history logging fails
+      }
+
       // Verify the skill was actually committed by fetching it back
       const verifyResult = await client.query(
         `SELECT id, title, domain, soul_hash, published, published_at FROM skills WHERE id = $1`,
