@@ -1862,6 +1862,20 @@
       let activeSlot = null;
       const selectedSkills = { A: null, B: null };
 
+      // Auto-select preselected skill from localStorage or Forge/Archive
+      const preselectedSkill = localStorage.getItem('playgroundPreselectedSkill');
+      if (preselectedSkill && ARENA_SKILL_POOL.some(s => s.name === preselectedSkill)) {
+        const slotA = card.querySelector('.fusion-slot[data-slot="A"]');
+        if (slotA && !slotA.classList.contains('filled')) {
+          selectedSkills.A = preselectedSkill;
+          slotA.classList.add('filled');
+          slotA.innerHTML = `<div class="fusion-slot-label">SKILL A</div><div class="fusion-slot-name">${preselectedSkill}</div>`;
+          console.log('✓ Pre-selected Skill A:', preselectedSkill);
+          // Clear the localStorage key after using it
+          localStorage.removeItem('playgroundPreselectedSkill');
+        }
+      }
+
       fusionSlots.forEach(slot => {
         slot.addEventListener('click', (e) => {
           e.stopPropagation();

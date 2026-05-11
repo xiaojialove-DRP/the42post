@@ -4943,7 +4943,10 @@ function showForgeCompletion(skillData, soulHash) {
       btnTryPlayground.addEventListener('click', () => {
         // Navigate to playground in twin-test mode for THIS just-forged skill
         // so the author can immediately see whether their skill changes AI behavior.
-        // The playground will auto-load this skill as Skill A thanks to localStorage
+        // Save the skill for Playground to auto-select as Skill A
+        const skillTitle = skillData.title || skillData.titleCn || 'Unnamed Skill';
+        localStorage.setItem('playgroundPreselectedSkill', skillTitle);
+        console.log('✓ Saved skill for Playground:', skillTitle);
         window.location.href = '/playground';
       });
     }
@@ -8380,13 +8383,24 @@ async function initAgentArchiveView() {
       });
     });
 
-    // Play buttons
+    // Play buttons - preset skill for Playground
     document.querySelectorAll('.domain-cell .play-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
         const skillId = btn.dataset.skillId;
+        const skill = findSkillById(skillId);
+
+        // Save skill title for Playground to auto-select as Skill A
+        if (skill) {
+          const skillTitle = (typeof currentLang !== 'undefined' && currentLang === 'cn')
+            ? (skill.title_cn || skill.titleCn || skill.title)
+            : (skill.title || skill.title_cn || skill.titleCn);
+          localStorage.setItem('playgroundPreselectedSkill', skillTitle);
+          console.log('✓ Saved skill for Playground:', skillTitle);
+        }
+
         // Set the skill for Playground to use as first selected option
-        window.TWIN_TEST_SKILL = findSkillById(skillId);
+        window.TWIN_TEST_SKILL = skill;
         window.location.href = `playground.html?skill=${encodeURIComponent(skillId)}`;
       });
     });
