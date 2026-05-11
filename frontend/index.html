@@ -385,6 +385,12 @@
           <div class="minimal-label" data-i18n="forge_account">ACCOUNT</div>
           <div class="minimal-inputs">
             <input type="text" class="minimal-input" placeholder="Username" data-i18n-placeholder="forge_username_ph" id="forgeUsername">
+            <div class="username-hint" id="usernameHint">
+              <small style="color: var(--ink-muted); font-size: 11px; display: block; margin-top: 6px; line-height: 1.5;">
+                <span data-i18n="username_rules">3-32 characters. Letters, numbers, underscore only. Cannot start with a number.</span>
+                <span style="display: block; margin-top: 4px;">✓ <span data-i18n="username_example_valid">Valid: creator_lala, lala_2024</span></span>
+              </small>
+            </div>
             <input type="email" class="minimal-input" placeholder="Email" data-i18n-placeholder="forge_email_ph" id="forgeEmail">
           </div>
         </div>
