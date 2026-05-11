@@ -10440,10 +10440,11 @@ h1, h2, h3, h4, h5, h6 {
    ═══════════════════════════════════════════════════════════════ */
 
 @media (max-width: 559px) {
-  /* Reduce padding for modals on small screens */
+  /* Reduce padding and height for modals on small screens */
   .about-panel,
   .howto-panel {
     padding: 24px;  /* from 40px: 40% reduction */
+    max-height: 65vh;  /* from 85vh: reduced for better mobile UX, content remains scrollable */
   }
 
   /* Tighten rule spacing on mobile */
