@@ -4487,7 +4487,7 @@ function initSkillForge() {
       publishBtn.style.pointerEvents = 'none';
 
       setTimeout(async () => {
-        const hash = 'SOUL_' + Math.random().toString(16).slice(2, 10);
+        const hash = 'SOUL_' + Math.random().toString(16).slice(2, 11);
 
         // Collect skill data from form
         let skillNameValue = 'Unnamed Skill';
@@ -5375,7 +5375,7 @@ function extractTasteTags(text) {
 function saveTasteCard(cardData) {
   let cards = JSON.parse(localStorage.getItem('42post_taste_cards') || '[]');
   const newCard = {
-    id: 'TC_' + Math.random().toString(16).slice(2, 10),
+    id: 'TC_' + Math.random().toString(16).slice(2, 11),
     text: cardData.text,
     tags: cardData.tags,
     author: cardData.author || 'Anonymous',
@@ -6631,7 +6631,7 @@ function saveForgedSkill(skillData) {
     agent: `creator_${creatorName}`,  // ✅ Use creator_ prefix for consistency
     creator_name: creatorName,  // ✅ Use snake_case for consistency
     domain: skillData.domain || 'ideas',
-    soul_hash: skillData.soulHash || 'SOUL_' + Math.random().toString(16).slice(2, 10),
+    soul_hash: skillData.soulHash || 'SOUL_' + Math.random().toString(16).slice(2, 11),
     author: creatorName,  // ✅ Store actual creator name for display
     email: skillData.email || '',
     commercial: skillData.commercial || 'authorized',
@@ -7616,7 +7616,7 @@ const DOMAIN_COLORS = {
 function soulHash(str) {
   let h = 0x42;
   for (let i = 0; i < str.length; i++) h = ((h << 5) - h + str.charCodeAt(i)) & 0xffffffff;
-  return 'SOUL_' + Math.abs(h).toString(16).padStart(8, '0');
+  return 'SOUL_' + Math.abs(h).toString(16).padStart(9, '0');
 }
 
 async function initAgentArchiveView() {
