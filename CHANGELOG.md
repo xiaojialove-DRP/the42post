@@ -2,6 +2,35 @@
 
 All notable changes to THE 42 POST.
 
+## [1.2.0] — 2026-05-11
+
+### 🎯 Bug Fixes & Quality Improvements
+
+**Critical Fixes**
+- ✅ Fixed Privacy Issue: User email no longer displayed on forge completion page
+- ✅ Fixed Impact Dashboard HTTP 500 error for forged skills  
+- ✅ Fixed soul-hash length inconsistency (now unified to 14 characters)
+
+**Feature Enhancements**
+- ✨ Auto-select Skill in Playground when forging or selecting from Archive
+- 📝 Added username validation hints in Forge page with clear examples
+- 🔒 Added comprehensive forged skill validation (prevents duplicates & low-quality submissions)
+- ⭐ Starlight/star votes now persist via localStorage
+
+**Data & Architecture**
+- 🗂️ Restored complete skills database: 60 skills (21 SHARED + 39 ADDITIONAL)
+- 🔧 Standardized field naming to snake_case throughout (creator_name, soul_hash)
+- 📊 Unified data normalization in Archive for consistent display
+- 🎨 Improved soul-hash and creator display consistency
+
+### 🔍 Code Quality
+- Consolidated related fixes into logical commits
+- Improved commit message clarity
+- Added inline documentation for new validation functions
+- Cleaned up deprecated naming conventions (DEMO_SKILLS_50 → ADDITIONAL_SKILLS)
+
+---
+
 ## [1.1.0] — 2026-05-08
 
 ### 🎯 Playground Enhancement Sprint
@@ -119,5 +148,5 @@ All notable changes to THE 42 POST.
 ---
 
 **Status**: Production Ready ✅  
-**Version**: 1.1.0  
-**Last Updated**: 2026-05-08
+**Version**: 1.2.0  
+**Last Updated**: 2026-05-11
