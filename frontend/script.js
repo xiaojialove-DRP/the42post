@@ -2698,6 +2698,10 @@ function initSkillForge() {
       if (draft.payload.five_layer) {
         window.agent42StructuredData = draft.payload.five_layer;
       }
+      // Restore original AI-generated version from draft if available
+      if (draft.payload.ai_outputs) {
+        window.agent42OriginalStructuredData = draft.payload.ai_outputs;
+      }
     } else {
       try { localStorage.removeItem('42post_forge_draft'); } catch (e) {}
     }
@@ -3030,6 +3034,7 @@ function initSkillForge() {
     window.probeChoice = null;
     window.homepageIdea = null;
     window.agent42StructuredData = null;
+    window.agent42OriginalStructuredData = null;
     window.agent42ReadyToUsePrompt = null;
 
     // Reset visible inputs so the user sees a clean slate, not stale text.
@@ -4122,6 +4127,9 @@ function initSkillForge() {
 
     probeState.fiveLayerSkill = fiveLayerSkill;
     window.agent42StructuredData = fiveLayerSkill;
+    // Store original AI-generated version for forging history (research data)
+    // This allows us to compare what the AI generated vs what the user kept/edited
+    window.agent42OriginalStructuredData = JSON.parse(JSON.stringify(fiveLayerSkill));
 
     // Render preview
     renderFiveLayerPreview(fiveLayerSkill);
@@ -4644,7 +4652,14 @@ function initSkillForge() {
             // ready_to_use_prompt is generated server-side at PUBLISH time
             // when missing from the payload, so we send through whatever the
             // user may have edited in the publish review.
-            ready_to_use_prompt: window.agent42ReadyToUsePrompt || null
+            ready_to_use_prompt: window.agent42ReadyToUsePrompt || null,
+            // ai_outputs: original AI-generated five_layer (before user edits)
+            // Used for forging history research data to track AI-human collaboration
+            // Stored in backend forging_histories table for comparison with final_skill_data
+            ai_outputs: window.agent42OriginalStructuredData || {},
+            // original_idea: the initial idea text from the user that led to generation
+            // Stored in forging_histories for research on skill creation origin
+            original_idea: skillDesc || ''
           };
 
           // ═══ Draft autosave: persist before network call ═══
