@@ -6975,6 +6975,10 @@ function generateSkillMarkdown(skillData) {
   const shortSoulHash = fullSoulHash.substring(0, 14);
   const creatorName = skillData.created_by || skillData.author || 'The 42 Post Community';
 
+  // Fallback ready-to-use prompt if not available
+  const readyPrompt = skillData.ready_to_use_prompt ||
+    (skillData.fiveLayerSkill?.principle ? `Apply the following principle:\n\n${skillData.fiveLayerSkill.principle}` : 'System prompt to be generated during skill forging');
+
   let md = `# ${skillData.title}
 By ${creatorName} | Soul-Hash: ${shortSoulHash}
 
@@ -6985,7 +6989,7 @@ By ${creatorName} | Soul-Hash: ${shortSoulHash}
 Copy and paste this system prompt directly into your favorite LLM:
 
 \`\`\`
-${skillData.ready_to_use_prompt || 'System prompt to be generated during skill forging'}
+${readyPrompt}
 \`\`\`
 
 ---
