@@ -3,7 +3,7 @@
    ═══════════════════════════════════════════════════════ */
 
 import express from 'express';
-import { db } from '../server.js';
+import { db } from '../utils/db.js';
 import { sendForgeSuccessEmail } from '../utils/email.js';
 import { generateEmailTemplate, generateCertificateHTML } from '../utils/certificate.js';
 import { isValidEmail } from '../utils/validation.js';

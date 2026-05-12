@@ -7,7 +7,7 @@
    ═══════════════════════════════════════════════════════ */
 
 import express from 'express';
-import { db } from '../server.js';
+import { db } from '../utils/db.js';
 import { v4 as uuidv4 } from 'uuid';
 import {
   hashPassword,

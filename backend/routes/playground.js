@@ -14,7 +14,7 @@
 
 import express from 'express';
 import { v4 as uuidv4 } from 'uuid';
-import { db } from '../server.js';
+import { db } from '../utils/db.js';
 import { rateLimitLLM, rateLimitTwinTest } from '../middleware/rateLimiter.js';
 import { callLLMJSON } from '../utils/skillGeneration.js';
 

@@ -3,7 +3,7 @@
    ═══════════════════════════════════════════════════════ */
 
 import express from 'express';
-import { db } from '../server.js';
+import { db } from '../utils/db.js';
 
 const router = express.Router();
 

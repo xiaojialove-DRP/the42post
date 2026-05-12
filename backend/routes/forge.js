@@ -4,7 +4,7 @@
 
 import express from 'express';
 import { v4 as uuidv4 } from 'uuid';
-import { db } from '../server.js';
+import { db } from '../utils/db.js';
 import { requireAuth, optionalAuth } from '../utils/auth.js';
 import { rateLimitLLM } from '../middleware/rateLimiter.js';
 import {

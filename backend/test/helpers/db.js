@@ -23,6 +23,7 @@ export function createTestDb() {
       username TEXT NOT NULL,
       password_hash TEXT,
       account_type TEXT NOT NULL DEFAULT 'standard',
+      verification_token TEXT,
       verified INTEGER DEFAULT 0,
       created_at TEXT DEFAULT CURRENT_TIMESTAMP,
       updated_at TEXT DEFAULT CURRENT_TIMESTAMP
