@@ -4726,7 +4726,24 @@ function initSkillForge() {
           console.log('✅ Skill saved to backend:', savedSkill);
           forgedSkillData.id = savedSkill.skill.id;
           forgedSkillData.backendId = savedSkill.skill.id;
+          forgedSkillData.soul_hash = savedSkill.skill.soul_hash;
           forgedSkillData.soulHash = savedSkill.skill.soul_hash;
+
+          // Fetch complete skill data (including ready_to_use_prompt for markdown export)
+          try {
+            const fullSkillResponse = await fetch(`${ApiClient.BASE_URL}/skills/${savedSkill.skill.id}`);
+            if (fullSkillResponse.ok) {
+              const fullSkill = await fullSkillResponse.json();
+              if (fullSkill.skill) {
+                forgedSkillData.ready_to_use_prompt = fullSkill.skill.ready_to_use_prompt;
+                forgedSkillData.downloaded_at = fullSkill.skill.downloaded_at;
+                console.log('✅ Retrieved complete skill data for markdown export');
+              }
+            }
+          } catch (fullDataErr) {
+            console.warn('Could not fetch complete skill data:', fullDataErr.message);
+            // Continue anyway - markdown will use default content
+          }
 
           // Save succeeded — clear the recovery draft
           try { localStorage.removeItem('42post_forge_draft'); } catch (e) {}
@@ -4878,9 +4895,11 @@ function showForgeCompletion(skillData, soulHash) {
     const completionEmail = document.getElementById('completionEmail');
 
     if (cardTitle) cardTitle.textContent = skillData.title || skillData.titleCn || '[Skill Title]';
-    // Shorten soul hash display (show only first 14 chars)
-    const shortSoulHash = soulHash && soulHash.length > 14 ? soulHash.substring(0, 14) : soulHash;
-    if (cardSoulHash) cardSoulHash.textContent = 'Soul-Hash: ' + shortSoulHash;
+    // Shorten soul hash display (show only first 14 chars: SOUL_[9chars])
+    // Full hash format from backend: SOUL_[16-char-hash]_[timestamp]
+    // Display format: SOUL_[first-9-chars-of-hash] (14 chars total)
+    const shortSoulHash = soulHash ? 'SOUL_' + (soulHash.split('_')[1]?.substring(0, 9) || soulHash.substring(5, 14)) : 'SOUL_UNKNOWN';
+    if (cardSoulHash) cardSoulHash.textContent = shortSoulHash;
     if (cardCreator) cardCreator.textContent = 'Created by: ' + (skillData.author || skillData.username || 'Creator');
     if (cardDate) cardDate.textContent = 'Forged: ' + new Date().toLocaleDateString('en-US', {year: 'numeric', month: 'short', day: 'numeric'});
 
@@ -4922,22 +4941,33 @@ function showForgeCompletion(skillData, soulHash) {
             const url = `${ApiClient.BASE_URL}/skills/${skillId}/stats`;
             console.log('📊 Loading dashboard from:', url);
 
-            const response = await fetch(url);
+            try {
+              const response = await fetch(url);
 
-            if (!response.ok) {
-              const errorData = await response.json().catch(() => ({}));
-              console.error('Dashboard API error:', errorData);
-              throw new Error(`HTTP ${response.status}: ${errorData.message || response.statusText}`);
+              if (!response.ok) {
+                console.warn('Dashboard API returned:', response.status);
+                throw new Error(`HTTP ${response.status}`);
+              }
+
+              const result = await response.json();
+              console.log('📊 Dashboard data loaded:', result);
+
+              if (!result.stats) {
+                throw new Error('Invalid dashboard data format');
+              }
+
+              showImpactDashboard(result.stats, skillData);
+            } catch (apiError) {
+              // Fallback: show local stats if API fails
+              console.warn('⚠️ Dashboard API failed, using local stats:', apiError.message);
+              const localStats = {
+                mySkillJourney: 1,
+                skillsForged: 1,
+                humanResonance: 0,
+                totalInteractions: 0
+              };
+              showImpactDashboard(localStats, skillData);
             }
-
-            const result = await response.json();
-            console.log('📊 Dashboard data loaded:', result);
-
-            if (!result.stats) {
-              throw new Error('Invalid dashboard data format');
-            }
-
-            showImpactDashboard(result.stats, skillData);
           }
 
           btnViewDashboard.textContent = '📊 Impact Dashboard';
@@ -5739,6 +5769,25 @@ function initPlayground() {
   const skillSlotA = document.getElementById('skillSlotA');
   const skillSlotB = document.getElementById('skillSlotB');
   const btnOpenCanvas = document.getElementById('btnOpenCanvas');
+
+  // Check if there's a preselected skill from Forge or Archive
+  const preselectedSkillName = (() => {
+    try {
+      const stored = localStorage.getItem('playgroundPreselectedSkill');
+      return stored ? stored : null;
+    } catch (e) {
+      return null;
+    }
+  })();
+
+  // Auto-fill first slot with preselected skill if available
+  if (preselectedSkillName && skillSlotA) {
+    selectedSkills.a = preselectedSkillName;
+    skillSlotA.innerHTML = `<span class="selected-skill-name">${preselectedSkillName}</span>`;
+    skillSlotA.classList.add('selected');
+    // Clear the localStorage so it's not used again
+    try { localStorage.removeItem('playgroundPreselectedSkill'); } catch (e) {}
+  }
 
   if (skillSlotA) {
     skillSlotA.addEventListener('click', () => {
