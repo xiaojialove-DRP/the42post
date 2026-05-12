@@ -6604,44 +6604,6 @@ const DAILY_HONORS = [
   },
 ];
 
-/* ═══ FORGED SKILL VALIDATION ═══ */
-function validateForgedSkill(skillData) {
-  const errors = [];
-
-  // Quality checks
-  if (!skillData.title || skillData.title.trim().length < 3) {
-    errors.push('Skill title must be at least 3 characters');
-  }
-
-  if (!skillData.desc || skillData.desc.trim().length < 10) {
-    errors.push('Skill description must be at least 10 characters');
-  }
-
-  // Five-layer structure completeness
-  const fiveLayer = skillData.fiveLayerSkill || {};
-  if (!fiveLayer.principle || fiveLayer.principle.trim().length < 5) {
-    errors.push('Layer 1 (Principle) is required and must be substantial');
-  }
-
-  if (!fiveLayer.exemplars || fiveLayer.exemplars.length === 0) {
-    errors.push('Layer 2 (Exemplars) requires at least one example');
-  }
-
-  if (!fiveLayer.boundaries || fiveLayer.boundaries.trim().length < 5) {
-    errors.push('Layer 3 (Boundaries) is required');
-  }
-
-  if (!fiveLayer.evaluation || fiveLayer.evaluation.metric === undefined) {
-    errors.push('Layer 4 (Evaluation) is required with test metrics');
-  }
-
-  if (!fiveLayer.cultural_variants || fiveLayer.cultural_variants.length === 0) {
-    errors.push('Layer 5 (Cultural Variants) requires at least one variant');
-  }
-
-  return errors;
-}
-
 // Check for duplicate skills
 function checkDuplicateSkill(title) {
   const recentSkills = JSON.parse(localStorage.getItem('42post_recent_forges') || '[]');
@@ -6665,17 +6627,8 @@ function checkDuplicateSkill(title) {
 
 /* ═══ RECENTLY FORGED SKILLS STORAGE ═══ */
 function saveForgedSkill(skillData) {
-  // ═══ QUALITY VALIDATION ═══
-  const validationErrors = validateForgedSkill(skillData);
-  if (validationErrors.length > 0) {
-    const isCn = typeof currentLang !== 'undefined' && currentLang === 'cn';
-    const errorMsg = isCn
-      ? '技能质量检查失败:\n' + validationErrors.join('\n')
-      : 'Skill quality check failed:\n' + validationErrors.join('\n');
-    console.error('❌ Skill validation failed:', validationErrors);
-    alert(errorMsg);
-    return null;
-  }
+  // NOTE: Quality validation is handled by backend moderation system
+  // Local storage is only a cache - no need for strict validation here
 
   // ═══ DUPLICATE CHECK ═══
   const duplicateCheck = checkDuplicateSkill(skillData.title);
