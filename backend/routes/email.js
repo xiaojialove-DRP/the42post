@@ -42,9 +42,16 @@ router.post('/send-forge-success', async (req, res, next) => {
     }
 
     if (!skillTitle || !soulHash) {
+      console.error('❌ Missing email fields:', {
+        skillTitle: skillTitle || 'undefined',
+        soulHash: soulHash || 'undefined',
+        recipientEmail,
+        recipientName
+      });
       return res.status(400).json({
         error: 'Missing input',
-        message: 'skillTitle and soulHash are required'
+        message: 'skillTitle and soulHash are required',
+        received: { skillTitle, soulHash }
       });
     }
 

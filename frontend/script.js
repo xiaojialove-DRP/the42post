@@ -4857,13 +4857,27 @@ function showForgeCompletion(skillData, soulHash) {
   if (skillData && skillData.email) {
     (async () => {
       try {
+        // Ensure we have required fields for email
+        const emailSkillTitle = skillData.title || skillData.titleCn || 'Unnamed Skill';
+        const emailSoulHash = soulHash || skillData.soulHash || skillData.soul_hash || 'SOUL_UNKNOWN';
+        const emailSkillId = skillData.id || skillData.backendId;
+
+        if (!emailSkillTitle || !emailSoulHash) {
+          console.warn('⚠️ Missing required email fields:', { title: emailSkillTitle, hash: emailSoulHash });
+          showEmailStatusBanner({
+            success: false,
+            error: 'Skill title or soul-hash missing for email'
+          }, skillData.email);
+          return;
+        }
+
         // Send forge success email (without card image to avoid size issues)
         const emailResult = await sendForgeSuccessEmail({
           recipientEmail: skillData.email,
           recipientName: skillData.author || skillData.username,
-          skillTitle: skillData.title,
-          skillId: skillData.id,
-          soulHash: soulHash,
+          skillTitle: emailSkillTitle,
+          skillId: emailSkillId,
+          soulHash: emailSoulHash,
           createdDate: new Date().toISOString()
         });
 
