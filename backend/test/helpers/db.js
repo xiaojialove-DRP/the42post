@@ -20,7 +20,7 @@ export function createTestDb() {
     CREATE TABLE IF NOT EXISTS users (
       id TEXT PRIMARY KEY,
       email TEXT UNIQUE NOT NULL,
-      username TEXT NOT NULL,
+      username TEXT UNIQUE NOT NULL,
       password_hash TEXT,
       account_type TEXT NOT NULL DEFAULT 'standard',
       verification_token TEXT,
@@ -172,6 +172,37 @@ export function createTestDb() {
           const stmt = sqlite.prepare(adapted);
           const rows = normalizeRows(stmt.all(...adaptedParams));
           return { rows, rowCount: rows.length };
+        } else if (trimmed.startsWith('INSERT') && adapted.includes('RETURNING')) {
+          // Handle INSERT ... RETURNING by executing insert then fetching the row
+          const returningMatch = adapted.match(/RETURNING\s+(.+)$/i);
+          if (returningMatch) {
+            // Extract column names from RETURNING clause
+            const returningCols = returningMatch[1].split(',').map(s => s.trim());
+
+            // Remove RETURNING clause for SQLite
+            const insertSql = adapted.replace(/\s+RETURNING\s+.+$/i, '');
+            const stmt = sqlite.prepare(insertSql);
+            const info = stmt.run(...adaptedParams);
+
+            // If insert was successful, fetch the inserted row
+            if (info.changes > 0) {
+              // Try to extract table name and first param as ID (for users table)
+              const tableMatch = insertSql.match(/INSERT INTO\s+(\w+)/i);
+              const tableName = tableMatch ? tableMatch[1] : 'users';
+
+              // First param is usually the id
+              const idParam = adaptedParams[0];
+              const selectSql = `SELECT ${returningCols.join(', ')} FROM ${tableName} WHERE id = ?`;
+              const selectStmt = sqlite.prepare(selectSql);
+              const row = selectStmt.get(idParam);
+              return { rows: row ? [row] : [], rowCount: info.changes };
+            }
+            return { rows: [], rowCount: 0 };
+          }
+          // Fallback if RETURNING parsing fails
+          const stmt = sqlite.prepare(adapted);
+          const info = stmt.run(...adaptedParams);
+          return { rows: [], rowCount: info.changes };
         } else {
           const stmt = sqlite.prepare(adapted);
           const info = stmt.run(...adaptedParams);

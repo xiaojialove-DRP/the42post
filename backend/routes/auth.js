@@ -189,14 +189,34 @@ router.post('/register', async (req, res, next) => {
     // Hash password
     const passwordHash = await hashPassword(password);
     const verificationToken = generateVerificationToken();
+    const userId = uuidv4();
 
     // Insert user
-    const result = await db.query(
-      `INSERT INTO users (email, username, password_hash, account_type, verification_token)
-       VALUES ($1, $2, $3, $4, $5)
-       RETURNING id, email, username, account_type`,
-      [email, username, passwordHash, account_type, verificationToken]
-    );
+    let result;
+    try {
+      result = await db.query(
+        `INSERT INTO users (id, email, username, password_hash, account_type, verification_token)
+         VALUES ($1, $2, $3, $4, $5, $6)
+         RETURNING id, email, username, account_type`,
+        [userId, email, username, passwordHash, account_type, verificationToken]
+      );
+    } catch (dbError) {
+      // Handle duplicate email or username
+      if (dbError.message && dbError.message.includes('UNIQUE constraint')) {
+        if (dbError.message.includes('email')) {
+          return res.status(400).json({
+            error: 'Email already exists',
+            message: 'This email is already registered'
+          });
+        } else if (dbError.message.includes('username')) {
+          return res.status(400).json({
+            error: 'Username already exists',
+            message: 'This username is already taken'
+          });
+        }
+      }
+      throw dbError;
+    }
 
     const user = result.rows[0];
 
