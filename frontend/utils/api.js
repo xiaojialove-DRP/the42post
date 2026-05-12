@@ -247,44 +247,11 @@ export const searchAPI = {
   }
 };
 
-/* ═══ AGENTS API ═══ */
-export const agentsAPI = {
-  async list(options = {}) {
-    const params = new URLSearchParams(options);
-    return apiCall(`/agents?${params.toString()}`, { method: 'GET' });
-  },
-
-  async getById(agentId) {
-    return apiCall(`/agents/${agentId}`, { method: 'GET' });
-  },
-
-  async bind(agentInfo) {
-    return apiCall('/agents/bind', {
-      method: 'POST',
-      body: JSON.stringify(agentInfo)
-    });
-  },
-
-  async addSkill(agentId, skillId) {
-    return apiCall(`/agents/${agentId}/skills`, {
-      method: 'POST',
-      body: JSON.stringify({ skill_id: skillId })
-    });
-  },
-
-  async removeSkill(agentId, skillId) {
-    return apiCall(`/agents/${agentId}/skills/${skillId}`, {
-      method: 'DELETE'
-    });
-  }
-};
-
 export default {
   auth,
   authAPI,
   forgeAPI,
   skillsAPI,
   searchAPI,
-  agentsAPI,
   apiCall
 };
