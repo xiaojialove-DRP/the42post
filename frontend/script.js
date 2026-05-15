@@ -7721,7 +7721,22 @@ async function initAgentArchiveView() {
       // This ensures 42 skills always display even if database wasn't seeded
       if (baseSkills.length < 40) {
         console.warn(`⚠️ Archive: API returned only ${baseSkills.length} skills, supplementing with local fallback for 42 display`);
-        const fallbackSkills = (typeof SkillStore !== 'undefined' && SkillStore.size() > 0) ? SkillStore.all() : (typeof ALL_SKILLS !== 'undefined' ? ALL_SKILLS : []) || [];
+        // Try multiple sources for fallback skills
+        let fallbackSkills = [];
+        if (typeof getTopSkills === 'function') {
+          // Most reliable: use getTopSkills(42) from skills.js
+          fallbackSkills = getTopSkills(42);
+          console.log(`✓ Using getTopSkills(42): ${fallbackSkills.length} skills`);
+        } else if (typeof ALL_SKILLS !== 'undefined' && Array.isArray(ALL_SKILLS)) {
+          fallbackSkills = ALL_SKILLS;
+          console.log(`✓ Using ALL_SKILLS: ${fallbackSkills.length} skills`);
+        } else if (typeof SkillStore !== 'undefined' && SkillStore.size && SkillStore.size() > 0) {
+          fallbackSkills = SkillStore.all();
+          console.log(`✓ Using SkillStore: ${fallbackSkills.length} skills`);
+        } else {
+          console.warn(`⚠️ No fallback source available`);
+        }
+
         // Merge: keep API skills, add fallback skills that don't duplicate
         const existingIds = new Set(baseSkills.map(s => s.id));
         const additional = fallbackSkills.filter(s => !existingIds.has(s.id));
@@ -7730,19 +7745,43 @@ async function initAgentArchiveView() {
       }
     } else {
       // Fallback to hardcoded skills if API fails
-      console.warn(`⚠️ Archive: API request failed (${response.status}), falling back to local ALL_SKILLS`);
-      baseSkills = (typeof SkillStore !== 'undefined' && SkillStore.size() > 0) ? SkillStore.all() : (typeof ALL_SKILLS !== 'undefined' ? ALL_SKILLS : []) || [];
+      console.warn(`⚠️ Archive: API request failed (${response.status}), falling back to local skills`);
+      if (typeof getTopSkills === 'function') {
+        baseSkills = getTopSkills(42);
+      } else if (typeof ALL_SKILLS !== 'undefined') {
+        baseSkills = ALL_SKILLS;
+      } else if (typeof SkillStore !== 'undefined' && SkillStore.size() > 0) {
+        baseSkills = SkillStore.all();
+      } else {
+        baseSkills = [];
+      }
     }
   } catch (error) {
     console.error('❌ Archive: Error fetching skills from API:', error.message);
     // Fallback to hardcoded skills
-    baseSkills = (typeof SkillStore !== 'undefined' && SkillStore.size() > 0) ? SkillStore.all() : (typeof ALL_SKILLS !== 'undefined' ? ALL_SKILLS : []) || [];
+    if (typeof getTopSkills === 'function') {
+      baseSkills = getTopSkills(42);
+    } else if (typeof ALL_SKILLS !== 'undefined') {
+      baseSkills = ALL_SKILLS;
+    } else if (typeof SkillStore !== 'undefined' && SkillStore.size() > 0) {
+      baseSkills = SkillStore.all();
+    } else {
+      baseSkills = [];
+    }
   }
 
   // Safety: ensure we always have at least some skills to display
   if (!baseSkills || baseSkills.length === 0) {
-    console.warn('⚠️ No skills available from API or fallback');
-    baseSkills = (typeof SkillStore !== 'undefined' && SkillStore.size() > 0) ? SkillStore.all() : (typeof ALL_SKILLS !== 'undefined' ? ALL_SKILLS : []);
+    console.warn('⚠️ No skills available from API or fallback, using local skills');
+    if (typeof getTopSkills === 'function') {
+      baseSkills = getTopSkills(42);
+    } else if (typeof ALL_SKILLS !== 'undefined') {
+      baseSkills = ALL_SKILLS;
+    } else if (typeof SkillStore !== 'undefined' && SkillStore.size() > 0) {
+      baseSkills = SkillStore.all();
+    } else {
+      baseSkills = [];
+    }
   }
 
   // ═══ UNIFIED NORMALIZATION ═══
@@ -9033,7 +9072,10 @@ function checkAndDisplayDashboard() {
       loadAndDisplayDashboardCard(mySkills[0].soul_hash, mySkills[0].token);
     } else {
       // Hide Dashboard card if no Skill created
-      document.getElementById('dashboard-card').style.display = 'none';
+      const dashboardCard = document.getElementById('dashboard-card');
+      if (dashboardCard) {
+        dashboardCard.style.display = 'none';
+      }
     }
   }
 }
