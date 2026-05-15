@@ -4909,10 +4909,10 @@ function showForgeCompletion(skillData, soulHash) {
     const completionEmail = document.getElementById('completionEmail');
 
     if (cardTitle) cardTitle.textContent = skillData.title || skillData.titleCn || '[Skill Title]';
-    // Shorten soul hash display (show only first 14 chars: SOUL_[9chars])
+    // Shorten soul hash display (show only first 14 chars)
     // Full hash format from backend: SOUL_[16-char-hash]_[timestamp]
-    // Display format: SOUL_[first-9-chars-of-hash] (14 chars total)
-    const shortSoulHash = soulHash ? 'SOUL_' + (soulHash.split('_')[1]?.substring(0, 9) || soulHash.substring(5, 14)) : 'SOUL_UNKNOWN';
+    // Display format: first 14 characters for consistency across UI
+    const shortSoulHash = soulHash && soulHash.length > 0 ? soulHash.substring(0, 14) : 'SOUL_UNKNOWN';
     if (cardSoulHash) cardSoulHash.textContent = shortSoulHash;
     if (cardCreator) cardCreator.textContent = 'Created by: ' + (skillData.author || skillData.username || 'Creator');
     if (cardDate) cardDate.textContent = 'Forged: ' + new Date().toLocaleDateString('en-US', {year: 'numeric', month: 'short', day: 'numeric'});
