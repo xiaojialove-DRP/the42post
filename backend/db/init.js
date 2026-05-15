@@ -50,6 +50,8 @@ export async function initDatabase() {
         remix_allowed INTEGER DEFAULT 1,
         applicable_when TEXT,
         disallowed_uses TEXT,
+        creator_anonymous_id TEXT,
+        ready_to_use_prompt TEXT,
         starlight_score INTEGER DEFAULT 0,
         published INTEGER DEFAULT 0,
         published_at TIMESTAMP,
