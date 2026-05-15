@@ -98,6 +98,7 @@ router.get('/:skillId', async (req, res, next) => {
       remix: skill.remix_allowed ? 'yes' : 'no',
       useCases: skill.applicable_when || '',
       disallowedUses: skill.disallowed_uses || '',
+      ready_to_use_prompt: skill.ready_to_use_prompt || null,
       fiveLayerSkill: fiveLayer
     };
 
@@ -187,9 +188,16 @@ function generateSkillMarkdown(skillData) {
   const fiveLayer = skillData.fiveLayerSkill || null;
 
   // ═══ QUICK COPY-PASTE PROMPT FIRST ═══
-  const readyPrompt = fiveLayer && fiveLayer.ready_to_use_prompt
-    ? fiveLayer.ready_to_use_prompt
-    : (fiveLayer && fiveLayer.principle ? fiveLayer.principle : (skillData.desc || 'A skill forged in The 42 Post'));
+  // Priority:
+  // 1. skillData.ready_to_use_prompt (stored at top level in skills table)
+  // 2. fiveLayer.ready_to_use_prompt (if present in five_layer JSON)
+  // 3. fiveLayer.principle (fallback to principle if no ready prompt)
+  // 4. skillData.desc (final fallback)
+  const readyPrompt = skillData.ready_to_use_prompt
+    ? skillData.ready_to_use_prompt
+    : (fiveLayer && fiveLayer.ready_to_use_prompt
+      ? fiveLayer.ready_to_use_prompt
+      : (fiveLayer && fiveLayer.principle ? fiveLayer.principle : (skillData.desc || 'A skill forged in The 42 Post')));
 
   let md = `# 🚀 READY TO PROMPT
 
