@@ -2785,27 +2785,36 @@
 
         const confirmBtn = stage.querySelector('[data-skill-confirm]');
         if (skills.length > 0) {
-          // Auto-select based on entry path:
-          // Path 1: From Archive (window.TWIN_TEST_SKILL) → prioritize selected skill
-          // Path 2: Direct entry → prioritize user's own forged skill (is_mine=true)
-          let selectedSkillId = skills[0].id;
+          let targetSkillId = skills[0].id;
+          let autoConfirm = false;
 
-          // Check if coming from Archive
-          const preloadedSkillId = window.TWIN_TEST_SKILL?.id;
-          if (preloadedSkillId && skills.some(s => s.id === preloadedSkillId)) {
-            // Path 1: From Archive → show the selected skill first
-            selectedSkillId = preloadedSkillId;
-          } else {
-            // Path 2: Direct entry → show user's own forged skill first
-            const userOwnSkill = skills.find(s => s.is_mine);
-            if (userOwnSkill) {
-              selectedSkillId = userOwnSkill.id;
+          const preloaded = window.TWIN_TEST_SKILL;
+          if (preloaded?.id) {
+            // Came from Forge "Try Playground" or Archive play button:
+            // find in list or inject at top so it can be confirmed.
+            if (skills.some(s => s.id === preloaded.id)) {
+              targetSkillId = preloaded.id;
+            } else {
+              const injectOpt = document.createElement('option');
+              injectOpt.value = preloaded.id;
+              injectOpt.textContent = (isCn ? '👋 你刚锻造的：' : '👋 Your forge — ') + getSkillTitle(preloaded);
+              injectOpt.dataset.skill = JSON.stringify(preloaded);
+              const placeholder = select.querySelector('option[disabled]');
+              placeholder ? placeholder.after(injectOpt) : select.prepend(injectOpt);
+              targetSkillId = preloaded.id;
             }
-            // Otherwise fall back to first skill
+            autoConfirm = true;
+          } else {
+            // Direct entry → prefer user's own recently forged skill
+            const ownSkill = skills.find(s => s.is_mine);
+            if (ownSkill) targetSkillId = ownSkill.id;
           }
 
-          select.value = selectedSkillId;
+          select.value = targetSkillId;
           confirmBtn.disabled = false;
+
+          // Auto-confirm after event handlers are wired (setTimeout defers past sync code)
+          if (autoConfirm) setTimeout(() => confirmBtn.click(), 80);
         }
 
         // Enable / disable the confirm button alongside the dropdown.
