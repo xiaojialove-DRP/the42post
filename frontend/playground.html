@@ -2395,26 +2395,9 @@
         skills.sort((a, b) => (b.starlight_score || 0) - (a.starlight_score || 0));
       }
 
-      // Prioritize user's recently forged skills from localStorage
-      try {
-        const forgedSkillsJson = localStorage.getItem('42post_recent_forges');
-        if (forgedSkillsJson) {
-          const forgedSkills = JSON.parse(forgedSkillsJson);
-          if (Array.isArray(forgedSkills) && forgedSkills.length > 0) {
-            // Get the most recent forged skill
-            const mostRecentForged = forgedSkills[0];
-            if (mostRecentForged && mostRecentForged.id) {
-              // Remove it from the skills list if it already exists (shouldn't happen, but just in case)
-              skills = skills.filter(s => s.id !== mostRecentForged.id);
-              // Add the most recent forged skill to the front
-              skills.unshift(mostRecentForged);
-              console.log(`✨ Prioritized recently forged skill: ${mostRecentForged.title}`);
-            }
-          }
-        }
-      } catch (e) {
-        console.warn('Failed to prioritize forged skills:', e.message);
-      }
+      // Note: localStorage-based forge injection removed.
+      // Skills from Forge/Archive now arrive via ?skill= URL param → initTwinTestMode,
+      // which sets window.TWIN_TEST_SKILL with the real DB object and bypasses this list.
 
       window.__hotSkillsCache = skills;
       return skills.slice(0, limit);
