@@ -15,6 +15,7 @@ const ANONYMOUS_AUTHOR_ID = 'anonymous-user-001';
 import { createManifest, addCovenantSignature, callLLMJSON } from '../utils/skillGeneration.js';
 import { moderateSkill } from '../utils/moderation.js';
 import { rateLimitForge } from '../middleware/rateLimiter.js';
+import { getCache, CACHE_TTL } from '../utils/cache.js';
 import { v4 as uuidv4 } from 'uuid';
 
 const router = express.Router();
@@ -104,6 +105,13 @@ router.get('/', async (req, res, next) => {
       });
     }
 
+    // Cache check — skip for search queries (high change rate, 3 min TTL)
+    const cache = getCache();
+    const cacheKey = `skills_list:${parsedPage}:${parsedLimit}:${domain||''}:${author||''}:${search||''}`;
+    const ttlType = search ? 'SEARCH_RESULTS' : 'SKILLS_LIST';
+    const cached = await cache.get(cacheKey);
+    if (cached) return res.json(cached);
+
     // JOIN users so the response carries the real creator_name the user
     // typed at forge time (stored as users.username via forge-session
     // auto-provision). Frontend uses this for the "creator_<name>" badge
@@ -156,7 +164,7 @@ router.get('/', async (req, res, next) => {
     const total = parseInt(countResult.rows[0].count, 10);
     const totalPages = Math.ceil(total / parsedLimit);
 
-    res.json({
+    const response = {
       success: true,
       skills,
       pagination: {
@@ -165,7 +173,10 @@ router.get('/', async (req, res, next) => {
         total,
         totalPages
       }
-    });
+    };
+
+    await cache.set(cacheKey, response, ttlType);
+    res.json(response);
   } catch (error) {
     next(error);
   }
@@ -567,7 +578,7 @@ router.post('/', optionalAuth, rateLimitForge, async (req, res, next) => {
           [
             uuidv4(),
             skillId,
-            user_email || null,
+            user?.email || null,
             req.body.original_idea || req.body.idea_text || null,
             JSON.stringify(req.body.ai_outputs || {}),
             JSON.stringify(five_layer)
@@ -591,6 +602,9 @@ router.post('/', optionalAuth, rateLimitForge, async (req, res, next) => {
       const savedSkill = verifyResult.rows[0];
 
       await client.query('COMMIT');
+
+      // Invalidate skills list cache so new skill appears immediately
+      await getCache().invalidatePattern('skills_list:*');
 
       // Return complete skill data with actual database values
       res.status(201).json({
