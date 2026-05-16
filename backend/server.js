@@ -30,6 +30,7 @@ import { requestValidator } from './middleware/requestValidator.js';
 import { corsOptions, logCorsConfiguration } from './config/cors.js';
 import { initializeCache } from './utils/cache.js';
 import { isOriginWhitelisted, getWhitelistedOrigins } from './config/cors.js';
+import { logger } from './utils/logger.js';
 
 dotenv.config();
 
@@ -53,7 +54,7 @@ if (process.env.NODE_ENV !== 'test' && !process.env.JWT_SECRET) {
 // Always use SQLite for now (ignore DATABASE_URL)
 let db;
 
-console.log('Using SQLite database (forced)...');
+logger.info('Using SQLite database (forced)...');
 // Persistent storage:
 // - Production (Railway): use /app/data (Volume-mounted, survives redeploys)
 // - Local dev: use ../database.sqlite3 next to the repo
@@ -69,13 +70,13 @@ if (existsSync(PERSISTENT_DIR)) {
     mkdirSync(PERSISTENT_DIR, { recursive: true });
     dbPath = join(PERSISTENT_DIR, 'database.sqlite3');
   } catch (e) {
-    console.warn('⚠ /app/data not available, falling back to ephemeral path. Data WILL BE LOST on redeploy!');
+    logger.warn('/app/data not available, falling back to ephemeral path. Data WILL BE LOST on redeploy!');
     dbPath = join(__dirname, '../database.sqlite3');
   }
 } else {
   dbPath = join(__dirname, '../database.sqlite3');
 }
-console.log('Database path:', dbPath);
+logger.info('Database path:', dbPath);
 
 db = new SqlitePool({
   connectionString: `sqlite:///${dbPath}`
@@ -86,9 +87,9 @@ global.__db__ = db;
 
 // Test connection
 db.query('SELECT 1 as test').then(result => {
-  console.log('✓ SQLite database connected');
+  logger.info('✓ SQLite database connected');
 }).catch(err => {
-  console.error('SQLite connection error:', err.message);
+  logger.error('SQLite connection error:', err.message);
   process.exit(1);
 });
 
@@ -99,7 +100,7 @@ import { startBackupScheduler } from './utils/backupScheduler.js';
 startBackupScheduler(db, dbPath);
 
 // ═══ INITIALIZE CACHING ═══
-console.log('\n═══ Cache System Initialization ═══');
+logger.info('═══ Cache System Initialization ═══');
 initializeCache(); // Memory-based cache (Redis optional)
 
 // ═══ MIDDLEWARE ═══
@@ -119,7 +120,7 @@ app.use(requestValidator);
 
 // ═══ STATIC FILES (Serve frontend) ═══
 const frontendPath = join(__dirname, '../frontend');
-console.log('Frontend Path:', frontendPath);
+logger.info('Frontend Path:', frontendPath);
 
 // Serve static files with proper MIME types and caching
 app.use(express.static(frontendPath, {
@@ -158,7 +159,7 @@ app.get('/archive', (req, res) => {
 
 // Root route - return API info if frontend not found
 app.get('/', (req, res) => {
-  console.log('GET / request received');
+  logger.debug('GET / request received');
   res.json({
     message: 'THE 42 POST API Server',
     status: 'running',
@@ -339,14 +340,14 @@ app.post('/api/admin/seed-apply', requireAdminKey, async (req, res) => {
     for (const path of seedPaths) {
       if (existsSync(path)) {
         sqlContent = readFileSync(path, 'utf8');
-        console.log(`[seed-apply] Loaded from local: ${path}`);
+        logger.info(`[seed-apply] Loaded from local: ${path}`);
         break;
       }
     }
 
     // If local not found, try GitHub raw
     if (!sqlContent) {
-      console.log('[seed-apply] Local file not found, fetching from GitHub...');
+      logger.info('[seed-apply] Local file not found, fetching from GitHub...');
       const response = await fetch(
         'https://raw.githubusercontent.com/xiaojialove-DRP/the42post/main/backend/sql/seed-42-skills.sql'
       );
@@ -356,13 +357,13 @@ app.post('/api/admin/seed-apply', requireAdminKey, async (req, res) => {
         });
       }
       sqlContent = await response.text();
-      console.log('[seed-apply] Loaded from GitHub');
+      logger.info('[seed-apply] Loaded from GitHub');
     }
     const statements = sqlContent
       .split(';')
       .filter(s => s.trim() && !s.trim().startsWith('--'));
 
-    console.log(`[seed-apply] Executing ${statements.length} statements...`);
+    logger.info(`[seed-apply] Executing ${statements.length} statements...`);
 
     let executed = 0;
     let failed = 0;
@@ -377,7 +378,7 @@ app.post('/api/admin/seed-apply', requireAdminKey, async (req, res) => {
         failed++;
         const errMsg = err.message || err.toString();
         errors.push(`Stmt ${i}: ${errMsg.substring(0, 120)}`);
-        console.warn(`[seed-apply] Stmt ${i} failed: ${errMsg}`);
+        logger.warn(`[seed-apply] Stmt ${i} failed: ${errMsg}`);
       }
     }
 
@@ -393,7 +394,7 @@ app.post('/api/admin/seed-apply', requireAdminKey, async (req, res) => {
       message: `Executed ${executed}/${statements.length} statements. Database now has ${finalCount} published skills.`
     });
   } catch (err) {
-    console.error('[seed-apply] Fatal error:', err);
+    logger.error('[seed-apply] Fatal error:', err);
     res.status(500).json({ error: err.message });
   }
 });
@@ -454,17 +455,17 @@ app.get('/api/admin/diagnostics', requireAdminKey, async (req, res) => {
 // Nuke all skills (dangerous — easy mode for development)
 app.get('/api/admin/nuke-skills-now', requireAdminKey, async (req, res) => {
   try {
-    console.log('[nuke-skills] Starting skill deletion...');
+    logger.info('[nuke-skills] Starting skill deletion...');
 
     // Delete in correct order (respect FK constraints)
     await db.query('DELETE FROM skill_usage_logs WHERE 1=1');
-    console.log('[nuke-skills] Deleted skill_usage_logs');
+    logger.debug('[nuke-skills] Deleted skill_usage_logs');
 
     await db.query('DELETE FROM user_skill_interactions WHERE 1=1');
-    console.log('[nuke-skills] Deleted user_skill_interactions');
+    logger.debug('[nuke-skills] Deleted user_skill_interactions');
 
     await db.query('DELETE FROM skills WHERE 1=1');
-    console.log('[nuke-skills] Deleted skills');
+    logger.debug('[nuke-skills] Deleted skills');
 
     // Verify
     const result = await db.query('SELECT COUNT(*) as count FROM skills');
@@ -476,14 +477,14 @@ app.get('/api/admin/nuke-skills-now', requireAdminKey, async (req, res) => {
       timestamp: new Date().toISOString()
     });
   } catch (err) {
-    console.error('[nuke-skills] Error:', err);
+    logger.error('[nuke-skills] Error:', err);
     res.status(500).json({ error: err.message });
   }
 });
 
 // Backfill skill descriptions
 app.post('/api/admin/backfill-descriptions', requireAdminKey, async (req, res) => {
-  console.log('[backfill] Starting skill description backfill...');
+  logger.info('[backfill] Starting skill description backfill...');
 
   try {
     const { spawn } = await import('child_process');
@@ -494,12 +495,12 @@ app.post('/api/admin/backfill-descriptions', requireAdminKey, async (req, res) =
 
     child.stdout.on('data', (data) => {
       output += data.toString();
-      console.log(`[backfill] ${data}`);
+      logger.debug(`[backfill] ${data}`);
     });
 
     child.stderr.on('data', (data) => {
       errorOutput += data.toString();
-      console.error(`[backfill-err] ${data}`);
+      logger.error(`[backfill-err] ${data}`);
     });
 
     child.on('close', (code) => {
@@ -531,38 +532,27 @@ async function startServer() {
   try {
     // Initialize database schema
     await initDatabase();
-    console.log('✓ Database schema initialized');
+    logger.info('✓ Database schema initialized');
 
     // Auto-seed 42 skills if needed
     // Temporarily disabled due to startup crash — will implement manual endpoint
     // await seedSkillsIfNeeded(db);
-    console.log('⚠ Skill seeding disabled during startup (manual seeding available via API)');
+    logger.warn('Skill seeding disabled during startup (manual seeding available via API)');
 
     const server = app.listen(PORT, () => {
-      console.log(`
-╔════════════════════════════════════════════════════════╗
-║  THE 42 POST — Backend Server (内胆) Running          ║
-╚════════════════════════════════════════════════════════╝
-  Port: ${PORT}
-  Node Env: ${process.env.NODE_ENV}
-  Frontend: ${process.env.FRONTEND_URL}
-
-  Health Check: GET /health
-  API Docs: See BACKEND_ARCHITECTURE.md
-      `);
+      logger.info(`THE 42 POST server running on port ${PORT} (${process.env.NODE_ENV})`);
     });
 
     // Handle server errors
     server.on('error', (err) => {
-      console.error('Server error:', err);
+      logger.error('Server error:', err);
       process.exit(1);
     });
 
-    // Keep the process alive
-    console.log('Server initialization complete');
+    logger.info('Server initialization complete');
 
   } catch (error) {
-    console.error('Failed to start server:', error);
+    logger.error('Failed to start server:', error);
     process.exit(1);
   }
 }
@@ -571,21 +561,21 @@ startServer();
 
 // Graceful shutdown
 process.on('SIGTERM', () => {
-  console.log('SIGTERM received, shutting down gracefully...');
+  logger.info('SIGTERM received, shutting down gracefully...');
 
   try {
     // Close the database connection (better-sqlite3 is synchronous)
     if (db && typeof db.close === 'function') {
       db.close();
-      console.log('✓ Database connection closed');
+      logger.info('✓ Database connection closed');
     }
   } catch (err) {
-    console.error('⚠ Error closing database:', err.message);
+    logger.error('Error closing database:', err.message);
   }
 
   // Give the server time to finish pending requests (max 10 seconds)
   setTimeout(() => {
-    console.error('⚠ Forced shutdown after timeout - pending requests still draining');
+    logger.error('Forced shutdown after timeout - pending requests still draining');
     process.exit(1);
   }, 10000);
 

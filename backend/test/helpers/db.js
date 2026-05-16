@@ -46,6 +46,12 @@ export function createTestDb() {
       applicable_when TEXT,
       disallowed_uses TEXT,
       ready_to_use_prompt TEXT,
+      moderation_status TEXT DEFAULT 'pending',
+      moderation_risk_level TEXT,
+      moderation_explanation TEXT,
+      moderation_categories TEXT,
+      moderation_review_required INTEGER DEFAULT 0,
+      moderation_decided_at TEXT,
       starlight_score INTEGER DEFAULT 0,
       download_count INTEGER DEFAULT 0,
       creator_anonymous_id TEXT,
@@ -107,6 +113,42 @@ export function createTestDb() {
       with_skill_response TEXT,
       without_skill_response TEXT,
       user_rating TEXT,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS moderation_logs (
+      id TEXT PRIMARY KEY,
+      skill_id TEXT,
+      identity TEXT,
+      decision TEXT NOT NULL,
+      risk_level TEXT,
+      violations TEXT,
+      explanation TEXT,
+      categories TEXT,
+      suggested_modifications TEXT,
+      review_required INTEGER DEFAULT 0,
+      title_snapshot TEXT,
+      description_snapshot TEXT,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS forging_histories (
+      id TEXT PRIMARY KEY,
+      skill_id TEXT REFERENCES skills(id) ON DELETE CASCADE,
+      user_email TEXT,
+      original_idea TEXT,
+      ai_outputs TEXT,
+      final_skill_data TEXT,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS skill_test_votes (
+      id TEXT PRIMARY KEY,
+      skill_id TEXT REFERENCES skills(id) ON DELETE CASCADE,
+      scenario_key TEXT,
+      anonymous_id TEXT,
+      skill_side TEXT,
+      diagnostic TEXT,
       created_at TEXT DEFAULT CURRENT_TIMESTAMP
     );
 

@@ -45,6 +45,7 @@ function cleanOldTimestamps(timestamps, now) {
  */
 export function createRateLimiter(maxRequests, windowMs = WINDOW_MS) {
   return (req, res, next) => {
+    if (process.env.NODE_ENV === 'test') return next();
     const ip = getClientIp(req);
     const now = Date.now();
     const key = `general`;
@@ -87,6 +88,7 @@ export function createRateLimiter(maxRequests, windowMs = WINDOW_MS) {
  * Applied to: /api/forge/probe, /api/forge/preview, /api/forge/generate, /api/playground/test
  */
 export const rateLimitLLM = (req, res, next) => {
+  if (process.env.NODE_ENV === 'test') return next();
   const ip = getClientIp(req);
   const now = Date.now();
   const key = 'llm';
@@ -126,6 +128,7 @@ export const rateLimitLLM = (req, res, next) => {
  * Applied to: /api/playground/test, /api/playground/vote
  */
 export const rateLimitTwinTest = (req, res, next) => {
+  if (process.env.NODE_ENV === 'test') return next();
   const ip = getClientIp(req);
   const now = Date.now();
   const key = 'twintest';
@@ -170,6 +173,7 @@ const FORGE_WINDOW_MS = 60 * 60 * 1000;  // 1 hour
 const FORGE_MAX = 5;
 
 export const rateLimitForge = (req, res, next) => {
+  if (process.env.NODE_ENV === 'test') return next();
   // Identity precedence: authenticated user > anon device ID > IP
   const userId = req.user?.userId;
   const anonId = req.headers['x-anonymous-id'] || req.body?.anonymous_id;

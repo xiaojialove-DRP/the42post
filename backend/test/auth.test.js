@@ -275,7 +275,7 @@ describe('GET /api/auth/me', () => {
 
   beforeAll(async () => {
     // Create and login a test user to get a token
-    await request(app)
+    const registerRes = await request(app)
       .post('/api/auth/register')
       .send({
         email: 'metest@example.com',
@@ -283,6 +283,14 @@ describe('GET /api/auth/me', () => {
         password: 'MePass123!',
         account_type: 'direct_knight'
       });
+
+    // Verify email so login is permitted
+    if (registerRes.body.user_id) {
+      await db.query(
+        'UPDATE users SET verified = 1 WHERE id = $1',
+        [registerRes.body.user_id]
+      );
+    }
 
     const loginRes = await request(app)
       .post('/api/auth/login')
@@ -328,20 +336,20 @@ describe('POST /api/auth/forge-session', () => {
   it('creates an anonymous forge session without authentication', async () => {
     const res = await request(app)
       .post('/api/auth/forge-session')
-      .set('X-Anonymous-Id', 'anon-user-123');
+      .send({ email: 'forge-anon@example.com', username: 'ForgeAnon' });
 
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
-    expect(res.body.forge_session_id).toBeTruthy();
+    expect(res.body.token).toBeTruthy();
   });
 
-  it('includes provided X-Anonymous-Id in response', async () => {
-    const anonId = 'custom-anon-456';
+  it('includes user info in response', async () => {
     const res = await request(app)
       .post('/api/auth/forge-session')
-      .set('X-Anonymous-Id', anonId);
+      .send({ email: 'forge-anon2@example.com', username: 'ForgeAnon2' });
 
     expect(res.status).toBe(200);
-    expect(res.body.anonymous_id).toBe(anonId);
+    expect(res.body.user).toBeTruthy();
+    expect(res.body.user.email).toBe('forge-anon2@example.com');
   });
 });

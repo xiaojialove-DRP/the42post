@@ -163,6 +163,24 @@ function isExternalFailure(msg) {
   );
 }
 
+// ─── Shared try/catch wrapper for all LLM generate functions ───
+// mapData: (rawData) => normalised data object
+// fallbackFn: () => { success, fallback, data, model } — called only on external failures
+async function callWithFallback(prompt, maxTokens, label, mapData, fallbackFn = null) {
+  try {
+    const { data, model, usage } = await callLLMJSON(prompt, maxTokens);
+    return { success: true, data: mapData(data), model, usage };
+  } catch (error) {
+    const msg = error.message || '';
+    console.error(`❌ DeepSeek ${label} error:`, msg);
+    if (isExternalFailure(msg) && fallbackFn) {
+      console.warn(`⚠ Falling back to template ${label} so forge flow is not blocked.`);
+      return fallbackFn();
+    }
+    return { success: false, message: `${label} failed: ${msg}` };
+  }
+}
+
 // ═══ PROBE GENERATION ═══
 export async function generateProbeWithClaude(ideaText, language = 'en') {
   const isCn = language === 'zh' || /[\u4e00-\u9fff]/.test(ideaText);
@@ -249,32 +267,11 @@ Banned: parroting the user's wording, template phrasing, hollow value-words.
 Return JSON only:
 {"scenario":"Concrete scenario with named person, time, stakes (1-2 sentences, causally self-consistent)","thesis":"Mainstream action (1-2 sentences, first person)","antithesis":"Contextual action (1-2 sentences, first person)","extreme":"Experimental action (1-2 sentences, first person)"}`;
 
-  try {
-    // 600 tokens is enough for 4 short strings — faster than the old 1500
-    const { data, model, usage } = await callLLMJSON(prompt, 600);
-    return {
-      success: true,
-      data: {
-        scenario: data.scenario || '',
-        thesis: data.thesis || '',
-        antithesis: data.antithesis || '',
-        extreme: data.extreme || ''
-      },
-      model,
-      usage
-    };
-  } catch (error) {
-    const msg = error.message || '';
-    console.error('❌ DeepSeek probe generation error:', msg);
-    if (isExternalFailure(msg)) {
-      console.warn('⚠ Falling back to template probe so forge flow is not blocked.');
-      return probeFallback(ideaText, language);
-    }
-    return {
-      success: false,
-      message: `Probe generation failed: ${msg}`
-    };
-  }
+  // 600 tokens is enough for 4 short strings — faster than the old 1500
+  return callWithFallback(prompt, 600, 'probe generation',
+    d => ({ scenario: d.scenario || '', thesis: d.thesis || '', antithesis: d.antithesis || '', extreme: d.extreme || '' }),
+    () => probeFallback(ideaText, language)
+  );
 }
 
 // ─── Template fallback for probe ───
@@ -369,27 +366,9 @@ Step 2 — Write three pieces that are **specific to this idea**:
 Return JSON only:
 {"skill_name":"","definition":"","use_when":"","refuse_when":""}`;
 
-  try {
-    const { data, model, usage } = await callLLMJSON(prompt, 600);
-    return {
-      success: true,
-      data: {
-        skill_name: data.skill_name || '',
-        definition: data.definition || '',
-        use_when: data.use_when || '',
-        refuse_when: data.refuse_when || ''
-      },
-      model,
-      usage
-    };
-  } catch (error) {
-    const msg = error.message || '';
-    console.error('❌ DeepSeek preview generation error:', msg);
-    return {
-      success: false,
-      message: `Preview generation failed: ${msg}`
-    };
-  }
+  return callWithFallback(prompt, 600, 'preview generation',
+    d => ({ skill_name: d.skill_name || '', definition: d.definition || '', use_when: d.use_when || '', refuse_when: d.refuse_when || '' })
+  );
 }
 
 // ═══ FIVE-LAYER SKILL GENERATION ═══
@@ -580,35 +559,18 @@ Return JSON only:
   }
 }`;
 
-  try {
-    const { data, model, usage } = await callLLMJSON(prompt, 2000);
-    return {
-      success: true,
-      data: {
-        principle: data.principle || '',
-        reasoning: data.reasoning || '',
-        exemplars: Array.isArray(data.exemplars) ? data.exemplars : [],
-        boundaries: data.boundaries || { applies_when: [], does_not_apply: [], tension_zones: [] },
-        evaluation: data.evaluation || { test_cases: [], metric: '', silent_failures: [] },
-        cultural_variants: data.cultural_variants || {},
-        // ✅ Critical field: ready-to-use system prompt for immediate copy-paste
-        ready_to_use_prompt: (data.ready_to_use_prompt || '').trim() || data.principle || ''
-      },
-      model,
-      usage
-    };
-  } catch (error) {
-    const msg = error.message || '';
-    console.error('❌ DeepSeek five-layer generation error:', msg);
-    if (isExternalFailure(msg)) {
-      console.warn('⚠ Falling back to template five-layer so forge flow is not blocked.');
-      return fiveLayerFallback(skillName, ideaText, selectedProbeResponse, probeData, language);
-    }
-    return {
-      success: false,
-      message: `Five-layer generation failed: ${msg}`
-    };
-  }
+  return callWithFallback(prompt, 2000, 'five-layer generation',
+    d => ({
+      principle: d.principle || '',
+      reasoning: d.reasoning || '',
+      exemplars: Array.isArray(d.exemplars) ? d.exemplars : [],
+      boundaries: d.boundaries || { applies_when: [], does_not_apply: [], tension_zones: [] },
+      evaluation: d.evaluation || { test_cases: [], metric: '', silent_failures: [] },
+      cultural_variants: d.cultural_variants || {},
+      ready_to_use_prompt: (d.ready_to_use_prompt || '').trim() || d.principle || ''
+    }),
+    () => fiveLayerFallback(skillName, ideaText, selectedProbeResponse, probeData, language)
+  );
 }
 
 // ─── Template fallback for structured five-layer ───
@@ -777,38 +739,22 @@ Return JSON only:
   "ready_to_use_prompt": "8-14 sentences. A natural-language System Prompt the user can paste into any LLM directly."
 }`;
 
-  try {
-    // 1500 wasn't enough headroom now that the model also returns a
-    // multi-sentence ready_to_use_prompt; bumped to 2200 to avoid silent
-    // truncation that left the prompt empty in production.
-    const { data, model, usage } = await callLLMJSON(prompt, 2200);
-    return {
-      success: true,
-      data: {
-        name: data.name || skillName,
-        definition: data.definition || definition,
-        defining: data.defining || '',
-        instantiating: data.instantiating || '',
-        fencing: data.fencing || '',
-        validating: data.validating || '',
-        contextualizing: data.contextualizing || '',
-        ready_to_use_prompt: (data.ready_to_use_prompt || '').trim()
-      },
-      model,
-      usage
-    };
-  } catch (error) {
-    const msg = error.message || '';
-    console.error('❌ DeepSeek flat five-layer generation error:', msg);
-    if (isExternalFailure(msg)) {
-      console.warn('⚠ Falling back to template flat five-layer so forge flow is not blocked.');
-      return flatFiveLayerFallback(skillName, definition, domain, language);
-    }
-    return {
-      success: false,
-      message: msg || 'Preview generation failed'
-    };
-  }
+  // 1500 wasn't enough headroom now that the model also returns a
+  // multi-sentence ready_to_use_prompt; bumped to 2200 to avoid silent
+  // truncation that left the prompt empty in production.
+  return callWithFallback(prompt, 2200, 'flat five-layer generation',
+    d => ({
+      name: d.name || skillName,
+      definition: d.definition || definition,
+      defining: d.defining || '',
+      instantiating: d.instantiating || '',
+      fencing: d.fencing || '',
+      validating: d.validating || '',
+      contextualizing: d.contextualizing || '',
+      ready_to_use_prompt: (d.ready_to_use_prompt || '').trim()
+    }),
+    () => flatFiveLayerFallback(skillName, definition, domain, language)
+  );
 }
 
 // ─── Template fallback for flat preview ───
