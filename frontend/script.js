@@ -313,6 +313,7 @@ function initializeApp() {
   initSkillPackageDownload();
   initArchiveBackButton();
   initSkillDetailModal();
+  initVoiceInput();
   // Initialize Dashboard card check after a short delay to ensure DOM is ready
   setTimeout(checkAndDisplayDashboard, 500);
 }
@@ -9211,3 +9212,94 @@ function onSkillForgeSuccess(skillData) {
 }
 
 // Dashboard initialization is now handled in initializeApp()
+
+/* ═══════════════════════════════════════════════════════
+   VOICE INPUT — Web Speech API
+   Attaches mic buttons to chaosInput and forgeSkillIdea.
+   Gracefully hidden when browser lacks SpeechRecognition.
+   ═══════════════════════════════════════════════════════ */
+function initVoiceInput() {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) return; // browser unsupported — buttons stay hidden
+
+  function getLang() {
+    const lang = document.body.dataset.lang || 'en';
+    return lang === 'cn' ? 'zh-CN' : 'en-US';
+  }
+
+  function createRecognizer(targetEl, btn) {
+    const rec = new SpeechRecognition();
+    rec.continuous = true;
+    rec.interimResults = true;
+
+    let baseText = '';
+    let active = false;
+
+    function start() {
+      if (active) return;
+      active = true;
+      baseText = targetEl.value;
+      rec.lang = getLang();
+      rec.start();
+      btn.classList.add('recording');
+      btn.title = 'Stop recording';
+    }
+
+    function stop() {
+      if (!active) return;
+      active = false;
+      rec.stop();
+      btn.classList.remove('recording');
+      btn.title = 'Voice input';
+    }
+
+    rec.onresult = (e) => {
+      let interim = '';
+      let final = '';
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        const t = e.results[i][0].transcript;
+        if (e.results[i].isFinal) final += t;
+        else interim += t;
+      }
+      targetEl.value = baseText + final + interim;
+      // Update baseText as finals accumulate
+      if (final) baseText = baseText + final;
+      targetEl.dispatchEvent(new Event('input', { bubbles: true }));
+    };
+
+    rec.onerror = (e) => {
+      if (e.error !== 'no-speech') stop();
+    };
+
+    rec.onend = () => {
+      // Auto-restart if still active (handles browser auto-stop on silence)
+      if (active) {
+        baseText = targetEl.value;
+        rec.start();
+      }
+    };
+
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      active ? stop() : start();
+    });
+
+    return { start, stop };
+  }
+
+  // ── Main chat input ──
+  const chatBtn = document.getElementById('btnVoiceChat');
+  const chatInput = document.getElementById('chaosInput');
+  if (chatBtn && chatInput) {
+    chatBtn.style.display = 'flex';
+    createRecognizer(chatInput, chatBtn);
+  }
+
+  // ── Forge idea textarea ──
+  const forgeBtn = document.getElementById('btnVoiceForge');
+  const forgeInput = document.getElementById('forgeSkillIdea');
+  if (forgeBtn && forgeInput) {
+    forgeBtn.style.display = 'flex';
+    createRecognizer(forgeInput, forgeBtn);
+  }
+}
