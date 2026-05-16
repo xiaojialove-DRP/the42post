@@ -8379,41 +8379,56 @@ async function initAgentArchiveView() {
   function attachArchiveSkillListeners() {
     // Star buttons
     document.querySelectorAll('.domain-cell .star-btn').forEach(btn => {
-      btn.addEventListener('click', (e) => {
+      btn.addEventListener('click', async (e) => {
         e.stopPropagation();
+        if (btn.disabled) return;
+
         const skillId = btn.dataset.skillId;
         const skillItem = btn.closest('.skill-item');
         const downloadBtn = skillItem?.querySelector('.download-btn');
+        const starCountEl = skillItem?.querySelector('.skill-stars');
 
-        // Get current starred state
         const starredSkills = JSON.parse(localStorage.getItem('starred_skills') || '{}');
         const isCurrentlyStarred = starredSkills[skillId] === true;
         const willBeStarred = !isCurrentlyStarred;
 
-        // Call the star function
-        starSkillById(skillId);
+        // Optimistic UI update
+        btn.textContent = willBeStarred ? '★' : '☆';
+        btn.classList.toggle('starred', willBeStarred);
+        btn.title = willBeStarred ? 'Unstar this skill' : 'Star this skill';
+        if (skillItem) skillItem.dataset.isStarred = String(willBeStarred);
+        if (downloadBtn) {
+          downloadBtn.disabled = !willBeStarred;
+          downloadBtn.classList.toggle('disabled', !willBeStarred);
+          downloadBtn.title = willBeStarred ? 'Download skill' : 'Star first to download';
+        }
 
-        // Update UI immediately
-        if (willBeStarred) {
-          btn.classList.add('starred');
-          btn.textContent = '★';
-          btn.title = 'Unstar this skill';
-          if (downloadBtn) {
-            downloadBtn.classList.remove('disabled');
-            downloadBtn.disabled = false;
-            downloadBtn.title = 'Download skill';
+        // Update localStorage
+        if (willBeStarred) starredSkills[skillId] = true;
+        else delete starredSkills[skillId];
+        localStorage.setItem('starred_skills', JSON.stringify(starredSkills));
+
+        // Call API and update count with real number from backend
+        btn.disabled = true;
+        try {
+          const resp = await fetch(`${API_CONFIG.BASE_URL}/skills/${skillId}/star`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-Anonymous-Id': getAnonymousId() },
+            body: JSON.stringify({ starred: willBeStarred })
+          });
+          if (resp.ok) {
+            const result = await resp.json();
+            if (starCountEl && typeof result.totalStars !== 'undefined') {
+              starCountEl.textContent = `⭐ ${result.totalStars}`;
+            }
           }
-          if (skillItem) skillItem.dataset.isStarred = 'true';
-        } else {
-          btn.classList.remove('starred');
-          btn.textContent = '☆';
-          btn.title = 'Star this skill';
-          if (downloadBtn) {
-            downloadBtn.classList.add('disabled');
-            downloadBtn.disabled = true;
-            downloadBtn.title = 'Star first to download';
-          }
-          if (skillItem) skillItem.dataset.isStarred = 'false';
+        } catch (err) {
+          console.warn('Star API error:', err.message);
+          // Revert on error
+          btn.textContent = isCurrentlyStarred ? '★' : '☆';
+          btn.classList.toggle('starred', isCurrentlyStarred);
+        } finally {
+          btn.disabled = false;
         }
       });
     });
@@ -8447,6 +8462,60 @@ async function initAgentArchiveView() {
         window.location.href = `playground.html?skill=${encodeURIComponent(skillId)}`;
       });
     });
+
+    // Batch-sync star states from backend (accurate count + userStarred per device)
+    syncArchiveStarStates();
+  }
+
+  async function syncArchiveStarStates() {
+    const btns = document.querySelectorAll('.domain-cell .star-btn[data-skill-id]');
+    const skillIds = [...new Set([...btns].map(b => b.dataset.skillId))];
+    if (!skillIds.length) return;
+
+    try {
+      const resp = await fetch(
+        `${API_CONFIG.BASE_URL}/skills/stars/batch?ids=${skillIds.join(',')}`,
+        { headers: { 'X-Anonymous-Id': getAnonymousId() } }
+      );
+      if (!resp.ok) return;
+      const { stars } = await resp.json();
+
+      const starredSkills = JSON.parse(localStorage.getItem('starred_skills') || '{}');
+
+      btns.forEach(btn => {
+        const id = btn.dataset.skillId;
+        const data = stars[id];
+        if (!data) return;
+
+        const skillItem = btn.closest('.skill-item');
+        const starCountEl = skillItem?.querySelector('.skill-stars');
+        const downloadBtn = skillItem?.querySelector('.download-btn');
+
+        // Update count display
+        if (starCountEl) starCountEl.textContent = `⭐ ${data.totalStars}`;
+
+        // Update starred state from backend (source of truth)
+        if (data.userStarred) {
+          btn.classList.add('starred');
+          btn.textContent = '★';
+          btn.title = 'Unstar this skill';
+          starredSkills[id] = true;
+          if (skillItem) skillItem.dataset.isStarred = 'true';
+          if (downloadBtn) { downloadBtn.disabled = false; downloadBtn.classList.remove('disabled'); }
+        } else {
+          btn.classList.remove('starred');
+          btn.textContent = '☆';
+          btn.title = 'Star this skill';
+          delete starredSkills[id];
+          if (skillItem) skillItem.dataset.isStarred = 'false';
+          if (downloadBtn) { downloadBtn.disabled = true; downloadBtn.classList.add('disabled'); }
+        }
+      });
+
+      localStorage.setItem('starred_skills', JSON.stringify(starredSkills));
+    } catch (e) {
+      console.warn('Could not sync star states:', e.message);
+    }
   }
 
   // Initialize

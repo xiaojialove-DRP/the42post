@@ -182,6 +182,58 @@ router.get('/', async (req, res, next) => {
   }
 });
 
+// ═══ BATCH STAR STATUS (for Archive page load) ═══
+// Returns totalStars + userStarred for up to 100 skills in one query
+router.get('/stars/batch', async (req, res, next) => {
+  try {
+    const { ids } = req.query;
+    const anonymousId = req.headers['x-anonymous-id'] || req.headers['x-anon-id'];
+
+    if (!ids) return res.json({ success: true, stars: {} });
+
+    const skillIds = ids.split(',').filter(Boolean).slice(0, 100);
+    if (skillIds.length === 0) return res.json({ success: true, stars: {} });
+
+    const placeholders = skillIds.map((_, i) => `$${i + 1}`).join(', ');
+
+    // Total star counts per skill
+    const countResult = await db.query(
+      `SELECT skill_id, COUNT(*) as star_count
+       FROM user_skill_interactions
+       WHERE skill_id IN (${placeholders}) AND starred = 1
+       GROUP BY skill_id`,
+      skillIds
+    );
+
+    // Which ones THIS user has starred
+    let userStarredMap = {};
+    if (anonymousId) {
+      const userResult = await db.query(
+        `SELECT skill_id, starred FROM user_skill_interactions
+         WHERE skill_id IN (${placeholders}) AND anonymous_id = $${skillIds.length + 1}`,
+        [...skillIds, anonymousId]
+      );
+      userResult.rows.forEach(row => {
+        userStarredMap[row.skill_id] = row.starred === 1;
+      });
+    }
+
+    // Build response keyed by skill_id
+    const stars = {};
+    skillIds.forEach(id => { stars[id] = { totalStars: 0, userStarred: false }; });
+    countResult.rows.forEach(row => {
+      if (stars[row.skill_id]) stars[row.skill_id].totalStars = parseInt(row.star_count);
+    });
+    Object.entries(userStarredMap).forEach(([id, starred]) => {
+      if (stars[id]) stars[id].userStarred = starred;
+    });
+
+    res.json({ success: true, stars });
+  } catch (error) {
+    next(error);
+  }
+});
+
 // ═══ GET SKILL STATISTICS (Impact Dashboard) ═══
 // OPTIMIZED: Single query with CTEs instead of 6 sequential queries
 router.get('/:skill_id/stats', async (req, res, next) => {
