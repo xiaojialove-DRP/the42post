@@ -88,35 +88,34 @@ export class SqlitePool {
 
       if (upper.startsWith('SELECT')) {
         const rows = prepared.all(...params);
-        return { rows };
+        return { rows, rowCount: rows.length };
       } else if (upper.startsWith('INSERT')) {
         if (hasReturning) {
-          // better-sqlite3 supports INSERT … RETURNING via .all()
           const rows = prepared.all(...params);
-          return { rows };
+          return { rows, rowCount: rows.length };
         }
-        prepared.run(...params);
-        return { rows: [] };
+        const result = prepared.run(...params);
+        return { rows: [], rowCount: result.changes };
       } else if (upper.startsWith('UPDATE')) {
         if (hasReturning) {
           const rows = prepared.all(...params);
-          return { rows };
+          return { rows, rowCount: rows.length };
         }
-        prepared.run(...params);
-        return { rows: [] };
+        const result = prepared.run(...params);
+        return { rows: [], rowCount: result.changes };
       } else if (upper.startsWith('DELETE')) {
         if (hasReturning) {
           const rows = prepared.all(...params);
-          return { rows };
+          return { rows, rowCount: rows.length };
         }
-        prepared.run(...params);
-        return { rows: [] };
+        const result = prepared.run(...params);
+        return { rows: [], rowCount: result.changes };
       } else if (upper.startsWith('CREATE')) {
         prepared.run(...params);
-        return { rows: [] };
+        return { rows: [], rowCount: 0 };
       } else {
         prepared.run(...params);
-        return { rows: [] };
+        return { rows: [], rowCount: 0 };
       }
     } catch (error) {
       console.error('SQLite Query Error:', error.message);

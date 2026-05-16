@@ -26,6 +26,7 @@
 
 import { join, dirname } from 'path';
 import { existsSync, mkdirSync, readdirSync, statSync, unlinkSync } from 'fs';
+import { logger } from './logger.js';
 
 const BACKUP_RETENTION_DAYS = 7;
 const BACKUP_INTERVAL_MS = 24 * 60 * 60 * 1000;  // 24 hours
@@ -41,7 +42,7 @@ export function startBackupScheduler(db, dbPath) {
   if (!existsSync(backupDir)) {
     try {
       mkdirSync(backupDir, { recursive: true });
-      console.log(`[backup] Created backup directory: ${backupDir}`);
+      logger.info(`[backup] Created backup directory: ${backupDir}`);
     } catch (err) {
       console.warn(`[backup] Cannot create backup dir at ${backupDir} — backups disabled:`, err.message);
       return;
@@ -49,7 +50,7 @@ export function startBackupScheduler(db, dbPath) {
   }
 
   async function performBackup() {
-    console.log('[backup] Starting snapshot...');
+    logger.debug('[backup] Starting snapshot...');
     try {
       const date = new Date().toISOString().slice(0, 10);  // YYYY-MM-DD
       const backupPath = join(backupDir, `backup-${date}.sqlite3`);
@@ -72,7 +73,7 @@ export function startBackupScheduler(db, dbPath) {
       }
 
       const sizeKB = Math.round(statSync(backupPath).size / 1024);
-      console.log(`[backup] ✓ Snapshot saved: ${backupPath} (${sizeKB} KB)`);
+      logger.info(`[backup] ✓ Snapshot saved: ${backupPath} (${sizeKB} KB)`);
 
       cleanOldBackups();
     } catch (err) {
@@ -94,7 +95,7 @@ export function startBackupScheduler(db, dbPath) {
         }
       });
       if (removed > 0) {
-        console.log(`[backup] Removed ${removed} old backup(s) (>${BACKUP_RETENTION_DAYS} days)`);
+        logger.debug(`[backup] Removed ${removed} old backup(s) (>${BACKUP_RETENTION_DAYS} days)`);
       }
     } catch (err) {
       console.warn('[backup] Cleanup failed:', err.message);
@@ -106,7 +107,5 @@ export function startBackupScheduler(db, dbPath) {
   setTimeout(performBackup, FIRST_BACKUP_DELAY_MS);
   setInterval(performBackup, BACKUP_INTERVAL_MS);
 
-  console.log(`[backup] Scheduler started — daily snapshots, ${BACKUP_RETENTION_DAYS}-day retention`);
-  console.log(`[backup] First snapshot in ${Math.round(FIRST_BACKUP_DELAY_MS / 1000)}s; thereafter every ${Math.round(BACKUP_INTERVAL_MS / 3600000)}h`);
-  console.log(`[backup] Backup directory: ${backupDir}`);
+  logger.info(`[backup] Scheduler started — daily snapshots, ${BACKUP_RETENTION_DAYS}-day retention, dir: ${backupDir}`);
 }

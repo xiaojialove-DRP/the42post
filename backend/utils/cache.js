@@ -185,9 +185,7 @@ class CacheManager {
     this.useRedis = !!redisClient;
 
     if (this.useRedis) {
-      console.log('✓ Redis cache enabled');
-    } else {
-      console.log('⚠ Redis cache unavailable, using memory-only cache');
+      console.info('✓ Redis cache enabled');
     }
   }
 

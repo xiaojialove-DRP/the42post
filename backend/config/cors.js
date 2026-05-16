@@ -126,7 +126,6 @@ function addWhitelistedOrigin(origin) {
   const normalized = normalizeOrigin(origin);
   if (normalized && !WHITELISTED_ORIGINS.includes(normalized)) {
     WHITELISTED_ORIGINS.push(normalized);
-    console.log(`✓ Added whitelisted origin: ${normalized}`);
     return true;
   }
   return false;
@@ -143,15 +142,12 @@ function getWhitelistedOrigins() {
  * Log CORS configuration on startup
  */
 function logCorsConfiguration() {
+  if (process.env.NODE_ENV === 'production') return;
   console.log('\n═══ CORS Configuration ═══');
   console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`Whitelisted origins: ${WHITELISTED_ORIGINS.length}`);
-  WHITELISTED_ORIGINS.forEach(origin => {
-    console.log(`  • ${origin}`);
-  });
-  if (process.env.NODE_ENV === 'development') {
-    console.log('  ℹ Development: localhost variants automatically allowed');
-  }
+  WHITELISTED_ORIGINS.forEach(origin => console.log(`  • ${origin}`));
+  console.log('  ℹ Development: localhost variants automatically allowed');
   console.log('');
 }
 

@@ -145,9 +145,7 @@ class ConnectionPool {
         }
       }
 
-      if (toRemove.length > 0) {
-        console.log(`🔄 Connection pool: Cleaned up ${toRemove.length} expired idle connections`);
-      }
+      // Cleanup is routine — no log needed in production
     }, this.idleTimeout / 2); // Run cleanup every half the idle timeout
   }
 
@@ -182,16 +180,7 @@ class ConnectionPool {
    */
   logStats() {
     const stats = this.getStats();
-    console.log('📊 Connection Pool Statistics:');
-    console.log(`  • Active: ${stats.activeConnections}/${stats.maxConnections}`);
-    console.log(`  • Idle: ${stats.idleConnections}`);
-    console.log(`  • Waiting: ${stats.waitingRequests}`);
-    console.log(`  • Utilization: ${stats.utilizationPercent}%`);
-    console.log(`  • Total Acquired: ${stats.totalAcquired}`);
-    console.log(`  • Total Released: ${stats.totalReleased}`);
-    console.log(`  • Query Count: ${stats.queryCount}`);
-    console.log(`  • Error Count: ${stats.errorCount}`);
-    console.log(`  • Peak Connections: ${stats.peakConnections}`);
+    console.log('📊 Connection Pool Statistics:', JSON.stringify(stats, null, 2));
   }
 
   /**
@@ -223,7 +212,7 @@ class ConnectionPool {
     this.idleConnections = [];
     this.waitingRequests = [];
 
-    console.log('✓ Connection pool shut down gracefully');
+    // Shutdown complete
   }
 }
 
