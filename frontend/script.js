@@ -7833,6 +7833,12 @@ async function initAgentArchiveView() {
 
   // ═══ FORGED SKILLS NORMALIZATION ═══
   const forgedSkills = getRecentForges();
+  console.log(`📍 Archive: Loaded ${forgedSkills.length} forged skills from localStorage`, forgedSkills.map(s => ({
+    id: s.id,
+    title: s.title,
+    creator_name: s.creator_name,
+    author: s.author
+  })));
   const forgedSkillsWithStarlight = forgedSkills.map(s => {
     // Ensure forged skills also follow the standard format
     const creatorName = s.creator_name || s.creatorName || s.author || 'Anonymous';
@@ -7936,6 +7942,14 @@ async function initAgentArchiveView() {
         color, phase: phaseRand * Math.PI * 2,
       };
     });
+
+    // Debug: Log nodes to verify they have proper title/creator info
+    const nodeSample = nodes.slice(0, 5).map(n => ({
+      id: n.id,
+      title: n.title,
+      creator_name: n.creator_name
+    }));
+    console.log(`✓ Archive: Created ${nodes.length} nodes for celestial canvas`, nodeSample);
 
     // ═══ DETERMINISTIC EDGE GENERATION ═══
     edges = [];
