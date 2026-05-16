@@ -10,9 +10,17 @@
 
 const WINDOW_MS = 60 * 1000; // 1 minute sliding window
 
-// Store: { ip: { [key]: [timestamps] } }
+// Store: { ip: { [key]: { timestamps: [], windowMs: number } } }
 // Memory-based for simplicity; for production scale, use Redis
 const requestTimestamps = new Map();
+
+// Track the window size per key so the cleanup interval uses the correct window
+const KEY_WINDOWS = {
+  general: WINDOW_MS,
+  llm: WINDOW_MS,
+  twintest: WINDOW_MS,
+  forge: 60 * 60 * 1000, // 1 hour
+};
 
 /**
  * Get IP address from request (handles proxies)
@@ -205,20 +213,33 @@ export const rateLimitForge = (req, res, next) => {
  * Cleanup configuration
  */
 const MAX_IPS_TRACKED = 10000;
-const CLEANUP_INTERVAL = 5 * 60 * 1000; // 5 minutes (more frequent)
+const CLEANUP_INTERVAL = 5 * 60 * 1000; // 5 minutes
 
 /**
- * Cleanup old IPs from memory periodically
- * This prevents unbounded memory growth and maintains consistent performance
+ * Safe min over an array — avoids stack overflow from Math.min(...bigArray)
  */
-setInterval(() => {
+function safeMin(arr) {
+  if (arr.length === 0) return Infinity;
+  let min = arr[0];
+  for (let i = 1; i < arr.length; i++) {
+    if (arr[i] < min) min = arr[i];
+  }
+  return min;
+}
+
+/**
+ * Cleanup old IPs from memory periodically.
+ * Uses each key's own window size so forge (1h) entries are not evicted early.
+ */
+export const cleanupInterval = setInterval(() => {
   const now = Date.now();
 
-  // Step 1: Clean expired timestamps
-  for (const [ip, data] of requestTimestamps.entries()) {
+  // Step 1: Clean expired timestamps using the correct window per key
+  for (const [identity, data] of requestTimestamps.entries()) {
     let hasData = false;
     for (const key in data) {
-      data[key] = cleanOldTimestamps(data[key], now);
+      const windowMs = KEY_WINDOWS[key] ?? WINDOW_MS;
+      data[key] = data[key].filter(ts => now - ts < windowMs);
       if (data[key].length > 0) {
         hasData = true;
       } else {
@@ -226,28 +247,23 @@ setInterval(() => {
       }
     }
     if (!hasData) {
-      requestTimestamps.delete(ip);
+      requestTimestamps.delete(identity);
     }
   }
 
-  // Step 2: Enforce capacity limit with LRU eviction
+  // Step 2: Enforce capacity limit — evict identities with oldest activity first
   if (requestTimestamps.size > MAX_IPS_TRACKED) {
-    // Find the oldest entries based on their minimum timestamp
     const ipsArray = Array.from(requestTimestamps.entries());
     ipsArray.sort((a, b) => {
-      const aOldest = Math.min(
-        ...Object.values(a[1]).flatMap(arr => arr).filter(ts => typeof ts === 'number')
-      );
-      const bOldest = Math.min(
-        ...Object.values(b[1]).flatMap(arr => arr).filter(ts => typeof ts === 'number')
-      );
-      return (aOldest || Infinity) - (bOldest || Infinity);
+      const aTs = Object.values(a[1]).flatMap(arr => arr);
+      const bTs = Object.values(b[1]).flatMap(arr => arr);
+      return safeMin(aTs) - safeMin(bTs);
     });
 
-    // Evict oldest IPs until we're back to 90% of capacity
+    // Evict oldest entries until back at 90% capacity
     const targetSize = Math.floor(MAX_IPS_TRACKED * 0.9);
     const toEvict = ipsArray.length - targetSize;
-    for (let i = 0; i < toEvict && i < ipsArray.length; i++) {
+    for (let i = 0; i < toEvict; i++) {
       requestTimestamps.delete(ipsArray[i][0]);
     }
   }

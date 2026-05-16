@@ -67,10 +67,14 @@ class MemoryCache {
 
     // Check expiration
     if (Date.now() > entry.expiresAt) {
-      this.store.delete(key);
-      this.timers.delete(key);
+      this.delete(key); // uses delete() to also clearTimeout
       return null;
     }
+
+    // Update LRU access order on read
+    const idx = this.accessOrder.indexOf(key);
+    if (idx !== -1) this.accessOrder.splice(idx, 1);
+    this.accessOrder.push(key);
 
     return entry.value;
   }
@@ -268,16 +272,24 @@ class CacheManager {
    * Invalidate pattern-matched keys (e.g., all skill_* keys)
    */
   async invalidatePattern(pattern) {
-    // Memory cache: simple iteration
+    // Memory cache: iterate and delete matching keys
     for (const key of this.memory.store.keys()) {
       if (this.matchesPattern(key, pattern)) {
         this.memory.delete(key);
       }
     }
 
-    // Redis: use KEYS pattern
+    // Redis: delete only matching keys, not the entire store
     if (this.useRedis) {
-      await this.redis.clear(); // Simple approach: clear all on pattern invalidation
+      try {
+        const fullPattern = this.redis.prefix + pattern.replace('*', '*');
+        const keys = await this.redis.redis.keys(fullPattern);
+        if (keys.length > 0) {
+          await this.redis.redis.del(...keys);
+        }
+      } catch (err) {
+        console.warn('Redis invalidatePattern failed:', err.message);
+      }
     }
   }
 
