@@ -9295,9 +9295,9 @@ function initVoiceInput() {
     createRecognizer(chatInput, chatBtn);
   }
 
-  // ── Forge idea textarea ──
+  // ── Forge feedback textarea ("Tell AI what to change…") ──
   const forgeBtn = document.getElementById('btnVoiceForge');
-  const forgeInput = document.getElementById('forgeSkillIdea');
+  const forgeInput = document.getElementById('skillFeedback');
   if (forgeBtn && forgeInput) {
     forgeBtn.style.display = 'flex';
     createRecognizer(forgeInput, forgeBtn);

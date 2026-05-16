@@ -407,17 +407,7 @@
         <div class="minimal-section">
           <div class="minimal-label" data-i18n="forge_thought">YOUR THOUGHT</div>
           <div class="minimal-instruction" data-i18n="forge_instruction">Any skill you wish or don't wish AI to have. Any idea counts.</div>
-          <div class="voice-textarea-wrap">
-            <textarea class="minimal-textarea" placeholder="e.g. AI should understand the silence of grief…" data-i18n-placeholder="forge_idea_ph" id="forgeSkillIdea"></textarea>
-            <button class="btn-voice-inline" id="btnVoiceForge" title="Voice input" aria-label="Voice input" style="display:none">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
-                <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
-                <line x1="12" y1="19" x2="12" y2="23"/>
-                <line x1="8" y1="23" x2="16" y2="23"/>
-              </svg>
-            </button>
-          </div>
+          <textarea class="minimal-textarea" placeholder="e.g. AI should understand the silence of grief…" data-i18n-placeholder="forge_idea_ph" id="forgeSkillIdea"></textarea>
         </div>
 
         <!-- Generate Probe Button -->
@@ -546,7 +536,17 @@
         <div class="skill-feedback-section">
           <div class="skill-item-label" data-i18n="forge_regen_label">REGENERATE? (optional)</div>
           <div class="feedback-input-group">
-            <textarea class="minimal-textarea" placeholder="Tell AI what to change…" data-i18n-placeholder="forge_regen_ph" id="skillFeedback"></textarea>
+            <div class="voice-textarea-wrap">
+              <textarea class="minimal-textarea" placeholder="Tell AI what to change…" data-i18n-placeholder="forge_regen_ph" id="skillFeedback"></textarea>
+              <button class="btn-voice-inline" id="btnVoiceForge" title="Voice input" aria-label="Voice input" style="display:none">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                  <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                  <line x1="12" y1="19" x2="12" y2="23"/>
+                  <line x1="8" y1="23" x2="16" y2="23"/>
+                </svg>
+              </button>
+            </div>
             <button class="btn-regen-send" id="btnRegenerateSkill">
               <span class="regen-emoji">🔄</span>
               <span class="regen-label" data-i18n="forge_regen_btn">Regen</span>
