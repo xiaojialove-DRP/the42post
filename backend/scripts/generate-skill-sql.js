@@ -35,8 +35,8 @@ try {
     process.exit(1);
   }
 
-  const SHARED_SKILLS = eval(`[${sharedMatch[1]}]`);
-  const DEMO_SKILLS_50 = eval(`[${demoMatch[1]}]`);
+  const SHARED_SKILLS = (new Function('return [' + sharedMatch[1] + ']'))();
+  const DEMO_SKILLS_50 = (new Function('return [' + demoMatch[1] + ']'))();
 
   // System user ID for authors
   const SYSTEM_USER_ID = uuidv4();

@@ -188,8 +188,20 @@ app.use('/api/download', downloadsRoutes);
 app.use('/api/playground', playgroundRoutes);
 
 // ═══ ADMIN UTILITIES ═══
+// Guard: require ADMIN_KEY header for all /api/admin/* routes
+function requireAdminKey(req, res, next) {
+  const adminKey = process.env.ADMIN_KEY;
+  if (!adminKey) {
+    return res.status(503).json({ error: 'Admin endpoints disabled: ADMIN_KEY not configured' });
+  }
+  if (req.headers['x-admin-key'] !== adminKey) {
+    return res.status(403).json({ error: 'Forbidden: invalid admin key' });
+  }
+  next();
+}
+
 // Seed diagnostic endpoint - check file paths
-app.get('/api/admin/seed-test', async (req, res) => {
+app.get('/api/admin/seed-test', requireAdminKey, async (req, res) => {
   try {
     const { existsSync, readdirSync } = await import('fs');
 
@@ -237,7 +249,7 @@ app.get('/api/admin/seed-test', async (req, res) => {
 });
 
 // Simple UI to trigger seed
-app.get('/admin/seed-ui', (req, res) => {
+app.get('/admin/seed-ui', requireAdminKey, (req, res) => {
   const html = `<!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"><title>Seed Manager</title>
@@ -312,7 +324,7 @@ async function applySeed() {
 });
 
 // Apply seed (from GitHub raw if local file not available)
-app.post('/api/admin/seed-apply', async (req, res) => {
+app.post('/api/admin/seed-apply', requireAdminKey, async (req, res) => {
   try {
     const { existsSync, readFileSync } = await import('fs');
 
@@ -409,7 +421,7 @@ app.get('/api/cors-debug', (req, res) => {
 });
 
 // Database diagnostics
-app.get('/api/admin/diagnostics', async (req, res) => {
+app.get('/api/admin/diagnostics', requireAdminKey, async (req, res) => {
   try {
     const allSkills = await db.query('SELECT COUNT(*) as count FROM skills');
     const publishedSkills = await db.query('SELECT COUNT(*) as count FROM skills WHERE published = 1');
@@ -440,7 +452,7 @@ app.get('/api/admin/diagnostics', async (req, res) => {
 });
 
 // Nuke all skills (dangerous — easy mode for development)
-app.get('/api/admin/nuke-skills-now', async (req, res) => {
+app.get('/api/admin/nuke-skills-now', requireAdminKey, async (req, res) => {
   try {
     console.log('[nuke-skills] Starting skill deletion...');
 
@@ -470,7 +482,7 @@ app.get('/api/admin/nuke-skills-now', async (req, res) => {
 });
 
 // Backfill skill descriptions
-app.post('/api/admin/backfill-descriptions', async (req, res) => {
+app.post('/api/admin/backfill-descriptions', requireAdminKey, async (req, res) => {
   console.log('[backfill] Starting skill description backfill...');
 
   try {

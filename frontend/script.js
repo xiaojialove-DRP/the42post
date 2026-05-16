@@ -7,6 +7,17 @@
    PHASE 0: API CLIENT LAYER (Front-Back Connection)
    ═══════════════════════════════════════════════════════ */
 
+/* ═══ HTML ESCAPE UTILITY ═══ */
+function escapeHtml(str) {
+  if (str == null) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
 /* ═══ TOAST NOTIFICATION SYSTEM ═══ */
 let notyfInstance = null;
 
@@ -333,26 +344,26 @@ function initSkillGrids() {
     const canDownload = isStarred;
 
     return `
-      <div class="skill-card" data-skill-id="${skill.id}">
+      <div class="skill-card" data-skill-id="${escapeHtml(skill.id)}">
         <!-- Card Header -->
         <div class="skill-card-header">
-          <span class="skill-title">${title}</span>
-          <span class="skill-starlight">✨ ${skill.starlight}</span>
+          <span class="skill-title">${escapeHtml(title)}</span>
+          <span class="skill-starlight">✨ ${escapeHtml(skill.starlight)}</span>
         </div>
-        
+
         <!-- Soul Hash -->
         <div class="skill-card-hash">
-          <code class="soul-hash">${skill.soul_hash ? skill.soul_hash.substring(0, 14) : 'SH-GENERATED'}</code>
+          <code class="soul-hash">${skill.soul_hash ? escapeHtml(skill.soul_hash.substring(0, 14)) : 'SH-GENERATED'}</code>
         </div>
-        
+
         <!-- Description -->
-        <div class="skill-card-desc">${desc}</div>
-        
+        <div class="skill-card-desc">${escapeHtml(desc)}</div>
+
         <!-- Footer with interactions -->
         <div class="skill-card-footer">
           <div class="skill-card-meta">
-            <span class="skill-author">${skill.author}</span>
-            <span class="skill-domain">${skill.domain}</span>
+            <span class="skill-author">${escapeHtml(skill.author)}</span>
+            <span class="skill-domain">${escapeHtml(skill.domain)}</span>
           </div>
           
           <!-- Action Buttons -->
@@ -1541,11 +1552,6 @@ function initializeSlotData() {
 initializeSlotData();
 
 /* ═══ SLOT GRID WITH STARLIGHT ═══ */
-  function escapeHtml(str) {
-    if (!str) return '';
-    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-  }
-
 function initSlotGrid() {
   // Ensure SLOT_DATA is populated
   if (!SLOT_DATA || SLOT_DATA.length === 0) {
@@ -5486,7 +5492,7 @@ function initShareTaste() {
 
       if (cardText) cardText.textContent = text;
       if (cardId) cardId.textContent = card.id;
-      if (cardTags) cardTags.innerHTML = tags.map(t => `<span class="taste-tag">${t}</span>`).join('');
+      if (cardTags) cardTags.innerHTML = tags.map(t => `<span class="taste-tag">${escapeHtml(t)}</span>`).join('');
       if (cardAuthor) cardAuthor.textContent = `— ${card.author}`;
 
       // Reveal the result
@@ -5797,7 +5803,7 @@ function initPlayground() {
   // Auto-fill first slot with preselected skill if available
   if (preselectedSkillName && skillSlotA) {
     selectedSkills.a = preselectedSkillName;
-    skillSlotA.innerHTML = `<span class="selected-skill-name">${preselectedSkillName}</span>`;
+    skillSlotA.innerHTML = `<span class="selected-skill-name">${escapeHtml(preselectedSkillName)}</span>`;
     skillSlotA.classList.add('selected');
     // Clear the localStorage so it's not used again
     try { localStorage.removeItem('playgroundPreselectedSkill'); } catch (e) {}
@@ -5808,7 +5814,7 @@ function initPlayground() {
       const skillName = prompt('Enter skill name (e.g., "Material Honesty"):');
       if (skillName && skillName.trim()) {
         selectedSkills.a = skillName.trim();
-        skillSlotA.innerHTML = `<span class="selected-skill-name">${skillName.trim()}</span>`;
+        skillSlotA.innerHTML = `<span class="selected-skill-name">${escapeHtml(skillName.trim())}</span>`;
         skillSlotA.classList.add('selected');
         updateOpenCanvasButton();
       }
@@ -5820,7 +5826,7 @@ function initPlayground() {
       const skillName = prompt('Enter skill name (e.g., "Grief Protocol"):');
       if (skillName && skillName.trim()) {
         selectedSkills.b = skillName.trim();
-        skillSlotB.innerHTML = `<span class="selected-skill-name">${skillName.trim()}</span>`;
+        skillSlotB.innerHTML = `<span class="selected-skill-name">${escapeHtml(skillName.trim())}</span>`;
         skillSlotB.classList.add('selected');
         updateOpenCanvasButton();
       }

@@ -159,7 +159,7 @@ async function seedSkills() {
 
     // Parse and insert SHARED_SKILLS
     const sharedSkillsCode = sharedSkillsMatch[1];
-    const sharedSkillsArray = eval(`[${sharedSkillsCode}]`);
+    const sharedSkillsArray = (new Function('return [' + sharedSkillsCode + ']'))();
 
     for (const skill of sharedSkillsArray) {
       const authorId = await getOrCreateAuthor(skill.author);
@@ -178,7 +178,7 @@ async function seedSkills() {
 
     // Parse and insert best DEMO_SKILLS
     const demoSkillsCode = demoSkillsMatch[1];
-    const demoSkillsArray = eval(`[${demoSkillsCode}]`);
+    const demoSkillsArray = (new Function('return [' + demoSkillsCode + ']'))();
 
     // Select only the best skills
     const selectedDemoSkills = demoSkillsArray.filter(skill => {
