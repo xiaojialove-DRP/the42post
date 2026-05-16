@@ -2722,10 +2722,7 @@ function initSkillForge() {
     // 1️⃣ 检测重复字符太多（如"拦拦拦拦拦"或"gggggg"）
     // 对英文降低阈值到4次重复（5个相同字符），对中文保留5次重复
     const repeatedCharRegex = /(.)\1{4,}/g;
-    if (repeatedCharRegex.test(text)) {
-      console.log("❌ Detected excessive repeated characters");
-      return false;
-    }
+    if (repeatedCharRegex.test(text)) return false;
 
     // 2️⃣ 检测中文随机字符
     const isChinese = /[一-鿿]/.test(text);
@@ -2745,33 +2742,20 @@ function initSkillForge() {
         // 短文本（12-20字）的严格检查
         if (text.length >= 12 && text.length <= 20) {
           // 如果没有常见词汇，且字符多样性不足，则拒绝
-          if (!hasMeaningfulWords && uniqueRatio < 0.7) {
-            console.log("❌ Detected random Chinese characters in short text (no meaningful words, low diversity)");
-            return false;
-          }
-          // 即使字符多样，如果完全没有标点和常见词汇，也要拒绝
+          if (!hasMeaningfulWords && uniqueRatio < 0.7) return false;
           const hasPunctuation = /[，。！？；：""''（）【】《》…·~]/g.test(text);
-          if (!hasPunctuation && !hasMeaningfulWords) {
-            console.log("❌ Detected random Chinese characters (no punctuation, no meaningful words)");
-            return false;
-          }
+          if (!hasPunctuation && !hasMeaningfulWords) return false;
         }
 
         // 中等文本（21-40字）检查
         if (text.length > 20 && text.length <= 40) {
-          if (!hasMeaningfulWords && uniqueRatio < 0.6) {
-            console.log("❌ Detected random Chinese characters in medium text (no meaningful words, low diversity)");
-            return false;
-          }
+          if (!hasMeaningfulWords && uniqueRatio < 0.6) return false;
         }
 
         // 更严格的检查：
         // - 如果unique char太少（≤4个），可能是随意重复
         // - 如果整个文本的unique char占比太低（≤25%），可能是随意拼凑
-        if (uniqueChars.size <= 4 || uniqueRatio <= 0.25) {
-          console.log("❌ Detected random Chinese characters (low diversity)");
-          return false;
-        }
+        if (uniqueChars.size <= 4 || uniqueRatio <= 0.25) return false;
 
         // 检查字符频率：如果某个字符出现频率太高（40%+），可能是无意义
         const charFreq = {};
@@ -2779,10 +2763,7 @@ function initSkillForge() {
           charFreq[char] = (charFreq[char] || 0) + 1;
         }
         const maxFreq = Math.max(...Object.values(charFreq));
-        if (maxFreq >= chineseChars.length * 0.4) {
-          console.log("❌ Detected repetitive Chinese pattern (one char appears 40%+ of the time)");
-          return false;
-        }
+        if (maxFreq >= chineseChars.length * 0.4) return false;
       }
     }
 
@@ -2800,14 +2781,8 @@ function initSkillForge() {
         const uniqueLetters = new Set(text.toLowerCase().match(/[a-z]/g) || []);
 
         // 对短文本（<20字）和长文本的字母多样性要求不同
-        if (text.length < 20 && uniqueLetters.size <= 4) {
-          console.log("❌ Detected random English characters with low variety (including symbols)");
-          return false;
-        }
-        if (text.length >= 20 && uniqueLetters.size <= 3) {
-          console.log("❌ Detected random English characters with very low variety");
-          return false;
-        }
+        if (text.length < 20 && uniqueLetters.size <= 4) return false;
+        if (text.length >= 20 && uniqueLetters.size <= 3) return false;
       }
     }
 
@@ -2816,25 +2791,16 @@ function initSkillForge() {
 
   // Share按钮处理 (btnTest是首页的Share按钮)
   const btnTest = document.getElementById("btnTest");
-  console.log("initSkillForge: btnTest =", btnTest);
   if (btnTest) {
-    console.log("✓ Attaching character limit validation to Share button");
     btnTest.addEventListener("click", () => {
-      console.log("🔵 Share button clicked");
-      // Offer recovery before user starts a fresh forge
       maybeOfferDraftRecovery();
-      const ideaInput = document.getElementById("chaosInput");  // 首页输入框的ID是chaosInput
-      const creatorNameInput = document.getElementById("creatorNameInput");
+      const ideaInput = document.getElementById("chaosInput");
       if (!ideaInput || !ideaInput.value.trim()) {
-        console.log("⚠ No idea input found or empty");
         alertI18n('error_share_idea_first');
         return;
       }
-      // ✅ 字数限制检查 (最少12个字)
       const ideaText = ideaInput.value.trim();
-      console.log("📝 Idea text length:", ideaText.length, "Content:", ideaText.substring(0, 50));
       if (ideaText.length < 12) {
-        console.log("❌ Character limit check FAILED - showing warning");
         // Show styled warning instead of alert
         const ethicsResult = document.getElementById('ethicsResult');
         const ethicsShortText = document.getElementById('ethicsShortText');
@@ -2842,7 +2808,6 @@ function initSkillForge() {
         const ethicsPass = document.getElementById('ethicsPass');
         const ethicsFail = document.getElementById('ethicsFail');
 
-        console.log("Elements found:", { ethicsResult: !!ethicsResult, ethicsShortText: !!ethicsShortText, ethicsShortMsg: !!ethicsShortMsg });
 
         if (ethicsResult && ethicsShortText && ethicsShortMsg) {
           // Determine language and set message
@@ -2872,7 +2837,6 @@ function initSkillForge() {
 
       // ✅ 内容有意性检查 (检测随意打入的无意义字符)
       if (!isContentMeaningful(ideaText)) {
-        console.log("❌ Content meaningfulness check FAILED");
         const ethicsResult = document.getElementById('ethicsResult');
         const ethicsShortText = document.getElementById('ethicsShortText');
         const ethicsShortMsg = document.getElementById('ethicsShortMsg');
@@ -9253,16 +9217,37 @@ function initVoiceInput() {
       btn.title = 'Voice input';
     }
 
+    const CONFIDENCE_THRESHOLD = 0.5;
+
     rec.onresult = (e) => {
       let interim = '';
       let final = '';
+      let hadLowConfidence = false;
+
       for (let i = e.resultIndex; i < e.results.length; i++) {
-        const t = e.results[i][0].transcript;
-        if (e.results[i].isFinal) final += t;
-        else interim += t;
+        const result = e.results[i];
+        const transcript = result[0].transcript;
+        const confidence = result[0].confidence;
+
+        if (result.isFinal) {
+          // confidence is 0 or undefined on some browsers for interim→final transitions;
+          // treat undefined as passing so we don't drop valid speech
+          if (confidence > 0 && confidence < CONFIDENCE_THRESHOLD) {
+            hadLowConfidence = true;
+          } else {
+            final += transcript;
+          }
+        } else {
+          interim += transcript;
+        }
       }
+
+      if (hadLowConfidence) {
+        btn.classList.add('voice-low-confidence');
+        setTimeout(() => btn.classList.remove('voice-low-confidence'), 600);
+      }
+
       targetEl.value = baseText + final + interim;
-      // Update baseText as finals accumulate
       if (final) baseText = baseText + final;
       targetEl.dispatchEvent(new Event('input', { bubbles: true }));
     };

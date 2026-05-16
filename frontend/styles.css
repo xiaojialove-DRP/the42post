@@ -1806,6 +1806,19 @@ body[data-lang="cn"] .voices-header-text {
   50%       { box-shadow: 0 0 0 6px rgba(229, 57, 53, 0); }
 }
 
+@keyframes voice-shake {
+  0%, 100% { transform: translateX(0); }
+  20%       { transform: translateX(-3px); }
+  50%       { transform: translateX(3px); }
+  80%       { transform: translateX(-2px); }
+}
+
+.btn-voice-input.voice-low-confidence,
+.btn-voice-inline.voice-low-confidence {
+  animation: voice-shake 0.5s ease;
+  border-color: #e53935;
+}
+
 /* Community Voices Grid */
 .community-voices-list {
   margin-top: 28px;
