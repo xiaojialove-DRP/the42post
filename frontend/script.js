@@ -6622,7 +6622,7 @@ function saveForgedSkill(skillData) {
   }
 
   const newSkill = {
-    id: 'forged_' + Date.now(),
+    id: skillData.id || skillData.backendId || 'forged_' + Date.now(),
     title: skillData.title || 'Unnamed Skill',
     titleCn: skillData.titleCn || '未命名技能',
     desc: skillData.desc || '',
@@ -8017,7 +8017,7 @@ async function initAgentArchiveView() {
         if (isClk) {
           ctx.font = '8px "JetBrains Mono", monospace';
           ctx.fillStyle = 'rgba(184,74,48,0.85)';
-          ctx.fillText(n.hash, n.x, n.y + sz * 2.8 + 10);
+          ctx.fillText((n.hash || '').substring(0, 14), n.x, n.y + sz * 2.8 + 10);
         }
       }
     });
