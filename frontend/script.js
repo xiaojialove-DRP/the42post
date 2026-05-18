@@ -2870,7 +2870,7 @@ function initSkillForge() {
       }
 
       // 字数和内容检查都通过，显示确认信息然后打开forge
-      window.homepageIdea = { text: ideaInput.value, creator_name: creatorNameInput ? creatorNameInput.value : "" };
+      window.homepageIdea = { text: ideaInput.value, creator_name: "" };
 
       // 显示确认✓和文案 (保留: We heard you...)
       const ethicsResult = document.getElementById('ethicsResult');
@@ -2918,7 +2918,6 @@ function initSkillForge() {
       }
 
       ideaInput.value = "";
-      if (creatorNameInput) creatorNameInput.value = "";
       // updateFormMode() removed - was throwing ReferenceError
     });
   }
