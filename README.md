@@ -1,129 +1,109 @@
-# THE 42 POST 🛸
+# THE 42 POST
 
-**An Open-Source Platform for Human-Centered AI Value Alignment**
+**An open-source platform for human-centered AI value alignment.**
 
-Democratizing how humans define, share, and verify their values for AI systems.
-🌐 **[中文版本 (Chinese Version)](./README.zh.md)** 
+🌐 [中文版本](./README.zh.md) · [Live Platform](https://www.the42post.com) · [Report Issues](https://github.com/xiaojialove-DRP/the42post/issues)
 
-> **Built on [SemanticForge](https://github.com/xiaojialove-DRP/SemanticForge)** — THE 42 POST implements SemanticForge's five-layer framework as a community platform where anyone can create and share AI-aligned skills.
-
----
-
-## 🎯 What is THE 42 POST?
-
-THE 42 POST is a web platform where anyone can create "Skills" — structured, verifiable representations of human values that guide AI behavior. Instead of hidden values in training data, THE 42 POST makes them explicit, shareable, verifiable, and multi-cultural.
-
-### Key Features
-
-- 🛠️ **Skill Forging Workshop** — Turn your values into verifiable AI guidance in 4 steps
-- 📚 **Skill Library** — Explore 42+ community-created skills across different domains
-- 👁️ **Preview & Iterate** — Review before publishing and refine based on feedback
-- 🤖 **AI-Ready** — Test behavior with Shadow Agent or integrate into your systems
+> Built on [SemanticForge](https://github.com/xiaojialove-DRP/SemanticForge) — THE 42 POST implements SemanticForge's five-layer framework as a community platform where anyone can create and share AI-aligned skills.
 
 ---
 
-## ❓ Why Did We Build This?
+## What is THE 42 POST?
 
-**The Problem:** AI values are hidden in training data, inconsistent across cultures, unverifiable, and controlled by few organizations.
+THE 42 POST is a web platform where anyone can create **Skills** — structured, verifiable representations of human values that guide AI behavior. Instead of burying values inside training data, THE 42 POST makes them explicit, shareable, auditable, and culturally diverse.
 
-**Our Solution:** We democratize AI alignment by making values explicit, auditable, and culturally adapted. Everyone—from users to ethicists—can shape AI behavior without needing technical expertise.
+### Features
 
----
-
-## 🚀 Getting Started
-
-**No setup required.** Visit [THE 42 POST](https://the42post-production.up.railway.app):
-
-1. **Browse** 42+ community-created skills (2 min)
-2. **Create** your first skill using Skill Forge (5-10 min)
-3. **Publish** and receive your Soul-Hash identity (1 min)
+- **Skill Forge** — Turn your values into verifiable AI guidance in 4 guided steps
+- **Skill Library** — Browse 42+ community-created skills across domains
+- **Twin Test Playground** — Compare two skills side-by-side to see how they change AI responses
+- **Soul-Hash Identity** — Each published skill receives a unique 14-character identity
+- **Creator Card** — Downloadable proof-of-contribution with skill summary and email delivery
 
 ---
 
-## 💭 Why We're Committed to Open Research
+## Why We Built This
 
-THE 42 POST is not a commercial product. We believe AI alignment should be:
-- **Owned by everyone**, not corporations
-- **Rooted in research**, not proprietary algorithms  
-- **Culturally diverse**, shaped by communities worldwide
-- **Verifiable and auditable**, not black-box
+**The problem:** AI values are hidden in training data, inconsistent across cultures, unverifiable, and controlled by a small number of organizations.
 
-This is why we open-sourced it.
+**Our answer:** Democratize AI alignment by making values explicit, auditable, and community-authored. No coding required — just your perspective as a human.
+
+This is an open-source research project. We believe AI alignment should be owned by everyone, not corporations.
 
 ---
 
-## 📚 Architecture
+## Getting Started
 
-For detailed system design, data flows, database schema, and technical architecture, see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+No setup required. Visit [the42post.com](https://www.the42post.com):
 
----
-
-## 📖 How to Use THE 42 POST
-
-### For Skill Discoverers
-- **Search the Library** by domain, creator, or keyword
-- **Read Skill Details** including five-layer structure, examples, and community feedback
-- **Experience Skills** using the Shadow Agent to see how they guide AI behavior
-- **Rate & Share** feedback and recommendations
-
-### For Creators
-1. **Click "Skill Forge"** and enter your core idea
-2. **AI generates** the five-layer structure (DEFINING, INSTANTIATING, FENCING, VALIDATING, CONTEXTUALIZING)
-3. **Preview & refine** before publishing
-4. **Publish** and receive your Soul-Hash identity + Creator Card
-
-### For Researchers
-- **Analyze patterns** across 42+ skills in different domains
-- **Study effectiveness** using test cases and Shadow Agent
-- **Access via API** — Get skill data in JSON format (`/api/skills`, `/api/search`)
-- **Publish findings** and contribute to human-centered AI research
-
-### For Developers
-- **Integrate skills** into your AI agents using REST API
-- **Run test cases** to validate behavior alignment
-- **Collaborate** with skill creators on improvements
+1. **Browse** community skills in the Skill Library
+2. **Create** your first skill using the Skill Forge (5–10 min)
+3. **Test** behavior in the Twin Test Playground
+4. **Publish** and receive your Soul-Hash + Creator Card
 
 ---
 
-## 🤝 Contributing
+## Self-Hosting
 
-We welcome contributions from creators, developers, and researchers:
+```bash
+git clone https://github.com/xiaojialove-DRP/the42post.git
+cd the42post/backend
+cp .env.example .env       # fill in ANTHROPIC_API_KEY and other vars
+npm install
+npm start
+```
 
-- **Skill Creators:** Design and publish skills through the platform
-- **Developers:** Fork the repo, submit PRs, improve the platform
-- **Researchers:** Download skills, run experiments, share findings
-
----
-
-## 📄 License
-
-MIT License — See [LICENSE](LICENSE) file
+See [docs/SETUP.md](docs/SETUP.md) for full environment configuration and [docs/guides/DEPLOYMENT.md](docs/guides/DEPLOYMENT.md) for production deployment.
 
 ---
 
-## 📚 Documentation
+## Architecture
 
-- **[Architecture](docs/ARCHITECTURE.md)** — System design and data flows
-- **[API Reference](docs/API_REFERENCE.md)** — REST API endpoints for integration
-- **[Contributing Guide](docs/CONTRIBUTING.md)** — How to contribute (creators, designers, developers, researchers)
-- **[Changelog](CHANGELOG.md)** — What's new in each release
+```
+frontend/          Static HTML/CSS/JS — no build step required
+backend/
+  routes/          REST API endpoints
+  utils/           LLM adapter, email, cache, validation
+  middleware/       Rate limiting, error handling
+  db/              SQLite schema and seed data
+docs/              Architecture, API reference, guides
+```
 
----
-
-## 🔗 Quick Links
-
-- **🌐 Live Platform**: www.the42post.com
-- **📦 GitHub Repository**: https://github.com/xiaojialove-DRP/the42post
-- **🐛 Report Issues**: [GitHub Issues](https://github.com/xiaojialove-DRP/the42post/issues)
-
----
-
-## 🙏 Acknowledgments
-
-THE 42 POST brings together research in Value-Sensitive Design, Participatory Design, Cross-Cultural HCI, and AI Alignment to make value definition accessible to everyone. Special thanks to all creators who have contributed skills to the library.
+Full system design: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)  
+REST API reference: [docs/API_REFERENCE.md](docs/API_REFERENCE.md)
 
 ---
 
-**Version**: 1.0.0 · **Status**: Public Release ✅
+## Contributing
+
+We welcome contributions from creators, developers, and researchers.
+
+- **Skill creators** — Design and publish skills through the platform
+- **Developers** — Fork, submit PRs, improve the platform
+- **Researchers** — Download skills via API, run experiments, share findings
+
+See [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) for guidelines.
+
+---
+
+## Documentation
+
+| Document | Description |
+|---|---|
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | System design and data flows |
+| [docs/API_REFERENCE.md](docs/API_REFERENCE.md) | REST API endpoints |
+| [docs/CONCEPTS.md](docs/CONCEPTS.md) | Core concepts: Skills, Soul-Hash, five-layer structure |
+| [docs/SETUP.md](docs/SETUP.md) | Local development setup |
+| [docs/guides/DEPLOYMENT.md](docs/guides/DEPLOYMENT.md) | Production deployment |
+| [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) | Contribution guidelines |
+| [CHANGELOG.md](CHANGELOG.md) | Release history |
+
+---
+
+## License
+
+MIT — see [LICENSE](LICENSE)
+
+---
 
 *Making AI values transparent, verifiable, and human-centered.*

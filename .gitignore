@@ -1,28 +1,10 @@
 # Dependencies
 node_modules/
-/.pnp
-.pnp.js
-
-# Testing
-/coverage
-
-# Production
-/build
-/dist
 
 # Environment variables
 .env
 .env.local
 .env.*.local
-
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-.DS_Store
-*.sublime-workspace
 
 # Logs
 logs/
@@ -31,11 +13,12 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# Database (temporary files)
+# Database
+*.sqlite3
 *.sqlite3-shm
 *.sqlite3-wal
-database.sqlite3-shm
-database.sqlite3-wal
+*.db
+backups/
 
 # OS files
 .DS_Store
@@ -43,18 +26,18 @@ database.sqlite3-wal
 ._*
 .Spotlight-V100
 .Trashes
-ehthumbs.db
 Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
 
 # Build output
 dist/
 build/
-*.o
-*.obj
-
-# Editor configuration
-.vscode/settings.json
-.idea/workspace.xml
+/coverage
 
 # Temporary files
 *.tmp
@@ -62,14 +45,7 @@ tmp/
 temp/
 .claude/
 
-# Design & Documentation (keep locally, not in git)
-*.pdf
-COMPLETION_CHECKLIST.txt
-**/*COMPLETION*.txt
-
-# Test & Demo files
-test-dashboard.html
+# Test & debug files
 test-*.html
 *-test.html
-backups/
-*.sqlite3
+cleanup-*.html
