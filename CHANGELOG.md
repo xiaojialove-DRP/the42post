@@ -2,6 +2,38 @@
 
 All notable changes to THE 42 POST.
 
+## [1.3.0] — 2026-05-19
+
+### Bug Fixes
+
+- **Share button unresponsive** — Removed stale `creatorNameInput` references that caused a silent `ReferenceError` on every click, blocking the entire forge entry flow
+- **Star state lost on refresh** — Archive stars now sync from the backend on every page load via a new batch endpoint (`GET /api/skills/stars/batch`), replacing the previous localStorage-only approach
+- **Incorrect star counts** — Archive star click handler now updates the displayed count from the server response instead of estimating locally
+- **Soul-hash full string in star map** — Celestial canvas now renders the correct 14-character truncation of the soul-hash
+- **Archive ▶ not auto-selecting Skill A** — Fixed `saveForgedSkill` writing a fake timestamp-based ID; it now persists the real database ID so `initTwinTestMode` can fetch it correctly
+- **`forging_histories` insert failure** — Fixed undefined `user_email` variable; replaced with `user?.email`
+
+### Features
+
+- **Voice input** — Mic button on the homepage idea input using Web Speech API with confidence threshold filtering; auto-restarts on silence; gracefully hidden when browser lacks `SpeechRecognition`
+- **Skills list cache** — `GET /api/skills` now serves from a 5-minute in-memory cache; invalidated automatically on new skill publish
+
+### Security
+
+- Replaced `eval()` with `Function()` constructor
+- Added admin route authentication
+- Escaped user-supplied `innerHTML` to prevent XSS
+
+### Project
+
+- Removed internal dev artifacts from repo root (`DEPLOYMENT_READY.md`, `FIXES_13_ISSUES.md`, `IMPLEMENTATION_CHECKLIST.md`, `README_FIXES.md`)
+- Removed `docs/dev-logs/` directory
+- Moved `backend/EMAIL_API_SETUP.md` → `docs/guides/EMAIL_SETUP.md`
+- Rewrote `README.md` with cleaner structure and self-hosting instructions
+- Tightened `.gitignore`
+
+---
+
 ## [1.2.0] — 2026-05-11
 
 ### 🎯 Bug Fixes & Quality Improvements
@@ -148,5 +180,5 @@ All notable changes to THE 42 POST.
 ---
 
 **Status**: Production Ready ✅  
-**Version**: 1.2.0  
-**Last Updated**: 2026-05-11
+**Version**: 1.3.0  
+**Last Updated**: 2026-05-19
