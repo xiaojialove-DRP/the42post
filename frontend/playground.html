@@ -2286,6 +2286,12 @@
        ═══════════════════════════════════════ */
 
     function getAnonymousId() {
+      // If forge redirected here with ?anonymous_id=..., use that and persist it
+      const urlId = new URLSearchParams(window.location.search).get('anonymous_id');
+      if (urlId) {
+        localStorage.setItem('42post_anon_id', urlId);
+        return urlId;
+      }
       let id = localStorage.getItem('42post_anon_id');
       if (!id) {
         id = 'anon_' + Math.random().toString(36).slice(2) + Date.now().toString(36);

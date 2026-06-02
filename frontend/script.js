@@ -5089,9 +5089,11 @@ function showForgeCompletion(skillData, soulHash) {
     if (btnTryPlayground) {
       btnTryPlayground.addEventListener('click', () => {
         const skillId = skillData.id || skillData.backendId;
-        window.location.href = skillId
-          ? `/playground?skill=${encodeURIComponent(skillId)}`
-          : '/playground';
+        const anonId = typeof getAnonymousId === 'function' ? getAnonymousId() : '';
+        const params = new URLSearchParams();
+        if (skillId) params.set('skill', skillId);
+        if (anonId) params.set('anonymous_id', anonId);
+        window.location.href = `/playground${params.toString() ? '?' + params.toString() : ''}`;
       });
     }
 
