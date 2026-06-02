@@ -3384,8 +3384,7 @@ function initSkillForge() {
         probeResponses = culturalProbes.responses;
       }
 
-      // Display scenario text
-      const scenarioEl = document.getElementById('probeScenarioText');
+      // Display scenario text (scenarioEl declared above for streaming)
       if (scenarioEl) scenarioEl.textContent = scenarios.context;
 
       // Fill in the three choices
