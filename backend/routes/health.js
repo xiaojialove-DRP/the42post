@@ -99,8 +99,14 @@ router.get('/', async (req, res) => {
     };
   }
 
-  // ═══ CHECK LLM (Claude API) ═══
-  if (process.env.ANTHROPIC_API_KEY) {
+  // ═══ CHECK LLM ═══
+  if (process.env.DEEPSEEK_API_KEY) {
+    health.services.llm = {
+      status: 'configured',
+      provider: 'DeepSeek' + (process.env.ANTHROPIC_API_KEY ? ' + Claude fallback' : ''),
+      configured: true
+    };
+  } else if (process.env.ANTHROPIC_API_KEY) {
     health.services.llm = {
       status: 'configured',
       provider: 'Claude (Anthropic)',
@@ -109,7 +115,7 @@ router.get('/', async (req, res) => {
   } else {
     health.services.llm = {
       status: 'not_configured',
-      message: 'ANTHROPIC_API_KEY not set'
+      message: 'DEEPSEEK_API_KEY not set'
     };
   }
 
