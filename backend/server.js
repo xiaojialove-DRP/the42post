@@ -353,7 +353,7 @@ app.post('/api/admin/seed-apply', requireAdminKey, async (req, res) => {
       logger.info('[seed-apply] Loaded from GitHub');
     }
     const statements = sqlContent
-      .split(';')
+      .split(/;\s*\n/)
       .filter(s => s.trim() && !s.trim().startsWith('--'));
 
     logger.info(`[seed-apply] Executing ${statements.length} statements...`);
