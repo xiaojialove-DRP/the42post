@@ -4369,19 +4369,6 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
   font-style: italic;
 }
 
-.probe-scenario-text.streaming::after {
-  content: '▋';
-  display: inline-block;
-  animation: blink-cursor 0.7s step-end infinite;
-  color: var(--ink-muted);
-  font-style: normal;
-}
-
-@keyframes blink-cursor {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0; }
-}
-
 .probe-cards {
   display: grid;
   grid-template-columns: repeat(3, 1fr);

@@ -2533,108 +2533,35 @@ function isSensitiveScenario(text) {
   return false;
 }
 
-async function generateProbeScenarios(idea, onStream) {
-  const lang = document.body.dataset.lang || 'en';
-
-  // ── Try streaming endpoint first ──
-  // onStream(chunk) lets the caller show text appearing in real time
+async function generateProbeScenarios(idea) {
+  // Always try the real API first — the probe endpoint is public (no auth required).
+  // Auth guard was the bug: users click Generate Probe before creating an account.
   try {
-    const probe = await _generateProbeStream(idea, lang, onStream);
-    if (probe && probe.scenario) {
-      if (isSensitiveScenario(`${probe.scenario} ${probe.thesis} ${probe.antithesis} ${probe.extreme}`)) {
-        return generateClientSideProbe(idea);
-      }
-      return { context: probe.scenario, a: probe.thesis, b: probe.antithesis, c: probe.extreme, apiSource: true, fullProbe: probe };
-    }
-  } catch (e) {
-    console.warn('[probe] stream failed, trying non-stream:', e.message);
-  }
-
-  // ── Fallback: non-streaming API ──
-  try {
-    const result = await API.generateProbe(idea, lang);
+    const result = await API.generateProbe(idea, document.body.dataset.lang || 'en');
     if (result.success && result.probe) {
-      if (isSensitiveScenario(`${result.probe.scenario} ${result.probe.thesis} ${result.probe.antithesis} ${result.probe.extreme}`)) {
+      // ⚠️ 安全检查：检测生成的场景是否包含敏感内容
+      const scenarioText = `${result.probe.scenario} ${result.probe.thesis} ${result.probe.antithesis} ${result.probe.extreme}`;
+      if (isSensitiveScenario(scenarioText)) {
+        console.warn('⚠️ Generated scenario contains sensitive content, falling back to client-side generation');
+        // 降级到客户端生成，避免敏感场景
         return generateClientSideProbe(idea);
       }
-      return { context: result.probe.scenario, a: result.probe.thesis, b: result.probe.antithesis, c: result.probe.extreme, apiSource: true, fullProbe: result.probe };
+
+      return {
+        context: result.probe.scenario,
+        a: result.probe.thesis,
+        b: result.probe.antithesis,
+        c: result.probe.extreme,
+        apiSource: true,
+        fullProbe: result.probe
+      };
     }
   } catch (e) {
-    console.warn('[probe] API unavailable, falling back to client-side:', e.message);
+    console.warn('Probe API unavailable, falling back to client-side generation:', e);
   }
 
+  // Fallback: client-side generation
   return generateClientSideProbe(idea);
-}
-
-// Streaming probe via SSE fetch
-async function _generateProbeStream(idea, lang, onChunk) {
-  return new Promise((resolve, reject) => {
-    const ctrl = new AbortController();
-    const timeout = setTimeout(() => { ctrl.abort(); reject(new Error('stream timeout')); }, 30000);
-
-    fetch(`${API_CONFIG.BASE_URL}/forge/probe/stream`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ idea_text: idea, language: lang }),
-      signal: ctrl.signal
-    }).then(resp => {
-      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-      const reader = resp.body.getReader();
-      const decoder = new TextDecoder();
-      let buffer = '';
-
-      function pump() {
-        return reader.read().then(({ done, value }) => {
-          if (done) { clearTimeout(timeout); resolve(null); return; }
-          buffer += decoder.decode(value, { stream: true });
-          const lines = buffer.split('\n');
-          buffer = lines.pop();
-
-          for (const line of lines) {
-            const t = line.trim();
-            if (!t || t === 'data: [DONE]') continue;
-            try {
-              if (t.startsWith('event: chunk')) return; // handled next line
-              if (t.startsWith('data: ')) {
-                const d = JSON.parse(t.slice(6));
-                if (d.text && onChunk) onChunk(d.text);
-                if (d.success && d.probe) { clearTimeout(timeout); resolve(d.probe); return; }
-                if (d.message && !d.success) { clearTimeout(timeout); reject(new Error(d.message)); return; }
-              }
-            } catch { /* malformed */ }
-          }
-          return pump();
-        });
-      }
-
-      // Parse event/data pairs properly
-      let lastEvent = '';
-      function pump2() {
-        return reader.read().then(({ done, value }) => {
-          if (done) { clearTimeout(timeout); resolve(null); return; }
-          buffer += decoder.decode(value, { stream: true });
-          const lines = buffer.split('\n');
-          buffer = lines.pop();
-
-          for (const line of lines) {
-            const t = line.trim();
-            if (!t) { lastEvent = ''; continue; }
-            if (t.startsWith('event: ')) { lastEvent = t.slice(7); continue; }
-            if (t.startsWith('data: ')) {
-              try {
-                const d = JSON.parse(t.slice(6));
-                if (lastEvent === 'chunk' && d.text && onChunk) onChunk(d.text);
-                if (lastEvent === 'done' && d.probe) { clearTimeout(timeout); resolve(d.probe); return; }
-                if (lastEvent === 'error') { clearTimeout(timeout); reject(new Error(d.message || 'stream error')); return; }
-              } catch { /* skip */ }
-            }
-          }
-          return pump2();
-        });
-      }
-      return pump2();
-    }).catch(err => { clearTimeout(timeout); reject(err); });
-  });
 }
 
 // ═══ CULTURAL PROBES: Generate 3 distinct AI response styles ═══
@@ -3255,7 +3182,7 @@ function initSkillForge() {
       const sess = await ApiClient.establishForgeSession(email, username);
       btnForgeBegin.disabled = false;
       if (!sess.ok) {
-        alertI18n('error_session_failed');
+        alert('无法建立会话 / Session failed: ' + (sess.message || 'Unknown error'));
         return;
       }
 
@@ -3307,7 +3234,7 @@ function initSkillForge() {
       if (!sess.ok) {
         btnGenerateProbe.disabled = false;
         btnGenerateProbe.textContent = originalText;
-        alertI18n('error_session_failed');
+        alert('无法建立会话 / Session failed: ' + (sess.message || 'Unknown error'));
         return;
       }
 
@@ -3318,41 +3245,13 @@ function initSkillForge() {
         probeChoice: null // Will be set when user selects a probe
       };
 
+      // 简洁的加载状态 - 只显示"正在思考中..."
       btnGenerateProbe.classList.add('generating');
 
-      // Show probe modal early with streaming container
-      const scenarioEl = document.getElementById('probeScenarioText');
-      if (scenarioEl) {
-        scenarioEl.textContent = '';
-        scenarioEl.classList.add('streaming');
-      }
-      if (probeModal) probeModal.style.display = 'flex';
+      // Generate probe scenarios based on idea
+      const scenarios = await generateProbeScenarios(idea);
 
-      // Reset choice cards while streaming
-      document.querySelectorAll('.probe-choice').forEach(c => {
-        const textEl = c.querySelector('.choice-text');
-        if (textEl) textEl.textContent = isCn ? '生成中…' : 'Generating…';
-        c.classList.remove('selected');
-      });
-      const confirmation = document.getElementById('probeConfirmation');
-      if (confirmation) confirmation.style.display = 'none';
-
-      // Stream text into scenario area in real-time
-      let streamBuffer = '';
-      const onStreamChunk = (chunk) => {
-        streamBuffer += chunk;
-        if (scenarioEl) {
-          // Show everything up to the first THESIS: marker
-          const cutoff = streamBuffer.search(/THESIS:|ANTITHESIS:|EXTREME:/);
-          scenarioEl.textContent = cutoff > 0
-            ? streamBuffer.slice(0, cutoff).replace(/^SCENARIO:\s*/i, '').trim()
-            : streamBuffer.replace(/^SCENARIO:\s*/i, '').trim();
-        }
-      };
-
-      const scenarios = await generateProbeScenarios(idea, onStreamChunk);
-
-      if (scenarioEl) scenarioEl.classList.remove('streaming');
+      // 恢复按钮状态
       btnGenerateProbe.disabled = false;
       btnGenerateProbe.textContent = originalText;
       btnGenerateProbe.classList.remove('generating');
@@ -3384,7 +3283,8 @@ function initSkillForge() {
         probeResponses = culturalProbes.responses;
       }
 
-      // Display scenario text (scenarioEl declared above for streaming)
+      // Display scenario text
+      const scenarioEl = document.getElementById('probeScenarioText');
       if (scenarioEl) scenarioEl.textContent = scenarios.context;
 
       // Fill in the three choices
@@ -3403,7 +3303,12 @@ function initSkillForge() {
         }
       });
 
-      // Modal already open from streaming start — just ensure visible
+      // Reset selection state
+      document.querySelectorAll('.probe-choice').forEach(c => c.classList.remove('selected'));
+      const confirmation = document.getElementById('probeConfirmation');
+      if (confirmation) confirmation.style.display = 'none';
+
+      // Show modal (now positioned fixed at screen center)
       if (probeModal) probeModal.style.display = 'flex';
     });
   }
@@ -4390,7 +4295,7 @@ function initSkillForge() {
     btnAutoStructure.addEventListener('click', async () => {
       const nativeTextEl = document.getElementById('forgeNativeText');
       if (!nativeTextEl || !nativeTextEl.value.trim()) {
-        alertI18n('error_share_idea_first');
+        alert('Please describe your idea first / 请先描述你的想法');
         return;
       }
 
@@ -4472,7 +4377,7 @@ function initSkillForge() {
 
       } catch (error) {
         console.error('Probe generation failed:', error);
-        alertI18n('error_probe_generation');
+        alert('Failed to generate probe');
         btnAutoStructure.textContent = '⚡ INTUITION PROBE · 直觉探针';
       } finally {
         btnAutoStructure.disabled = false;
@@ -4803,7 +4708,7 @@ function initSkillForge() {
           if (!ApiClient.getToken() && emailValue && usernameValue) {
             const sess = await ApiClient.establishForgeSession(emailValue, usernameValue);
             if (!sess.ok) {
-              alertI18n('error_session_failed');
+              alert('无法建立会话 / Session failed: ' + (sess.message || 'Unknown error'));
               publishBtn.textContent = '⚔ PUBLISH & FORGE';
               publishBtn.style.pointerEvents = 'auto';
               return;
@@ -5413,7 +5318,7 @@ function showImpactDashboard(stats, skillData) {
 /* ═══ DOWNLOAD CREATOR CARD ═══ */
 async function downloadCreatorCard(skillData, soulHash) {
   const cardElement = document.querySelector('.commemorative-card');
-  if (!cardElement) { alertI18n('error_card_not_found'); return; }
+  if (!cardElement) { alert('Certificate card not found'); return; }
 
   try {
     // Show loading state
@@ -5450,7 +5355,7 @@ async function downloadCreatorCard(skillData, soulHash) {
     }
   } catch (error) {
     console.error('Failed to generate card image:', error);
-    alertI18n('error_card_generation');
+    alert('Failed to generate creator card image. Please try again.');
     if (event?.target) {
       event.target.disabled = false;
     }
@@ -7581,7 +7486,7 @@ function copySkillToClipboard(skillData) {
     }, 2000);
   }).catch(err => {
     console.error('Failed to copy:', err);
-    alertI18n('error_copy_clipboard');
+    alert('Failed to copy to clipboard');
   });
 }
 
@@ -7688,7 +7593,7 @@ function initSkillPackageDownload() {
       if (window.currentForgedSkill) {
         downloadSkillPackage(window.currentForgedSkill);
       } else {
-        alertI18n('error_no_skill_data');
+        alert('No skill data available. Please forge a skill first.');
       }
     });
   }
@@ -7703,7 +7608,7 @@ function initSkillPackageDownload() {
       if (window.currentForgedSkill) {
         downloadMarkdownSkill(window.currentForgedSkill);
       } else {
-        alertI18n('error_no_skill_data');
+        alert('No skill data available. Please forge a skill first.');
       }
     });
   }
@@ -7713,7 +7618,7 @@ function initSkillPackageDownload() {
       if (window.currentForgedSkill) {
         downloadLangChainSkill(window.currentForgedSkill);
       } else {
-        alertI18n('error_no_skill_data');
+        alert('No skill data available. Please forge a skill first.');
       }
     });
   }
@@ -7723,7 +7628,7 @@ function initSkillPackageDownload() {
       if (window.currentForgedSkill) {
         downloadMCPConfigSkill(window.currentForgedSkill);
       } else {
-        alertI18n('error_no_skill_data');
+        alert('No skill data available. Please forge a skill first.');
       }
     });
   }
@@ -8691,7 +8596,7 @@ async function initAgentArchiveView() {
         // Check if button is disabled
         if (btn.disabled) {
           const t = window.t || ((key) => key);
-          alertI18n('warning_star_first');
+          alert(t('warning_star_first') || 'Please star this skill first to download it');
           return;
         }
 
@@ -9042,7 +8947,7 @@ function attachDomainSkillListeners() {
 
         const starredSkills = JSON.parse(localStorage.getItem('starred_skills') || '{}');
         if (starredSkills[skillId] !== true) {
-          alertI18n('warning_star_first');
+          alert('⭐ Please star this skill first before downloading.');
           return;
         }
 
@@ -9081,7 +8986,7 @@ function attachDomainSkillListeners() {
           console.log(`📥 Skill "${skill.title}" downloaded (${skill.downloads} total)`);
         } catch (error) {
           console.error('Download error:', error);
-          alertI18n('error_download_failed');
+          alert('Failed to download skill. Please try again.');
           downloadBtn.textContent = originalText;
         } finally {
           downloadBtn.disabled = false;
