@@ -563,7 +563,7 @@ router.post('/', optionalAuth, rateLimitForge, async (req, res, next) => {
     try {
       // SECURITY: Use SERIALIZABLE isolation level to prevent race conditions
       // (e.g., duplicate skill creation if user submits twice)
-      await client.query('BEGIN IMMEDIATE');
+      await client.query('BEGIN');
 
       // Insert skill (SQLite-compatible: 1/0 for booleans, CURRENT_TIMESTAMP for CURRENT_TIMESTAMP)
       const skillResult = await client.query(
