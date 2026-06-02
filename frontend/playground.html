@@ -2358,16 +2358,14 @@
         window.TWIN_TEST_SKILL = skill;
 
         // Coming from Archive's "▶ Play" — drop the user straight into a
-        // ready-to-test card. We pick a domain that matches the skill if
-        // possible, then a random scenario from it. The dock is still
-        // visible so the user can keep playing other categories.
+        // ready-to-test card.
         const skillDomain = (skill.domain || '').toLowerCase();
         const matchedRepo =
           REPOSITORIES.find(r => r.id === skillDomain) ||
           REPOSITORIES[Math.floor(Math.random() * REPOSITORIES.length)];
         const task = matchedRepo.tasks[Math.floor(Math.random() * matchedRepo.tasks.length)];
-        // Defer one frame so the canvas has finished its first layout pass.
-        requestAnimationFrame(() => spawnCard(task, matchedRepo));
+        // Wait for layout to settle before spawning (especially on mobile)
+        setTimeout(() => spawnCard(task, matchedRepo), 300);
       } catch (err) {
         console.warn('Twin Test init failed (proceeding without preset skill):', err.message);
       }
@@ -2625,9 +2623,14 @@
       canvas.appendChild(card);
       setTimeout(() => card.classList.remove('spawning'), 600);
 
-      // Always show skill picker first — user selects a skill (or uses default)
-      // then confirms with "Use this Skill" button to enter the test flow.
-      showSkillPickerInCard(card, task, repo);
+      // If a skill was pre-loaded (from ?skill= URL or Forge completion),
+      // skip the picker and go straight to the test trigger.
+      if (window.TWIN_TEST_SKILL?.id) {
+        applyTwinSkillToCard(card, window.TWIN_TEST_SKILL);
+        showTwinTestTrigger(card, task, repo);
+      } else {
+        showSkillPickerInCard(card, task, repo);
+      }
 
       return card;
     }
