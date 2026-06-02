@@ -62,6 +62,7 @@ if (pgUri) {
   const pgPool = new Pool({ connectionString: pgUri, ssl: false });
   db = {
     query: (sql, params) => pgPool.query(sql, params),
+    connect: () => pgPool.connect(),
     dialect: 'postgresql'
   };
   pgPool.query('SELECT 1 as test').then(() => {
@@ -361,6 +362,18 @@ app.post('/api/admin/seed-apply', requireAdminKey, async (req, res) => {
       .split(/;\s*\n/)
       .map(s => s.trim())
       .filter(s => s.length > 0);
+
+    // Ensure system user exists before inserting skills (FK dependency)
+    try {
+      await db.query(
+        `INSERT INTO users (id, email, username, password_hash, account_type, verified, created_at)
+         VALUES ('bb1eecf8-68ae-4765-b6db-5e092462d8e2', 'system@the42post.local', 'System', 'system', 'system', 1, NOW())
+         ON CONFLICT (id) DO NOTHING`
+      );
+      logger.info('[seed-apply] System user ensured');
+    } catch (e) {
+      logger.warn('[seed-apply] System user insert skipped:', e.message);
+    }
 
     logger.info(`[seed-apply] Executing ${statements.length} statements...`);
 
