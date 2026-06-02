@@ -378,7 +378,8 @@ function initSkillGrids() {
             <!-- Download Button (star first to enable) -->
             <button class="btn-download"
                     data-skill-id="${skill.id}"
-                    title="Star first to download">
+                    ${canDownload ? '' : 'disabled'}
+                    title="${canDownload ? 'Download this skill' : 'Star first to download'}">
               <span class="download-icon">⬇</span>
               <span class="download-count">${skill.downloads || 0}</span>
             </button>

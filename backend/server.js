@@ -548,9 +548,7 @@ async function startServer() {
     logger.info('✓ Database schema initialized');
 
     // Auto-seed 42 skills if needed
-    // Temporarily disabled due to startup crash — will implement manual endpoint
-    // await seedSkillsIfNeeded(db);
-    logger.warn('Skill seeding disabled during startup (manual seeding available via API)');
+    await seedSkillsIfNeeded(db);
 
     const server = app.listen(PORT, () => {
       logger.info(`THE 42 POST server running on port ${PORT} (${process.env.NODE_ENV})`);

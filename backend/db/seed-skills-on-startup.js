@@ -33,9 +33,13 @@ export async function seedSkillsIfNeeded(db) {
 
     const sqlContent = fs.readFileSync(sqlPath, 'utf8');
     const statements = sqlContent
-      .split(';')
-      .filter(s => s.trim() && !s.trim().startsWith('--'))
-      .map(s => s.trim() + ';');
+      .split('\n')
+      .filter(line => !line.trim().startsWith('--'))
+      .join('\n')
+      .split(/;\s*\n/)
+      .map(s => s.trim())
+      .filter(s => s.length > 0)
+      .map(s => s + ';');
 
     console.log(`
     📊 Seed Status Report:
