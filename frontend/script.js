@@ -316,9 +316,98 @@ function initializeApp() {
   initVoiceInput();
   // Initialize Dashboard card check after a short delay to ensure DOM is ready
   setTimeout(checkAndDisplayDashboard, 500);
+  // Silently re-sync any localStorage skills that failed to reach the DB
+  setTimeout(syncLocalSkillsToDB, 3000);
 }
 
 document.addEventListener('DOMContentLoaded', initializeApp);
+
+// ═══ AUTO-SYNC: re-publish localStorage skills that never reached the DB ═══
+// Runs silently on page load. If a forged skill's ID is not found in the API,
+// it means the original publish failed (e.g. due to a server bug) and we
+// re-submit it now. The user sees nothing — their skill just quietly appears.
+async function syncLocalSkillsToDB() {
+  try {
+    const localSkills = getRecentForges();
+    if (!localSkills.length) return;
+
+    for (const skill of localSkills) {
+      // Only sync skills that have a real five_layer (not stub entries)
+      const fiveLayer = skill.five_layer || skill.fiveLayerSkill;
+      if (!fiveLayer || !fiveLayer.principle) continue;
+
+      // Check if this skill ID already exists in DB
+      const skillId = skill.id || skill.backendId;
+      if (!skillId || skillId.startsWith('forged_')) {
+        // No real backend ID — was never submitted or failed before save
+        await _resubmitSkillToDB(skill);
+        continue;
+      }
+
+      // Has a UUID-style ID — verify it actually exists in DB
+      try {
+        const check = await fetch(`${API_CONFIG.BASE_URL}/skills/${skillId}`);
+        if (check.status === 404) {
+          await _resubmitSkillToDB(skill);
+        }
+      } catch (e) {
+        // Network error — skip silently, retry next visit
+      }
+    }
+  } catch (e) {
+    console.warn('[sync] Auto-sync failed silently:', e.message);
+  }
+}
+
+async function _resubmitSkillToDB(skill) {
+  try {
+    const fiveLayer = skill.five_layer || skill.fiveLayerSkill;
+    if (!fiveLayer || !fiveLayer.principle) return;
+
+    const creatorName = skill.creator_name || skill.creatorName || skill.author || 'Anonymous';
+
+    // Ensure we have a forge-session token for attribution
+    let token = ApiClient.getToken();
+    if (!token && skill.email && creatorName) {
+      const s = await ApiClient.establishForgeSession(skill.email, creatorName);
+      if (s.ok) token = ApiClient.getToken();
+    }
+
+    const headers = { 'Content-Type': 'application/json' };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+
+    const resp = await fetch(`${API_CONFIG.BASE_URL}/skills`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        title: skill.title,
+        title_cn: skill.titleCn || skill.title,
+        description: skill.desc || '',
+        description_cn: skill.descCn || skill.desc || '',
+        domain: skill.domain || 'ideas',
+        creatorName,
+        five_layer: fiveLayer
+      })
+    });
+
+    if (resp.ok) {
+      const data = await resp.json();
+      if (data.success && data.skill?.id) {
+        // Update localStorage entry with the real DB id
+        const forges = getRecentForges();
+        const idx = forges.findIndex(s => (s.id || s.backendId) === (skill.id || skill.backendId));
+        if (idx !== -1) {
+          forges[idx].id = data.skill.id;
+          forges[idx].backendId = data.skill.id;
+          localStorage.setItem('42post_recent_forges', JSON.stringify(forges));
+        }
+        console.log(`[sync] Re-synced skill to DB: "${skill.title}" → ${data.skill.id}`);
+      }
+    }
+  } catch (e) {
+    // Fail silently — will retry on next page load
+  }
+}
 
 /* ═══ SKILL GRIDS ═══ */
 /* ═══ SKILL GRIDS - ENHANCED WITH STAR/DOWNLOAD SYSTEM ═══ */
