@@ -165,10 +165,21 @@ router.get('/:skillId', async (req, res, next) => {
           ]
         );
         // Bump the per-skill download counter so the archive UI reflects it
-        await db.query(
-          `UPDATE skills SET download_count = COALESCE(download_count, 0) + 1 WHERE id = $1`,
-          [skillId]
-        );
+        try {
+          await db.query(
+            `UPDATE skills SET download_count = COALESCE(download_count, 0) + 1 WHERE id = $1`,
+            [skillId]
+          );
+        } catch (colErr) {
+          // Column may not exist yet — ensure it and retry once
+          if (/column/.test(colErr.message || '')) {
+            await db.query(`ALTER TABLE skills ADD COLUMN download_count INTEGER DEFAULT 0`).catch(() => {});
+            await db.query(
+              `UPDATE skills SET download_count = COALESCE(download_count, 0) + 1 WHERE id = $1`,
+              [skillId]
+            ).catch(() => {});
+          }
+        }
       } catch (logErr) {
         console.warn('Failed to log download:', logErr.message);
       }
