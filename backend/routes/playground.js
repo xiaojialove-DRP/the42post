@@ -516,7 +516,7 @@ router.get('/picker', async (req, res, next) => {
          FROM skills s
          LEFT JOIN users u ON s.author_id = u.id
          WHERE s.creator_anonymous_id = $1
-           AND s.published = true
+           AND s.published = 1
            AND s.deleted_at IS NULL
          ORDER BY s.published_at DESC
          LIMIT $2`,
@@ -529,7 +529,7 @@ router.get('/picker', async (req, res, next) => {
       SELECT s.*, u.username AS creator_name
        FROM skills s
        LEFT JOIN users u ON s.author_id = u.id
-       WHERE s.published = true AND s.deleted_at IS NULL
+       WHERE s.published = 1 AND s.deleted_at IS NULL
     `;
     let hotParams = [];
     if (exclude_domain && typeof exclude_domain === 'string') {

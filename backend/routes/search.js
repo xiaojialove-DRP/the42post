@@ -41,7 +41,7 @@ router.get('/', async (req, res, next) => {
       FROM skills s
       JOIN users u ON s.author_id = u.id,
            plainto_tsquery('english', $1) query
-      WHERE s.published = true
+      WHERE s.published = 1
             AND s.deleted_at IS NULL
             AND (to_tsvector('english', s.title || ' ' || COALESCE(s.description, '')) @@ query
                  OR s.title ILIKE $2
@@ -52,7 +52,7 @@ router.get('/', async (req, res, next) => {
 
     const countQuery = `
       SELECT COUNT(*) FROM skills s
-      WHERE s.published = true
+      WHERE s.published = 1
             AND s.deleted_at IS NULL
             AND (s.title ILIKE $1 OR s.description ILIKE $1)
     `;
@@ -99,7 +99,7 @@ router.get('/trending', async (req, res, next) => {
 
     const result = await db.query(
       `SELECT * FROM skills
-       WHERE published = true AND deleted_at IS NULL ${domainClause}
+       WHERE published = 1 AND deleted_at IS NULL ${domainClause}
        ORDER BY starlight_score DESC, published_at DESC
        LIMIT $${paramIndex}`,
       [...params, parsedLimit]
@@ -126,13 +126,13 @@ router.get('/domain/:domain', async (req, res, next) => {
     const [resultsResult, countResult] = await Promise.all([
       db.query(
         `SELECT * FROM skills
-         WHERE domain = $1 AND published = true AND deleted_at IS NULL
+         WHERE domain = $1 AND published = 1 AND deleted_at IS NULL
          ORDER BY published_at DESC
          LIMIT $2 OFFSET $3`,
         [domain, parsedLimit, offset]
       ),
       db.query(
-        'SELECT COUNT(*) FROM skills WHERE domain = $1 AND published = true AND deleted_at IS NULL',
+        'SELECT COUNT(*) FROM skills WHERE domain = $1 AND published = 1 AND deleted_at IS NULL',
         [domain]
       )
     ]);

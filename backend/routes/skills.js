@@ -125,8 +125,8 @@ router.get('/', async (req, res, next) => {
                  END AS creator_name
                  FROM skills s
                  LEFT JOIN users u ON s.author_id = u.id
-                 WHERE s.published = true AND s.deleted_at IS NULL`;
-    let countQuery = 'SELECT COUNT(*) FROM skills s WHERE s.published = true AND s.deleted_at IS NULL';
+                 WHERE s.published = 1 AND s.deleted_at IS NULL`;
+    let countQuery = 'SELECT COUNT(*) FROM skills s WHERE s.published = 1 AND s.deleted_at IS NULL';
     const params = [];
     let paramIndex = 1;
 
@@ -1055,7 +1055,7 @@ router.get('/user/skills', requireAuth, async (req, res, next) => {
     const params = [userId];
 
     if (!include_drafts) {
-      query += ' AND published = true';
+      query += ' AND published = 1';
     }
 
     query += ' ORDER BY published_at DESC NULLS LAST';
