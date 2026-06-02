@@ -384,6 +384,7 @@ app.post('/api/admin/seed-apply', requireAdminKey, async (req, res) => {
       failed,
       total: statements.length,
       finalPublishedSkills: finalCount,
+      errors: errors.slice(0, 5),
       message: `Executed ${executed}/${statements.length} statements. Database now has ${finalCount} published skills.`
     });
   } catch (err) {
