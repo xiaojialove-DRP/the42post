@@ -9362,84 +9362,70 @@ function onSkillForgeSuccess(skillData) {
    ═══════════════════════════════════════════════════════ */
 function initVoiceInput() {
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SpeechRecognition) return; // browser unsupported — buttons stay hidden
+  if (!SpeechRecognition) return;
 
-  // iOS Safari does not allow auto-restarting recognition in onend callbacks;
-  // it must always be triggered by a direct user gesture.
-  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+  // Mobile: single-shot mode (tap→speak→auto-stop→tap again to add more).
+  // This matches the UX of every mobile voice keyboard and works across
+  // iOS Safari, Android Chrome, and all OEM browsers.
+  // Desktop: continuous mode with manual stop.
+  const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
 
   function getLang() {
-    const lang = document.body.dataset.lang || 'en';
-    return lang === 'cn' ? 'zh-CN' : 'en-US';
+    return (document.body.dataset.lang || 'en') === 'cn' ? 'zh-CN' : 'en-US';
   }
 
   function createRecognizer(targetEl, btn) {
     let rec = null;
-    let baseText = '';
-    let active = false;
+    let listening = false;   // a recognition session is running
+    let committed = '';      // text already confirmed by previous sessions
+
+    function setBtn(state) {
+      btn.classList.toggle('recording', state === 'recording');
+      btn.classList.toggle('voice-ready', state === 'ready');
+      const titles = { idle: 'Voice input', recording: 'Listening…', ready: 'Tap to add more' };
+      btn.title = titles[state] || 'Voice input';
+    }
 
     function buildRec() {
       const r = new SpeechRecognition();
-      // iOS Safari only supports non-continuous mode reliably
-      r.continuous = !isIOS;
-      r.interimResults = !isIOS;
       r.lang = getLang();
-
-      const CONFIDENCE_THRESHOLD = 0.5;
+      r.continuous = !isMobile;      // continuous only on desktop
+      r.interimResults = true;
+      r.maxAlternatives = 1;
 
       r.onresult = (e) => {
         let interim = '';
         let final = '';
-        let hadLowConfidence = false;
-
         for (let i = e.resultIndex; i < e.results.length; i++) {
-          const result = e.results[i];
-          const transcript = result[0].transcript;
-          const confidence = result[0].confidence;
-
-          if (result.isFinal) {
-            if (confidence > 0 && confidence < CONFIDENCE_THRESHOLD) {
-              hadLowConfidence = true;
-            } else {
-              final += transcript;
-            }
-          } else {
-            interim += transcript;
-          }
+          const t = e.results[i][0].transcript;
+          e.results[i].isFinal ? (final += t) : (interim += t);
         }
-
-        if (hadLowConfidence) {
-          btn.classList.add('voice-low-confidence');
-          setTimeout(() => btn.classList.remove('voice-low-confidence'), 600);
-        }
-
-        targetEl.value = baseText + final + interim;
-        if (final) baseText = baseText + final;
+        // Show interim inline; only commit final text
+        targetEl.value = committed + final + interim;
+        if (final) committed = committed + final;
         targetEl.dispatchEvent(new Event('input', { bubbles: true }));
       };
 
       r.onerror = (e) => {
-        // not-allowed = permission denied; abort-others are transient
         if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
-          active = false;
-          btn.classList.remove('recording');
-          btn.title = 'Voice input';
-        } else if (e.error !== 'no-speech') {
-          // non-fatal — let onend handle cleanup
+          // Permission denied — reset fully
+          listening = false;
+          committed = '';
+          setBtn('idle');
         }
+        // 'no-speech', 'aborted', network errors → let onend handle cleanup
       };
 
       r.onend = () => {
-        if (!active) return;
-        if (isIOS) {
-          // iOS: can't auto-restart — show tap-again hint briefly
-          btn.classList.remove('recording');
-          btn.title = 'Tap to continue';
-          setTimeout(() => { if (active) btn.title = 'Tap to continue'; }, 0);
+        listening = false;
+        if (!isMobile) {
+          // Desktop: auto-restart until user clicks stop
+          if (rec === r) {
+            try { r.start(); listening = true; } catch (_) { setBtn('idle'); }
+          }
         } else {
-          // Desktop/Android Chrome: safe to auto-restart
-          baseText = targetEl.value;
-          try { r.start(); } catch (_) {}
+          // Mobile: single shot done — show "tap to add more" if we got text
+          setBtn(committed ? 'ready' : 'idle');
         }
       };
 
@@ -9447,43 +9433,33 @@ function initVoiceInput() {
     }
 
     function start() {
-      if (active) return;
-      active = true;
-      baseText = targetEl.value;
+      committed = targetEl.value;
       rec = buildRec();
       try {
         rec.start();
-        btn.classList.add('recording');
-        btn.title = 'Stop recording';
+        listening = true;
+        setBtn('recording');
       } catch (e) {
-        active = false;
-        btn.classList.remove('recording');
+        listening = false;
+        setBtn('idle');
       }
     }
 
     function stop() {
-      if (!active) return;
-      active = false;
-      btn.classList.remove('recording');
-      btn.title = 'Voice input';
-      try { rec && rec.stop(); } catch (_) {}
+      const old = rec;
       rec = null;
+      listening = false;
+      setBtn('idle');
+      try { old && old.stop(); } catch (_) {}
     }
 
     btn.addEventListener('click', (e) => {
       e.preventDefault();
-      // iOS: if we were waiting for tap-to-continue, restart
-      if (isIOS && active && !btn.classList.contains('recording')) {
-        rec = buildRec();
-        baseText = targetEl.value;
-        try {
-          rec.start();
-          btn.classList.add('recording');
-          btn.title = 'Stop recording';
-        } catch (_) { stop(); }
-        return;
+      if (listening) {
+        stop();          // tap while recording → stop
+      } else {
+        start();         // tap while idle or "ready" → start new shot
       }
-      active ? stop() : start();
     });
 
     return { start, stop };
