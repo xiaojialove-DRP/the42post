@@ -180,24 +180,80 @@ router.get('/:skillId', async (req, res, next) => {
 });
 
 /**
+ * Normalize five_layer to a consistent shape regardless of schema version.
+ * Old format: { defining, instantiating:{before,after}, fencing:{apply,notApply},
+ *               validating:[], contextualizing }
+ * New format: { principle, reasoning, exemplars:[{label,text,note}],
+ *               boundaries:{applies_when,does_not_apply,tension_zones},
+ *               evaluation:{test_cases,metric,silent_failures},
+ *               cultural_variants:{locale:{principle_note,adaptation}} }
+ */
+function normalizeFiveLayer(fl) {
+  if (!fl) return null;
+
+  // Already new format
+  if (fl.principle || fl.reasoning || fl.exemplars) {
+    return {
+      principle:        fl.principle || fl.defining || '',
+      reasoning:        fl.reasoning || '',
+      exemplars:        fl.exemplars || [],
+      boundaries:       fl.boundaries || null,
+      evaluation:       fl.evaluation || null,
+      cultural_variants: fl.cultural_variants || null,
+      contextualizing:  fl.contextualizing || ''
+    };
+  }
+
+  // Old format — map to new
+  const exemplars = [];
+  if (fl.instantiating) {
+    if (fl.instantiating.before || fl.instantiating.after) {
+      exemplars.push({
+        label: 'Before → After',
+        text: [
+          fl.instantiating.before ? `❌ Before: ${fl.instantiating.before}` : '',
+          fl.instantiating.after  ? `✅ After: ${fl.instantiating.after}` : ''
+        ].filter(Boolean).join('\n\n'),
+        note: ''
+      });
+    }
+  }
+
+  const boundaries = fl.fencing ? {
+    applies_when:   fl.fencing.apply    ? [fl.fencing.apply]    : [],
+    does_not_apply: fl.fencing.notApply ? [fl.fencing.notApply] : [],
+    tension_zones:  []
+  } : null;
+
+  const evaluation = fl.validating && fl.validating.length ? {
+    test_cases: fl.validating.map(v => ({ prompt: v, expected: '', pass_criteria: '' })),
+    metric: '',
+    silent_failures: []
+  } : null;
+
+  return {
+    principle:        fl.defining || '',
+    reasoning:        '',
+    exemplars,
+    boundaries,
+    evaluation,
+    cultural_variants: null,
+    contextualizing:  fl.contextualizing || ''
+  };
+}
+
+/**
  * Generate Markdown format (SKILL.md)
  */
 function generateSkillMarkdown(skillData) {
   const now = new Date();
   const timestamp = now.toISOString().split('T')[0];
-  const fiveLayer = skillData.fiveLayerSkill || null;
+  const fl = normalizeFiveLayer(skillData.fiveLayerSkill);
 
-  // ═══ QUICK COPY-PASTE PROMPT FIRST ═══
-  // Priority:
-  // 1. skillData.ready_to_use_prompt (stored at top level in skills table)
-  // 2. fiveLayer.ready_to_use_prompt (if present in five_layer JSON)
-  // 3. fiveLayer.principle (fallback to principle if no ready prompt)
-  // 4. skillData.desc (final fallback)
   const readyPrompt = skillData.ready_to_use_prompt
-    ? skillData.ready_to_use_prompt
-    : (fiveLayer && fiveLayer.ready_to_use_prompt
-      ? fiveLayer.ready_to_use_prompt
-      : (fiveLayer && fiveLayer.principle ? fiveLayer.principle : (skillData.desc || 'A skill forged in The 42 Post')));
+    || (fl && fl.principle)
+    || skillData.desc
+    || 'A skill forged in The 42 Post';
 
   let md = `# 🚀 READY TO PROMPT
 
@@ -206,22 +262,6 @@ Copy the content below and paste directly into your AI assistant as a System Pro
 \`\`\`
 ${readyPrompt}
 \`\`\`
-
----
-
-# 📖 ABOUT THIS SKILL
-
-This is **not just a prompt** — it's a complete **Semantic Capital Skill** from THE 42 POST.
-
-- **What it is**: A structured framework for AI behavior aligned with human values
-- **What you get**:
-  1. A ready-to-use principle (copy above)
-  2. Real examples showing how it works
-  3. Clear boundaries (when to use, when to stop)
-  4. Test cases to verify effectiveness
-  5. Cultural adaptations for different contexts
-
-📚 **See "COMPLETE FRAMEWORK" section below** for the full five-layer architecture that agents and developers use.
 
 ---
 
@@ -235,59 +275,41 @@ This is **not just a prompt** — it's a complete **Semantic Capital Skill** fro
 | **Domain** | ${skillData.domain} |
 | **Created** | ${timestamp} |
 | **Protocol** | THE 42 POST v0.1 |
-| **License** | ${skillData.commercial === 'allowed' ? '✅ Commercial' : skillData.commercial === 'authorized' ? '⚠️ Auth Required' : '❌ Non-commercial'} · ${skillData.remix === 'yes' ? '✅ Remixable' : '⚠️ Share-alike'} |
+| **License** | ${skillData.commercial === 'allowed' ? '✅ Commercial OK' : skillData.commercial === 'authorized' ? '⚠️ Authorization required' : '❌ Non-commercial only'} · ${skillData.remix !== 'no' ? '✅ Remix allowed' : '❌ No derivatives'} |
 
 ---
 
 # ✨ COMPLETE FRAMEWORK
 
-> **For AI agents, LLM systems, and developers who need the full structure**
-
 ---
 
 ## 🎯 Layer 1 · PRINCIPLE
 
-**Why this skill exists — the philosophy behind it:**
-
-${fiveLayer && fiveLayer.principle ? fiveLayer.principle : (skillData.desc || 'A skill forged in The 42 Post')}
-
----
-
-## 📌 Layer 2 · EXEMPLARS
-
-**Before/after examples showing this skill in action:**
+${fl && fl.principle ? fl.principle : (skillData.desc || '')}
 `;
 
-  if (fiveLayer && fiveLayer.exemplars && fiveLayer.exemplars.length > 0) {
-    fiveLayer.exemplars.forEach((ex, i) => {
-      md += `\n### Example ${i + 1}: ${ex.label}
-
-**Input / User says:**
-\`${ex.input || 'N/A'}\`
-
-**With this skill:**
-\`\`\`
-${ex.with_skill || 'Response with skill applied'}
-\`\`\`
-
-**Without this skill:**
-\`\`\`
-${ex.without_skill || 'Standard response without skill'}
-\`\`\`
-
-*Why this matters:* ${ex.note || 'Shows the skill in action'}
-`;
-    });
-  } else {
-    md += `\n*No exemplars generated yet — complete the Intuition Probe to generate comparative examples.*\n`;
+  if (fl && fl.reasoning) {
+    md += `\n**Why this matters:**\n${fl.reasoning}\n`;
   }
 
-  md += `\n---\n\n## 🚧 Layer 3 · BOUNDARIES\n\n**When to use this, when not to, and the gray areas:**\n`;
+  md += `\n---\n\n## 📌 Layer 2 · EXEMPLARS\n`;
 
-  if (fiveLayer && fiveLayer.boundaries) {
-    const b = fiveLayer.boundaries;
+  if (fl && fl.exemplars && fl.exemplars.length > 0) {
+    fl.exemplars.forEach((ex, i) => {
+      md += `\n### ${i + 1}. ${ex.label || 'Example'}\n\n`;
+      md += `${ex.text || ''}\n`;
+      if (ex.note) md += `\n> ${ex.note}\n`;
+    });
+  } else {
+    md += `\n*No exemplars provided.*\n`;
+  }
+
+  md += `\n---\n\n## 🚧 Layer 3 · BOUNDARIES\n`;
+
+  if (fl && fl.boundaries) {
+    const b = fl.boundaries;
     if (b.applies_when && b.applies_when.length) {
-      md += `\n### ✅ Apply this skill when:\n`;
+      md += `\n### ✅ Apply when:\n`;
       b.applies_when.forEach(t => { md += `- ${t}\n`; });
     }
     if (b.does_not_apply && b.does_not_apply.length) {
@@ -295,64 +317,62 @@ ${ex.without_skill || 'Standard response without skill'}
       b.does_not_apply.forEach(t => { md += `- ${t}\n`; });
     }
     if (b.tension_zones && b.tension_zones.length) {
-      md += `\n### ⚠️ TENSION ZONES (requires judgment):\n`;
-      b.tension_zones.forEach(t => { md += `- **Gray area:** ${t}\n`; });
+      md += `\n### ⚠️ Gray areas requiring judgment:\n`;
+      b.tension_zones.forEach(t => { md += `- ${t}\n`; });
     }
+  } else if (skillData.useCases || skillData.disallowedUses) {
+    if (skillData.useCases) md += `\n### ✅ Apply when:\n- ${skillData.useCases}\n`;
+    if (skillData.disallowedUses) md += `\n### ❌ Do NOT apply when:\n- ${skillData.disallowedUses}\n`;
   } else {
-    md += `**Allowed use cases:** ${skillData.useCases || 'General creative and professional applications'}\n`;
-    md += `**Disallowed uses:** ${skillData.disallowedUses || 'Harmful, illegal, or deceptive purposes'}\n`;
+    md += `\n*No boundary conditions specified.*\n`;
   }
 
-  md += `\n---\n\n## ✔️ Layer 4 · EVALUATION\n\n**How to know if this skill is working:**\n`;
+  md += `\n---\n\n## ✔️ Layer 4 · EVALUATION\n`;
 
-  if (fiveLayer && fiveLayer.evaluation && fiveLayer.evaluation.test_cases) {
-    fiveLayer.evaluation.test_cases.forEach((tc, i) => {
-      md += `\n### Test Case ${i + 1}\n`;
-      md += `**Prompt to test:** \n\`${tc.prompt}\`\n\n`;
-      md += `**Expected behavior:** \n${tc.pass_criteria}\n\n`;
-      if (tc.expected) {
-        md += `**Reference output:** \n\`\`\`\n${tc.expected}\n\`\`\`\n`;
-      }
+  if (fl && fl.evaluation && fl.evaluation.test_cases && fl.evaluation.test_cases.length) {
+    fl.evaluation.test_cases.forEach((tc, i) => {
+      md += `\n### Test ${i + 1}\n`;
+      if (tc.prompt) md += `**Prompt:** ${tc.prompt}\n\n`;
+      if (tc.expected) md += `**Expected:** ${tc.expected}\n\n`;
+      if (tc.pass_criteria) md += `**Pass when:** ${tc.pass_criteria}\n`;
     });
-    md += `\n**Success metric:** \`${fiveLayer.evaluation.metric || 'quality_score'}\`\n`;
-  } else {
-    md += `\n*No evaluation test cases generated yet — complete the Intuition Probe to auto-generate.*\n`;
-  }
-
-  md += `\n---\n\n## 🌍 Layer 5 · CULTURAL VARIANTS\n\n**Localized versions for different languages and cultures:**\n`;
-
-  if (fiveLayer && fiveLayer.cultural_variants) {
-    for (const [locale, variant] of Object.entries(fiveLayer.cultural_variants)) {
-      const localeLabel = locale === 'zh-CN' ? '🇨🇳 Chinese' : locale === 'en-US' ? '🇺🇸 English' : locale === 'ja-JP' ? '🇯🇵 Japanese' : locale;
-      md += `\n### ${localeLabel} (\`${locale}\`)\n`;
-      md += `**Cultural context:** ${variant.principle_note || variant.note || 'N/A'}\n\n`;
-      md += `**Adaptation for this locale:**\n${variant.adaptation || 'N/A'}\n`;
+    if (fl.evaluation.metric) {
+      md += `\n**Success metric:** ${fl.evaluation.metric}\n`;
+    }
+    if (fl.evaluation.silent_failures && fl.evaluation.silent_failures.length) {
+      md += `\n**Watch out for:**\n`;
+      fl.evaluation.silent_failures.forEach(f => { md += `- ${f}\n`; });
     }
   } else {
-    md += `\n*Cultural adaptations pending — will be generated based on usage patterns.*\n`;
+    md += `\n*No evaluation test cases provided.*\n`;
   }
 
-  md += `\n---\n\n## ⚖️ CREATOR RIGHTS & LICENSING
+  md += `\n---\n\n## 🌍 Layer 5 · CULTURAL CONTEXT\n`;
+
+  if (fl && fl.cultural_variants && Object.keys(fl.cultural_variants).length) {
+    const localeNames = { 'zh-CN': '🇨🇳 Chinese (Simplified)', 'en-US': '🇺🇸 English (US)', 'ja-JP': '🇯🇵 Japanese' };
+    for (const [locale, variant] of Object.entries(fl.cultural_variants)) {
+      md += `\n### ${localeNames[locale] || locale}\n`;
+      if (variant.principle_note) md += `**Context:** ${variant.principle_note}\n\n`;
+      if (variant.adaptation) md += `**Adaptation:** ${variant.adaptation}\n`;
+    }
+  } else if (fl && fl.contextualizing) {
+    md += `\n${fl.contextualizing}\n`;
+  } else {
+    md += `\n*No cultural adaptations specified.*\n`;
+  }
+
+  md += `\n---\n\n## ⚖️ LICENSING
 
 | Right | Status |
 |-------|--------|
-| **Commercial Use** | ${skillData.commercial === 'allowed' ? '✅ Free to use commercially' : skillData.commercial === 'authorized' ? '⚠️ Requires permission' : '❌ Non-commercial only'} |
-| **Remixing** | ${skillData.remix === 'yes' ? '✅ Full remix allowed' : skillData.remix === 'share-alike' ? '⚠️ Share-alike (derivatives must share same rights)' : '❌ No derivatives'} |
-| **Creator** | ${skillData.author} ${skillData.email ? `(${skillData.email})` : ''} |
+| **Commercial Use** | ${skillData.commercial === 'allowed' ? '✅ Free to use commercially' : skillData.commercial === 'authorized' ? '⚠️ Requires creator permission' : '❌ Non-commercial only'} |
+| **Remixing** | ${skillData.remix !== 'no' ? '✅ Remix and adapt allowed' : '❌ No derivatives'} |
+| **Creator** | ${skillData.author}${skillData.email && !skillData.email.includes('@the42post.local') ? ` · ${skillData.email}` : ''} |
 
 ---
 
-## 📚 USING THIS SKILL
-
-1. **For immediate use:** Copy the "READY TO PROMPT" section at the top
-2. **For integration:** Use the complete five-layer framework above
-3. **For agents:** Pass this entire file to your agent/LLM system
-4. **For modification:** Respect the licensing terms above
-
----
-
-*Forged with ❤️ via THE 42 POST · Human Semantic Capital Protocol*
-*Protocol Version: v0.1 | Generated: ${timestamp}*
+*Forged via THE 42 POST · Human Semantic Capital Protocol v0.1 · ${timestamp}*
 `;
 
   return md;
