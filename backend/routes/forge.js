@@ -207,6 +207,40 @@ router.post('/generate', rateLimitLLM, optionalAuth, async (req, res, next) => {
       });
     }
 
+    // ─── Save probe session for research (silent, non-blocking) ───
+    let probeSessionId = null;
+    try {
+      probeSessionId = uuidv4();
+      const countryCode = req.headers['cf-ipcountry']
+        || req.headers['x-country-code']
+        || req.headers['x-vercel-ip-country']
+        || null;
+      const acceptLanguage = (req.headers['accept-language'] || '').substring(0, 100) || null;
+
+      await db.query(
+        `INSERT INTO probe_sessions
+           (id, user_id, idea_text, language, scenario, thesis, antithesis, extreme,
+            selected_response, country_code, accept_language)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`,
+        [
+          probeSessionId,
+          userId || null,
+          idea_text.trim(),
+          language || 'en',
+          probe_data.scenario || '',
+          probe_data.thesis || '',
+          probe_data.antithesis || '',
+          probe_data.extreme || '',
+          selected_response,
+          countryCode,
+          acceptLanguage
+        ]
+      );
+    } catch (sessionErr) {
+      console.warn('[forge] probe_session save failed (non-fatal):', sessionErr.message);
+      probeSessionId = null;
+    }
+
     // Prepare skill data (not yet saved to DB — that happens during publishing)
     const skillDraft = {
       title: skill_name.trim(),
@@ -225,6 +259,7 @@ router.post('/generate', rateLimitLLM, optionalAuth, async (req, res, next) => {
     res.json({
       success: true,
       skill_draft: skillDraft,
+      probe_session_id: probeSessionId,
       model: generationResult.model,
       usage: generationResult.usage
     });
@@ -287,6 +322,44 @@ router.post('/preview', rateLimitLLM, optionalAuth, async (req, res, next) => {
     });
   } catch (error) {
     next(error);
+  }
+});
+
+// ═══ SAVE PROBE SESSION (called when user confirms probe choice) ═══
+// Lightweight endpoint — no LLM call, just persist the human decision for research.
+router.post('/save-probe-session', optionalAuth, async (req, res, next) => {
+  try {
+    const { idea_text, scenario, thesis, antithesis, extreme, selected_response, language } = req.body;
+    if (!idea_text || !scenario || !selected_response) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    const countryCode = req.headers['cf-ipcountry']
+      || req.headers['x-country-code']
+      || req.headers['x-vercel-ip-country']
+      || null;
+    const acceptLanguage = (req.headers['accept-language'] || '').substring(0, 100) || null;
+    const userId = req.user?.userId || null;
+    const probeSessionId = uuidv4();
+
+    await db.query(
+      `INSERT INTO probe_sessions
+         (id, user_id, idea_text, language, scenario, thesis, antithesis, extreme,
+          selected_response, country_code, accept_language)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`,
+      [
+        probeSessionId, userId,
+        idea_text.trim(), language || 'en',
+        scenario, thesis || '', antithesis || '', extreme || '',
+        selected_response, countryCode, acceptLanguage
+      ]
+    );
+
+    res.json({ success: true, probe_session_id: probeSessionId });
+  } catch (error) {
+    // Non-fatal — return success anyway so the forge flow isn't blocked
+    console.warn('[forge] save-probe-session failed:', error.message);
+    res.json({ success: false });
   }
 });
 

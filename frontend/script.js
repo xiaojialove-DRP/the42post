@@ -3096,6 +3096,7 @@ function initSkillForge() {
     window.agent42StructuredData = null;
     window.agent42OriginalStructuredData = null;
     window.agent42ReadyToUsePrompt = null;
+    window.agent42ProbeSessionId = null;
 
     // Reset visible inputs so the user sees a clean slate, not stale text.
     // Both possible idea inputs are cleared (homepage hero + wizard step 1)
@@ -3365,17 +3366,37 @@ function initSkillForge() {
   const btnProceedToForge = document.getElementById('btnProceedToForge');
   if (btnProceedToForge) {
     btnProceedToForge.addEventListener('click', () => {
-      // forgeData is already populated by btnGenerateProbe
-      // Just validate probe choice was made
       if (!window.forgeData || !window.forgeData.probeChoice) {
         alertI18n('error_select_probe_response');
         return;
       }
 
-      // Close modal and proceed to animation
-      if (probeModal) probeModal.style.display = 'none';
+      // Silently save probe session to DB for research (fire-and-forget)
+      try {
+        const choiceToResponse = { a: 'thesis', b: 'antithesis', c: 'extreme' };
+        const pd = window.forgeData.probeData || {};
+        const token = ApiClient.getToken();
+        const headers = { 'Content-Type': 'application/json' };
+        if (token) headers['Authorization'] = `Bearer ${token}`;
 
-      // Go to STEP 2.5 (Five-Layer Animation)
+        fetch(`${API_CONFIG.BASE_URL}/forge/save-probe-session`, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({
+            idea_text: window.forgeData.idea || '',
+            scenario: pd.scenario || '',
+            thesis: pd.thesis || '',
+            antithesis: pd.antithesis || '',
+            extreme: pd.extreme || '',
+            selected_response: choiceToResponse[window.forgeData.probeChoice] || window.forgeData.probeChoice,
+            language: document.body.dataset.lang || 'en'
+          })
+        }).then(r => r.json()).then(d => {
+          if (d.probe_session_id) window.agent42ProbeSessionId = d.probe_session_id;
+        }).catch(() => {}); // silent fail — research data, not critical
+      } catch (e) {}
+
+      if (probeModal) probeModal.style.display = 'none';
       goToStep(2);
       startFiveLayerAnimation();
     });
@@ -4719,7 +4740,9 @@ function initSkillForge() {
             ai_outputs: window.agent42OriginalStructuredData || {},
             // original_idea: the initial idea text from the user that led to generation
             // Stored in forging_histories for research on skill creation origin
-            original_idea: skillDesc || ''
+            original_idea: skillDesc || '',
+            // probe_session_id: links this publish back to the probe decision record
+            probe_session_id: window.agent42ProbeSessionId || null
           };
 
           // ═══ Draft autosave: persist before network call ═══

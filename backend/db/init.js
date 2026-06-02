@@ -296,6 +296,35 @@ export async function initDatabase() {
     await db.query(`CREATE INDEX IF NOT EXISTS idx_moderation_logs_decision ON moderation_logs(decision)`);
     await db.query(`CREATE INDEX IF NOT EXISTS idx_moderation_logs_created ON moderation_logs(created_at)`);
 
+    // ─── Probe sessions: captures the full human decision process ───
+    // Each row = one user seeing a probe and choosing a stance.
+    // Linked to skills.id after publish so we can join idea→choice→final skill.
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS probe_sessions (
+        id TEXT PRIMARY KEY,
+        skill_id TEXT REFERENCES skills(id) ON DELETE SET NULL,
+        user_id TEXT REFERENCES users(id) ON DELETE SET NULL,
+        idea_text TEXT NOT NULL,
+        language VARCHAR(10),
+        scenario TEXT NOT NULL,
+        thesis TEXT,
+        antithesis TEXT,
+        extreme TEXT,
+        selected_response VARCHAR(20),
+        country_code VARCHAR(10),
+        accept_language VARCHAR(100),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    await db.query(`CREATE INDEX IF NOT EXISTS idx_probe_sessions_skill ON probe_sessions(skill_id)`);
+    await db.query(`CREATE INDEX IF NOT EXISTS idx_probe_sessions_country ON probe_sessions(country_code)`);
+    await db.query(`CREATE INDEX IF NOT EXISTS idx_probe_sessions_selected ON probe_sessions(selected_response)`);
+
+    // Add research columns to forging_histories (safe migration)
+    try { await db.query(`ALTER TABLE forging_histories ADD COLUMN country_code VARCHAR(10)`); } catch {}
+    try { await db.query(`ALTER TABLE forging_histories ADD COLUMN accept_language VARCHAR(100)`); } catch {}
+    try { await db.query(`ALTER TABLE forging_histories ADD COLUMN probe_session_id TEXT REFERENCES probe_sessions(id) ON DELETE SET NULL`); } catch {}
+
     console.log('✓ All database tables initialized');
   } catch (error) {
     console.error('Database initialization failed:', error);

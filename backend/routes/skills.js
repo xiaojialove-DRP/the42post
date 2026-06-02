@@ -395,8 +395,16 @@ router.post('/', optionalAuth, rateLimitForge, async (req, res, next) => {
       disallowed_uses,
       ready_to_use_prompt,
       anonymous_id: bodyAnonymousId,
-      creatorName  // ✅ Creator name for forged skills (user's chosen name)
+      creatorName,
+      probe_session_id: probeSessionId  // passed from frontend after forge/generate
     } = req.body;
+
+    // Capture geographic + language context for research
+    const countryCode = req.headers['cf-ipcountry']
+      || req.headers['x-country-code']
+      || req.headers['x-vercel-ip-country']
+      || null;
+    const acceptLanguage = (req.headers['accept-language'] || '').substring(0, 100) || null;
 
     // ─── Safety + Quality Moderation (run BEFORE translation to save cost on rejects) ───
     // Calls the moderation LLM with a strict review rubric. On REJECT or
@@ -622,23 +630,38 @@ router.post('/', optionalAuth, rateLimitForge, async (req, res, next) => {
       }
 
       // Save forging history for research purposes
-      // Captures the complete creation process: original idea, AI outputs, final structure
       try {
         await client.query(
-          `INSERT INTO forging_histories (id, skill_id, user_email, original_idea, ai_outputs, final_skill_data)
-           VALUES ($1, $2, $3, $4, $5, $6)`,
+          `INSERT INTO forging_histories
+             (id, skill_id, user_email, original_idea, ai_outputs, final_skill_data,
+              country_code, accept_language, probe_session_id)
+           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
           [
             uuidv4(),
             skillId,
             user?.email || null,
             req.body.original_idea || req.body.idea_text || null,
             JSON.stringify(req.body.ai_outputs || {}),
-            JSON.stringify(five_layer)
+            JSON.stringify(five_layer),
+            countryCode,
+            acceptLanguage,
+            probeSessionId || null
           ]
         );
       } catch (historyErr) {
         console.warn('forging_histories insert failed (non-fatal):', historyErr.message);
-        // Don't fail the entire publish if history logging fails
+      }
+
+      // Link probe_session → skill so research queries can join them
+      if (probeSessionId) {
+        try {
+          await client.query(
+            `UPDATE probe_sessions SET skill_id = $1 WHERE id = $2`,
+            [skillId, probeSessionId]
+          );
+        } catch (psErr) {
+          console.warn('probe_session link failed (non-fatal):', psErr.message);
+        }
       }
 
       // Verify the skill was actually committed by fetching it back
