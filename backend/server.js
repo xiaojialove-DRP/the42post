@@ -352,9 +352,15 @@ app.post('/api/admin/seed-apply', requireAdminKey, async (req, res) => {
       sqlContent = await response.text();
       logger.info('[seed-apply] Loaded from GitHub');
     }
-    const statements = sqlContent
+    // Strip comment lines, then split on semicolons
+    const cleanedSql = sqlContent
+      .split('\n')
+      .filter(line => !line.trim().startsWith('--'))
+      .join('\n');
+    const statements = cleanedSql
       .split(/;\s*\n/)
-      .filter(s => s.trim() && !s.trim().startsWith('--'));
+      .map(s => s.trim())
+      .filter(s => s.length > 0);
 
     logger.info(`[seed-apply] Executing ${statements.length} statements...`);
 
