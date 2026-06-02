@@ -9364,86 +9364,125 @@ function initVoiceInput() {
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SpeechRecognition) return; // browser unsupported — buttons stay hidden
 
+  // iOS Safari does not allow auto-restarting recognition in onend callbacks;
+  // it must always be triggered by a direct user gesture.
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+
   function getLang() {
     const lang = document.body.dataset.lang || 'en';
     return lang === 'cn' ? 'zh-CN' : 'en-US';
   }
 
   function createRecognizer(targetEl, btn) {
-    const rec = new SpeechRecognition();
-    rec.continuous = true;
-    rec.interimResults = true;
-
+    let rec = null;
     let baseText = '';
     let active = false;
+
+    function buildRec() {
+      const r = new SpeechRecognition();
+      // iOS Safari only supports non-continuous mode reliably
+      r.continuous = !isIOS;
+      r.interimResults = !isIOS;
+      r.lang = getLang();
+
+      const CONFIDENCE_THRESHOLD = 0.5;
+
+      r.onresult = (e) => {
+        let interim = '';
+        let final = '';
+        let hadLowConfidence = false;
+
+        for (let i = e.resultIndex; i < e.results.length; i++) {
+          const result = e.results[i];
+          const transcript = result[0].transcript;
+          const confidence = result[0].confidence;
+
+          if (result.isFinal) {
+            if (confidence > 0 && confidence < CONFIDENCE_THRESHOLD) {
+              hadLowConfidence = true;
+            } else {
+              final += transcript;
+            }
+          } else {
+            interim += transcript;
+          }
+        }
+
+        if (hadLowConfidence) {
+          btn.classList.add('voice-low-confidence');
+          setTimeout(() => btn.classList.remove('voice-low-confidence'), 600);
+        }
+
+        targetEl.value = baseText + final + interim;
+        if (final) baseText = baseText + final;
+        targetEl.dispatchEvent(new Event('input', { bubbles: true }));
+      };
+
+      r.onerror = (e) => {
+        // not-allowed = permission denied; abort-others are transient
+        if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
+          active = false;
+          btn.classList.remove('recording');
+          btn.title = 'Voice input';
+        } else if (e.error !== 'no-speech') {
+          // non-fatal — let onend handle cleanup
+        }
+      };
+
+      r.onend = () => {
+        if (!active) return;
+        if (isIOS) {
+          // iOS: can't auto-restart — show tap-again hint briefly
+          btn.classList.remove('recording');
+          btn.title = 'Tap to continue';
+          setTimeout(() => { if (active) btn.title = 'Tap to continue'; }, 0);
+        } else {
+          // Desktop/Android Chrome: safe to auto-restart
+          baseText = targetEl.value;
+          try { r.start(); } catch (_) {}
+        }
+      };
+
+      return r;
+    }
 
     function start() {
       if (active) return;
       active = true;
       baseText = targetEl.value;
-      rec.lang = getLang();
-      rec.start();
-      btn.classList.add('recording');
-      btn.title = 'Stop recording';
+      rec = buildRec();
+      try {
+        rec.start();
+        btn.classList.add('recording');
+        btn.title = 'Stop recording';
+      } catch (e) {
+        active = false;
+        btn.classList.remove('recording');
+      }
     }
 
     function stop() {
       if (!active) return;
       active = false;
-      rec.stop();
       btn.classList.remove('recording');
       btn.title = 'Voice input';
+      try { rec && rec.stop(); } catch (_) {}
+      rec = null;
     }
-
-    const CONFIDENCE_THRESHOLD = 0.5;
-
-    rec.onresult = (e) => {
-      let interim = '';
-      let final = '';
-      let hadLowConfidence = false;
-
-      for (let i = e.resultIndex; i < e.results.length; i++) {
-        const result = e.results[i];
-        const transcript = result[0].transcript;
-        const confidence = result[0].confidence;
-
-        if (result.isFinal) {
-          // confidence is 0 or undefined on some browsers for interim→final transitions;
-          // treat undefined as passing so we don't drop valid speech
-          if (confidence > 0 && confidence < CONFIDENCE_THRESHOLD) {
-            hadLowConfidence = true;
-          } else {
-            final += transcript;
-          }
-        } else {
-          interim += transcript;
-        }
-      }
-
-      if (hadLowConfidence) {
-        btn.classList.add('voice-low-confidence');
-        setTimeout(() => btn.classList.remove('voice-low-confidence'), 600);
-      }
-
-      targetEl.value = baseText + final + interim;
-      if (final) baseText = baseText + final;
-      targetEl.dispatchEvent(new Event('input', { bubbles: true }));
-    };
-
-    rec.onerror = (e) => {
-      if (e.error !== 'no-speech') stop();
-    };
-
-    rec.onend = () => {
-      // Auto-restart if still active (handles browser auto-stop on silence)
-      if (active) {
-        baseText = targetEl.value;
-        rec.start();
-      }
-    };
 
     btn.addEventListener('click', (e) => {
       e.preventDefault();
+      // iOS: if we were waiting for tap-to-continue, restart
+      if (isIOS && active && !btn.classList.contains('recording')) {
+        rec = buildRec();
+        baseText = targetEl.value;
+        try {
+          rec.start();
+          btn.classList.add('recording');
+          btn.title = 'Stop recording';
+        } catch (_) { stop(); }
+        return;
+      }
       active ? stop() : start();
     });
 
