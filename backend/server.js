@@ -9,7 +9,8 @@ import dotenv from 'dotenv';
 import pg from 'pg';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
-import { SqlitePool } from './db/sqlite-adapter.js';
+import { SqlitePool } from './db/sqlite-adapter.js'; // kept for local dev fallback
+import { existsSync, mkdirSync } from 'fs';
 
 const { Pool } = pg;
 
@@ -51,53 +52,45 @@ if (process.env.NODE_ENV !== 'test' && !process.env.JWT_SECRET) {
 }
 
 // ═══ DATABASE SETUP ═══
-// Always use SQLite for now (ignore DATABASE_URL)
+// Use PostgreSQL if POSTGRES_URI is set (Zeabur auto-injects it), else SQLite (local dev)
 let db;
 
-logger.info('Using SQLite database (forced)...');
-// Persistent storage:
-// - Production (Railway): use /app/data (Volume-mounted, survives redeploys)
-// - Local dev: use ../database.sqlite3 next to the repo
-// Fallback chain ensures local development still works without a /app/data dir.
-import { existsSync, mkdirSync } from 'fs';
-const PERSISTENT_DIR = '/app/data';
-let dbPath;
-if (existsSync(PERSISTENT_DIR)) {
-  dbPath = join(PERSISTENT_DIR, 'database.sqlite3');
-} else if (process.env.NODE_ENV === 'production') {
-  // Production but no volume mounted — try to create the dir, otherwise warn loudly
-  try {
-    mkdirSync(PERSISTENT_DIR, { recursive: true });
+const pgUri = process.env.POSTGRES_URI || process.env.DATABASE_URL;
+
+if (pgUri) {
+  logger.info('Using PostgreSQL database...');
+  const pgPool = new Pool({ connectionString: pgUri, ssl: { rejectUnauthorized: false } });
+  db = {
+    query: (sql, params) => pgPool.query(sql, params),
+    dialect: 'postgresql'
+  };
+  pgPool.query('SELECT 1 as test').then(() => {
+    logger.info('✓ PostgreSQL database connected');
+  }).catch(err => {
+    logger.error('PostgreSQL connection error:', err.message);
+    process.exit(1);
+  });
+} else {
+  logger.info('Using SQLite database (local dev)...');
+  const PERSISTENT_DIR = '/app/data';
+  let dbPath;
+  if (existsSync(PERSISTENT_DIR)) {
     dbPath = join(PERSISTENT_DIR, 'database.sqlite3');
-  } catch (e) {
-    logger.warn('/app/data not available, falling back to ephemeral path. Data WILL BE LOST on redeploy!');
+  } else {
     dbPath = join(__dirname, '../database.sqlite3');
   }
-} else {
-  dbPath = join(__dirname, '../database.sqlite3');
+  logger.info('Database path:', dbPath);
+  db = new SqlitePool({ connectionString: `sqlite:///${dbPath}` });
+  db.query('SELECT 1 as test').then(() => {
+    logger.info('✓ SQLite database connected');
+  }).catch(err => {
+    logger.error('SQLite connection error:', err.message);
+    process.exit(1);
+  });
 }
-logger.info('Database path:', dbPath);
 
-db = new SqlitePool({
-  connectionString: `sqlite:///${dbPath}`
-});
-
-// Make db available globally for health checks and other modules
+// Make db available globally
 global.__db__ = db;
-
-// Test connection
-db.query('SELECT 1 as test').then(result => {
-  logger.info('✓ SQLite database connected');
-}).catch(err => {
-  logger.error('SQLite connection error:', err.message);
-  process.exit(1);
-});
-
-// ═══ BACKUP SCHEDULER ═══
-// Daily SQLite snapshots with 7-day retention to /app/data/backups/.
-// Protects real user-forged skills against accidental drops/migrations.
-import { startBackupScheduler } from './utils/backupScheduler.js';
-startBackupScheduler(db, dbPath);
 
 // ═══ INITIALIZE CACHING ═══
 logger.info('═══ Cache System Initialization ═══');
