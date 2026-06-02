@@ -1,15 +1,16 @@
 /* ═══════════════════════════════════════════════════════
-   Skill Generation with DeepSeek API
+   Skill Generation — DeepSeek primary, Claude fallback
 
-   Provider: DeepSeek (OpenAI-compatible REST API)
+   Provider chain:
+     1. DeepSeek  (DEEPSEEK_API_KEY)   — primary, fast, cheap
+     2. Claude    (ANTHROPIC_API_KEY)  — automatic fallback if DeepSeek is down
+     3. Template                        — last-resort so forge flow never blocks
+
    Env:
-     - DEEPSEEK_API_KEY  (required)
-     - DEEPSEEK_MODEL    (optional, defaults to "deepseek-chat" = V3.2)
-
-   Historical note: these functions are still named *WithClaude*
-   because the rest of the codebase (routes/forge.js, routes/skills.js)
-   imports them by those names. The names are kept to avoid a wider
-   refactor — the implementation is now DeepSeek.
+     - DEEPSEEK_API_KEY   (required for primary)
+     - DEEPSEEK_MODEL     (optional, defaults to "deepseek-chat")
+     - ANTHROPIC_API_KEY  (optional, enables Claude fallback)
+     - ANTHROPIC_MODEL    (optional, defaults to "claude-haiku-4-5-20251001")
    ═══════════════════════════════════════════════════════ */
 
 import crypto from 'crypto';
@@ -56,6 +57,65 @@ async function fetchWithTimeout(url, options = {}, timeoutMs = 60000) {
   } finally {
     clearTimeout(timeoutId);
   }
+}
+
+// ─── Streaming call: pipes raw token chunks to a callback ───
+// onChunk(text) is called for each partial token as it arrives.
+// Returns the complete accumulated text when the stream ends.
+export async function callDeepSeekStream(prompt, maxTokens, onChunk) {
+  const body = {
+    model: PRIMARY_MODEL,
+    messages: [{ role: 'user', content: prompt }],
+    temperature: 0.7,
+    max_tokens: maxTokens,
+    stream: true
+    // No response_format: json_object — streaming + json_object is not supported
+  };
+
+  const resp = await fetch(DEEPSEEK_ENDPOINT, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${DEEPSEEK_KEY}`
+    },
+    body: JSON.stringify(body),
+    signal: AbortSignal.timeout(120000)
+  });
+
+  if (!resp.ok) {
+    const errText = await resp.text().catch(() => '');
+    throw new Error(`DeepSeek stream HTTP ${resp.status}: ${errText.substring(0, 200)}`);
+  }
+
+  const reader = resp.body.getReader();
+  const decoder = new TextDecoder();
+  let fullText = '';
+  let buffer = '';
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split('\n');
+    buffer = lines.pop(); // keep incomplete last line
+
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed === 'data: [DONE]') continue;
+      if (!trimmed.startsWith('data: ')) continue;
+      try {
+        const chunk = JSON.parse(trimmed.slice(6));
+        const delta = chunk.choices?.[0]?.delta?.content || '';
+        if (delta) {
+          fullText += delta;
+          onChunk(delta);
+        }
+      } catch { /* malformed chunk — skip */ }
+    }
+  }
+
+  return fullText;
 }
 
 // ─── Single-model call (no retry) ───
@@ -116,6 +176,58 @@ async function callDeepSeekSingle(modelName, prompt, maxTokens) {
       input_tokens: usage.prompt_tokens || 0,
       output_tokens: usage.completion_tokens || 0
     }
+  };
+}
+
+// ─── Claude fallback (direct REST, no SDK required) ───
+const ANTHROPIC_ENDPOINT = 'https://api.anthropic.com/v1/messages';
+const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY || '';
+const ANTHROPIC_MODEL = process.env.ANTHROPIC_MODEL || 'claude-haiku-4-5-20251001';
+
+async function callClaudeJSON(prompt, maxTokens) {
+  if (!ANTHROPIC_KEY) throw new Error('ANTHROPIC_API_KEY not configured');
+
+  const resp = await fetchWithTimeout(ANTHROPIC_ENDPOINT, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': ANTHROPIC_KEY,
+      'anthropic-version': '2023-06-01'
+    },
+    body: JSON.stringify({
+      model: ANTHROPIC_MODEL,
+      max_tokens: maxTokens,
+      messages: [{ role: 'user', content: prompt }]
+    })
+  }, 90000);
+
+  if (!resp.ok) {
+    const errText = await resp.text().catch(() => '');
+    throw new Error(`Claude HTTP ${resp.status}: ${errText.substring(0, 300)}`);
+  }
+
+  const json = await resp.json();
+  const text = json.content?.[0]?.text || '';
+  const usage = json.usage || {};
+
+  let parsed;
+  try {
+    parsed = JSON.parse(text);
+  } catch {
+    const stripped = text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/, '').trim();
+    try {
+      parsed = JSON.parse(stripped);
+    } catch {
+      const jsonMatch = stripped.match(/(\{[\s\S]*\}|\[[\s\S]*\])/);
+      if (!jsonMatch) throw new Error('Failed to parse Claude response as JSON');
+      parsed = JSON.parse(jsonMatch[0]);
+    }
+  }
+
+  return {
+    data: parsed,
+    model: ANTHROPIC_MODEL,
+    usage: { input_tokens: usage.input_tokens || 0, output_tokens: usage.output_tokens || 0 }
   };
 }
 
