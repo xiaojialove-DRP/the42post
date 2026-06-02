@@ -1114,6 +1114,11 @@ const I18N = {
     playground_browse: 'Or browse all in Archive →',
     playground_close: 'Close',
     console_check: '(check browser console)',
+    archive_back_home: '← Back Home',
+    archive_most_starred: '⭐ Top 42 Skills',
+    archive_honor_subtitle: 'Community Rankings · Starlight Votes',
+    archive_readable_title: 'Skill Archive',
+    archive_readable_subtitle: 'Creative Domains · Community Curated',
   },
   cn: {
     masthead_subtitle: 'AI 每天都在变得更聪明。<br>但它有让我们的生活更好吗？',
