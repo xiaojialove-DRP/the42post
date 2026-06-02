@@ -7822,7 +7822,43 @@ async function initAgentArchiveView() {
     };
   });
 
-  const allSkills = [...baseSkills, ...forgedSkillsWithStarlight];
+  // ═══ FETCH USER'S OWN SKILLS FROM DB (survives device/cache changes) ═══
+  let userDbSkills = [];
+  try {
+    const token = ApiClient.getToken();
+    if (token) {
+      const userResp = await fetch(`${ApiClient.BASE_URL}/skills/user/skills`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (userResp.ok) {
+        const userData = await userResp.json();
+        const existingIds = new Set(baseSkills.map(s => s.id));
+        userDbSkills = (userData.skills || [])
+          .filter(s => !existingIds.has(s.id))
+          .map(s => {
+            const creatorName = s.creator_anonymous_id || s.username || 'Anonymous';
+            return {
+              ...s,
+              starlight: s.starlight_score || s.starlight || 5,
+              titleCn: s.title_cn || s.title,
+              desc: s.description || '',
+              descCn: s.description_cn || s.description || '',
+              agent: `creator_${creatorName}`,
+              author: creatorName,
+              creator_name: creatorName
+            };
+          });
+        if (userDbSkills.length > 0) {
+          console.log(`📍 Archive: Loaded ${userDbSkills.length} user skills from DB`);
+        }
+      }
+    }
+  } catch (e) {
+    console.warn('Archive: failed to fetch user skills from DB:', e.message);
+  }
+
+  const allSkills = [...baseSkills, ...userDbSkills, ...forgedSkillsWithStarlight]
+    .filter((s, i, arr) => arr.findIndex(x => x.id === s.id) === i); // dedup by id
 
   // Expose allSkills to window so findSkillById can access them
   // This is critical for Archive action buttons (star, download, play) to work
