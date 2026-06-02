@@ -59,7 +59,7 @@ const pgUri = process.env.POSTGRES_URI || process.env.DATABASE_URL;
 
 if (pgUri) {
   logger.info('Using PostgreSQL database...');
-  const pgPool = new Pool({ connectionString: pgUri, ssl: { rejectUnauthorized: false } });
+  const pgPool = new Pool({ connectionString: pgUri, ssl: pgUri.includes('localhost') || pgUri.includes('.zeabur.internal') ? false : { rejectUnauthorized: false } });
   db = {
     query: (sql, params) => pgPool.query(sql, params),
     dialect: 'postgresql'
