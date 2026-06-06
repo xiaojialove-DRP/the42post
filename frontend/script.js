@@ -1116,8 +1116,8 @@ const I18N = {
     console_check: '(check browser console)',
     archive_back_home: '← Back Home',
     forge_research_note: '✦ Thank you for contributing a human judgment on AI boundaries. This kind of data is extremely rare globally.',
-    archive_most_starred: '⭐ Top 42 Skills',
-    archive_honor_subtitle: 'Community Rankings · Starlight Votes',
+    archive_most_starred: '✦ Latest 42 Skills',
+    archive_honor_subtitle: 'Most Recently Forged · Live Archive',
     archive_readable_title: 'Skill Archive',
     archive_readable_subtitle: 'Creative Domains · Community Curated',
   },
@@ -1296,8 +1296,8 @@ const I18N = {
     archive_title: 'THE 42 POST · Skill 储藏室',
     archive_back_home: '← 返回首页',
     forge_research_note: '✦ 谢谢你贡献了一条关于 AI 边界的人类判断数据。目前全球这类数据极为稀缺。',
-    archive_most_starred: '⭐ 热门42Skill',
-    archive_honor_subtitle: '社区排名 · 星光投票',
+    archive_most_starred: '✦ 最新 42 个 Skill',
+    archive_honor_subtitle: '最近铸造 · 实时档案',
     archive_readable_title: 'Skill 储藏室',
     archive_readable_subtitle: '创意领域 · 社区策划',
     archive_footer: 'THE 42 POST · 智能体档案库 · Soul.MD 协议激活',
@@ -7895,12 +7895,7 @@ async function initAgentArchiveView() {
 
   if (!canvas || !canvasWrap) return;
 
-  // ── Mobile: skip canvas, render a simple scrollable list instead ──
-  const isMobileArchive = window.innerWidth <= 768;
-  if (isMobileArchive) {
-    initAgentArchiveMobileView();
-    return;
-  }
+  // Mobile: keep star map but enable touch interactions
 
   const ctx = canvas.getContext('2d');
   const dpr = window.devicePixelRatio || 1;
@@ -7908,7 +7903,9 @@ async function initAgentArchiveView() {
   let nodes = [];
   let edges = [];
   let bgStars = [];
-  let cam = { x: 0, y: 0, zoom: 1 };
+  // Mobile gets a higher default zoom so stars are more spread out and tappable
+  const defaultZoom = window.innerWidth <= 768 ? 1.6 : 1;
+  let cam = { x: 0, y: 0, zoom: defaultZoom };
   let drag = { active: false, startX: 0, startY: 0, camStartX: 0, camStartY: 0 };
   let hoveredNode = null;
   let clickedNode = null;
@@ -8532,10 +8529,14 @@ async function initAgentArchiveView() {
     refreshCanvas();
   });
   
-  // Honor List — top 42 only (name-consistent with "Most Starred Skills 42")
+  // Honor List — latest 42 skills (sorted by published_at desc)
   function initHonorList() {
     const list = document.getElementById('honorList');
-    const sorted = [...allSkills].sort((a, b) => b.starlight - a.starlight).slice(0, 42);
+    const sorted = [...allSkills].sort((a, b) => {
+      const ta = new Date(b.published_at || b.publishedAt || 0).getTime();
+      const tb = new Date(a.published_at || a.publishedAt || 0).getTime();
+      return ta - tb;
+    }).slice(0, 42);
 
     list.innerHTML = '';
     sorted.forEach((s, i) => {
@@ -8852,8 +8853,15 @@ function initTop42Grid() {
   const gridEl = document.getElementById('top42Grid');
   if (!gridEl) return;
 
-  // Get top 42 skills sorted by starlight
-  const topSkills = getTopSkills(42);
+  // Get latest 42 skills sorted by published_at desc
+  const allForGrid = (typeof window.allSkills !== 'undefined' && window.allSkills.length > 0)
+    ? window.allSkills
+    : (typeof getTopSkills === 'function' ? getTopSkills(100) : []);
+  const topSkills = [...allForGrid].sort((a, b) => {
+    const ta = new Date(b.published_at || b.publishedAt || 0).getTime();
+    const tb = new Date(a.published_at || a.publishedAt || 0).getTime();
+    return ta - tb;
+  }).slice(0, 42);
 
   gridEl.innerHTML = '';
   topSkills.forEach((skill, index) => {
