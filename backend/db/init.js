@@ -331,6 +331,32 @@ export async function initDatabase() {
     try { await db.query(`ALTER TABLE forging_histories ADD COLUMN accept_language VARCHAR(100)`); } catch {}
     try { await db.query(`ALTER TABLE forging_histories ADD COLUMN probe_session_id TEXT REFERENCES probe_sessions(id) ON DELETE SET NULL`); } catch {}
 
+    // ─── One-time data migration: normalize creator names to creator_<name> format ───
+    try {
+      // NULL / empty → creator_42 (seed skills)
+      await db.query(`
+        UPDATE skills SET creator_anonymous_id = 'creator_42'
+        WHERE (creator_anonymous_id IS NULL OR creator_anonymous_id = '')
+          AND deleted_at IS NULL
+      `);
+      // Bare names without prefix → add creator_ prefix
+      await db.query(`
+        UPDATE skills SET creator_anonymous_id = 'creator_' || creator_anonymous_id
+        WHERE creator_anonymous_id IS NOT NULL
+          AND creator_anonymous_id NOT LIKE 'creator_%'
+          AND deleted_at IS NULL
+      `);
+      // Fix any accidental double prefix
+      await db.query(`
+        UPDATE skills SET creator_anonymous_id = REPLACE(creator_anonymous_id, 'creator_creator_', 'creator_')
+        WHERE creator_anonymous_id LIKE 'creator_creator_%'
+          AND deleted_at IS NULL
+      `);
+      console.log('✓ Creator names normalized');
+    } catch (e) {
+      console.warn('Creator name normalization skipped:', e.message);
+    }
+
     console.log('✓ All database tables initialized');
   } catch (error) {
     console.error('Database initialization failed:', error);
