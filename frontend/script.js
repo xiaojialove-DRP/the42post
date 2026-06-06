@@ -1115,7 +1115,7 @@ const I18N = {
     playground_close: 'Close',
     console_check: '(check browser console)',
     archive_back_home: '← Back Home',
-    forge_research_note: '✦ You just contributed a human judgment on AI boundaries. This kind of data is extremely rare globally.',
+    forge_research_note: '✦ Thank you for contributing a human judgment on AI boundaries. This kind of data is extremely rare globally.',
     archive_most_starred: '⭐ Top 42 Skills',
     archive_honor_subtitle: 'Community Rankings · Starlight Votes',
     archive_readable_title: 'Skill Archive',
@@ -1295,7 +1295,7 @@ const I18N = {
     /* ── 档案库 / 品味档案库 ── */
     archive_title: 'THE 42 POST · Skill 储藏室',
     archive_back_home: '← 返回首页',
-    forge_research_note: '✦ 你刚刚贡献了一条关于 AI 边界的人类判断数据。目前全球这类数据极为稀缺。',
+    forge_research_note: '✦ 谢谢你贡献了一条关于 AI 边界的人类判断数据。目前全球这类数据极为稀缺。',
     archive_most_starred: '⭐ 热门42Skill',
     archive_honor_subtitle: '社区排名 · 星光投票',
     archive_readable_title: 'Skill 储藏室',
