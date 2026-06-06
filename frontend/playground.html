@@ -2636,10 +2636,10 @@
       setTimeout(() => card.classList.remove('spawning'), 600);
 
       // If a skill was pre-loaded (from ?skill= URL or Forge completion),
-      // skip the picker and go straight to the test trigger.
+      // skip the picker AND the trigger — go straight into the A/B test.
       if (window.TWIN_TEST_SKILL?.id) {
         applyTwinSkillToCard(card, window.TWIN_TEST_SKILL);
-        showTwinTestTrigger(card, task, repo);
+        runTwinTest(card, task, repo);
       } else {
         showSkillPickerInCard(card, task, repo);
       }
