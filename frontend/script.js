@@ -2537,35 +2537,81 @@ function isSensitiveScenario(text) {
   return false;
 }
 
-async function generateProbeScenarios(idea) {
-  // Always try the real API first — the probe endpoint is public (no auth required).
-  // Auth guard was the bug: users click Generate Probe before creating an account.
-  try {
-    const result = await API.generateProbe(idea, document.body.dataset.lang || 'en');
-    if (result.success && result.probe) {
-      // ⚠️ 安全检查：检测生成的场景是否包含敏感内容
-      const scenarioText = `${result.probe.scenario} ${result.probe.thesis} ${result.probe.antithesis} ${result.probe.extreme}`;
-      if (isSensitiveScenario(scenarioText)) {
-        console.warn('⚠️ Generated scenario contains sensitive content, falling back to client-side generation');
-        // 降级到客户端生成，避免敏感场景
-        return generateClientSideProbe(idea);
-      }
+async function generateProbeScenarios(idea, onChunk) {
+  const lang = document.body.dataset.lang || 'en';
 
-      return {
-        context: result.probe.scenario,
-        a: result.probe.thesis,
-        b: result.probe.antithesis,
-        c: result.probe.extreme,
-        apiSource: true,
-        fullProbe: result.probe
-      };
+  // ── Try streaming endpoint first ──
+  if (typeof onChunk === 'function') {
+    try {
+      const probe = await _streamProbe(idea, lang, onChunk);
+      if (probe && probe.scenario) {
+        const txt = `${probe.scenario} ${probe.thesis} ${probe.antithesis} ${probe.extreme}`;
+        if (isSensitiveScenario(txt)) return generateClientSideProbe(idea);
+        return { context: probe.scenario, a: probe.thesis, b: probe.antithesis, c: probe.extreme, apiSource: true, fullProbe: probe };
+      }
+    } catch (e) {
+      console.warn('[probe] stream failed, trying regular API:', e.message);
     }
-  } catch (e) {
-    console.warn('Probe API unavailable, falling back to client-side generation:', e);
   }
 
-  // Fallback: client-side generation
+  // ── Fallback: regular (non-streaming) API ──
+  try {
+    const result = await API.generateProbe(idea, lang);
+    if (result.success && result.probe) {
+      const txt = `${result.probe.scenario} ${result.probe.thesis} ${result.probe.antithesis} ${result.probe.extreme}`;
+      if (isSensitiveScenario(txt)) return generateClientSideProbe(idea);
+      return { context: result.probe.scenario, a: result.probe.thesis, b: result.probe.antithesis, c: result.probe.extreme, apiSource: true, fullProbe: result.probe };
+    }
+  } catch (e) {
+    console.warn('[probe] API unavailable, using client-side fallback:', e.message);
+  }
+
   return generateClientSideProbe(idea);
+}
+
+// Streaming probe via SSE — returns parsed probe object when stream ends
+async function _streamProbe(idea, lang, onChunk) {
+  return new Promise(function(resolve, reject) {
+    var ctrl = new AbortController();
+    var timer = setTimeout(function() { ctrl.abort(); reject(new Error('timeout')); }, 30000);
+    var buffer = '';
+    var lastEvent = '';
+
+    fetch(API_CONFIG.BASE_URL + '/forge/probe/stream', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ idea_text: idea, language: lang }),
+      signal: ctrl.signal
+    }).then(function(resp) {
+      if (!resp.ok) throw new Error('HTTP ' + resp.status);
+      var reader = resp.body.getReader();
+      var decoder = new TextDecoder();
+
+      function pump() {
+        return reader.read().then(function(result) {
+          if (result.done) { clearTimeout(timer); resolve(null); return; }
+          buffer += decoder.decode(result.value, { stream: true });
+          var lines = buffer.split('\n');
+          buffer = lines.pop();
+          for (var i = 0; i < lines.length; i++) {
+            var line = lines[i].trim();
+            if (!line) { lastEvent = ''; continue; }
+            if (line.startsWith('event: ')) { lastEvent = line.slice(7); continue; }
+            if (line.startsWith('data: ')) {
+              try {
+                var d = JSON.parse(line.slice(6));
+                if (lastEvent === 'chunk' && d.text) onChunk(d.text);
+                if (lastEvent === 'done' && d.probe) { clearTimeout(timer); resolve(d.probe); return; }
+                if (lastEvent === 'error') { clearTimeout(timer); reject(new Error(d.message || 'stream error')); return; }
+              } catch(e) { /* skip malformed */ }
+            }
+          }
+          return pump();
+        });
+      }
+      return pump();
+    }).catch(function(err) { clearTimeout(timer); reject(err); });
+  });
 }
 
 // ═══ CULTURAL PROBES: Generate 3 distinct AI response styles ═══
@@ -3249,11 +3295,31 @@ function initSkillForge() {
         probeChoice: null // Will be set when user selects a probe
       };
 
-      // 简洁的加载状态 - 只显示"正在思考中..."
       btnGenerateProbe.classList.add('generating');
 
-      // Generate probe scenarios based on idea
-      const scenarios = await generateProbeScenarios(idea);
+      // Open modal early and stream scenario text in real-time
+      if (probeModal) probeModal.style.display = 'flex';
+      document.querySelectorAll('.probe-choice').forEach(c => {
+        const t = c.querySelector('.choice-text');
+        if (t) t.textContent = isCn ? '生成中…' : 'Generating…';
+        c.classList.remove('selected');
+      });
+      const confirmationEl = document.getElementById('probeConfirmation');
+      if (confirmationEl) confirmationEl.style.display = 'none';
+
+      // Stream scenario text — onChunk writes directly to DOM (no new const declarations)
+      const scenarios = await generateProbeScenarios(idea, function(chunk) {
+        const el = document.getElementById('probeScenarioText');
+        if (!el) return;
+        if (!el.dataset.streaming) { el.textContent = ''; el.dataset.streaming = '1'; }
+        // Show only text before first A/B/C label marker
+        const raw = (el.textContent || '') + chunk;
+        const cut = raw.search(/THESIS:|ANTITHESIS:|EXTREME:|thesis:|antithesis:|extreme:/i);
+        el.textContent = (cut > 0 ? raw.slice(0, cut) : raw).replace(/^SCENARIO:\s*/i, '').trim();
+      });
+      // Clear streaming flag
+      const probeScEl = document.getElementById('probeScenarioText');
+      if (probeScEl) delete probeScEl.dataset.streaming;
 
       // 恢复按钮状态
       btnGenerateProbe.disabled = false;
@@ -3317,7 +3383,7 @@ function initSkillForge() {
       const confirmation = document.getElementById('probeConfirmation');
       if (confirmation) confirmation.style.display = 'none';
 
-      // Show modal (now positioned fixed at screen center)
+      // Modal already opened at stream start
       if (probeModal) probeModal.style.display = 'flex';
     });
   }

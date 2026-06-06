@@ -4367,6 +4367,21 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
   color: var(--ink);
   line-height: 1.7;
   font-style: italic;
+  min-height: 2.5em;
+}
+
+/* Blinking cursor while streaming */
+.probe-scenario-text[data-streaming]::after {
+  content: '▋';
+  display: inline-block;
+  animation: blink-cursor 0.7s step-end infinite;
+  color: var(--ink-muted);
+  font-style: normal;
+}
+
+@keyframes blink-cursor {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
 }
 
 .probe-cards {
