@@ -7829,12 +7829,78 @@ function soulHash(str) {
   return 'SOUL_' + Math.abs(h).toString(16).padStart(9, '0');
 }
 
+// ── Mobile Archive: simple scrollable skill list ──
+async function initAgentArchiveMobileView() {
+  const wrap = document.getElementById('canvasWrap');
+  if (!wrap) return;
+  const isCn = (typeof currentLang !== 'undefined' && currentLang === 'cn');
+
+  wrap.innerHTML = '<div style="padding:16px;text-align:center;color:var(--ink-muted);font-size:12px;letter-spacing:0.05em;">' +
+    (isCn ? '加载中…' : 'Loading…') + '</div>';
+
+  // Fetch skills
+  let skills = [];
+  try {
+    const resp = await fetch(`${ApiClient.BASE_URL}/skills?limit=50`);
+    if (resp.ok) skills = (await resp.json()).skills || [];
+  } catch (e) { /* fallback to empty */ }
+
+  // Also merge user's own forged skills
+  const forgedSkills = (typeof getRecentForges === 'function') ? getRecentForges() : [];
+  const seenIds = new Set(skills.map(s => s.id));
+  forgedSkills.forEach(s => { if (!seenIds.has(s.id)) skills.unshift(s); });
+
+  if (!skills.length) {
+    wrap.innerHTML = '<div style="padding:32px 16px;text-align:center;color:var(--ink-muted);font-size:13px;">' +
+      (isCn ? '还没有技能，来铸造第一个吧 ✦' : 'No skills yet — forge the first one ✦') + '</div>';
+    return;
+  }
+
+  const cards = skills.map(function(s) {
+    const title = (isCn ? (s.title_cn || s.titleCn || s.title) : (s.title)) || '—';
+    const desc = (isCn ? (s.description_cn || s.descCn || s.description || s.desc) : (s.description || s.desc)) || '';
+    const creator = (s.creator_anonymous_id || s.creator_name || s.author || 'creator_42');
+    const stars = s.starlight_score || s.stars || s.starlight || 0;
+    const domain = s.domain || '';
+    const sid = s.id || '';
+    return `<div style="background:#fff;border:1px solid #e8e2d8;border-radius:12px;padding:16px;margin-bottom:12px;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+        <span style="font-size:11px;color:var(--ink-muted);letter-spacing:0.05em;text-transform:uppercase;">${domain}</span>
+        <span style="font-size:11px;color:var(--ink-muted);">✦ ${stars}</span>
+      </div>
+      <div style="font-family:var(--font-serif);font-size:16px;font-weight:700;color:var(--ink);margin-bottom:6px;line-height:1.3;">${title}</div>
+      ${desc ? `<div style="font-size:12px;color:var(--ink-muted);line-height:1.5;margin-bottom:10px;">${desc.slice(0,80)}${desc.length>80?'…':''}</div>` : ''}
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-size:11px;color:var(--ink-muted);">${creator}</span>
+        <div style="display:flex;gap:8px;">
+          ${sid ? `<button onclick="window.location.href='/playground.html?skill=${sid}'" style="padding:6px 12px;border:1px solid var(--ink);background:transparent;border-radius:6px;font-size:11px;cursor:pointer;letter-spacing:0.05em;">▶ ${isCn?'测试':'Play'}</button>` : ''}
+          ${sid ? `<button onclick="window.location.href='/api/download/${sid}'" style="padding:6px 12px;border:1px solid var(--ink-muted);background:transparent;border-radius:6px;font-size:11px;cursor:pointer;letter-spacing:0.05em;">↓ ${isCn?'下载':'Get'}</button>` : ''}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  wrap.innerHTML = `<div style="padding:12px 16px 40px;overflow-y:auto;height:100%;">
+    <div style="font-size:11px;color:var(--ink-muted);letter-spacing:0.08em;margin-bottom:16px;text-align:center;">
+      ${isCn ? `${skills.length} 个 Skill` : `${skills.length} Skills`}
+    </div>
+    ${cards}
+  </div>`;
+}
+
 async function initAgentArchiveView() {
   const canvas = document.getElementById('celestialCanvas');
   const canvasWrap = document.getElementById('canvasWrap');
   const tooltip = document.getElementById('starTooltip');
 
   if (!canvas || !canvasWrap) return;
+
+  // ── Mobile: skip canvas, render a simple scrollable list instead ──
+  const isMobileArchive = window.innerWidth <= 768;
+  if (isMobileArchive) {
+    initAgentArchiveMobileView();
+    return;
+  }
 
   const ctx = canvas.getContext('2d');
   const dpr = window.devicePixelRatio || 1;
