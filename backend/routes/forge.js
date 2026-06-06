@@ -343,16 +343,18 @@ router.post('/save-probe-session', optionalAuth, async (req, res, next) => {
     const userId = req.user?.userId || null;
     const probeSessionId = uuidv4();
 
+    const researchConsent = req.body.research_consent !== false ? 1 : 0;
+
     await db.query(
       `INSERT INTO probe_sessions
          (id, user_id, idea_text, language, scenario, thesis, antithesis, extreme,
-          selected_response, country_code, accept_language)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`,
+          selected_response, country_code, accept_language, research_consent)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)`,
       [
         probeSessionId, userId,
         idea_text.trim(), language || 'en',
         scenario, thesis || '', antithesis || '', extreme || '',
-        selected_response, countryCode, acceptLanguage
+        selected_response, countryCode, acceptLanguage, researchConsent
       ]
     );
 

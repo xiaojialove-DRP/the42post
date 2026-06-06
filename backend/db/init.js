@@ -319,6 +319,12 @@ export async function initDatabase() {
     await db.query(`CREATE INDEX IF NOT EXISTS idx_probe_sessions_skill ON probe_sessions(skill_id)`);
     await db.query(`CREATE INDEX IF NOT EXISTS idx_probe_sessions_country ON probe_sessions(country_code)`);
     await db.query(`CREATE INDEX IF NOT EXISTS idx_probe_sessions_selected ON probe_sessions(selected_response)`);
+    try { await db.query(`ALTER TABLE probe_sessions ADD COLUMN research_consent INTEGER DEFAULT 1`); } catch {}
+    // Store full test content for research (silent migration)
+    try { await db.query(`ALTER TABLE skill_test_votes ADD COLUMN scenario_text TEXT`); } catch {}
+    try { await db.query(`ALTER TABLE skill_test_votes ADD COLUMN response_a_text TEXT`); } catch {}
+    try { await db.query(`ALTER TABLE skill_test_votes ADD COLUMN response_b_text TEXT`); } catch {}
+    try { await db.query(`ALTER TABLE skill_test_votes ADD COLUMN decision_ms INTEGER`); } catch {}
 
     // Add research columns to forging_histories (safe migration)
     try { await db.query(`ALTER TABLE forging_histories ADD COLUMN country_code VARCHAR(10)`); } catch {}

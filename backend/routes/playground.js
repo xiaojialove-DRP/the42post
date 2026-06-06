@@ -317,10 +317,15 @@ router.post('/test', rateLimitLLM, async (req, res, next) => {
     const testId = uuidv4();
     const scenarioKey = scenario.key || scenario.title || `${scenario.domain || ''}-unknown`;
     try {
+      const scenarioTitle = (scenario.title || scenario.titleCn || '').slice(0, 500);
       await db.query(
-        `INSERT INTO skill_test_votes (id, skill_id, scenario_key, anonymous_id, skill_side, diagnostic)
-         VALUES ($1, $2, $3, $4, $5, $6)`,
-        [testId, skill_id, String(scenarioKey).slice(0, 250), anonymous_id || null, skillSide, diagnostic || null]
+        `INSERT INTO skill_test_votes
+           (id, skill_id, scenario_key, anonymous_id, skill_side, diagnostic,
+            scenario_text, response_a_text, response_b_text)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
+        [testId, skill_id, String(scenarioKey).slice(0, 250), anonymous_id || null,
+         skillSide, diagnostic || null,
+         scenarioTitle, responseA.slice(0, 2000), responseB.slice(0, 2000)]
       );
     } catch (dbErr) {
       console.warn('skill_test_votes insert failed (non-fatal):', dbErr.message);

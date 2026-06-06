@@ -1115,6 +1115,7 @@ const I18N = {
     playground_close: 'Close',
     console_check: '(check browser console)',
     archive_back_home: '← Back Home',
+    research_consent: 'Allow anonymous forging data to be used for AI alignment research',
     archive_most_starred: '⭐ Top 42 Skills',
     archive_honor_subtitle: 'Community Rankings · Starlight Votes',
     archive_readable_title: 'Skill Archive',
@@ -1294,6 +1295,7 @@ const I18N = {
     /* ── 档案库 / 品味档案库 ── */
     archive_title: 'THE 42 POST · Skill 储藏室',
     archive_back_home: '← 返回首页',
+    research_consent: '同意将匿名铸造数据用于 AI 对齐研究',
     archive_most_starred: '⭐ 热门42Skill',
     archive_honor_subtitle: '社区排名 · 星光投票',
     archive_readable_title: 'Skill 储藏室',
@@ -3287,12 +3289,17 @@ function initSkillForge() {
       const scenarioEl = document.getElementById('probeScenarioText');
       if (scenarioEl) scenarioEl.textContent = scenarios.context;
 
-      // Fill in the three choices
+      // Fill in the three choices — hide labels until user selects (reduces framing bias)
+      const isCnMode = currentLang === 'cn';
       probeResponses.forEach((response) => {
         const choiceEl = document.querySelector(`.probe-choice[data-choice="${response.label.toLowerCase()}"]`);
         if (choiceEl) {
           const typeEl = choiceEl.querySelector('.choice-type');
-          if (typeEl) typeEl.textContent = response.styleCN;
+          // Store real label in dataset, show neutral letter for now
+          if (typeEl) {
+            typeEl.dataset.realLabel = isCnMode ? response.styleCN : response.style;
+            typeEl.textContent = response.label; // just "A", "B", "C"
+          }
 
           const textEl = choiceEl.querySelector('.choice-text');
           if (textEl) textEl.textContent = response.content;
@@ -3342,20 +3349,29 @@ function initSkillForge() {
     choice.addEventListener('click', function() {
       const selectedChoice = this.dataset.choice;
       const isChineseMode = currentLang === 'cn';
-      const labels = {
-        'a': isChineseMode ? 'A · 主流派' : 'A · Mainstream',
-        'b': isChineseMode ? 'B · 情景派' : 'B · Contextual',
-        'c': isChineseMode ? 'C · 实验派' : 'C · Experimental'
-      };
 
       // Highlight selection
       document.querySelectorAll('.probe-choice').forEach(c => c.classList.remove('selected'));
       this.classList.add('selected');
 
+      // Reveal real labels after selection (reduces framing bias before choice)
+      document.querySelectorAll('.probe-choice').forEach(c => {
+        const typeEl = c.querySelector('.choice-type');
+        if (typeEl && typeEl.dataset.realLabel) {
+          typeEl.textContent = `${c.dataset.choice.toUpperCase()} · ${typeEl.dataset.realLabel}`;
+        }
+      });
+
       // Save probe choice to global data
       if (window.forgeData) {
         window.forgeData.probeChoice = selectedChoice;
       }
+
+      const labels = {
+        'a': isChineseMode ? 'A · 主流派' : 'A · Mainstream',
+        'b': isChineseMode ? 'B · 情景派' : 'B · Contextual',
+        'c': isChineseMode ? 'C · 实验派' : 'C · Experimental'
+      };
 
       // Show confirmation button
       const confirmation = document.getElementById('probeConfirmation');
@@ -3384,6 +3400,9 @@ function initSkillForge() {
         const headers = { 'Content-Type': 'application/json' };
         if (token) headers['Authorization'] = `Bearer ${token}`;
 
+        const consentEl = document.getElementById('researchConsent');
+        const researchConsent = consentEl ? consentEl.checked : true;
+
         fetch(`${API_CONFIG.BASE_URL}/forge/save-probe-session`, {
           method: 'POST',
           headers,
@@ -3394,7 +3413,8 @@ function initSkillForge() {
             antithesis: pd.antithesis || '',
             extreme: pd.extreme || '',
             selected_response: choiceToResponse[window.forgeData.probeChoice] || window.forgeData.probeChoice,
-            language: document.body.dataset.lang || 'en'
+            language: document.body.dataset.lang || 'en',
+            research_consent: researchConsent
           })
         }).then(r => r.json()).then(d => {
           if (d.probe_session_id) window.agent42ProbeSessionId = d.probe_session_id;
