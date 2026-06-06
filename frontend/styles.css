@@ -3971,7 +3971,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 
 .about-overlay.active, .howto-overlay.active { opacity: 1; pointer-events: all; }
 
-.about-panel, .howto-panel {
+.about-panel {
   width: 90%;
   max-width: 700px;
   max-height: 85vh;
@@ -3979,6 +3979,18 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
   background: var(--paper-card);
   border: 1px solid var(--rule);
   padding: 40px;
+  position: relative;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.12);
+}
+
+.howto-panel {
+  width: 88%;
+  max-width: 480px;
+  max-height: 75vh;
+  overflow-y: auto;
+  background: var(--paper-card);
+  border: 1px solid var(--rule);
+  padding: 24px 28px 20px;
   position: relative;
   box-shadow: 0 20px 60px rgba(0,0,0,0.12);
 }
@@ -3996,11 +4008,18 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 
 .about-close:hover, .howto-close:hover { color: var(--ink); }
 
-.about-title, .howto-title {
+.about-title {
   font-family: var(--font-head);
   font-size: 28px;
   color: var(--ink);
   margin-bottom: 20px;
+}
+
+.howto-title {
+  font-family: var(--font-head);
+  font-size: 18px;
+  color: var(--ink);
+  margin-bottom: 12px;
 }
 
 .about-section { margin-bottom: 16px; }
@@ -4074,8 +4093,8 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 
 /* ═══ HOW TO PLAY ═══ */
 .howto-rule {
-  margin-bottom: 20px;
-  padding-bottom: 16px;
+  margin-bottom: 10px;
+  padding-bottom: 10px;
   border-bottom: 1px solid var(--rule-light);
 }
 
@@ -4083,16 +4102,18 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 
 .howto-rule h3 {
   font-family: var(--font-serif);
-  font-size: 14px;
+  font-size: 12px;
+  font-weight: 700;
   color: var(--ink);
-  margin-bottom: 8px;
+  margin-bottom: 4px;
+  letter-spacing: 0.03em;
 }
 
 .howto-rule p {
-  font-size: 12px;
+  font-size: 11px;
   color: var(--ink-light);
-  line-height: 1.8;
-  margin-bottom: 4px;
+  line-height: 1.6;
+  margin-bottom: 0;
 }
 
 .howto-rule .cn {
