@@ -2357,15 +2357,14 @@
         }
         window.TWIN_TEST_SKILL = skill;
 
-        // Coming from Archive's "▶ Play" — drop the user straight into a
-        // ready-to-test card.
+        // Coming from Archive's "▶ Play" — spawn card AFTER TWIN_TEST_SKILL
+        // is set so spawnCard sees it and skips the picker immediately.
         const skillDomain = (skill.domain || '').toLowerCase();
         const matchedRepo =
           REPOSITORIES.find(r => r.id === skillDomain) ||
           REPOSITORIES[Math.floor(Math.random() * REPOSITORIES.length)];
         const task = matchedRepo.tasks[Math.floor(Math.random() * matchedRepo.tasks.length)];
-        // Wait for layout to settle before spawning (especially on mobile)
-        setTimeout(() => spawnCard(task, matchedRepo), 300);
+        spawnCard(task, matchedRepo);
       } catch (err) {
         console.warn('Twin Test init failed (proceeding without preset skill):', err.message);
       }
