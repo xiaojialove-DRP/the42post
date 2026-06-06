@@ -2066,8 +2066,7 @@
       const isCn = (typeof currentLang !== 'undefined' && currentLang === 'cn');
 
       // Check if we've reached the scenario limit
-      if (twinScenarioCount >= TWIN_SCENARIO_LIMIT) {
-        // Show a toast-like notification
+      if (scenarioLimitReached()) {
         alert(isCn
           ? '你已经完成了 7 个场景，很棒了。休息一下吧 ☕️'
           : 'You\'ve explored 7 scenarios — well played. Time for a break ☕️');
@@ -2094,12 +2093,21 @@
       const taskDisplay = getTaskDisplay(task);
       const scenarioId = `${repo.id}::${taskDisplay.title}`;
       usedScenarioBatch.add(scenarioId);
+      incrementScenarioCount();
       spawnCard(task, repo);
     }
 
-    /* ── "Try Another Scenario" — limited to 7 plays per session ── */
+    /* ── Scenario counter — shared across all spawn paths, limit = 7 ── */
     let twinScenarioCount = 0;
     const TWIN_SCENARIO_LIMIT = 7;
+
+    // Call this whenever any card is spawned (dock, try-another, or preload)
+    function incrementScenarioCount() {
+      twinScenarioCount++;
+    }
+    function scenarioLimitReached() {
+      return twinScenarioCount >= TWIN_SCENARIO_LIMIT;
+    }
     // Global set of used scenario identifiers (repo:taskTitle) to prevent duplicates across all repos
     const usedScenarioBatch = new Set();
 
@@ -2107,7 +2115,7 @@
       const isCn = (typeof currentLang !== 'undefined' && currentLang === 'cn');
 
       // Reached the limit — show a friendly farewell
-      if (twinScenarioCount >= TWIN_SCENARIO_LIMIT) {
+      if (scenarioLimitReached()) {
         const stageThanks = currentCard.querySelector('.twin-thanks');
         if (stageThanks) {
           const actions = stageThanks.querySelector('.twin-thanks-actions');
@@ -2152,8 +2160,8 @@
         return;
       }
 
-      // Increment counter and check if we've now hit the limit
-      twinScenarioCount++;
+      // Increment shared counter
+      incrementScenarioCount();
 
       // Pick a random unused scenario
       const { task, repo: selectedRepo, scenarioId } = allCandidates[Math.floor(Math.random() * allCandidates.length)];
@@ -2357,13 +2365,12 @@
         }
         window.TWIN_TEST_SKILL = skill;
 
-        // Coming from Archive's "▶ Play" — spawn card AFTER TWIN_TEST_SKILL
-        // is set so spawnCard sees it and skips the picker immediately.
         const skillDomain = (skill.domain || '').toLowerCase();
         const matchedRepo =
           REPOSITORIES.find(r => r.id === skillDomain) ||
           REPOSITORIES[Math.floor(Math.random() * REPOSITORIES.length)];
         const task = matchedRepo.tasks[Math.floor(Math.random() * matchedRepo.tasks.length)];
+        incrementScenarioCount(); // 初始卡片也计入总数
         spawnCard(task, matchedRepo);
       } catch (err) {
         console.warn('Twin Test init failed (proceeding without preset skill):', err.message);
