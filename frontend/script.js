@@ -1564,7 +1564,9 @@ async function loadSkillsFromDB() {
         const rawName = (skill.creator_name && skill.creator_name !== 'Anonymous' && skill.creator_name !== 'System')
           ? skill.creator_name
           : 'anonymous';
-        const creatorLabel = `creator_${rawName}`;
+        // Normalize: strip existing creator_ prefix before re-adding, to avoid creator_creator_X
+        const cleanName = rawName.replace(/^creator_/i, '');
+        const creatorLabel = `creator_${cleanName}`;
 
         return {
         id: skill.id,
@@ -4667,7 +4669,7 @@ function initSkillForge() {
         // Display attribution comes from the *creator's* name (the username
         // the user typed at forge time), not the agent. Fall back to a
         // generic "anonymous" only when nothing was entered.
-        const creatorRawName = (usernameValue && usernameValue.trim()) || 'anonymous';
+        const creatorRawName = ((usernameValue && usernameValue.trim()) || 'anonymous').replace(/^creator_/i, '');
         const creatorLabel = `creator_${creatorRawName}`;
 
         // ═══ LANGUAGE DETECTION & PROPER BILINGUAL HANDLING ═══

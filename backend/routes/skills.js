@@ -491,8 +491,14 @@ router.post('/', optionalAuth, rateLimitForge, async (req, res, next) => {
     // when the user later signs in or out.
     const userId = req.user?.userId || ANONYMOUS_AUTHOR_ID;
     const isAnonymous = !req.user;
-    // ✅ Use creatorName if provided (user's chosen creator name), otherwise use device identifier
-    const anonymousId = creatorName || bodyAnonymousId || req.headers['x-anonymous-id'] || null;
+    // Normalize creator name to creator_<name> format
+    function normalizeCreatorName(raw) {
+      if (!raw || raw === 'Anonymous' || raw === 'System') return null;
+      const clean = raw.trim().replace(/^creator_/i, ''); // strip existing prefix
+      return `creator_${clean}`;
+    }
+    const rawCreator = creatorName || bodyAnonymousId || req.headers['x-anonymous-id'] || null;
+    const anonymousId = normalizeCreatorName(rawCreator);
 
     // Validation
     if (!title || !title.trim()) {

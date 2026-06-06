@@ -495,6 +495,39 @@ app.get('/api/admin/nuke-skills-now', requireAdminKey, async (req, res) => {
   }
 });
 
+// Normalize creator_anonymous_id to creator_<name> format
+app.post('/api/admin/normalize-creator-names', requireAdminKey, async (req, res) => {
+  try {
+    // 1. NULL or empty → creator_42
+    const r1 = await db.query(
+      `UPDATE skills SET creator_anonymous_id = 'creator_42'
+       WHERE (creator_anonymous_id IS NULL OR creator_anonymous_id = '')
+         AND deleted_at IS NULL`
+    );
+    // 2. Names without creator_ prefix → add prefix
+    const r2 = await db.query(
+      `UPDATE skills SET creator_anonymous_id = 'creator_' || creator_anonymous_id
+       WHERE creator_anonymous_id IS NOT NULL
+         AND creator_anonymous_id NOT LIKE 'creator_%'
+         AND deleted_at IS NULL`
+    );
+    // 3. Double prefix (creator_creator_X) → fix
+    const r3 = await db.query(
+      `UPDATE skills SET creator_anonymous_id = REPLACE(creator_anonymous_id, 'creator_creator_', 'creator_')
+       WHERE creator_anonymous_id LIKE 'creator_creator_%'
+         AND deleted_at IS NULL`
+    );
+    res.json({
+      success: true,
+      nullFixed: r1.rowCount,
+      prefixAdded: r2.rowCount,
+      doubleFixed: r3.rowCount
+    });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // Backfill skill descriptions
 app.post('/api/admin/backfill-descriptions', requireAdminKey, async (req, res) => {
   logger.info('[backfill] Starting skill description backfill...');
