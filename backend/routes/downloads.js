@@ -265,10 +265,25 @@ function generateSkillMarkdown(skillData) {
   const timestamp = now.toISOString().split('T')[0];
   const fl = normalizeFiveLayer(skillData.fiveLayerSkill);
 
-  const readyPrompt = skillData.ready_to_use_prompt
-    || (fl && fl.principle)
-    || skillData.desc
-    || 'A skill forged in The 42 Post';
+  // Build a complete, usable System Prompt from available fields.
+  // Priority: stored ready_to_use_prompt → synthesize from five_layer → fallback
+  let readyPrompt = skillData.ready_to_use_prompt || '';
+
+  if (!readyPrompt && fl) {
+    // Synthesize from five_layer: principle + key DO behavior + boundary
+    const parts = [];
+    if (fl.principle) parts.push(fl.principle);
+    if (fl.reasoning) parts.push(fl.reasoning);
+    const doEx = fl.exemplars?.find(e => /^DO/i.test(e.label || ''));
+    if (doEx?.text) parts.push(`Apply this skill like so: ${doEx.text}`);
+    const applies = fl.boundaries?.applies_when?.[0];
+    if (applies) parts.push(`Use this when: ${applies}`);
+    const notApply = fl.boundaries?.does_not_apply?.[0];
+    if (notApply) parts.push(`Do not use this when: ${notApply}`);
+    readyPrompt = parts.join('\n\n');
+  }
+
+  if (!readyPrompt) readyPrompt = skillData.desc || 'A skill forged in The 42 Post';
 
   let md = `# ✦ ${skillData.title}
 > A Skill from THE 42 POST · Human Semantic Capital Protocol
