@@ -2808,6 +2808,21 @@ function initSkillForge() {
   const knightCardSection = document.getElementById('knightCardSection');
   let selectedDomain = null;
 
+  // ── Mobile keyboard: prevent layout jump when keyboard appears/dismisses ──
+  // visualViewport API tracks the actual visible area (shrinks when keyboard opens).
+  // We pin the overlay height to the visual viewport so it never reflows.
+  if (window.visualViewport) {
+    function onViewportResize() {
+      const vv = window.visualViewport;
+      if (overlay && overlay.classList.contains('active')) {
+        overlay.style.height = vv.height + 'px';
+        overlay.style.top = vv.offsetTop + 'px';
+      }
+    }
+    window.visualViewport.addEventListener('resize', onViewportResize);
+    window.visualViewport.addEventListener('scroll', onViewportResize);
+  }
+
   // ─── Draft Recovery: offer to restore an unsubmitted forge ───
   // If the previous session's POST /skills failed (network drop, 5xx)
   // we kept their work in localStorage. Offer to restore it here.
@@ -3177,10 +3192,19 @@ function initSkillForge() {
 
   if (slot00) slot00.addEventListener('click', openForge);
 
-  if (closeBtn) closeBtn.addEventListener('click', () => overlay.classList.remove('active'));
-  overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.classList.remove('active'); });
+  if (closeBtn) closeBtn.addEventListener('click', () => {
+    overlay.classList.remove('active');
+    overlay.style.height = '';
+    overlay.style.top = '';
+  });
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) {
+      overlay.classList.remove('active');
+      overlay.style.height = '';
+      overlay.style.top = '';
+    }
+  });
 
-  
   // ═══ STEP 1: ACCOUNT + IDEA + INTUITION PROBE ═══
   
   // 直觉探针按钮处理

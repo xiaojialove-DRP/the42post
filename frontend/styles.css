@@ -2751,6 +2751,8 @@ body[data-lang="cn"] .footer-text-muted {
   pointer-events: none;
   transition: opacity 0.4s ease;
   backdrop-filter: blur(4px);
+  /* Use small viewport height so keyboard doesn't cause layout jump */
+  height: 100svh;
 }
 
 div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important; }
@@ -3262,7 +3264,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 .forge-modal {
   width: 92%;
   max-width: 620px;
-  max-height: 88vh;
+  max-height: 88svh;
   overflow-y: auto;
   overflow-x: hidden;
   background: #ffffff;
@@ -5922,7 +5924,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
   .forge-modal, .probe-modal-content {
     width: 94% !important;
     padding: 20px 18px !important;
-    max-height: 92vh !important;
+    max-height: 88svh !important;
     border-radius: 12px !important;
   }
   .forge-close {
