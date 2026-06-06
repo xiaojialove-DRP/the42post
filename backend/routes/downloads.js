@@ -285,14 +285,46 @@ function generateSkillMarkdown(skillData) {
 
   if (!readyPrompt) readyPrompt = skillData.desc || 'A skill forged in The 42 Post';
 
-  let md = `# ✦ ${skillData.title}
-> A Skill from THE 42 POST · Human Semantic Capital Protocol
+  // Detect language from title/desc for bilingual labels
+  const isCn = /[一-鿿]/.test(skillData.title + (skillData.desc || ''));
+
+  const L = {
+    readyTitle:    isCn ? '⚡ 直接使用' : '⚡ Ready to Use',
+    readyHint:     isCn ? '复制下方内容，粘贴到任意 AI 的 System Prompt 即可使用（Claude / ChatGPT / Gemini 均支持）'
+                        : 'Copy the block below and paste as System Prompt into Claude / ChatGPT / Gemini — no setup needed.',
+    l1:            isCn ? '这个 Skill 的核心信念' : 'Core Belief',
+    whyMatters:    isCn ? '为什么这很重要' : 'Why this matters',
+    l2:            isCn ? '实际效果对比' : 'Before & After',
+    l3:            isCn ? '什么时候用，什么时候不该用' : 'When to Use / Avoid',
+    applyWhen:     isCn ? '✅ 适合用的场景' : '✅ Use when',
+    notApply:      isCn ? '❌ 不适合用的场景' : '❌ Avoid when',
+    grayArea:      isCn ? '⚠️ 需要判断的灰色地带' : '⚠️ Gray areas',
+    l4:            isCn ? '怎么知道它起效了' : 'How to Know It\'s Working',
+    prompt:        isCn ? '测试场景' : 'Test prompt',
+    expected:      isCn ? '期望表现' : 'Expected behavior',
+    passWhen:      isCn ? '通过条件' : 'Pass when',
+    metric:        isCn ? '成功指标' : 'Success metric',
+    watchOut:      isCn ? '注意避免' : 'Watch out for',
+    l5:            isCn ? '不同文化的用法' : 'Cultural Adaptations',
+    context:       isCn ? '文化背景' : 'Cultural context',
+    adaptation:    isCn ? '适配方式' : 'Adaptation',
+    licensing:     isCn ? '授权说明' : 'Licensing',
+    commercial:    isCn ? '商业使用' : 'Commercial use',
+    remix:         isCn ? '改编权限' : 'Remixing',
+    creator:       isCn ? '创作者' : 'Creator',
+    noData:        isCn ? '暂无内容' : 'Not specified',
+    footer:        isCn ? `由 THE 42 POST 锻造 · 人类语义资本协议 v0.1 · ${timestamp}`
+                        : `Forged via THE 42 POST · Human Semantic Capital Protocol v0.1 · ${timestamp}`,
+  };
+
+  let md = `# ${skillData.title}
+*${skillData.author} · THE 42 POST · ${skillData.domain}*
 
 ---
 
-## ⚡ READY TO USE
+## ${L.readyTitle}
 
-> Copy the block below and paste as **System Prompt** into Claude / ChatGPT / Gemini — no setup needed.
+> ${L.readyHint}
 
 \`\`\`
 ${readyPrompt}
@@ -300,118 +332,112 @@ ${readyPrompt}
 
 ---
 
-# 📋 SKILL METADATA
-
-| Property | Value |
-|----------|-------|
-| **Title** | ${skillData.title} |
-| **Soul-Hash** | \`${skillData.soulHash}\` |
-| **Author** | ${skillData.author} |
-| **Domain** | ${skillData.domain} |
-| **Created** | ${timestamp} |
-| **Protocol** | THE 42 POST v0.1 |
-| **License** | ${skillData.commercial === 'allowed' ? '✅ Commercial OK' : skillData.commercial === 'authorized' ? '⚠️ Authorization required' : '❌ Non-commercial only'} · ${skillData.remix !== 'no' ? '✅ Remix allowed' : '❌ No derivatives'} |
-
----
-
-# ✨ COMPLETE FRAMEWORK
-
----
-
-## 🎯 Layer 1 · PRINCIPLE
+## ${L.l1}
 
 ${fl && fl.principle ? fl.principle : (skillData.desc || '')}
 `;
 
   if (fl && fl.reasoning) {
-    md += `\n**Why this matters:**\n${fl.reasoning}\n`;
+    md += `\n**${L.whyMatters}：** ${fl.reasoning}\n`;
   }
 
-  md += `\n---\n\n## 📌 Layer 2 · EXEMPLARS\n`;
+  md += `\n---\n\n## ${L.l2}\n`;
 
   if (fl && fl.exemplars && fl.exemplars.length > 0) {
     fl.exemplars.forEach((ex, i) => {
-      md += `\n### ${i + 1}. ${ex.label || 'Example'}\n\n`;
-      md += `${ex.text || ''}\n`;
+      md += `\n### ${i + 1}. ${ex.label || ''}\n\n${ex.text || ''}\n`;
       if (ex.note) md += `\n> ${ex.note}\n`;
     });
   } else {
-    md += `\n*No exemplars provided.*\n`;
+    md += `\n*${L.noData}*\n`;
   }
 
-  md += `\n---\n\n## 🚧 Layer 3 · BOUNDARIES\n`;
+  md += `\n---\n\n## ${L.l3}\n`;
 
   if (fl && fl.boundaries) {
     const b = fl.boundaries;
     if (b.applies_when && b.applies_when.length) {
-      md += `\n### ✅ Apply when:\n`;
+      md += `\n### ${L.applyWhen}\n`;
       b.applies_when.forEach(t => { md += `- ${t}\n`; });
     }
     if (b.does_not_apply && b.does_not_apply.length) {
-      md += `\n### ❌ Do NOT apply when:\n`;
+      md += `\n### ${L.notApply}\n`;
       b.does_not_apply.forEach(t => { md += `- ${t}\n`; });
     }
     if (b.tension_zones && b.tension_zones.length) {
-      md += `\n### ⚠️ Gray areas requiring judgment:\n`;
+      md += `\n### ${L.grayArea}\n`;
       b.tension_zones.forEach(t => { md += `- ${t}\n`; });
     }
   } else if (skillData.useCases || skillData.disallowedUses) {
-    if (skillData.useCases) md += `\n### ✅ Apply when:\n- ${skillData.useCases}\n`;
-    if (skillData.disallowedUses) md += `\n### ❌ Do NOT apply when:\n- ${skillData.disallowedUses}\n`;
+    if (skillData.useCases) md += `\n### ${L.applyWhen}\n- ${skillData.useCases}\n`;
+    if (skillData.disallowedUses) md += `\n### ${L.notApply}\n- ${skillData.disallowedUses}\n`;
   } else {
-    md += `\n*No boundary conditions specified.*\n`;
+    md += `\n*${L.noData}*\n`;
   }
 
-  md += `\n---\n\n## ✔️ Layer 4 · EVALUATION\n`;
+  md += `\n---\n\n## ${L.l4}\n`;
 
   if (fl && fl.evaluation && fl.evaluation.test_cases && fl.evaluation.test_cases.length) {
     fl.evaluation.test_cases.forEach((tc, i) => {
-      md += `\n### Test ${i + 1}\n`;
-      if (tc.prompt) md += `**Prompt:** ${tc.prompt}\n\n`;
-      if (tc.expected) md += `**Expected:** ${tc.expected}\n\n`;
-      if (tc.pass_criteria) md += `**Pass when:** ${tc.pass_criteria}\n`;
+      md += `\n### ${isCn ? '场景' : 'Test'} ${i + 1}\n`;
+      if (tc.prompt) md += `**${L.prompt}：** ${tc.prompt}\n\n`;
+      if (tc.expected) md += `**${L.expected}：** ${tc.expected}\n\n`;
+      if (tc.pass_criteria) md += `**${L.passWhen}：** ${tc.pass_criteria}\n`;
     });
-    if (fl.evaluation.metric) {
-      md += `\n**Success metric:** ${fl.evaluation.metric}\n`;
-    }
-    if (fl.evaluation.silent_failures && fl.evaluation.silent_failures.length) {
-      md += `\n**Watch out for:**\n`;
+    if (fl.evaluation.metric) md += `\n**${L.metric}：** ${fl.evaluation.metric}\n`;
+    if (fl.evaluation.silent_failures?.length) {
+      md += `\n**${L.watchOut}：**\n`;
       fl.evaluation.silent_failures.forEach(f => { md += `- ${f}\n`; });
     }
   } else {
-    md += `\n*No evaluation test cases provided.*\n`;
+    md += `\n*${L.noData}*\n`;
   }
 
-  md += `\n---\n\n## 🌍 Layer 5 · CULTURAL CONTEXT\n`;
+  md += `\n---\n\n## ${L.l5}\n`;
 
   if (fl && fl.cultural_variants && Object.keys(fl.cultural_variants).length) {
-    const localeNames = { 'zh-CN': '🇨🇳 Chinese (Simplified)', 'en-US': '🇺🇸 English (US)', 'ja-JP': '🇯🇵 Japanese' };
+    const localeNames = { 'zh-CN': '🇨🇳 中文', 'en-US': '🇺🇸 English', 'ja-JP': '🇯🇵 日本語' };
     for (const [locale, variant] of Object.entries(fl.cultural_variants)) {
       md += `\n### ${localeNames[locale] || locale}\n`;
-      if (variant.principle_note) md += `**Context:** ${variant.principle_note}\n\n`;
-      if (variant.adaptation) md += `**Adaptation:** ${variant.adaptation}\n`;
+      if (variant.principle_note) md += `**${L.context}：** ${variant.principle_note}\n\n`;
+      if (variant.adaptation) md += `**${L.adaptation}：** ${variant.adaptation}\n`;
     }
   } else if (fl && fl.contextualizing) {
     md += `\n${fl.contextualizing}\n`;
   } else {
-    md += `\n*No cultural adaptations specified.*\n`;
+    md += `\n*${L.noData}*\n`;
   }
 
-  md += `\n---\n\n## ⚖️ LICENSING
+  const licenseCommercial = skillData.commercial === 'allowed'
+    ? (isCn ? '✅ 可商用' : '✅ Commercial use OK')
+    : skillData.commercial === 'authorized'
+    ? (isCn ? '⚠️ 需授权' : '⚠️ Requires permission')
+    : (isCn ? '❌ 仅非商业' : '❌ Non-commercial only');
 
-| Right | Status |
-|-------|--------|
-| **Commercial Use** | ${skillData.commercial === 'allowed' ? '✅ Free to use commercially' : skillData.commercial === 'authorized' ? '⚠️ Requires creator permission' : '❌ Non-commercial only'} |
-| **Remixing** | ${skillData.remix !== 'no' ? '✅ Remix and adapt allowed' : '❌ No derivatives'} |
-| **Creator** | ${skillData.author}${skillData.email && !skillData.email.includes('@the42post.local') ? ` · ${skillData.email}` : ''} |
+  const licenseRemix = skillData.remix !== 'no'
+    ? (isCn ? '✅ 可改编' : '✅ Remix allowed')
+    : (isCn ? '❌ 不可改编' : '❌ No derivatives');
+
+  const creatorDisplay = skillData.email && !skillData.email.includes('@the42post.local')
+    ? `${skillData.author} · ${skillData.email}`
+    : skillData.author;
+
+  md += `\n---\n\n## ${L.licensing}
+
+| | |
+|---|---|
+| **${L.commercial}** | ${licenseCommercial} |
+| **${L.remix}** | ${licenseRemix} |
+| **${L.creator}** | ${creatorDisplay} |
 
 ---
 
-*Forged via THE 42 POST · Human Semantic Capital Protocol v0.1 · ${timestamp}*
+*${L.footer}*
 `;
 
   return md;
 }
+
 
 /**
  * Generate Python/LangChain format
