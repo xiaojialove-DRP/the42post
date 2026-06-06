@@ -2,6 +2,37 @@
 
 All notable changes to THE 42 POST.
 
+## [1.4.0] — 2026-06-06
+
+### Features
+
+- **Streaming probe** — Real-time streaming response in the forge probe step (second implementation, no variable conflicts)
+- **Creator name normalization** — Names auto-formatted to `creator_<name>` on input and auto-migrated on server startup for consistency
+- **PostgreSQL support** — Backend auto-switches to PostgreSQL when `POSTGRES_URI` env var is set (Zeabur/Railway compatible), falls back to SQLite
+
+### UX & Copy
+
+- **Forge modal title** — Changed to an invitational question to better guide user intent
+- **Post-forge acknowledgement** — Replaced consent checkbox with a cleaner post-forge research acknowledgement note
+- **Post-forge copy** — "you just" → "thank you" for warmer tone
+- **Download format** — Markdown download redesigned to be more user-friendly and readable
+- **Howto modal** — Compacted: smaller text, tighter spacing, no scroll needed
+
+### Bug Fixes
+
+- **Mobile layout jump** — Keyboard open/close on mobile no longer causes layout reflow
+- **Star map on mobile** — Touch support added; star map now stays visible on small screens
+- **Mobile Playground cards** — Card UX and Archive flow fixed for mobile
+- **Skill pre-load flow** — When arriving from Archive or Forge with `?skill=ID`, skips picker AND trigger screen, goes directly into A/B twin test
+- **7-card random task limit** — Fixed double-counting bug in `spawnRandomFromRepo` where `twinScenarioCount` was incremented twice per spawn (once directly, once via `incrementScenarioCount`), causing the limit to trigger at card 4 instead of card 7
+- **Missing `ready_to_use_prompt`** — Backend now synthesizes a complete System Prompt when the field is absent
+
+### Research
+
+- Unbiased probe labels, complete test data collection, consent flow improvements
+
+---
+
 ## [1.3.0] — 2026-05-19
 
 ### Bug Fixes
@@ -180,5 +211,5 @@ All notable changes to THE 42 POST.
 ---
 
 **Status**: Production Ready ✅  
-**Version**: 1.3.0  
-**Last Updated**: 2026-05-19
+**Version**: 1.4.0  
+**Last Updated**: 2026-06-06
