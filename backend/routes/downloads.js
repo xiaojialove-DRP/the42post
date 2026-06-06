@@ -104,14 +104,18 @@ router.get('/:skillId', async (req, res, next) => {
 
     let content, filename, contentType;
 
-    // Use soul_hash for filename to avoid HTTP header encoding issues with special characters
-    // (titles can contain Chinese, quotes, etc. which are invalid in HTTP headers)
-    const safeFilename = skill.soul_hash || `skill_${skill.id.substring(0, 8)}`;
+    // Build a clean filename from the skill title (ASCII-safe, no spaces)
+    const titleSlug = (skill.title || 'skill')
+      .replace(/[^\w一-鿿\s-]/g, '')   // keep letters, CJK, spaces, hyphens
+      .trim()
+      .replace(/\s+/g, '-')                      // spaces → hyphens
+      .substring(0, 40);                         // max 40 chars
+    const safeFilename = titleSlug || skill.id.substring(0, 8);
 
     switch (format) {
       case 'markdown':
         content = generateSkillMarkdown(skillData);
-        filename = `The42Post_${safeFilename}.md`;
+        filename = `42post-skill-${safeFilename}.md`;
         contentType = 'text/markdown';
         break;
 
@@ -266,9 +270,14 @@ function generateSkillMarkdown(skillData) {
     || skillData.desc
     || 'A skill forged in The 42 Post';
 
-  let md = `# 🚀 READY TO PROMPT
+  let md = `# ✦ ${skillData.title}
+> A Skill from THE 42 POST · Human Semantic Capital Protocol
 
-Copy the content below and paste directly into your AI assistant as a System Prompt:
+---
+
+## ⚡ READY TO USE
+
+> Copy the block below and paste as **System Prompt** into Claude / ChatGPT / Gemini — no setup needed.
 
 \`\`\`
 ${readyPrompt}
