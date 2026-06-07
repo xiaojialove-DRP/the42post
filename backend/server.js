@@ -461,7 +461,8 @@ app.get('/api/admin/diagnostics', requireAdminKey, async (req, res) => {
       timestamp: new Date().toISOString()
     });
   } catch (err) {
-    res.status(500).json({ error: err.message, stack: err.stack });
+    const isDev = process.env.NODE_ENV !== 'production';
+    res.status(500).json({ error: isDev ? err.message : 'Internal server error', ...(isDev && { stack: err.stack }) });
   }
 });
 
