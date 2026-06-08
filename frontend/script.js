@@ -3196,7 +3196,9 @@ function initSkillForge() {
     if (knightCardSection) knightCardSection.classList.remove('visible');
     document.querySelectorAll('.forge-page').forEach(p => p.classList.remove('active'));
     const page0 = document.getElementById('forgePage0');
+    const page1 = document.getElementById('forgePage1');
     if (page0) page0.classList.add('active');
+    else if (page1) page1.classList.add('active'); // forgePage0 removed; fall back to step 1
     selectedDomain = null;
     document.querySelectorAll('.forge-domain').forEach(d => d.classList.remove('selected'));
   }
@@ -6319,7 +6321,6 @@ function initHeadlineHero() {
 
       // Open forge modal and skip to Step 2
       const forgeOverlay = document.getElementById('forgeOverlay');
-      const forgePage0 = document.getElementById('forgePage0');
       const forgePage2 = document.getElementById('forgePage2');
 
       if (forgeOverlay) forgeOverlay.classList.add('active');
