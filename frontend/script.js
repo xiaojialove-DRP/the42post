@@ -9348,6 +9348,12 @@ function generateForgeSuccessEmail(skillData) {
   const dashboardLink = `${baseUrl}?soul_hash=${soulHash}&token=${skillData.tracking_token}`;
   const playgroundLink = `${baseUrl}?skill=${soulHash}#playground`;
 
+  // Escape user-provided values before HTML email injection
+  const safeSkillTitle = escapeHtml(skillTitle);
+  const safeSoulHash = escapeHtml(soulHash);
+  const safeCreatorName = escapeHtml(creatorName);
+  const safeDomain = escapeHtml(String(domain || ''));
+
   // Read email template and replace variables
   let emailHtml = `
     <!DOCTYPE html>
@@ -9422,12 +9428,12 @@ function generateForgeSuccessEmail(skillData) {
               <div class="card-header">THE 42 POST · SKILL FORGED</div>
               <div class="card-content">
                 <div class="card-crest">✨</div>
-                <div class="card-title-main">${skillTitle}</div>
-                <div class="card-soul-hash">Soul-Hash: ${soulHash}</div>
+                <div class="card-title-main">${safeSkillTitle}</div>
+                <div class="card-soul-hash">Soul-Hash: ${safeSoulHash}</div>
                 <div class="card-meta">
-                  <p>Created by: ${creatorName}</p>
+                  <p>Created by: ${safeCreatorName}</p>
                   <p>Date: ${createdDate}</p>
-                  <p>Domain: ${domain}</p>
+                  <p>Domain: ${safeDomain}</p>
                 </div>
                 <div class="card-divider"></div>
                 <div class="card-tagline">Forging Human Wisdom for a Better AI Future</div>
