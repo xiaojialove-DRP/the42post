@@ -5733,6 +5733,8 @@ function initShareTaste() {
       const card = goDeeper._tasteCard;
       const overlay = document.getElementById('forgeOverlay');
       if (overlay) overlay.classList.add('active');
+      // Reset all pages before showing the target step
+      document.querySelectorAll('.forge-page').forEach(p => p.classList.remove('active'));
 
       // Pre-fill forge from taste card
       const skillNameEl = document.getElementById('forgeSkillName');
@@ -6322,8 +6324,8 @@ function initHeadlineHero() {
 
       if (forgeOverlay) forgeOverlay.classList.add('active');
 
-      // Hide Step 0, skip to Step 2
-      if (forgePage0) forgePage0.classList.remove('active');
+      // Reset all pages, then show target step
+      document.querySelectorAll('.forge-page').forEach(p => p.classList.remove('active'));
       if (forgePage2) {
         forgePage2.classList.add('active');
 
@@ -6363,6 +6365,9 @@ function initHeadlineHero() {
     if (forgeOverlay) {
       forgeOverlay.classList.add('active');
     }
+
+    // Reset to step 1 — clear any previously active page
+    document.querySelectorAll('.forge-page').forEach(p => p.classList.remove('active'));
 
     if (forgePage1) {
       forgePage1.classList.add('active');
