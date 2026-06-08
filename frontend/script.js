@@ -4718,7 +4718,7 @@ function initSkillForge() {
           skillNameValue = editedName.value.trim();
         } else {
           const skillName = document.getElementById('forgeSkillName');
-          skillNameValue = skillName ? skillName.value : 'Unnamed Skill';
+          skillNameValue = (skillName && skillName.value.trim()) ? skillName.value.trim() : 'Unnamed Skill';
         }
 
         let skillDesc = '';
