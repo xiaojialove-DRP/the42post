@@ -21,6 +21,8 @@ THE 42 POST 是一个让普通人参与定义 AI 价值观的平台。
 
 ## 二、主页（index.html）
 
+![主页首屏](screenshots/01-homepage.png)
+
 ### 页面入口
 
 打开网站，你会看到主标题：
@@ -50,6 +52,8 @@ THE 42 POST 是一个让普通人参与定义 AI 价值观的平台。
 ---
 
 ### Skill 展示区
+
+![主页社区声音与底部导航](screenshots/02-homepage-skills.png)
 
 主页中段展示：
 - **本周精选 Skill**（SKILL OF TODAY）
@@ -125,6 +129,8 @@ THE 42 POST 是一个让普通人参与定义 AI 价值观的平台。
 
 ## 四、Skill 档案（Archive）
 
+![Archive 页面](screenshots/03-archive.png)
+
 地址：`/archive`，顶部显示「✦ Latest 42 Skills」
 
 ### 页面功能
@@ -141,6 +147,8 @@ Skills 按领域分类：Safety / Science / Narrative / Design / Visual / Experi
 ---
 
 ## 五、Playground（测试场）
+
+![Playground 页面](screenshots/04-playground.png)
 
 地址：`/playground`
 
