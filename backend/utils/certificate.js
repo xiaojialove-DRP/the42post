@@ -13,6 +13,12 @@
  * @param {string} createdDate - Creation date (ISO format)
  * @returns {string} - HTML content of the certificate
  */
+// HTML escape helper to prevent XSS in generated HTML files
+function esc(str) {
+  if (str == null) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+}
+
 export function generateCertificateHTML(skillData, soulHash, createdDate) {
   const title = skillData.title || 'Untitled Skill';
   const author = skillData.author || skillData.username || 'Creator';
@@ -27,7 +33,7 @@ export function generateCertificateHTML(skillData, soulHash, createdDate) {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Creator Card - ${title}</title>
+  <title>Creator Card - ${esc(title)}</title>
   <style>
     * {
       margin: 0;
@@ -225,16 +231,16 @@ export function generateCertificateHTML(skillData, soulHash, createdDate) {
           <div class="card-creator-role">Community Creator</div>
 
           <!-- Skill Info -->
-          <div class="card-skill-name">${title}</div>
+          <div class="card-skill-name">${esc(title)}</div>
           <div class="card-meta">
-            <p>Created by: ${author}</p>
+            <p>Created by: ${esc(author)}</p>
           </div>
 
           <!-- Soul Hash (Prominent) -->
           <div class="card-divider-bottom"></div>
           <div class="card-soul-hash-prominent">
             <div style="font-size: 11px; color: #999; letter-spacing: 2px; margin-bottom: 6px; text-transform: uppercase;">Soul-Hash</div>
-            <div style="font-size: 18px; font-family: 'JetBrains Mono', monospace; font-weight: 600; letter-spacing: 1px; color: #333; word-break: break-all;">${soulHash}</div>
+            <div style="font-size: 18px; font-family: 'JetBrains Mono', monospace; font-weight: 600; letter-spacing: 1px; color: #333; word-break: break-all;">${esc(soulHash)}</div>
           </div>
 
           <!-- Rights Info and Date -->
@@ -647,9 +653,9 @@ export function generateEmailTemplate(
               <div class="card-creator-role">Community Creator</div>
 
               <!-- Skill Info -->
-              <div class="card-skill-name">${title}</div>
+              <div class="card-skill-name">${esc(title)}</div>
               <div class="card-meta">
-                <p>Created by: ${author}</p>
+                <p>Created by: ${esc(author)}</p>
               </div>
 
               <!-- Rights Info -->
@@ -661,7 +667,7 @@ export function generateEmailTemplate(
               <div class="card-divider-bottom"></div>
               <div style="text-align: center; margin: 12px 0;">
                 <div style="font-size: 9px; color: #999; letter-spacing: 2px; margin-bottom: 6px; text-transform: uppercase;">Soul-Hash</div>
-                <div style="font-size: 16px; font-family: 'JetBrains Mono', monospace; font-weight: 600; letter-spacing: 1px; color: #333; word-break: break-all;">${soulHash}</div>
+                <div style="font-size: 16px; font-family: 'JetBrains Mono', monospace; font-weight: 600; letter-spacing: 1px; color: #333; word-break: break-all;">${esc(soulHash)}</div>
               </div>
 
               <!-- Rights Info and Date -->
