@@ -9,6 +9,17 @@ import { v4 as uuidv4 } from 'uuid';
 
 const router = express.Router();
 
+// Simple HTML escape for backend use (avoids XSS in generated HTML files)
+function escapeHtml(str) {
+  if (str == null) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
 /**
  * GET /api/download/:skillId?format=markdown|langchain|mcp|certificate
  * Download skill in specified format
@@ -608,7 +619,7 @@ function generateCertificateHTML(skillData, soulHash) {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Creator Card — ${skillData.title}</title>
+  <title>Creator Card — ${escapeHtml(skillData.title)}</title>
   <link rel="preconnect" href="https://fonts.font.im">
   <link href="https://fonts.font.im/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
   <style>
@@ -652,9 +663,9 @@ function generateCertificateHTML(skillData, soulHash) {
   <div class="commemorative-card">
     <div class="sq-brand">THE 42 POST</div>
     <div style="font-size:26px; color:#d4a849;">✨</div>
-    <div class="sq-skill-name">${skillData.title}</div>
-    <div class="sq-creator-role">Created by ${skillData.author}</div>
-    <div style="font-size:7px; color:rgba(138,124,110,0.6); margin: 4px 0;">Soul-Hash: ${soulHash.substring(0, 20)}...</div>
+    <div class="sq-skill-name">${escapeHtml(skillData.title)}</div>
+    <div class="sq-creator-role">Created by ${escapeHtml(skillData.author)}</div>
+    <div style="font-size:7px; color:rgba(138,124,110,0.6); margin: 4px 0;">Soul-Hash: ${escapeHtml(soulHash.substring(0, 20))}...</div>
     <div class="sq-invite-code" style="margin: 8px 0; font-size: 12px;">CREATOR CARD</div>
     <div style="font-size:8px; color:#999;">Forged on ${createdDate}</div>
     <div class="sq-url">www.the42post.com</div>
