@@ -10,14 +10,14 @@
  */
 const VALIDATION_SCHEMAS = {
   // Auth endpoints
-  'POST /auth/forge-session': {
+  'POST /api/auth/forge-session': {
     body: {
       email: { type: 'string', required: true, minLength: 5, maxLength: 254 },
       username: { type: 'string', required: true, minLength: 3, maxLength: 32 }
     }
   },
 
-  'POST /auth/register': {
+  'POST /api/auth/register': {
     body: {
       email: { type: 'string', required: true, minLength: 5, maxLength: 254 },
       username: { type: 'string', required: true, minLength: 3, maxLength: 32 },
@@ -27,14 +27,14 @@ const VALIDATION_SCHEMAS = {
   },
 
   // Forge endpoints
-  'POST /forge/probe': {
+  'POST /api/forge/probe': {
     body: {
       idea_text: { type: 'string', required: true, minLength: 10, maxLength: 5000 },
       language: { type: 'string', required: false, enum: ['en', 'zh'] }
     }
   },
 
-  'POST /forge/generate': {
+  'POST /api/forge/generate': {
     body: {
       skill_name: { type: 'string', required: true, minLength: 3, maxLength: 200 },
       idea_text: { type: 'string', required: true, minLength: 10 },
@@ -46,7 +46,7 @@ const VALIDATION_SCHEMAS = {
   },
 
   // Skills endpoints
-  'GET /skills': {
+  'GET /api/skills': {
     query: {
       page: { type: 'number', required: false, min: 1, max: 1000 },
       limit: { type: 'number', required: false, min: 1, max: 100 },
@@ -55,7 +55,7 @@ const VALIDATION_SCHEMAS = {
     }
   },
 
-  'POST /skills': {
+  'POST /api/skills': {
     body: {
       title: { type: 'string', required: true, minLength: 3, maxLength: 200 },
       description: { type: 'string', required: false, maxLength: 1000 },
@@ -68,7 +68,7 @@ const VALIDATION_SCHEMAS = {
   },
 
   // Playground endpoints
-  'POST /playground/test': {
+  'POST /api/playground/test': {
     body: {
       skill_id: { type: 'string', required: true, minLength: 1, maxLength: 100 },
       scenario: { type: 'object', required: true },
@@ -195,7 +195,7 @@ export function requestValidator(req, res, next) {
   const key = `${req.method} ${req.baseUrl}${req.path}`;
 
   // Remove query string from path for schema lookup
-  const pathForLookup = key.split('?')[0];
+  const pathForLookup = key.split('?')[0].replace(/\/$/, '');
 
   const schema = VALIDATION_SCHEMAS[pathForLookup];
 
