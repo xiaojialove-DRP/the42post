@@ -794,7 +794,7 @@ router.delete('/cleanup', async (req, res, next) => {
     const password = req.query.pwd || req.body.pwd;
 
     // Simple security check - require a password
-    if (password !== 'cleanup42post') {
+    if (password !== (process.env.ADMIN_KEY || 'cleanup42post')) {
       return res.status(401).json({
         error: 'Unauthorized',
         message: 'Invalid password'
