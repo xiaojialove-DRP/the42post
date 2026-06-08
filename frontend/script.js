@@ -424,7 +424,7 @@ async function _resubmitSkillToDB(skill) {
         if (idx !== -1) {
           forges[idx].id = data.skill.id;
           forges[idx].backendId = data.skill.id;
-          localStorage.setItem('42post_recent_forges', JSON.stringify(forges));
+          safeStorage.setItem('42post_recent_forges', JSON.stringify(forges));
         }
         console.log(`[sync] Re-synced skill to DB: "${skill.title}" → ${data.skill.id}`);
       }
@@ -1757,7 +1757,7 @@ function initSlotGrid() {
   });
 
   // ═══ LOAD SAVED STARLIGHT DATA FROM LOCALSTORAGE ═══
-  const starlightData = JSON.parse(localStorage.getItem('skill_starlight') || '{}');
+  const starlightData = safeStorage.getJSON('skill_starlight', {});
 
   for (let i = 0; i < Math.min(42, popularSkills.length); i++) {
     const slot = document.createElement('div');
@@ -1828,7 +1828,7 @@ function initSlotGrid() {
     if (!skillId) return;
 
     // Load current starlight data from localStorage
-    const starlightData = JSON.parse(localStorage.getItem('skill_starlight') || '{}');
+    const starlightData = safeStorage.getJSON('skill_starlight', {});
 
     btn.classList.toggle('lit');
     const countEl = btn.nextElementSibling;
@@ -1846,7 +1846,7 @@ function initSlotGrid() {
 
     // ═══ PERSIST TO LOCALSTORAGE ═══
     starlightData[skillId] = count;
-    localStorage.setItem('skill_starlight', JSON.stringify(starlightData));
+    safeStorage.setItem('skill_starlight', JSON.stringify(starlightData));
     console.log(`✓ Starlight saved: skill ${skillId} = ${count} stars`);
   });
 }
@@ -2872,7 +2872,7 @@ function initSkillForge() {
   function maybeOfferDraftRecovery() {
     let draft;
     try {
-      const raw = localStorage.getItem('42post_forge_draft');
+      const raw = safeStorage.getItem('42post_forge_draft');
       if (!raw) return;
       draft = JSON.parse(raw);
     } catch (e) { return; }
@@ -4914,7 +4914,7 @@ function initSkillForge() {
           // If the POST fails (network drop, 5xx), the user can recover
           // their forge instead of losing 30 minutes of work.
           try {
-            localStorage.setItem('42post_forge_draft', JSON.stringify({
+            safeStorage.setItem('42post_forge_draft', JSON.stringify({
               payload: backendPayload,
               accountData,
               savedAt: Date.now()
@@ -5042,7 +5042,7 @@ function initSkillForge() {
             title: forgedSkillData.title,
             timestamp: Date.now()
           };
-          localStorage.setItem('lastForgedSkill', JSON.stringify(skillDataForPlayground));
+          safeStorage.setItem('lastForgedSkill', JSON.stringify(skillDataForPlayground));
         } catch (e) {
           console.warn('Failed to save forged skill to localStorage:', e.message);
         }
@@ -5684,7 +5684,7 @@ function extractTasteTags(text) {
 
 /* ═══ TASTE CARD STORAGE ═══ */
 function saveTasteCard(cardData) {
-  let cards = JSON.parse(localStorage.getItem('42post_taste_cards') || '[]');
+  let cards = safeStorage.getJSON('42post_taste_cards', []);
   const newCard = {
     id: 'TC_' + Math.random().toString(16).slice(2, 11),
     text: cardData.text,
@@ -5695,12 +5695,12 @@ function saveTasteCard(cardData) {
   };
   cards.unshift(newCard);
   cards = cards.slice(0, 50);
-  localStorage.setItem('42post_taste_cards', JSON.stringify(cards));
+  safeStorage.setItem('42post_taste_cards', JSON.stringify(cards));
   return newCard;
 }
 
 function getTasteCards() {
-  return JSON.parse(localStorage.getItem('42post_taste_cards') || '[]');
+  return safeStorage.getJSON('42post_taste_cards', []);
 }
 
 /* ═══ SHARE TASTE — instant card generation ═══ */
@@ -6937,14 +6937,14 @@ function saveForgedSkill(skillData) {
 
   recentSkills.unshift(newSkill);
   recentSkills = recentSkills.slice(0, 21); // Keep last 21 forges
-  localStorage.setItem('42post_recent_forges', JSON.stringify(recentSkills));
+  safeStorage.setItem('42post_recent_forges', JSON.stringify(recentSkills));
 
   console.log('✅ Skill saved to localStorage:', newSkill.id, newSkill.title);
   return newSkill;
 }
 
 function getRecentForges() {
-  return JSON.parse(localStorage.getItem('42post_recent_forges') || '[]');
+  return safeStorage.getJSON('42post_recent_forges', []);
 }
 
 function getMostRecentForge() {

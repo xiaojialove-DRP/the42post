@@ -1650,17 +1650,17 @@
         dateStr: new Date().toLocaleDateString()
       };
 
-      let cards = JSON.parse(localStorage.getItem('42post_creative_cards') || '[]');
+      let cards = safeStorage.getJSON('42post_creative_cards', []);
       cards.unshift(card); // 添加到开头（最新的卡片在前）
       cards = cards.slice(0, 100); // 最多保存100张卡片
-      localStorage.setItem('42post_creative_cards', JSON.stringify(cards));
+      safeStorage.setItem('42post_creative_cards', JSON.stringify(cards));
 
       displayCardLibrary();
       return card;
     }
 
     function getCreativeCards() {
-      return JSON.parse(localStorage.getItem('42post_creative_cards') || '[]');
+      return safeStorage.getJSON('42post_creative_cards', []);
     }
 
     function displayCardLibrary() {
@@ -1862,7 +1862,7 @@
       const selectedSkills = { A: null, B: null };
 
       // Auto-select preselected skill from localStorage or Forge/Archive
-      const preselectedSkill = localStorage.getItem('playgroundPreselectedSkill');
+      const preselectedSkill = safeStorage.getItem('playgroundPreselectedSkill');
       if (preselectedSkill && ARENA_SKILL_POOL.some(s => s.name === preselectedSkill)) {
         const slotA = card.querySelector('.fusion-slot[data-slot="A"]');
         if (slotA && !slotA.classList.contains('filled')) {
@@ -1871,7 +1871,7 @@
           slotA.innerHTML = `<div class="fusion-slot-label">SKILL A</div><div class="fusion-slot-name">${preselectedSkill}</div>`;
           console.log('✓ Pre-selected Skill A:', preselectedSkill);
           // Clear the localStorage key after using it
-          localStorage.removeItem('playgroundPreselectedSkill');
+          safeStorage.removeItem('playgroundPreselectedSkill');
         }
       }
 
@@ -2300,15 +2300,22 @@
       // If forge redirected here with ?anonymous_id=..., use that and persist it
       const urlId = new URLSearchParams(window.location.search).get('anonymous_id');
       if (urlId) {
-        localStorage.setItem('42post_anon_id', urlId);
+        safeStorage.setItem('42post_anon_id', urlId);
         return urlId;
       }
-      let id = localStorage.getItem('42post_anon_id');
-      if (!id) {
-        id = 'anon_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
-        localStorage.setItem('42post_anon_id', id);
+      try {
+        let id = localStorage.getItem('42post_anon_id');
+        if (!id) {
+          id = 'anon_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+          localStorage.setItem('42post_anon_id', id);
+        }
+        return id;
+      } catch (e) {
+        if (!window.__sessionAnonId) {
+          window.__sessionAnonId = 'anon_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+        }
+        return window.__sessionAnonId;
       }
-      return id;
     }
 
     async function initTwinTestMode() {
@@ -2341,7 +2348,7 @@
       // Check for recently forged skill from localStorage (user's own skill)
       if (!skillId) {
         try {
-          const lastForgedSkill = localStorage.getItem('lastForgedSkill');
+          const lastForgedSkill = safeStorage.getItem('lastForgedSkill');
           if (lastForgedSkill) {
             const skillInfo = JSON.parse(lastForgedSkill);
             // Only use it if it's recent (within 1 hour)
@@ -2708,7 +2715,7 @@
     function updateVoteCounter(card) {
       const isCn = (typeof currentLang !== 'undefined' && currentLang === 'cn');
       const todayKey = 'votedSkillsToday_' + new Date().toISOString().split('T')[0];
-      const votedSkills = JSON.parse(localStorage.getItem(todayKey) || '[]');
+      const votedSkills = safeStorage.getJSON(todayKey, []);
       const counter = card.querySelector('[data-vote-counter]');
       if (counter) {
         if (votedSkills.length > 0) {
