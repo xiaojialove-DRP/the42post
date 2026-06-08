@@ -94,10 +94,7 @@
     padding: 8px 12px;
   }
 
-  /* Input fields can remain at 16px or reduce to 14px on tablet (keeping 16px for safety) */
-  .forge-input, .minimal-input {
-    font-size: 14px;
-  }
+  /* Keep 16px on tablet — iOS zooms on any input < 16px */
 
   /* Grid layouts expand to 2 columns on tablet */
   .vibe-grid { grid-template-columns: repeat(2, 1fr); }
@@ -789,7 +786,7 @@ body[data-lang="cn"] .voices-header-text {
 }
 
 .feed-card-desc {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--ink-light);
   line-height: 1.6;
   flex: 1;
@@ -5668,7 +5665,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
   }
   .footer-logo-row { flex-direction: column; gap: 12px; padding: 20px 16px 24px !important; }
   .footer-quotes { text-align: left; }
-  .headline-textarea { font-size: 15px; min-height: 120px; padding: 24px; }
+  .headline-textarea { font-size: 16px; min-height: 120px; padding: 24px; }
   .headline-textarea.chat-textarea { padding: 12px 0; }
   .headline-actions { flex-direction: column; align-items: stretch; }
   .headline-actions .creator-name-input { width: 100%; }
@@ -8430,6 +8427,36 @@ button.generating {
     max-width: calc(100% - 40px);
     padding: 24px;
   }
+
+  /* Larger touch targets for action buttons on mobile */
+  .btn-star,
+  .btn-download,
+  .btn-view-full {
+    min-height: 44px;
+    padding: 10px 14px;
+    font-size: 13px;
+  }
+
+  /* Skill detail modal: full-width on small screens */
+  .skill-detail-modal {
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: 90dvh !important;
+    border-radius: 16px 16px 0 0;
+    margin-top: auto;
+  }
+
+  .skill-detail-overlay {
+    align-items: flex-end;
+  }
+
+  .skill-detail-header {
+    padding: 20px 20px 12px;
+  }
+
+  .skill-detail-body {
+    padding: 0 20px 20px;
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -9082,12 +9109,24 @@ button.generating {
   border-radius: 10px !important;
   color: var(--wc-charcoal) !important;
   font-family: var(--font-serif) !important;
-  font-size: 13px !important;
+  font-size: 16px !important;
   padding: 11px 14px !important;
   box-sizing: border-box !important;
   width: 100% !important;
   transition: border-color 0.22s, background 0.22s, box-shadow 0.22s !important;
   -webkit-appearance: none !important;
+}
+@media (min-width: 1024px) {
+  .minimal-input,
+  .minimal-textarea,
+  .forge-input,
+  .forge-textarea,
+  .skill-editable-input,
+  .skill-editable-textarea,
+  .preview-input,
+  .preview-textarea {
+    font-size: 13px !important;
+  }
 }
 .minimal-input::placeholder,
 .minimal-textarea::placeholder,
