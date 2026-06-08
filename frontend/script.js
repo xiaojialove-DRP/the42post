@@ -7,6 +7,22 @@
    PHASE 0: API CLIENT LAYER (Front-Back Connection)
    ═══════════════════════════════════════════════════════ */
 
+/* ═══ SAFE LOCALSTORAGE UTILITY ═══ */
+const safeStorage = {
+  getItem(key, fallback = null) {
+    try { return localStorage.getItem(key); } catch (e) { return fallback; }
+  },
+  setItem(key, value) {
+    try { localStorage.setItem(key, value); } catch (e) { /* quota or security */ }
+  },
+  removeItem(key) {
+    try { localStorage.removeItem(key); } catch (e) { /* ignore */ }
+  },
+  getJSON(key, fallback = null) {
+    try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; } catch (e) { return fallback; }
+  }
+};
+
 /* ═══ HTML ESCAPE UTILITY ═══ */
 function escapeHtml(str) {
   if (str == null) return '';
@@ -107,12 +123,21 @@ const API_CONFIG = {
 
 // 生成或获取匿名用户ID（用于追踪未登录用户的行为）
 function getAnonymousId() {
-  let anonId = localStorage.getItem(API_CONFIG.ANON_ID_KEY);
-  if (!anonId) {
-    anonId = 'anon_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-    localStorage.setItem(API_CONFIG.ANON_ID_KEY, anonId);
+  try {
+    let anonId = localStorage.getItem(API_CONFIG.ANON_ID_KEY);
+    if (!anonId) {
+      anonId = 'anon_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+      localStorage.setItem(API_CONFIG.ANON_ID_KEY, anonId);
+    }
+    return anonId;
+  } catch (e) {
+    // localStorage unavailable (private browsing, security settings, storage full)
+    // Return a session-scoped ID that won't persist across page loads
+    if (!window.__sessionAnonId) {
+      window.__sessionAnonId = 'anon_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    }
+    return window.__sessionAnonId;
   }
-  return anonId;
 }
 
 const ApiClient = {
@@ -417,7 +442,7 @@ function initSkillGrids() {
   const currentUser = ApiClient.getUser();
 
   // Load starred skills from localStorage
-  const starredSkills = JSON.parse(localStorage.getItem('starred_skills') || '{}');
+  const starredSkills = safeStorage.getJSON('starred_skills', {});
 
   function renderSkillCard(skill) {
     const lang = document.body.dataset.lang || 'en';
@@ -499,7 +524,7 @@ function initSkillGrids() {
 
 /* ═══ SKILL CARD EVENT LISTENERS ═══ */
 function attachSkillCardListeners() {
-  const starredSkills = JSON.parse(localStorage.getItem('starred_skills') || '{}');
+  const starredSkills = safeStorage.getJSON('starred_skills', {});
 
   // ═══ LOAD STAR STATUS FROM BACKEND ═══
   // Sync user's star state with backend on page load
@@ -532,7 +557,7 @@ function attachSkillCardListeners() {
         }
 
         // Sync with localStorage
-        localStorage.setItem('starred_skills', JSON.stringify(starredSkills));
+        safeStorage.setItem('starred_skills', JSON.stringify(starredSkills));
       }
     } catch (error) {
       console.warn(`Could not load star status for skill ${skillId}:`, error);
@@ -597,7 +622,7 @@ function attachSkillCardListeners() {
         }
 
         // Save to localStorage as backup
-        localStorage.setItem('starred_skills', JSON.stringify(starredSkills));
+        safeStorage.setItem('starred_skills', JSON.stringify(starredSkills));
 
         // Update button with the new star count from backend
         btn.querySelector('.star-icon').textContent = newStarred ? '⭐' : '☆';
@@ -1418,7 +1443,7 @@ const I18N = {
 };
 
 // 从 localStorage 读取保存的语言，默认为英文
-let currentLang = localStorage.getItem('42post_lang') || 'en';
+let currentLang = (() => { try { return localStorage.getItem('42post_lang') || 'en'; } catch (e) { return 'en'; } })();
 
 /**
  * Show toast with i18n translation
@@ -1453,7 +1478,7 @@ function initI18n() {
   btnLang.addEventListener('click', () => {
     currentLang = currentLang === 'en' ? 'cn' : 'en';
     // 保存语言选择到 localStorage
-    localStorage.setItem('42post_lang', currentLang);
+    safeStorage.setItem('42post_lang', currentLang);
     document.body.setAttribute('data-lang', currentLang);
     updateLanguageButtonText();
     applyI18n();
@@ -8694,7 +8719,7 @@ async function initAgentArchiveView() {
             ? soulHashFull.substring(0, 14)
             : soulHashFull;
           // Check if skill is starred from localStorage
-          const starredSkills = JSON.parse(localStorage.getItem('starred_skills') || '{}');
+          const starredSkills = safeStorage.getJSON('starred_skills', {});
           const isStarred = starredSkills[skill.id] === true;
           return `
             <div class="skill-item" data-skill-id="${skill.id}" data-is-starred="${isStarred}">
@@ -8757,7 +8782,7 @@ async function initAgentArchiveView() {
         const downloadBtn = skillItem?.querySelector('.download-btn');
         const starCountEl = skillItem?.querySelector('.skill-stars');
 
-        const starredSkills = JSON.parse(localStorage.getItem('starred_skills') || '{}');
+        const starredSkills = safeStorage.getJSON('starred_skills', {});
         const isCurrentlyStarred = starredSkills[skillId] === true;
         const willBeStarred = !isCurrentlyStarred;
 
@@ -8775,7 +8800,7 @@ async function initAgentArchiveView() {
         // Update localStorage
         if (willBeStarred) starredSkills[skillId] = true;
         else delete starredSkills[skillId];
-        localStorage.setItem('starred_skills', JSON.stringify(starredSkills));
+        safeStorage.setItem('starred_skills', JSON.stringify(starredSkills));
 
         // Call API and update count with real number from backend
         btn.disabled = true;
@@ -8849,7 +8874,7 @@ async function initAgentArchiveView() {
       if (!resp.ok) return;
       const { stars } = await resp.json();
 
-      const starredSkills = JSON.parse(localStorage.getItem('starred_skills') || '{}');
+      const starredSkills = safeStorage.getJSON('starred_skills', {});
 
       btns.forEach(btn => {
         const id = btn.dataset.skillId;
@@ -8881,7 +8906,7 @@ async function initAgentArchiveView() {
         }
       });
 
-      localStorage.setItem('starred_skills', JSON.stringify(starredSkills));
+      safeStorage.setItem('starred_skills', JSON.stringify(starredSkills));
     } catch (e) {
       console.warn('Could not sync star states:', e.message);
     }
@@ -8963,7 +8988,7 @@ function initTop42Grid() {
 
 /* ═══ UTILITY FUNCTIONS FOR SKILL INTERACTIONS ═══ */
 function starSkillById(skillId, nodesArray = null) {
-  const starredSkills = JSON.parse(localStorage.getItem('starred_skills') || '{}');
+  const starredSkills = safeStorage.getJSON('starred_skills', {});
   const isStarred = starredSkills[skillId] === true;
   const newStarred = !isStarred;
 
@@ -8973,7 +8998,7 @@ function starSkillById(skillId, nodesArray = null) {
   } else {
     delete starredSkills[skillId];
   }
-  localStorage.setItem('starred_skills', JSON.stringify(starredSkills));
+  safeStorage.setItem('starred_skills', JSON.stringify(starredSkills));
 
   // Sync to backend
   try {
@@ -9020,7 +9045,7 @@ function attachTop42SkillListeners() {
     if (starBtn) {
       starBtn.addEventListener('click', async (e) => {
         e.stopPropagation();
-        const starredSkills = JSON.parse(localStorage.getItem('starred_skills') || '{}');
+        const starredSkills = safeStorage.getJSON('starred_skills', {});
         const isStarred = starredSkills[skillId] === true;
         const newStarred = !isStarred;
 
@@ -9036,7 +9061,7 @@ function attachTop42SkillListeners() {
           skill.starlight = Math.max(0, (skill.starlight || 0) - 1);
           skill.stars = skill.starlight;
         }
-        localStorage.setItem('starred_skills', JSON.stringify(starredSkills));
+        safeStorage.setItem('starred_skills', JSON.stringify(starredSkills));
         const starDisplay = cell.querySelector('.top42-skill-meta .top42-skill-meta-item:first-child span');
         if (starDisplay) starDisplay.textContent = skill.starlight || 0;
 
@@ -9057,7 +9082,7 @@ function attachTop42SkillListeners() {
       });
 
       // Check if already starred
-      const starredSkills = JSON.parse(localStorage.getItem('starred_skills') || '{}');
+      const starredSkills = safeStorage.getJSON('starred_skills', {});
       if (starredSkills[skillId]) {
         starBtn.classList.add('starred');
       }
@@ -9111,7 +9136,7 @@ function attachDomainSkillListeners() {
     if (starBtn) {
       starBtn.addEventListener('click', async (e) => {
         e.stopPropagation();
-        const starredSkills = JSON.parse(localStorage.getItem('starred_skills') || '{}');
+        const starredSkills = safeStorage.getJSON('starred_skills', {});
         const isCurrentlyStarred = starredSkills[skillId] === true;
         const newStarred = !isCurrentlyStarred;
 
@@ -9125,7 +9150,7 @@ function attachDomainSkillListeners() {
           skill.stars = Math.max(0, (skill.stars || 0) - 1);
           starBtn.textContent = `☆ ${skill.stars}`;
         }
-        localStorage.setItem('starred_skills', JSON.stringify(starredSkills));
+        safeStorage.setItem('starred_skills', JSON.stringify(starredSkills));
 
         // Enable/disable download button
         const downloadBtn = card.querySelector('.btn-skill-download');
@@ -9166,7 +9191,7 @@ function attachDomainSkillListeners() {
       downloadBtn.addEventListener('click', async (e) => {
         e.stopPropagation();
 
-        const starredSkills = JSON.parse(localStorage.getItem('starred_skills') || '{}');
+        const starredSkills = safeStorage.getJSON('starred_skills', {});
         if (starredSkills[skillId] !== true) {
           alert('⭐ Please star this skill first before downloading.');
           return;
