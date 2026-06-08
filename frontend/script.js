@@ -6417,6 +6417,9 @@ function initHeadlineHero() {
     // Also listen for Esc key as a fallback close
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && forgeOverlayEl.classList.contains('active')) {
+        forgeOverlayEl.classList.remove('active');
+        forgeOverlayEl.style.height = '';
+        forgeOverlayEl.style.top = '';
         setTimeout(restoreChatBubble, 50);
       }
     });

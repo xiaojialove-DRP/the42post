@@ -20,6 +20,12 @@ import { callLLMJSON } from '../utils/skillGeneration.js';
 
 const router = express.Router();
 
+// Sanitize anonymous_id: truncate to DB column size and allow only safe chars
+const safeAnonId = (id) => {
+  if (!id || typeof id !== 'string') return null;
+  return id.replace(/[^a-zA-Z0-9_\-]/g, '').slice(0, 255) || null;
+};
+
 // ─── Build the two prompts ───
 // Prefers the ready_to_use_prompt (natural-language System Prompt synthesised
 // at forge time) over a structured-tag dump of the 5 layers. The natural
@@ -323,7 +329,7 @@ router.post('/test', rateLimitLLM, async (req, res, next) => {
            (id, skill_id, scenario_key, anonymous_id, skill_side, diagnostic,
             scenario_text, response_a_text, response_b_text)
          VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
-        [testId, skill_id, String(scenarioKey).slice(0, 250), anonymous_id || null,
+        [testId, skill_id, String(scenarioKey).slice(0, 250), safeAnonId(anonymous_id),
          skillSide, diagnostic || null,
          scenarioTitle, responseA.slice(0, 2000), responseB.slice(0, 2000)]
       );
@@ -400,7 +406,7 @@ router.post('/feedback', async (req, res, next) => {
           uuidv4(),
           testRow.skill_id,
           testRow.scenario_key || null,
-          anonymous_id || null,
+          safeAnonId(anonymous_id),
           rating,
           trimmedComment || null,
           testRow.skill_side || null
@@ -515,7 +521,8 @@ router.get('/picker', async (req, res, next) => {
     const limit = Math.max(1, Math.min(parseInt(req.query.limit, 10) || 8, 30));
 
     let mySkills = [];
-    if (anonymous_id && typeof anonymous_id === 'string') {
+    const safeAnonIdQuery = safeAnonId(anonymous_id);
+    if (safeAnonIdQuery) {
       mySkills = (await db.query(
         `SELECT s.*, u.username AS creator_name
          FROM skills s
@@ -525,7 +532,7 @@ router.get('/picker', async (req, res, next) => {
            AND s.deleted_at IS NULL
          ORDER BY s.published_at DESC
          LIMIT $2`,
-        [anonymous_id, limit]
+        [safeAnonIdQuery, limit]
       )).rows || [];
     }
 

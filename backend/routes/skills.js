@@ -187,7 +187,7 @@ router.get('/', async (req, res, next) => {
 router.get('/stars/batch', async (req, res, next) => {
   try {
     const { ids } = req.query;
-    const anonymousId = req.headers['x-anonymous-id'] || req.headers['x-anon-id'];
+    const anonymousId = ((req.headers['x-anonymous-id'] || req.headers['x-anon-id'] || '').replace(/[^a-zA-Z0-9_\-]/g, '').slice(0, 255)) || null;
 
     if (!ids) return res.json({ success: true, stars: {} });
 
@@ -959,7 +959,7 @@ router.post('/:skill_id/star', async (req, res, next) => {
   try {
     const { skill_id } = req.params;
     const { starred } = req.body;
-    const anonymousId = req.headers['x-anonymous-id'] || req.headers['x-anon-id'];
+    const anonymousId = ((req.headers['x-anonymous-id'] || req.headers['x-anon-id'] || '').replace(/[^a-zA-Z0-9_\-]/g, '').slice(0, 255)) || null;
 
     // SECURITY: Validate X-Anonymous-Id header
     if (!anonymousId) {
@@ -1059,7 +1059,7 @@ router.post('/:skill_id/star', async (req, res, next) => {
 router.get('/:skill_id/stars', async (req, res, next) => {
   try {
     const { skill_id } = req.params;
-    const anonymousId = req.headers['x-anonymous-id'] || req.headers['x-anon-id'];
+    const anonymousId = ((req.headers['x-anonymous-id'] || req.headers['x-anon-id'] || '').replace(/[^a-zA-Z0-9_\-]/g, '').slice(0, 255)) || null;
 
     // Verify skill exists
     const skillCheck = await db.query('SELECT id FROM skills WHERE id = $1', [skill_id]);
