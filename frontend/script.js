@@ -6158,10 +6158,10 @@ function displayRandomPlaygroundTask(source = 'showcase') {
     const showcase = document.getElementById('showcaseTask');
     if (showcase) {
       showcase.innerHTML = `
-        <h3 class="inspiration-question">${task.title}</h3>
-        <p class="inspiration-context">${task.description}</p>
+        <h3 class="inspiration-question">${escapeHtml(task.title)}</h3>
+        <p class="inspiration-context">${escapeHtml(task.description)}</p>
         <div class="task-tags">
-          ${task.tags.map(tag => `<span class="task-tag">${tag}</span>`).join('')}
+          ${(task.tags || []).map(tag => `<span class="task-tag">${escapeHtml(tag)}</span>`).join('')}
         </div>
       `;
     }
