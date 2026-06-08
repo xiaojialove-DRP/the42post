@@ -395,7 +395,7 @@
       border: 1px solid var(--rule);
       color: var(--ink);
       font-family: 'Noto Serif SC', 'Noto Serif JP', var(--font-sans);
-      font-size: 14px;
+      font-size: 16px;
       line-height: 1.6;
       padding: 12px;
       resize: none;
@@ -903,25 +903,31 @@
       .bar-logo { font-size: 13px; }
       .bar-subtitle { display: none; }
       .bar-btn, .btn-back-home {
-        font-size: 9px;
-        padding: 4px 8px;
+        font-size: 11px;
+        padding: 8px 10px;
+        min-height: 36px;
       }
       .workshop-dock {
         padding: 6px 8px;
-        gap: 3px;
+        gap: 4px;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        flex-wrap: nowrap;
       }
       .dock-item {
-        padding: 3px 6px;
-        font-size: 6.5px;
-        border: 0.5px solid color-mix(in srgb, var(--dock-color, #ddd) 20%, #ddd);
+        padding: 6px 10px;
+        font-size: 10px;
+        flex-shrink: 0;
+        min-height: 32px;
+        border: 1px solid color-mix(in srgb, var(--dock-color, #ddd) 20%, #ddd);
       }
       .dock-item .dock-icon {
-        font-size: 9px;
+        font-size: 11px;
       }
       .dock-item .dock-count {
-        padding: 0 3px;
-        font-size: 6px;
-        min-width: 14px;
+        padding: 0 4px;
+        font-size: 9px;
+        min-width: 16px;
       }
       .twin-resp {
         padding: 10px;
