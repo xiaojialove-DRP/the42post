@@ -57,12 +57,30 @@ router.get('/', async (req, res, next) => {
             AND (s.title ILIKE $1 OR s.description ILIKE $1)
     `;
 
-    const [resultsResult, countResult] = await Promise.all([
-      db.query(query, [q.trim(), searchTerm, parsedLimit, offset]),
-      db.query(countQuery, [searchTerm])
-    ]);
+    let resultsResult, countResult;
+    try {
+      [resultsResult, countResult] = await Promise.all([
+        db.query(query, [q.trim(), searchTerm, parsedLimit, offset]),
+        db.query(countQuery, [searchTerm])
+      ]);
+    } catch (pgError) {
+      // Full-text search failed (e.g. SQLite local dev): fall back to simple LIKE
+      const fallbackQuery = `
+        SELECT s.*, u.username
+        FROM skills s JOIN users u ON s.author_id = u.id
+        WHERE s.published = 1 AND s.deleted_at IS NULL
+          AND (s.title LIKE $1 OR s.description LIKE $1)
+        ORDER BY s.starlight_score DESC, s.published_at DESC
+        LIMIT $2 OFFSET $3
+      `;
+      const fallbackCount = `SELECT COUNT(*) AS count FROM skills s WHERE s.published = 1 AND s.deleted_at IS NULL AND (s.title LIKE $1 OR s.description LIKE $1)`;
+      [resultsResult, countResult] = await Promise.all([
+        db.query(fallbackQuery, [searchTerm, parsedLimit, offset]),
+        db.query(fallbackCount, [searchTerm])
+      ]);
+    }
 
-    const total = parseInt(countResult.rows[0].count, 10);
+    const total = parseInt(countResult.rows[0]?.count || 0, 10);
     const totalPages = Math.ceil(total / parsedLimit);
 
     res.json({

@@ -88,6 +88,9 @@ export class SqlitePool {
       // \b ensures we don't match "ELSEWNOW" or similar; case-insensitive.
       normalizedSql = normalizedSql.replace(/\bNOW\s*\(\s*\)/gi, 'CURRENT_TIMESTAMP');
 
+      // ILIKE → LIKE (SQLite LIKE is case-insensitive for ASCII by default)
+      normalizedSql = normalizedSql.replace(/\bILIKE\b/g, 'LIKE');
+
       // RETURNING clause - SQLite 3.35+ supports it
 
       const prepared = this.db.prepare(normalizedSql);

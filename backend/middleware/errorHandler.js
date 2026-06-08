@@ -95,8 +95,13 @@ export function errorHandler(err, req, res, next) {
     ? (err.message || 'Internal server error')
     : (SAFE_ERROR_MESSAGES[err.name] || 'An unexpected error occurred');
 
+  // In production, sanitize the error name to avoid leaking DB implementation details
+  const safeErrorName = isDevelopment
+    ? (err.name || 'Error')
+    : (SAFE_ERROR_MESSAGES[err.name] ? err.name : 'Error');
+
   const response = {
-    error: err.name || 'Error',
+    error: safeErrorName,
     message: safeMessage,
     timestamp: new Date().toISOString()
   };
