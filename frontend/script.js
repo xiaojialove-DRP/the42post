@@ -1588,14 +1588,25 @@ async function loadSkillsFromDB() {
         five_layer: (() => {
           try {
             const fl = skill.five_layer ? JSON.parse(skill.five_layer) : {};
+            // Preserve ALL fields — new format uses principle/exemplars/boundaries,
+            // old format uses defining/instantiating/fencing/validating/contextualizing.
+            // Stripping new-format fields here caused blank markdown exports for new skills.
             return {
-              defining: fl.defining || '',
+              // new-format fields
+              principle: fl.principle || '',
+              reasoning: fl.reasoning || '',
+              exemplars: fl.exemplars || [],
+              boundaries: fl.boundaries || null,
+              evaluation: fl.evaluation || null,
+              cultural_variants: fl.cultural_variants || null,
+              // old-format fields (kept for backwards compat)
+              defining: fl.defining || fl.principle || '',
               instantiating: fl.instantiating || '',
               fencing: fl.fencing || '',
               validating: fl.validating || [],
               contextualizing: fl.contextualizing || ''
             };
-          } catch { return { defining: '', instantiating: '', fencing: '', validating: [], contextualizing: '' }; }
+          } catch { return { defining: '', instantiating: '', fencing: '', validating: [], contextualizing: '', principle: '', exemplars: [] }; }
         })()
       };
     });

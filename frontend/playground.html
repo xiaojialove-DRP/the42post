@@ -2127,10 +2127,14 @@
         return;
       }
 
-      // Mark current scenario as used
+      // Mark current scenario as used — use same repo::title key format as spawnRandomFromRepo
       const currentTitle = currentCard.querySelector('.twin-scenario-title')?.textContent;
       if (currentTitle) {
+        // Add both formats to ensure cross-path deduplication
         usedScenarioBatch.add(currentTitle);
+        for (const r of REPOSITORIES) {
+          usedScenarioBatch.add(`${r.id}::${currentTitle}`);
+        }
       }
 
       // Build list of all available scenarios from all repos
@@ -2138,8 +2142,8 @@
       for (const r of REPOSITORIES) {
         for (const t of r.tasks) {
           const taskDisplay = getTaskDisplay(t);
-          const scenarioId = taskDisplay.title;
-          if (!usedScenarioBatch.has(scenarioId)) {
+          const scenarioId = `${r.id}::${taskDisplay.title}`;
+          if (!usedScenarioBatch.has(scenarioId) && !usedScenarioBatch.has(taskDisplay.title)) {
             allCandidates.push({ task: t, repo: r, scenarioId });
           }
         }
