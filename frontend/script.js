@@ -1752,10 +1752,10 @@ function initSlotGrid() {
           <span class="slot-number">★ #${i + 1}</span>
           <span class="slot-status active">★${savedStarlight}</span>
         </div>
-        <div class="slot-title">${data.title}</div>
+        <div class="slot-title">${escapeHtml(data.title)}</div>
         <div class="slot-desc" title="${escapeHtml(data.desc)}">${escapeHtml(descDisplay)}</div>
         <div class="slot-license">
-          <span class="license-author">by ${data.author || 'Anonymous'}</span>
+          <span class="license-author">by ${escapeHtml(data.author || 'Anonymous')}</span>
           <span class="license-badge" title="${licenseLabel}">${licenseIcon} ${licenseLabel}</span>
         </div>
         <div class="slot-starlight">
@@ -5859,7 +5859,7 @@ function initTasteNotes() {
     const note = document.createElement('div');
     note.className = 'taste-note';
     note.innerHTML = `
-      <div class="note-text">"${text}"</div>
+      <div class="note-text">"${escapeHtml(text)}"</div>
       <div class="note-author">— you, just now</div>
     `;
     note.style.opacity = '0';
@@ -6114,10 +6114,10 @@ function displayPlaygroundTaskForDomain(domain) {
   const taskEl = document.getElementById('playgroundTask');
   if (taskEl) {
     taskEl.innerHTML = `
-      <h3 class="task-title">${task.title}</h3>
-      <p class="task-description">${task.description}</p>
+      <h3 class="task-title">${escapeHtml(task.title)}</h3>
+      <p class="task-description">${escapeHtml(task.description)}</p>
       <div class="task-tags">
-        ${task.tags.map(tag => `<span class="task-tag">${tag}</span>`).join('')}
+        ${(task.tags || []).map(tag => `<span class="task-tag">${escapeHtml(tag)}</span>`).join('')}
       </div>
     `;
   }
