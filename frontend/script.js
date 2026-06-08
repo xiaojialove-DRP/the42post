@@ -3492,10 +3492,13 @@ function initSkillForge() {
   const btnProceedToForge = document.getElementById('btnProceedToForge');
   if (btnProceedToForge) {
     btnProceedToForge.addEventListener('click', () => {
+      if (btnProceedToForge.disabled) return;
       if (!window.forgeData || !window.forgeData.probeChoice) {
         alertI18n('error_select_probe_response');
         return;
       }
+      btnProceedToForge.disabled = true;
+      setTimeout(() => { btnProceedToForge.disabled = false; }, 3000);
 
       // Silently save probe session to DB for research (fire-and-forget)
       try {

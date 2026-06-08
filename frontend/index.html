@@ -390,14 +390,14 @@
         <div class="minimal-section">
           <div class="minimal-label" data-i18n="forge_account">ACCOUNT</div>
           <div class="minimal-inputs">
-            <input type="text" class="minimal-input" placeholder="Username" data-i18n-placeholder="forge_username_ph" id="forgeUsername">
+            <input type="text" class="minimal-input" placeholder="Username" data-i18n-placeholder="forge_username_ph" id="forgeUsername" maxlength="32">
             <div class="username-hint" id="usernameHint">
               <small style="color: var(--ink-muted); font-size: 11px; display: block; margin-top: 6px; line-height: 1.5;">
                 <span data-i18n="username_rules">3-32 characters. Letters, numbers, underscore only. Cannot start with a number.</span>
                 <span style="display: block; margin-top: 4px;">✓ <span data-i18n="username_example_valid">Valid: creator_lala, lala_2024</span></span>
               </small>
             </div>
-            <input type="email" class="minimal-input" placeholder="Email" data-i18n-placeholder="forge_email_ph" id="forgeEmail">
+            <input type="email" class="minimal-input" placeholder="Email" data-i18n-placeholder="forge_email_ph" id="forgeEmail" maxlength="254">
           </div>
         </div>
 
@@ -405,7 +405,7 @@
         <div class="minimal-section">
           <div class="minimal-label" data-i18n="forge_thought">YOUR THOUGHT</div>
           <div class="minimal-instruction" data-i18n="forge_instruction">Any skill you wish or don't wish AI to have. Any idea counts.</div>
-          <textarea class="minimal-textarea" placeholder="e.g. AI should understand the silence of grief…" data-i18n-placeholder="forge_idea_ph" id="forgeSkillIdea"></textarea>
+          <textarea class="minimal-textarea" placeholder="e.g. AI should understand the silence of grief…" data-i18n-placeholder="forge_idea_ph" id="forgeSkillIdea" maxlength="5000"></textarea>
         </div>
 
         <!-- Generate Probe Button -->
@@ -498,6 +498,7 @@
               id="reviewSkillDef"
               placeholder="Skill definition…"
               data-i18n-placeholder="forge_skill_def_ph"
+              maxlength="1000"
             ></textarea>
           </div>
 
@@ -569,7 +570,7 @@
           <div class="rights-title" data-i18n="forge_creator_rights">CREATOR RIGHTS</div>
           <div class="forge-field">
             <label data-i18n="forge_author_label">AUTHOR</label>
-            <input type="text" class="forge-input" placeholder="Your name or pseudonym" data-i18n-placeholder="forge_author_ph" id="forgeAuthor">
+            <input type="text" class="forge-input" placeholder="Your name or pseudonym" data-i18n-placeholder="forge_author_ph" id="forgeAuthor" maxlength="100">
           </div>
           <div class="forge-field">
             <label data-i18n="forge_commercial_label">COMMERCIAL USE</label>
