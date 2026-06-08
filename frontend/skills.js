@@ -610,7 +610,7 @@ const ALL_SKILLS = [...SHARED_SKILLS, ...ADDITIONAL_SKILLS];
 
 // Helper: Get top N skills by starlight
 function getTopSkills(limit = 42) {
-  return ALL_SKILLS.sort((a, b) => (b.starlight || 0) - (a.starlight || 0)).slice(0, limit);
+  return [...ALL_SKILLS].sort((a, b) => (b.starlight || 0) - (a.starlight || 0)).slice(0, limit);
 }
 
 // Helper: Get all skills including user forges
