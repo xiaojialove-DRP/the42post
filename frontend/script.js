@@ -9186,6 +9186,18 @@ function attachDomainSkillListeners() {
 }
 
 function generateDomainSkillMarkdown(skill) {
+  // Delegate to the unified new-format generator.
+  // Normalise field names so generateSkillMarkdown can read them.
+  const adapted = {
+    ...skill,
+    fiveLayerSkill: skill.fiveLayerSkill || skill.five_layer || {},
+    author: skill.author || skill.creator_anonymous_id || 'The 42 Post Community',
+    soul_hash: skill.soul_hash || skill.soulHash || 'SOUL_UNKNOWN',
+    ready_to_use_prompt: skill.ready_to_use_prompt || null,
+  };
+  return generateSkillMarkdown(adapted);
+
+  // ── Legacy implementation kept below for reference ──
   const fiveLayer = skill.five_layer || {};
 
   let markdown = `# ${skill.title}\n`;
