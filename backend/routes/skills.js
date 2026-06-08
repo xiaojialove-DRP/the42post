@@ -126,7 +126,7 @@ router.get('/', async (req, res, next) => {
                  FROM skills s
                  LEFT JOIN users u ON s.author_id = u.id
                  WHERE s.published = 1 AND s.deleted_at IS NULL`;
-    let countQuery = 'SELECT COUNT(*) FROM skills s WHERE s.published = 1 AND s.deleted_at IS NULL';
+    let countQuery = 'SELECT COUNT(*) AS count FROM skills s WHERE s.published = 1 AND s.deleted_at IS NULL';
     const params = [];
     let paramIndex = 1;
 

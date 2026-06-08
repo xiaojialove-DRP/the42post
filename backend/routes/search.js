@@ -51,7 +51,7 @@ router.get('/', async (req, res, next) => {
     `;
 
     const countQuery = `
-      SELECT COUNT(*) FROM skills s
+      SELECT COUNT(*) AS count FROM skills s
       WHERE s.published = 1
             AND s.deleted_at IS NULL
             AND (s.title ILIKE $1 OR s.description ILIKE $1)
@@ -132,7 +132,7 @@ router.get('/domain/:domain', async (req, res, next) => {
         [domain, parsedLimit, offset]
       ),
       db.query(
-        'SELECT COUNT(*) FROM skills WHERE domain = $1 AND published = 1 AND deleted_at IS NULL',
+        'SELECT COUNT(*) AS count FROM skills WHERE domain = $1 AND published = 1 AND deleted_at IS NULL',
         [domain]
       )
     ]);

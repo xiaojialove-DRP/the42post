@@ -67,8 +67,18 @@ export class SqlitePool {
 
       // Convert PostgreSQL-specific syntax
       // $1, $2, etc → ? placeholders
-      let paramIndex = 1;
-      normalizedSql = normalizedSql.replace(/\$(\d+)/g, () => '?');
+      // IMPORTANT: Track order of references to rebuild params array correctly.
+      // PostgreSQL uses $N by position (params[0] = $1), and $N can appear multiple times.
+      // SQLite uses positional ? so we need to expand params to match occurrences.
+      const paramOrder = [];
+      normalizedSql = normalizedSql.replace(/\$(\d+)/g, (_, n) => {
+        paramOrder.push(parseInt(n, 10) - 1); // 0-based index into original params
+        return '?';
+      });
+      // Rebuild params array in the order they appear in the SQL
+      if (paramOrder.length > 0 && params.length > 0) {
+        params = paramOrder.map(i => params[i]);
+      }
 
       // Handle DEFAULT values
       normalizedSql = normalizedSql.replace(/DEFAULT gen_random_uuid\(\)/g, 'DEFAULT (lower(hex(randomblob(4))) || hex(randomblob(2)) || hex(randomblob(2)))');
