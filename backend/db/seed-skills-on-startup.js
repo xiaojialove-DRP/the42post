@@ -56,7 +56,7 @@ export async function seedSkillsIfNeeded(db) {
         successCount++;
       } catch (err) {
         // Silently ignore duplicate errors
-        if (!err.message?.includes('UNIQUE') && !err.message?.includes('already exists')) {
+        if (!err.message?.toLowerCase().includes('unique') && !err.message?.includes('already exists') && err.code !== '23505') {
           console.warn(`  ⚠️  ${err.message?.substring(0, 80)}`);
         }
       }

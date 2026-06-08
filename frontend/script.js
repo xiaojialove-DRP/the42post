@@ -2882,12 +2882,12 @@ function initSkillForge() {
     // Drafts older than 7 days are stale — drop silently
     const ageMs = Date.now() - (draft.savedAt || 0);
     if (ageMs > 7 * 24 * 60 * 60 * 1000) {
-      try { localStorage.removeItem('42post_forge_draft'); } catch (e) {}
+      safeStorage.removeItem('42post_forge_draft');
       return;
     }
 
     const isCn = (typeof currentLang !== 'undefined' && currentLang === 'cn');
-    const title = (draft.payload.title || '').slice(0, 30);
+    const title = (draft.payload.title || '').replace(/[\r\n\t]/g, ' ').slice(0, 30);
     const msg = isCn
       ? `你上次有一个未发布的 Skill「${title}」。要恢复继续吗？`
       : `You have an unfinished Skill "${title}" from before. Restore it?`;
@@ -2913,7 +2913,7 @@ function initSkillForge() {
         window.agent42OriginalStructuredData = draft.payload.ai_outputs;
       }
     } else {
-      try { localStorage.removeItem('42post_forge_draft'); } catch (e) {}
+      safeStorage.removeItem('42post_forge_draft');
     }
   }
 
@@ -4994,7 +4994,7 @@ function initSkillForge() {
           }
 
           // Save succeeded — clear the recovery draft
-          try { localStorage.removeItem('42post_forge_draft'); } catch (e) {}
+          safeStorage.removeItem('42post_forge_draft');
 
         } catch (error) {
           console.error('Error saving skill to backend:', error);

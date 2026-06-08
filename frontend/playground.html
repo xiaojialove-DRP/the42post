@@ -2191,8 +2191,13 @@
         card.style.width = newWidth + 'px';
         card.style.height = newHeight + 'px';
       } else {
-        card.style.left = (e.clientX - startX) + 'px';
-        card.style.top = (e.clientY - startY) + 'px';
+        // Clamp to keep at least 40px of card header visible on screen
+        const minLeft = -(card.offsetWidth - 40);
+        const maxLeft = window.innerWidth - 40;
+        const minTop = 0;
+        const maxTop = window.innerHeight - 40;
+        card.style.left = Math.min(maxLeft, Math.max(minLeft, e.clientX - startX)) + 'px';
+        card.style.top = Math.min(maxTop, Math.max(minTop, e.clientY - startY)) + 'px';
       }
     });
 
@@ -2217,8 +2222,10 @@
         card.style.width = newWidth + 'px';
         card.style.height = newHeight + 'px';
       } else {
-        card.style.left = (touch.clientX - startX) + 'px';
-        card.style.top = (touch.clientY - startY) + 'px';
+        const minLeft = -(card.offsetWidth - 40);
+        const maxLeft = window.innerWidth - 40;
+        card.style.left = Math.min(maxLeft, Math.max(minLeft, touch.clientX - startX)) + 'px';
+        card.style.top = Math.min(window.innerHeight - 40, Math.max(0, touch.clientY - startY)) + 'px';
       }
     }, { passive: true });
 

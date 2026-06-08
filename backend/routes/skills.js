@@ -853,6 +853,9 @@ router.delete('/:skill_id', requireAuth, async (req, res, next) => {
       [skill_id]
     );
 
+    // Invalidate skills list cache so deleted skill no longer appears
+    try { await getCache().invalidatePattern('skills_list:*'); } catch (_) {}
+
     res.json({
       success: true,
       message: 'Skill deleted'
@@ -1006,7 +1009,7 @@ router.post('/:skill_id/star', async (req, res, next) => {
       );
     } catch (insertErr) {
       // If unique constraint fails, update instead
-      if (insertErr.message && insertErr.message.includes('UNIQUE')) {
+      if (insertErr.message && (insertErr.message.toLowerCase().includes('unique') || insertErr.code === '23505')) {
         await db.query(
           `UPDATE user_skill_interactions
            SET starred = $1, starred_at = $2, updated_at = $3

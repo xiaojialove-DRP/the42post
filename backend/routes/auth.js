@@ -202,7 +202,7 @@ router.post('/register', async (req, res, next) => {
       );
     } catch (dbError) {
       // Handle duplicate email or username
-      if (dbError.message && dbError.message.includes('UNIQUE constraint')) {
+      if (dbError.message && (dbError.message.toLowerCase().includes('unique') || dbError.code === '23505')) {
         if (dbError.message.includes('email')) {
           return res.status(400).json({
             error: 'Email already exists',
