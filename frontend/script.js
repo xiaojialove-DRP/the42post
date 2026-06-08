@@ -784,7 +784,14 @@ function showSkillModal(skill) {
   }
 
   const markdown = generateSkillMarkdown(skill);
-  const htmlContent = markdownToHtml(markdown);
+  // Sanitize: strip script/style/event-handler tags from the rendered HTML
+  // (skill content comes from user input and could contain injected markup)
+  const rawHtml = markdownToHtml(markdown);
+  const htmlContent = rawHtml
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+    .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '')
+    .replace(/ on\w+="[^"]*"/gi, '')
+    .replace(/ on\w+='[^']*'/gi, '');
 
   // Append a Playground CTA so any reader of the full skill detail
   // can immediately go test it (closes the loop: read → test → judge).
@@ -6649,10 +6656,10 @@ function initSkillsFeed() {
   feed.innerHTML = displayItems.map(item => `
     <div class="feed-card ${item.type === 'taste' ? 'feed-card-taste' : ''}">
       <div class="feed-card-type">${item.type === 'taste' ? 'TASTE CARD' : 'TASTE SKILL'}</div>
-      <h4 class="feed-card-title">${item.title}</h4>
-      <p class="feed-card-desc">${item.desc}</p>
+      <h4 class="feed-card-title">${escapeHtml(item.title)}</h4>
+      <p class="feed-card-desc">${escapeHtml(item.desc)}</p>
       <div class="feed-card-meta">
-        <span class="feed-card-author">by ${item.author}</span>
+        <span class="feed-card-author">by ${escapeHtml(item.author)}</span>
         <span class="feed-card-license">${licenseLabel(item.commercial)}</span>
       </div>
       ${item.starlight > 0 ? `<div class="feed-card-stars">★ ${item.starlight}</div>` : ''}
