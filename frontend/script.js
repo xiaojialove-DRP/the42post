@@ -5327,7 +5327,7 @@ function showEmailStatusBanner(result, recipientEmail) {
     banner.style.color = '#1b5e20';
     banner.innerHTML = `
       <div style="font-weight:600;margin-bottom:4px;">✓ Email sent successfully</div>
-      <div style="opacity:0.85;">Check <strong>${recipientEmail}</strong> (including spam folder) for your certificate and download links.</div>
+      <div style="opacity:0.85;">Check <strong>${escapeHtml(recipientEmail)}</strong> (including spam folder) for your certificate and download links.</div>
       <div style="margin-top:8px;font-size:12px;opacity:0.7;">邮件已成功发送 · 请查收收件箱和垃圾邮件箱</div>
     `;
     setTimeout(() => { banner.style.opacity = '0'; banner.style.transition = 'opacity 0.5s'; setTimeout(() => banner.remove(), 500); }, 8000);
@@ -5389,7 +5389,7 @@ function showImpactDashboard(stats, skillData) {
 
       <div style="text-align: center; margin-bottom: 28px;">
         <h2 style="margin: 0 0 8px 0; font-family: 'Playfair Display', serif; font-size: 28px; color: #1a1a1a;">Community Signal Dashboard</h2>
-        <p style="color: #8a7a6e; margin: 0; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 1px; text-transform: uppercase;">${skillData.title}</p>
+        <p style="color: #8a7a6e; margin: 0; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 1px; text-transform: uppercase;">${escapeHtml(skillData.title)}</p>
       </div>
 
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 24px;">
@@ -8807,7 +8807,7 @@ async function initAgentArchiveView() {
         const skill = findSkillById(skillId);
         if (skill) {
           const markdown = generateDomainSkillMarkdown(skill);
-          downloadMarkdownFile(markdown, skillId, skill.title);
+          downloadMarkdownFile(markdown, `The42Post_${skill.title.replace(/\s+/g, '_')}.md`);
         }
       });
     });
@@ -9059,7 +9059,7 @@ function attachTop42SkillListeners() {
         e.stopPropagation();
         // Generate markdown and download
         const markdown = generateDomainSkillMarkdown(skill);
-        downloadMarkdownFile(markdown, skill.id, skill.title);
+        downloadMarkdownFile(markdown, `The42Post_${skill.title.replace(/\s+/g, '_')}.md`);
 
         // Update download counter
         skill.downloads = (skill.downloads || 0) + 1;

@@ -2858,6 +2858,10 @@
        4. POST /api/playground/feedback → thank-you + counts. */
     async function runTwinTest(card, task, repo) {
       const skill = window.TWIN_TEST_SKILL;
+      if (!skill || !skill.id) {
+        console.error('runTwinTest called without TWIN_TEST_SKILL set');
+        return;
+      }
       const isCn = (typeof currentLang !== 'undefined' && currentLang === 'cn');
       const td = getTaskDisplay(task);
       const stageLoading = card.querySelector('.twin-loading');
