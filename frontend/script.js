@@ -8692,11 +8692,11 @@ async function initAgentArchiveView() {
           return `
             <div class="skill-item" data-skill-id="${skill.id}" data-is-starred="${isStarred}">
               <div class="skill-header">
-                <div class="skill-title">${title}</div>
-                <div class="skill-hash" title="Soul Hash: ${soulHashFull}">${soulHashShort || '—'}</div>
+                <div class="skill-title">${escapeHtml(title)}</div>
+                <div class="skill-hash" title="Soul Hash: ${escapeHtml(soulHashFull)}">${escapeHtml(soulHashShort) || '—'}</div>
               </div>
-              <div class="skill-creator">${creatorDisplay}</div>
-              <div class="skill-desc">${shortDesc}</div>
+              <div class="skill-creator">${escapeHtml(creatorDisplay)}</div>
+              <div class="skill-desc">${escapeHtml(shortDesc)}</div>
               <div class="skill-footer">
                 <div class="skill-meta">
                   <span class="skill-stars">⭐ ${skill.starlight_score || skill.stars || 0}</span>
@@ -8925,14 +8925,14 @@ function initTop42Grid() {
     const cellHTML = `
       <div class="top42-cell" data-skill-id="${skill.id}">
         <div class="top42-skill-rank">★ #${rank}</div>
-        <div class="top42-skill-title text-en">${titleEn}</div>
-        <div class="top42-skill-title-cn text-cn">${titleCn}</div>
-        <div class="top42-skill-desc text-en">${descEn}</div>
-        <div class="top42-skill-desc text-cn">${descCn}</div>
+        <div class="top42-skill-title text-en">${escapeHtml(titleEn)}</div>
+        <div class="top42-skill-title-cn text-cn">${escapeHtml(titleCn)}</div>
+        <div class="top42-skill-desc text-en">${escapeHtml(descEn)}</div>
+        <div class="top42-skill-desc text-cn">${escapeHtml(descCn)}</div>
         <div class="top42-skill-meta">
           <div class="top42-skill-meta-item">⭐ <span>${skill.starlight || 0}</span></div>
           <div class="top42-skill-meta-item">📥 <span>${skill.downloads || 0}</span></div>
-          <div class="top42-skill-meta-item">${skill.domain}</div>
+          <div class="top42-skill-meta-item">${escapeHtml(skill.domain || '')}</div>
         </div>
         <div class="top42-skill-actions">
           <button class="top42-action-btn star-btn" data-skill-id="${skill.id}" title="Star this skill">⭐ STAR</button>
