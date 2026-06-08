@@ -240,63 +240,59 @@ router.get('/:skill_id/stats', async (req, res, next) => {
   try {
     const { skill_id } = req.params;
 
-    // CONSOLIDATED QUERY using CTEs to fetch all stats in one database round-trip
-    // This eliminates the N+1 query pattern that was fetching skill, author, and various aggregates separately
-    const result = await db.query(
-      `WITH skill_data AS (
-         -- Get basic skill info
-         SELECT s.id, s.title, s.published_at, s.domain, s.author_id,
-                COUNT(CASE WHEN sul.outcome = 'download_success' THEN 1 END) as download_count,
-                COUNT(DISTINCT sul.agent_id) as unique_downloaders
+    // Use separate queries for compatibility with both PostgreSQL and SQLite.
+    // (The previous CTE version failed on SQLite due to multi-reference $1 params.)
+    const [skillResult, starsResult, communityResult, interactionsResult] = await Promise.all([
+      db.query(
+        `SELECT s.id, s.title, s.published_at, s.domain, s.author_id,
+                COUNT(CASE WHEN sul.outcome = 'download_success' THEN 1 END) AS download_count,
+                COUNT(DISTINCT sul.agent_id) AS unique_downloaders
          FROM skills s
          LEFT JOIN skill_usage_logs sul ON s.id = sul.skill_id
          WHERE s.id = $1
-         GROUP BY s.id, s.title, s.published_at, s.domain, s.author_id
-       ),
-       author_downloads AS (
-         -- Author's total downloads across all their published skills
-         SELECT COALESCE(SUM(CAST(CASE WHEN sul.outcome = 'download_success' THEN 1 ELSE 0 END AS INTEGER)), 0) as total
-         FROM skills s
-         LEFT JOIN skill_usage_logs sul ON s.id = sul.skill_id
-         WHERE s.author_id = (SELECT author_id FROM skill_data) AND s.published = 1
-       ),
-       community_stats AS (
-         -- Total published skills in community
-         SELECT COUNT(*) as total_skills FROM skills WHERE published = 1
-       ),
-       skill_stars AS (
-         -- Stars received by this skill
-         SELECT COUNT(*) as star_count FROM user_skill_interactions
-         WHERE skill_id = $1 AND starred = 1
-       ),
-       interactions_stats AS (
-         -- Total unique participants in Twin Tests
-         SELECT COUNT(DISTINCT anonymous_id) as unique_participants
-         FROM skill_test_votes WHERE voted_for_skill IS NOT NULL
-       )
-       SELECT
-         sd.id, sd.title, sd.published_at, sd.domain,
-         sd.download_count, sd.unique_downloaders,
-         COALESCE(ad.total, 0) as author_total_downloads,
-         COALESCE(cs.total_skills, 0) as community_total_skills,
-         COALESCE(ss.star_count, 0) as star_count,
-         COALESCE(ist.unique_participants, 0) as total_interactions
-       FROM skill_data sd
-       CROSS JOIN author_downloads ad
-       CROSS JOIN community_stats cs
-       CROSS JOIN skill_stars ss
-       CROSS JOIN interactions_stats ist`,
-      [skill_id]
-    );
+         GROUP BY s.id, s.title, s.published_at, s.domain, s.author_id`,
+        [skill_id]
+      ),
+      db.query(
+        `SELECT COUNT(*) AS count FROM user_skill_interactions WHERE skill_id = $1 AND starred = 1`,
+        [skill_id]
+      ),
+      db.query(`SELECT COUNT(*) AS count FROM skills WHERE published = 1`, []),
+      db.query(
+        `SELECT COUNT(DISTINCT anonymous_id) AS count FROM skill_test_votes WHERE voted_for_skill IS NOT NULL`,
+        []
+      )
+    ]);
 
-    if (result.rows.length === 0) {
+    if (!skillResult.rows || skillResult.rows.length === 0) {
       return res.status(404).json({
         error: 'Not found',
         message: 'Skill not found'
       });
     }
 
-    const stats = result.rows[0];
+    const skillRow = skillResult.rows[0];
+
+    // Author's total downloads (secondary query using author_id from skill row)
+    const authorDownloadsResult = await db.query(
+      `SELECT COALESCE(SUM(CASE WHEN sul.outcome = 'download_success' THEN 1 ELSE 0 END), 0) AS total
+       FROM skills s LEFT JOIN skill_usage_logs sul ON s.id = sul.skill_id
+       WHERE s.author_id = $1 AND s.published = 1`,
+      [skillRow.author_id]
+    );
+
+    const stats = {
+      id: skillRow.id,
+      title: skillRow.title,
+      published_at: skillRow.published_at,
+      domain: skillRow.domain,
+      download_count: skillRow.download_count || 0,
+      unique_downloaders: skillRow.unique_downloaders || 0,
+      star_count: parseInt(starsResult.rows[0]?.count || 0, 10),
+      community_total_skills: parseInt(communityResult.rows[0]?.count || 0, 10),
+      author_total_downloads: parseInt(authorDownloadsResult.rows[0]?.total || 0, 10),
+      total_interactions: parseInt(interactionsResult.rows[0]?.count || 0, 10)
+    };
 
     // Calculate days since publication and daily rate (client-side logic)
     const publishedDate = new Date(stats.published_at);
