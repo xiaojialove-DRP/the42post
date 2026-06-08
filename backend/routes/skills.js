@@ -330,6 +330,32 @@ router.get('/:skill_id/stats', async (req, res, next) => {
   }
 });
 
+// ═══ GET AUTHOR'S SKILLS — must be before /:skill_id to avoid route shadowing ═══
+router.get('/user/skills', requireAuth, async (req, res, next) => {
+  try {
+    const userId = req.user.userId;
+    const { include_drafts = false } = req.query;
+
+    let query = 'SELECT * FROM skills WHERE author_id = $1 AND deleted_at IS NULL';
+    const params = [userId];
+
+    if (!include_drafts) {
+      query += ' AND published = 1';
+    }
+
+    query += ' ORDER BY published_at DESC NULLS LAST';
+
+    const result = await db.query(query, params);
+
+    res.json({
+      success: true,
+      skills: result.rows
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 // ═══ GET SKILL DETAIL ═══
 router.get('/:skill_id', async (req, res, next) => {
   try {
@@ -1068,32 +1094,6 @@ router.get('/:skill_id/stars', async (req, res, next) => {
       totalStars: starCount,
       userStarred,
       userAnonymousId: anonymousId || null
-    });
-  } catch (error) {
-    next(error);
-  }
-});
-
-// ═══ GET AUTHOR'S SKILLS ═══
-router.get('/user/skills', requireAuth, async (req, res, next) => {
-  try {
-    const userId = req.user.userId;
-    const { include_drafts = false } = req.query;
-
-    let query = 'SELECT * FROM skills WHERE author_id = $1 AND deleted_at IS NULL';
-    const params = [userId];
-
-    if (!include_drafts) {
-      query += ' AND published = 1';
-    }
-
-    query += ' ORDER BY published_at DESC NULLS LAST';
-
-    const result = await db.query(query, params);
-
-    res.json({
-      success: true,
-      skills: result.rows
     });
   } catch (error) {
     next(error);

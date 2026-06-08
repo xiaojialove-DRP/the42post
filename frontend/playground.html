@@ -2692,8 +2692,8 @@
       // skill title and let the user push Start.
       const skillTitle = getSkillTitle(skill);
       statsLine.innerHTML = isCn
-        ? `🎯 <strong>${skillTitle}</strong> — 一键生成两个回应，看看这个 Skill 让 AI 怎样不一样`
-        : `🎯 <strong>${skillTitle}</strong> — one click, two responses, see how this Skill changes the AI`;
+        ? `🎯 <strong>${escapeHtml(skillTitle)}</strong> — 一键生成两个回应，看看这个 Skill 让 AI 怎样不一样`
+        : `🎯 <strong>${escapeHtml(skillTitle)}</strong> — one click, two responses, see how this Skill changes the AI`;
 
       // Wire the START action exactly once per card.
       if (!stage.dataset.wired) {
@@ -2732,7 +2732,7 @@
       if (skillLine) {
         skillLine.innerHTML = `
           <span class="twin-skill-icon">🎯</span>
-          <span>${skillTitle || (t('playground_current_skill'))}</span>
+          <span>${escapeHtml(skillTitle || t('playground_current_skill'))}</span>
         `;
       }
 
@@ -2962,7 +2962,7 @@
         console.error('❌ Twin Test error:', err);
         stageLoading.innerHTML = `<div style="color:#b85a4a;font-size:12px;line-height:1.5;">
           <strong>${t('playground_generation_error')}</strong><br/>
-          ${err.message}<br/>
+          ${escapeHtml(err.message)}<br/>
           <span style="font-size:11px;color:#8a7a6e;">${t('console_check')}</span>
         </div>`;
       }

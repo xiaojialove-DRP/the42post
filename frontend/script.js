@@ -5443,6 +5443,11 @@ async function downloadCreatorCard(skillData, soulHash) {
   const cardElement = document.querySelector('.commemorative-card');
   if (!cardElement) { alert('Certificate card not found'); return; }
 
+  if (typeof html2canvas === 'undefined') {
+    alert('Card generation library not loaded. Please check your internet connection and try again.');
+    return;
+  }
+
   try {
     // Show loading state
     const btn = event?.target;
