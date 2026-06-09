@@ -570,11 +570,11 @@ router.post('/', optionalAuth, rateLimitForge, async (req, res, next) => {
           anonymousId,
           ready_to_use_prompt || null,
           // Moderation fields (decision was already APPROVE to reach here)
-          moderationResult.review_required ? 'pending_review' : 'approved',
-          moderationResult.risk_level || 'LOW',
-          moderationResult.explanation || '',
-          JSON.stringify(moderationResult.flagged_categories || []),
-          moderationResult.review_required ? 1 : 0
+          'pending_review',
+          'LOW',
+          '',
+          JSON.stringify([]),
+          1
         ]
       );
 
