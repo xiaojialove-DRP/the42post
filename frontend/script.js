@@ -2887,7 +2887,7 @@ function initSkillForge() {
     }
 
     const isCn = (typeof currentLang !== 'undefined' && currentLang === 'cn');
-    const title = (draft.payload.title || '').replace(/[\r\n\t]/g, ' ').slice(0, 30);
+    const title = (draft.payload.title || draft.payload.title_cn || draft.payload.original_idea || '').replace(/[\r\n\t]/g, ' ').slice(0, 30);
     const msg = isCn
       ? `你上次有一个未发布的 Skill「${title}」。要恢复继续吗？`
       : `You have an unfinished Skill "${title}" from before. Restore it?`;
@@ -2895,9 +2895,11 @@ function initSkillForge() {
     if (confirm(msg)) {
       // Pre-fill the forge inputs
       const map = {
-        forgeSkillIdea: draft.payload.description,
-        forgeNativeText: draft.payload.description,
-        forgeSkillName: draft.payload.title,
+        forgeSkillIdea: draft.payload.description || draft.payload.original_idea,
+        forgeNativeText: draft.payload.description || draft.payload.original_idea,
+        forgeSkillName: draft.payload.title || draft.payload.title_cn,
+        reviewSkillName: draft.payload.title || draft.payload.title_cn,
+        reviewSkillDef: draft.payload.description || draft.payload.description_cn,
         forgeUsername: draft.accountData?.username,
         forgeEmail: draft.accountData?.email
       };
@@ -2908,9 +2910,18 @@ function initSkillForge() {
       if (draft.payload.five_layer) {
         window.agent42StructuredData = draft.payload.five_layer;
       }
-      // Restore original AI-generated version from draft if available
       if (draft.payload.ai_outputs) {
         window.agent42OriginalStructuredData = draft.payload.ai_outputs;
+      }
+
+      // Open forge modal and jump directly to Step 4 (publish) if we have
+      // enough data, otherwise fall back to Step 3 (review & edit).
+      const forgeOverlay = document.getElementById('forgeOverlay');
+      if (forgeOverlay) {
+        forgeOverlay.classList.add('active');
+        const targetStep = (draft.payload.five_layer &&
+          Object.keys(draft.payload.five_layer).length > 0) ? 4 : 3;
+        setTimeout(() => goToStep(targetStep), 50);
       }
     } else {
       safeStorage.removeItem('42post_forge_draft');
