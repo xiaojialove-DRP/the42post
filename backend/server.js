@@ -4,6 +4,7 @@
    ═══════════════════════════════════════════════════════ */
 
 import express from 'express';
+import compression from 'compression';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import pg from 'pg';
@@ -98,6 +99,9 @@ logger.info('═══ Cache System Initialization ═══');
 initializeCache(); // Memory-based cache (Redis optional)
 
 // ═══ MIDDLEWARE ═══
+// 0. Gzip/Brotli compression — must be first to compress all responses
+app.use(compression());
+
 // 1. CORS (with explicit whitelist)
 logCorsConfiguration();
 app.use(cors(corsOptions));
