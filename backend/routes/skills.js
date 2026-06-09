@@ -496,15 +496,25 @@ router.post('/', optionalAuth, rateLimitForge, async (req, res, next) => {
       });
     }
 
-    // ─── Auto-translate to ensure both language versions exist ───
-    // Frontend often sends title === title_cn (only one language); we
-    // generate the missing version so the skill renders correctly on
-    // both /cn and /en archive pages.
-    const translated = await translateBilingualPair(title, title_cn, description, description_cn);
-    title = translated.title;
-    title_cn = translated.title_cn;
-    description = translated.description;
-    description_cn = translated.description_cn;
+    // ─── Auto-translate: run inline only when both languages are missing ───
+    // If user submitted single-language content, do a quick sync translate.
+    // If both languages already exist (common after AI generation), skip the
+    // LLM call entirely — saves ~1s on mobile and avoids timeout on slow connections.
+    const needsTranslation = !(title && title_cn && title !== title_cn
+      && description && description_cn && description !== description_cn);
+
+    if (needsTranslation) {
+      try {
+        const translated = await translateBilingualPair(title, title_cn, description, description_cn);
+        title = translated.title;
+        title_cn = translated.title_cn;
+        description = translated.description;
+        description_cn = translated.description_cn;
+      } catch (translateErr) {
+        // Non-fatal — proceed with original values, background job can fix later
+        console.warn('[skills.create] Translation failed, using originals:', translateErr.message);
+      }
+    }
 
     // Logged-in users author with their real id; anonymous community forges
     // attach to the sentinel anonymous user. The anonymous_id is recorded
@@ -710,6 +720,7 @@ router.post('/', optionalAuth, rateLimitForge, async (req, res, next) => {
       await getCache().invalidatePattern('skills_list:*');
 
       // Return complete skill data with actual database values
+      // ─── Respond immediately so mobile doesn't timeout ───
       res.status(201).json({
         success: true,
         message: 'Skill published successfully',
@@ -723,6 +734,30 @@ router.post('/', optionalAuth, rateLimitForge, async (req, res, next) => {
         },
         manifest
       });
+
+      // ─── Background: backfill translation if skill was saved without it ───
+      // Runs after response is sent so it never blocks the user.
+      if (needsTranslation) {
+        setImmediate(async () => {
+          try {
+            const backfilled = await translateBilingualPair(
+              savedSkill.title, savedSkill.title_cn,
+              savedSkill.description, savedSkill.description_cn
+            );
+            await db.query(
+              `UPDATE skills SET title=$1, title_cn=$2, description=$3, description_cn=$4
+               WHERE id=$5`,
+              [backfilled.title, backfilled.title_cn,
+               backfilled.description, backfilled.description_cn, skillId]
+            );
+            await getCache().invalidatePattern('skills_list:*');
+            console.log(`[skills.translate] Background translation complete for ${skillId}`);
+          } catch (bgErr) {
+            console.warn(`[skills.translate] Background translation failed for ${skillId}:`, bgErr.message);
+          }
+        });
+      }
+
     } catch (error) {
       try {
         await client.query('ROLLBACK');
