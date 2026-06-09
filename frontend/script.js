@@ -2889,39 +2889,33 @@ function initSkillForge() {
     const isCn = (typeof currentLang !== 'undefined' && currentLang === 'cn');
     const title = (draft.payload.title || draft.payload.title_cn || draft.payload.original_idea || '').replace(/[\r\n\t]/g, ' ').slice(0, 30);
     const msg = isCn
-      ? `你上次有一个未发布的 Skill「${title}」。要恢复继续吗？`
-      : `You have an unfinished Skill "${title}" from before. Restore it?`;
+      ? `你上次有一个未发布的 Skill「${title}」。点 OK 将帮你预填想法，重新锻造一次（约3分钟）。`
+      : `You have an unfinished Skill "${title}". Click OK to pre-fill your idea and forge again (~3 min).`;
 
     if (confirm(msg)) {
-      // Pre-fill the forge inputs
+      // Simple recovery: go back to Step 1 with fields pre-filled.
+      // Trying to jump to Step 4 is unreliable (AI-generated state is gone).
+      // Pre-filling Step 1 lets the user re-generate in ~3 minutes.
+      const idea = draft.payload.original_idea || draft.payload.description || draft.payload.description_cn || '';
       const map = {
-        forgeSkillIdea: draft.payload.description || draft.payload.original_idea,
-        forgeNativeText: draft.payload.description || draft.payload.original_idea,
-        forgeSkillName: draft.payload.title || draft.payload.title_cn,
-        reviewSkillName: draft.payload.title || draft.payload.title_cn,
-        reviewSkillDef: draft.payload.description || draft.payload.description_cn,
-        forgeUsername: draft.accountData?.username,
-        forgeEmail: draft.accountData?.email
+        forgeSkillIdea: idea,
+        forgeNativeText: idea,
+        forgeUsername: draft.accountData?.username || '',
+        forgeEmail: draft.accountData?.email || ''
       };
       Object.entries(map).forEach(([id, val]) => {
         const el = document.getElementById(id);
         if (el && val) el.value = val;
       });
-      if (draft.payload.five_layer) {
-        window.agent42StructuredData = draft.payload.five_layer;
-      }
-      if (draft.payload.ai_outputs) {
-        window.agent42OriginalStructuredData = draft.payload.ai_outputs;
-      }
 
-      // Open forge modal and jump directly to Step 4 (publish) if we have
-      // enough data, otherwise fall back to Step 3 (review & edit).
+      // Clear stale draft — user will get a fresh one after this run
+      safeStorage.removeItem('42post_forge_draft');
+
+      // Open forge modal at Step 1
       const forgeOverlay = document.getElementById('forgeOverlay');
       if (forgeOverlay) {
         forgeOverlay.classList.add('active');
-        const targetStep = (draft.payload.five_layer &&
-          Object.keys(draft.payload.five_layer).length > 0) ? 4 : 3;
-        setTimeout(() => goToStep(targetStep), 50);
+        setTimeout(() => goToStep(1), 50);
       }
     } else {
       safeStorage.removeItem('42post_forge_draft');
