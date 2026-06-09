@@ -4,12 +4,19 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>THE 42 POST — Forging Human Wisdom for a Better AI Future</title>
+  <!-- DNS prefetch for all external CDNs -->
+  <link rel="dns-prefetch" href="https://fonts.font.im">
+  <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+  <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
   <!-- Fonts via fonts.font.im — global CDN, accessible in mainland China -->
-  <link rel="preconnect" href="https://fonts.font.im">
-  <link href="https://fonts.font.im/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Noto+Serif+SC:wght@400;700;900&family=Noto+Serif+JP:wght@400;700;900&family=Noto+Sans+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <!-- crossorigin required for preconnect to work with cross-origin font fetches -->
+  <link rel="preconnect" href="https://fonts.font.im" crossorigin>
+  <!-- Removed Noto Serif JP (not needed for current user base), trimmed weights -->
+  <link href="https://fonts.font.im/css2?family=JetBrains+Mono:wght@400;500;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Noto+Serif+SC:wght@400;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css?v=1777129023-probe-email">
-  <!-- Notyf Toast Notifications -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.css">
+  <!-- Notyf — load async, not render-blocking -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.css" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.css"></noscript>
 </head>
 <body data-lang="en">
   <!-- ═══════════════ GLOBAL HEADER ═══════════════ -->
@@ -863,8 +870,9 @@
   <!-- About/HowTo overlays removed — content moved to footer -->
 
   <!-- Scripts: Load with verification -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-  <!-- Notyf Toast Notifications -->
+  <!-- html2canvas only needed for certificate download — defer so it doesn't block page render -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
+  <!-- Notyf Toast Notifications — must load before script.js uses it -->
   <script src="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.js"></script>
   <script src="skills.js?t=1777029023-lang"></script>
   <script src="skillStore.js"></script>
