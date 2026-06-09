@@ -5010,7 +5010,9 @@ function initSkillForge() {
         } catch (error) {
           console.error('Error saving skill to backend:', error);
           const isCn = (typeof currentLang !== 'undefined' && currentLang === 'cn');
-          alert((isCn ? '保存失败: ' : 'Save failed: ') + error.message +
+          // Show detailed error for diagnosis
+          const errDetail = error.message || error.name || 'Unknown error';
+          alert((isCn ? '保存失败: ' : 'Save failed: ') + errDetail +
             (isCn
               ? '\n\n你的草稿已保留。下次打开时可以恢复。'
               : '\n\nYour draft has been saved. You can restore it next time.'));

@@ -428,73 +428,11 @@ router.post('/', optionalAuth, rateLimitForge, async (req, res, next) => {
       || null;
     const acceptLanguage = (req.headers['accept-language'] || '').substring(0, 100) || null;
 
-    // ─── Safety + Quality Moderation (run BEFORE translation to save cost on rejects) ───
-    // Calls the moderation LLM with a strict review rubric. On REJECT or
-    // REQUIRES_MODIFICATION we return a structured error before spending
-    // tokens on translation/save. On infra failure we fail-open with a
-    // manual-review flag (better UX than blocking).
-    const moderationResult = await moderateSkill({
-      title,
-      description,
-      five_layer,
-      applicable_when,
-      disallowed_uses
-    });
-
-    // Always log the decision, even on APPROVE — gives us an audit trail
-    // for tuning the rubric and catching false negatives later.
-    try {
-      await db.query(
-        `INSERT INTO moderation_logs
-          (id, skill_id, identity, decision, risk_level, violations, explanation,
-           categories, suggested_modifications, review_required,
-           title_snapshot, description_snapshot, created_at)
-         VALUES ($1, NULL, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, CURRENT_TIMESTAMP)`,
-        [
-          uuidv4(),
-          req.user?.userId || req.headers['x-anonymous-id'] || req.ip || 'unknown',
-          moderationResult.decision,
-          moderationResult.risk_level,
-          JSON.stringify(moderationResult.violations || []),
-          moderationResult.explanation || '',
-          JSON.stringify(moderationResult.flagged_categories || []),
-          moderationResult.suggested_modifications || '',
-          moderationResult.review_required ? 1 : 0,
-          (title || '').slice(0, 500),
-          (description || '').slice(0, 1000)
-        ]
-      );
-    } catch (logErr) {
-      // Don't block publish on logging failure
-      console.warn('[moderation] Failed to write audit log:', logErr.message);
-    }
-
-    if (moderationResult.decision === 'REJECT') {
-      return res.status(403).json({
-        error: 'Content moderation: rejected',
-        decision: 'REJECT',
-        risk_level: moderationResult.risk_level,
-        violations: moderationResult.violations,
-        explanation: moderationResult.explanation,
-        flagged_categories: moderationResult.flagged_categories,
-        message_cn: '很抱歉，你的内容暂时无法发布。' + (moderationResult.explanation ? '\n\n原因：' + moderationResult.explanation : ''),
-        message_en: 'Sorry, this content cannot be published.' + (moderationResult.explanation ? '\n\nReason: ' + moderationResult.explanation : '')
-      });
-    }
-
-    if (moderationResult.decision === 'REQUIRES_MODIFICATION') {
-      return res.status(422).json({
-        error: 'Content moderation: needs modification',
-        decision: 'REQUIRES_MODIFICATION',
-        risk_level: moderationResult.risk_level,
-        violations: moderationResult.violations,
-        explanation: moderationResult.explanation,
-        suggested_modifications: moderationResult.suggested_modifications,
-        flagged_categories: moderationResult.flagged_categories,
-        message_cn: '内容需要稍作调整：\n\n' + (moderationResult.suggested_modifications || moderationResult.explanation || ''),
-        message_en: 'Content needs adjustment:\n\n' + (moderationResult.suggested_modifications || moderationResult.explanation || '')
-      });
-    }
+    // ─── Moderation: fully async, never blocks publish ───
+    // Run after save so the user gets instant response.
+    // Store skill_id for the background job to update the record.
+    const moderationPayload = { title, description, five_layer, applicable_when, disallowed_uses };
+    const moderationIdentity = req.user?.userId || req.headers['x-anonymous-id'] || req.ip || 'unknown';
 
     // ─── Auto-translate: run inline only when both languages are missing ───
     // If user submitted single-language content, do a quick sync translate.
@@ -735,8 +673,42 @@ router.post('/', optionalAuth, rateLimitForge, async (req, res, next) => {
         manifest
       });
 
+      // ─── Background: run moderation after responding ───
+      setImmediate(async () => {
+        try {
+          const modResult = await moderateSkill(moderationPayload);
+          await db.query(
+            `UPDATE skills SET moderation_status=$1, moderation_risk_level=$2,
+             moderation_explanation=$3, moderation_review_required=$4, moderation_decided_at=CURRENT_TIMESTAMP
+             WHERE id=$5`,
+            [
+              modResult.review_required ? 'pending_review' : (modResult.decision === 'REJECT' ? 'rejected' : 'approved'),
+              modResult.risk_level || 'LOW',
+              modResult.explanation || '',
+              modResult.review_required ? 1 : 0,
+              skillId
+            ]
+          );
+          // Log moderation result
+          await db.query(
+            `INSERT INTO moderation_logs
+              (id, skill_id, identity, decision, risk_level, violations, explanation,
+               categories, suggested_modifications, review_required,
+               title_snapshot, description_snapshot, created_at)
+             VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,CURRENT_TIMESTAMP)`,
+            [uuidv4(), skillId, moderationIdentity, modResult.decision, modResult.risk_level,
+             JSON.stringify(modResult.violations||[]), modResult.explanation||'',
+             JSON.stringify(modResult.flagged_categories||[]), modResult.suggested_modifications||'',
+             modResult.review_required?1:0, (moderationPayload.title||'').slice(0,500),
+             (moderationPayload.description||'').slice(0,1000)]
+          );
+          console.log(`[moderation] Background complete for ${skillId}: ${modResult.decision}`);
+        } catch (modErr) {
+          console.warn(`[moderation] Background failed for ${skillId}:`, modErr.message);
+        }
+      });
+
       // ─── Background: backfill translation if skill was saved without it ───
-      // Runs after response is sent so it never blocks the user.
       if (needsTranslation) {
         setImmediate(async () => {
           try {
