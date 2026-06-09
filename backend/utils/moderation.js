@@ -115,10 +115,14 @@ ${fiveLayer}
 请按照系统指示的格式输出 JSON 判断。`;
 
   try {
-    const result = await callLLMJSON(
-      `${MODERATION_SYSTEM_PROMPT}\n\n---\n\n${userContent}`,
-      1200
+    // 8-second timeout — if DeepSeek is slow, fail-open rather than blocking the user
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Moderation timeout after 8s')), 8000)
     );
+    const result = await Promise.race([
+      callLLMJSON(`${MODERATION_SYSTEM_PROMPT}\n\n---\n\n${userContent}`, 1200),
+      timeoutPromise
+    ]);
     const data = result.data || {};
 
     // Defensive normalization — model could return slightly off shapes
