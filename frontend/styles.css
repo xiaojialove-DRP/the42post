@@ -6457,6 +6457,15 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
   letter-spacing: -0.2px;
 }
 
+/* Playground win-rate badge — filled async from /playground/stats-batch */
+.skill-item .skill-winrate {
+  color: #6a8d52;
+  font-weight: 600;
+  font-size: 11px;
+  white-space: nowrap;
+}
+.skill-item .skill-winrate:empty { display: none; }
+
 /* ═══ SKILL ACTIONS (Star, Download, Play buttons) ═══ */
 .skill-item .skill-actions {
   display: flex;
@@ -8875,11 +8884,55 @@ button.generating {
   font-family: 'Playfair Display', serif;
 }
 
+/* ─── Post-forge next-step CTA: the one thing we want users to do ─── */
+.completion-next-step {
+  margin-top: 36px;
+  padding: 22px 20px;
+  background: linear-gradient(135deg, var(--wc-cream, #faf5ed) 0%, var(--wc-sand, #f0e8d4) 100%);
+  border: 1.5px solid var(--wc-amber, #f0d090);
+  border-radius: 14px;
+  text-align: center;
+}
+.completion-next-step .next-step-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 3px;
+  color: var(--wc-muted, #8a7c6e);
+  margin-bottom: 8px;
+}
+.completion-next-step .next-step-text {
+  font-size: 14px;
+  line-height: 1.65;
+  color: var(--wc-charcoal, #3c3028);
+  margin-bottom: 16px;
+  max-width: 420px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.completion-next-step .next-step-cta {
+  padding: 14px 28px;
+  min-height: 48px;
+  background: var(--wc-ink, #2a2018);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+  box-shadow: 0 3px 14px rgba(60,48,40,0.18);
+}
+.completion-next-step .next-step-cta:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(60,48,40,0.25);
+}
+
 .forge-completion-actions {
   display: flex;
   gap: 16px;
   justify-content: center;
-  margin-top: 40px;
+  margin-top: 16px;
   flex-wrap: wrap;
 }
 

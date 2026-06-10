@@ -1037,6 +1037,9 @@ const I18N = {
     card_certificate: 'Creator\'s Certificate',
     forge_dashboard: '📊  Impact Dashboard',
     forge_playground: '🎮  Playground',
+    forge_next_step_label: 'NEXT STEP',
+    forge_next_step_text: 'See your Skill in action — test it against a baseline AI in real scenarios. Takes 1 minute.',
+    forge_next_step_cta: '🎮 Test My Skill in Playground →',
     ethics_pass_msg: 'We heard you. Let\'s turn this idea into a Skill.',
     btn_enter_forge: 'Enter Skill Forge',
     /* ── Arena / Playground ── */
@@ -1295,6 +1298,9 @@ const I18N = {
     card_certificate: '创作者证书',
     forge_dashboard: '📊  数据面板',
     forge_playground: '🎮  探索广场',
+    forge_next_step_label: '下一步',
+    forge_next_step_text: '去看看你的 Skill 实际效果——在真实场景中和基线 AI 对比测试，只需1分钟。',
+    forge_next_step_cta: '🎮 去 Playground 测试我的 Skill →',
     ethics_pass_msg: '我们听到你了。让我们一起把这个想法变成技能。',
     btn_enter_forge: '进入技能铸造',
     /* ── 域名分类 ── */
@@ -8739,6 +8745,7 @@ async function initAgentArchiveView() {
               <div class="skill-footer">
                 <div class="skill-meta">
                   <span class="skill-stars">⭐ ${skill.starlight_score || skill.stars || 0}</span>
+                  <span class="skill-winrate" data-skill-id="${skill.id}"></span>
                 </div>
                 <!-- Action buttons: Star, Download, Play -->
                 <div class="skill-actions">
@@ -8774,6 +8781,33 @@ async function initAgentArchiveView() {
     }, 100);
 
     console.log('✓ Domain Grid: Rendered', ARCHIVE_DOMAINS.length, 'domains with skills');
+
+    // Async: badge each card with its real Playground win rate.
+    // One batch request for the whole grid — fails silently if unavailable.
+    (async () => {
+      try {
+        const resp = await fetch(`${ApiClient.BASE_URL}/playground/stats-batch`);
+        if (!resp.ok) return;
+        const json = await resp.json();
+        const stats = json.stats || {};
+        const isCn = (typeof currentLang !== 'undefined' && currentLang === 'cn');
+        document.querySelectorAll('.skill-winrate').forEach(el => {
+          const s = stats[el.dataset.skillId];
+          if (!s) return;
+          if (s.win_rate !== null && s.rated >= 3) {
+            // Enough votes for a meaningful percentage
+            el.textContent = isCn
+              ? `🏆 实测胜率 ${s.win_rate}%`
+              : `🏆 ${s.win_rate}% win rate`;
+            el.title = isCn
+              ? `${s.tests} 次 Playground 测试，${s.rated} 人评价`
+              : `${s.tests} Playground tests, ${s.rated} ratings`;
+          } else if (s.tests > 0) {
+            el.textContent = isCn ? `⚡ ${s.tests} 次实测` : `⚡ ${s.tests} tests`;
+          }
+        });
+      } catch (e) { /* stats are a nicety — never break the grid */ }
+    })();
   } // end initDomainGrid
 
   // Attach listeners to skill action buttons in archive grid

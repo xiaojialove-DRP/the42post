@@ -50,8 +50,8 @@ function getResend() {
   return resendClient;
 }
 
-// ─── Shared send helper ───
-async function sendViaResend({ to, subject, html, text }) {
+// ─── Shared send helper (exported for digest emails etc.) ───
+export async function sendViaResend({ to, subject, html, text }) {
   const client = getResend();
 
   // Dev mode: no key → log & fake success so the app flow isn't blocked

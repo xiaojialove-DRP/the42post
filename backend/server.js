@@ -588,6 +588,14 @@ async function startServer() {
       logger.info(`THE 42 POST server running on port ${PORT} (${process.env.NODE_ENV})`);
     });
 
+    // Monthly creator impact digest (Resend) — at most once per creator per month
+    try {
+      const { startCreatorDigestScheduler } = await import('./utils/creatorDigest.js');
+      startCreatorDigestScheduler();
+    } catch (digestErr) {
+      logger.warn('Creator digest scheduler failed to start:', digestErr.message);
+    }
+
     // Handle server errors
     server.on('error', (err) => {
       logger.error('Server error:', err);

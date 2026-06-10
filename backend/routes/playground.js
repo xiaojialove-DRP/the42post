@@ -589,6 +589,47 @@ router.get('/picker', async (req, res, next) => {
   }
 });
 
+// ═══ GET /stats-batch — win rates for many skills in one query ═══
+// Used by Archive grid to badge every card without N+1 requests.
+// "Win rate" = better / (better + worse + no_diff) from skill_feedback,
+// "tests" = rows in skill_test_votes. Returns only skills with activity.
+router.get('/stats-batch', async (req, res, next) => {
+  try {
+    const [feedbackRows, testRows] = await Promise.all([
+      db.query(
+        `SELECT skill_id, rating, COUNT(*) AS n
+         FROM skill_feedback
+         WHERE rating IN ('better','worse','no_diff')
+         GROUP BY skill_id, rating`
+      ),
+      db.query(
+        `SELECT skill_id, COUNT(*) AS n
+         FROM skill_test_votes
+         GROUP BY skill_id`
+      )
+    ]);
+
+    const stats = {};
+    for (const r of (testRows.rows || [])) {
+      stats[r.skill_id] = { tests: Number(r.n) || 0, better: 0, worse: 0, no_diff: 0 };
+    }
+    for (const r of (feedbackRows.rows || [])) {
+      if (!stats[r.skill_id]) stats[r.skill_id] = { tests: 0, better: 0, worse: 0, no_diff: 0 };
+      stats[r.skill_id][r.rating] = Number(r.n) || 0;
+    }
+    for (const id of Object.keys(stats)) {
+      const s = stats[id];
+      const rated = s.better + s.worse + s.no_diff;
+      s.win_rate = rated > 0 ? Math.round((s.better / rated) * 100) : null;
+      s.rated = rated;
+    }
+
+    res.json({ success: true, stats });
+  } catch (error) {
+    next(error);
+  }
+});
+
 // ═══ GET /stats/:skill_id — running win rate (used by Archive cards) ═══
 router.get('/stats/:skill_id', async (req, res, next) => {
   try {
