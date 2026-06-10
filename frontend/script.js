@@ -9743,8 +9743,20 @@ function initVoiceInput() {
   // Desktop: continuous mode with manual stop.
   const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
 
-  function getLang() {
-    return (document.body.dataset.lang || 'en') === 'cn' ? 'zh-CN' : 'en-US';
+  // Pick recognition language per session, smartest hint first:
+  // 1. what's already typed in the box (CJK → zh, latin words → en)
+  // 2. the page language toggle
+  // 3. the browser/system language
+  // Web Speech API can't auto-detect mid-stream, so we re-evaluate on
+  // every mic tap — type a few Chinese characters and the next tap
+  // listens in Chinese.
+  function getLang(targetEl) {
+    const text = (targetEl && targetEl.value || '').trim();
+    if (/[一-鿿]/.test(text)) return 'zh-CN';
+    if (/[a-zA-Z]{2,}/.test(text)) return 'en-US';
+    if ((document.body.dataset.lang || 'en') === 'cn') return 'zh-CN';
+    if ((navigator.language || '').toLowerCase().startsWith('zh')) return 'zh-CN';
+    return 'en-US';
   }
 
   function createRecognizer(targetEl, btn) {
@@ -9761,7 +9773,7 @@ function initVoiceInput() {
 
     function buildRec() {
       const r = new SpeechRecognition();
-      r.lang = getLang();
+      r.lang = getLang(targetEl);
       r.continuous = !isMobile;      // continuous only on desktop
       r.interimResults = true;
       r.maxAlternatives = 1;
