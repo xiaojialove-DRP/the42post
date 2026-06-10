@@ -5237,12 +5237,6 @@ function showForgeCompletion(skillData, soulHash) {
       const cnMode = (typeof currentLang !== 'undefined' && currentLang === 'cn');
       domainEl.textContent = cnMode ? `${theme.cn} · ${theme.en}` : theme.en;
     }
-    // Serial number from the soul-hash timestamp — every card is unique
-    const serialEl = document.getElementById('cardSerial');
-    if (serialEl) {
-      const ts = String(soulHash || '').match(/_(\d{6,})$/);
-      serialEl.textContent = '№ 42-' + (ts ? ts[1].slice(-6) : String(Date.now()).slice(-6));
-    }
     // AI one-line blessing — fetched async; curated fallback per domain.
     fillCardBlessing(skillData, domainKey);
     // Shorten soul hash display (show only first 14 chars)
@@ -5250,8 +5244,9 @@ function showForgeCompletion(skillData, soulHash) {
     // Display format: first 14 characters for consistency across UI
     const shortSoulHash = soulHash && soulHash.length > 0 ? soulHash.substring(0, 14) : 'SOUL_UNKNOWN';
     if (cardSoulHash) cardSoulHash.textContent = shortSoulHash;
-    if (cardCreator) cardCreator.textContent = 'Created by: ' + (skillData.author || skillData.username || 'Creator');
-    if (cardDate) cardDate.textContent = 'Forged: ' + new Date().toLocaleDateString('en-US', {year: 'numeric', month: 'short', day: 'numeric'});
+    // Single attribution line: "Forged by xiaojia · Jun 10, 2026"
+    if (cardCreator) cardCreator.textContent = 'Forged by ' + (skillData.author || skillData.username || 'Creator');
+    if (cardDate) cardDate.textContent = new Date().toLocaleDateString('en-US', {year: 'numeric', month: 'short', day: 'numeric'});
 
     // Don't display actual email for privacy - just show placeholder
     // The message "All files sent to your email" is enough context
