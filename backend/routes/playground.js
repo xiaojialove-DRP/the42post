@@ -517,22 +517,33 @@ router.post('/vote', rateLimitTwinTest, async (req, res, next) => {
 // Optional: ?exclude_domain=DOMAIN — skips skills from that domain (used for "try another" flow)
 router.get('/picker', async (req, res, next) => {
   try {
-    const { anonymous_id, exclude_domain } = req.query;
+    const { anonymous_id, exclude_domain, creator_name } = req.query;
     const limit = Math.max(1, Math.min(parseInt(req.query.limit, 10) || 8, 30));
 
-    let mySkills = [];
+    // skills.creator_anonymous_id stores "creator_<username>" when the forge
+    // supplied a creatorName (the normal flow), falling back to the device
+    // anonymous_id otherwise. Match on BOTH so "your latest forge" works:
+    //   - device id  → anonymous-only forges
+    //   - creator_<name> → named forges (the common case)
+    const ownerKeys = [];
     const safeAnonIdQuery = safeAnonId(anonymous_id);
-    if (safeAnonIdQuery) {
+    if (safeAnonIdQuery) ownerKeys.push(safeAnonIdQuery);
+    const safeCreator = safeAnonId(creator_name);
+    if (safeCreator) ownerKeys.push(`creator_${safeCreator.replace(/^creator_/i, '')}`);
+
+    let mySkills = [];
+    if (ownerKeys.length) {
+      const placeholders = ownerKeys.map((_, i) => `$${i + 1}`).join(', ');
       mySkills = (await db.query(
         `SELECT s.*, u.username AS creator_name
          FROM skills s
          LEFT JOIN users u ON s.author_id = u.id
-         WHERE s.creator_anonymous_id = $1
+         WHERE s.creator_anonymous_id IN (${placeholders})
            AND s.published = 1
            AND s.deleted_at IS NULL
          ORDER BY s.published_at DESC
-         LIMIT $2`,
-        [safeAnonIdQuery, limit]
+         LIMIT $${ownerKeys.length + 1}`,
+        [...ownerKeys, limit]
       )).rows || [];
     }
 
@@ -564,11 +575,12 @@ router.get('/picker', async (req, res, next) => {
 
     // Annotate which row is the user's own so the client can render a
     // "👋 Your latest forge" badge on the first option without another
-    // round trip. is_mine is true for any skill where the device-level
-    // anonymous_id matches.
+    // round trip. is_mine matches either ownership key (device id or
+    // creator_<username>).
+    const ownerSet = new Set(ownerKeys);
     const annotated = merged.map(s => ({
       ...s,
-      is_mine: !!anonymous_id && s.creator_anonymous_id === anonymous_id
+      is_mine: !!s.creator_anonymous_id && ownerSet.has(s.creator_anonymous_id)
     }));
 
     res.json({ success: true, skills: annotated });

@@ -2409,9 +2409,16 @@
     async function fetchHotSkills(limit = 8) {
       if (window.__hotSkillsCache) return window.__hotSkillsCache.slice(0, limit);
       const anonId = encodeURIComponent(getAnonymousId());
+      // Pass the forge username too — skills store ownership as
+      // creator_<username>, so the device id alone can't match named forges.
+      let creatorParam = '';
+      try {
+        const u = JSON.parse(localStorage.getItem('42post_user') || 'null');
+        if (u && u.username) creatorParam = `&creator_name=${encodeURIComponent(u.username)}`;
+      } catch (e) {}
       let skills = [];
       try {
-        const resp = await fetch(`/api/playground/picker?anonymous_id=${anonId}&limit=20`);
+        const resp = await fetch(`/api/playground/picker?anonymous_id=${anonId}${creatorParam}&limit=20`);
         if (resp.ok) {
           const json = await resp.json();
           skills = json.skills || [];
