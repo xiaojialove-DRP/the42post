@@ -1449,18 +1449,39 @@ body[data-lang="cn"] .voices-header-text {
   align-items: center;
 }
 
+/* Gemini-style frame: a watercolour light travels along the border line.
+   Same five hues as the Playground top bar (coral→periwinkle→teal→
+   marigold→lavender). The border itself is painted by a conic gradient
+   on the border-box layer; --sheet-angle rotates so the coloured
+   segment slowly walks around the frame. */
+@property --sheet-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
 .chat-bubble-wrap {
   width: 100%;
   max-width: var(--max-w);
-  background: linear-gradient(180deg, #ffffff 0%, #fcfbf8 100%);
-  border: 1.5px solid #e4e0d9;
+  border: 1.5px solid transparent;
+  background:
+    linear-gradient(180deg, #ffffff 0%, #fcfbf8 100%) padding-box,
+    conic-gradient(from var(--sheet-angle),
+      #e4e0d9 0deg,
+      #e4e0d9 200deg,
+      rgba(212, 114, 106, 0.9) 245deg,   /* coral */
+      rgba(106, 142, 186, 0.9) 270deg,   /* periwinkle */
+      rgba(58, 154, 140, 0.95) 295deg,   /* teal */
+      rgba(212, 164, 60, 0.9) 320deg,    /* marigold */
+      rgba(154, 122, 166, 0.85) 340deg,  /* lavender */
+      #e4e0d9 360deg) border-box;
   border-radius: 24px;
   padding: 36px 44px;
   display: flex;
   flex-direction: column;
   gap: 0;
   position: relative;
-  transition: background 0.3s ease, color 0.3s ease, border-color 0.3s ease, opacity 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+  transition: opacity 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
   min-height: 360px;
   box-shadow:
     0 1px 3px rgba(0, 0, 0, 0.02),
@@ -1468,30 +1489,13 @@ body[data-lang="cn"] .voices-header-text {
     0 0 25px rgba(212, 114, 106, 0.06),
     0 0 50px rgba(58, 154, 140, 0.04),
     0 0 35px rgba(106, 142, 186, 0.05);
-  /* breathing halo is chained after the entrance animation (see the
-     mastheadReveal block near the end of this file) */
 }
 
-@keyframes sheetBreath {
-  0%, 100% {
-    box-shadow:
-      0 1px 3px rgba(0, 0, 0, 0.02),
-      0 8px 40px rgba(0, 0, 0, 0.04),
-      0 0 25px rgba(212, 114, 106, 0.06),
-      0 0 50px rgba(58, 154, 140, 0.04),
-      0 0 35px rgba(106, 142, 186, 0.05);
-  }
-  50% {
-    box-shadow:
-      0 1px 3px rgba(0, 0, 0, 0.02),
-      0 8px 40px rgba(0, 0, 0, 0.05),
-      0 0 38px rgba(212, 114, 106, 0.16),
-      0 0 75px rgba(58, 154, 140, 0.13),
-      0 0 55px rgba(106, 142, 186, 0.12);
-  }
+@keyframes sheetBorderFlow {
+  to { --sheet-angle: 360deg; }
 }
 
-/* Writing or focused: breathing stops, halo holds steady and warm */
+/* Writing or focused: the light stops walking and holds steady */
 .chat-bubble-wrap:focus-within,
 .chat-bubble-wrap.has-content {
   animation: none;
@@ -1501,10 +1505,19 @@ body[data-lang="cn"] .voices-header-text {
   .chat-bubble-wrap { animation: none; }
 }
 
-/* State: has content being edited */
+/* State: has content being edited — frame holds its colours steady */
 .chat-bubble-wrap.is-focused {
-  background: rgba(255, 255, 255, 0.99);
-  border-color: var(--coral);
+  background:
+    linear-gradient(180deg, #ffffff 0%, #fdfcfa 100%) padding-box,
+    conic-gradient(from 250deg,
+      #e4e0d9 0deg,
+      #e4e0d9 200deg,
+      rgba(212, 114, 106, 0.9) 245deg,
+      rgba(106, 142, 186, 0.9) 270deg,
+      rgba(58, 154, 140, 0.95) 295deg,
+      rgba(212, 164, 60, 0.9) 320deg,
+      rgba(154, 122, 166, 0.85) 340deg,
+      #e4e0d9 360deg) border-box;
   box-shadow:
     0 1px 4px rgba(0, 0, 0, 0.03),
     0 12px 48px rgba(0, 0, 0, 0.06),
@@ -1538,8 +1551,18 @@ body[data-lang="cn"] .voices-header-text {
     0 0 50px rgba(212, 114, 106, 0.12),
     0 0 80px rgba(58, 154, 140, 0.1),
     0 0 60px rgba(106, 142, 186, 0.12);
-  border-color: #d4cfc6;
-  background: linear-gradient(180deg, #ffffff 0%, #faf8f5 100%);
+  /* keep the dual-layer paint so the gradient frame survives focus */
+  background:
+    linear-gradient(180deg, #ffffff 0%, #faf8f5 100%) padding-box,
+    conic-gradient(from 250deg,
+      #e4e0d9 0deg,
+      #e4e0d9 200deg,
+      rgba(212, 114, 106, 0.9) 245deg,
+      rgba(106, 142, 186, 0.9) 270deg,
+      rgba(58, 154, 140, 0.95) 295deg,
+      rgba(212, 164, 60, 0.9) 320deg,
+      rgba(154, 122, 166, 0.85) 340deg,
+      #e4e0d9 360deg) border-box;
 }
 
 /* Ghost copy overlays the writing area — absolute, so the textarea and
@@ -10667,11 +10690,12 @@ button.generating {
   animation: mastheadReveal 0.6s 0.45s ease both;
 }
 
-/* Chat bubble entrance, then the watercolour halo starts breathing */
+/* Chat bubble entrance, then the watercolour light starts walking
+   along the border (Gemini-style frame) */
 .chat-bubble-wrap {
   animation:
     mastheadReveal 0.65s 0.55s ease both,
-    sheetBreath 7s 1.4s ease-in-out infinite;
+    sheetBorderFlow 10s 1.4s linear infinite;
 }
 
 /* ── masthead-vol subtle emphasis on hover ── */
