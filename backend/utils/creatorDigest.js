@@ -87,21 +87,21 @@ async function getCreatorStats(userId) {
   return { rows, totalTests };
 }
 
-/** Top community skill (by starlight) NOT authored by this user. */
-async function getRecommendation(userId) {
-  const rec = (await db.query(
+/** Top community skills (by starlight) NOT authored by this user. */
+async function getRecommendations(userId, limit = 7) {
+  const recs = (await db.query(
     `SELECT s.id, s.title, s.title_cn, s.description, s.description_cn,
             COALESCE(s.starlight_score, 0) AS starlight
      FROM skills s
      WHERE s.published = 1 AND s.deleted_at IS NULL AND s.author_id != $1
      ORDER BY COALESCE(s.starlight_score, 0) DESC, s.published_at DESC
-     LIMIT 1`,
-    [userId]
-  )).rows?.[0];
-  return rec || null;
+     LIMIT $2`,
+    [userId, limit]
+  )).rows || [];
+  return recs;
 }
 
-function buildDigestHtml({ username, periodLabel, stats, rec }) {
+function buildDigestHtml({ username, periodLabel, stats, recs }) {
   const skillRows = stats.rows.map(s => `
     <tr>
       <td style="padding:10px 14px;border-bottom:1px solid #f0e8d8;font-weight:600;color:#2a2018;">${escapeHtml(s.title)}</td>
@@ -111,12 +111,18 @@ function buildDigestHtml({ username, periodLabel, stats, rec }) {
       </td>
     </tr>`).join('');
 
-  const recBlock = rec ? `
-    <div style="margin-top:28px;padding:18px 20px;background:#faf5ed;border:1px solid #f0d090;border-radius:12px;">
-      <div style="font-family:monospace;font-size:10px;letter-spacing:2px;color:#8a7c6e;margin-bottom:8px;">本月社区推荐 · COMMUNITY PICK</div>
-      <div style="font-size:16px;font-weight:700;color:#2a2018;margin-bottom:4px;">${escapeHtml(rec.title || rec.title_cn)}</div>
-      <div style="font-size:13px;color:#5a4f44;line-height:1.6;">${escapeHtml((rec.description_cn || rec.description || '').slice(0, 120))}</div>
-      <a href="https://the42post.com/archive.html" style="display:inline-block;margin-top:12px;font-size:13px;color:#2a2018;font-weight:600;">去档案馆看看 →</a>
+  const recItems = (recs || []).map((r, i) => `
+    <div style="padding:8px 0;border-bottom:1px solid #f0e8d8;">
+      <span style="font-family:monospace;font-size:11px;color:#b8a89a;margin-right:8px;">${String(i + 1).padStart(2, '0')}</span>
+      <span style="font-size:14px;font-weight:700;color:#2a2018;">${escapeHtml(r.title || r.title_cn)}</span>
+      <span style="font-size:12px;color:#8a7c6e;"> — ${escapeHtml((r.description_cn || r.description || '').slice(0, 50))}</span>
+    </div>`).join('');
+
+  const recBlock = recItems ? `
+    <div style="margin-top:28px;padding:16px 20px;background:#faf5ed;border:1px solid #f0d090;border-radius:12px;">
+      <div style="font-family:monospace;font-size:10px;letter-spacing:2px;color:#8a7c6e;margin-bottom:6px;">本月社区推荐 · COMMUNITY PICKS</div>
+      ${recItems}
+      <a href="https://the42post.com/archive.html" style="display:inline-block;margin-top:12px;font-size:13px;color:#2a2018;font-weight:600;">去档案馆看全部 →</a>
     </div>` : '';
 
   return `
@@ -184,7 +190,7 @@ export async function runCreatorDigest({ force = false } = {}) {
 
       const stats = await getCreatorStats(c.id);
       if (!stats) { skipped++; continue; }
-      const rec = await getRecommendation(c.id);
+      const recs = await getRecommendations(c.id, 7);
 
       const result = await sendViaResend({
         to: c.email,
@@ -193,7 +199,7 @@ export async function runCreatorDigest({ force = false } = {}) {
           username: c.username || 'Creator',
           periodLabel: period,
           stats,
-          rec
+          recs
         }),
         text: `你的 Skill 过去30天共被测试 ${stats.totalTests} 次。详情请用支持 HTML 的邮箱查看。— THE 42 POST`
       });
