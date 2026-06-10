@@ -1468,6 +1468,37 @@ body[data-lang="cn"] .voices-header-text {
     0 0 25px rgba(212, 114, 106, 0.06),
     0 0 50px rgba(58, 154, 140, 0.04),
     0 0 35px rgba(106, 142, 186, 0.05);
+  /* breathing halo is chained after the entrance animation (see the
+     mastheadReveal block near the end of this file) */
+}
+
+@keyframes sheetBreath {
+  0%, 100% {
+    box-shadow:
+      0 1px 3px rgba(0, 0, 0, 0.02),
+      0 8px 40px rgba(0, 0, 0, 0.04),
+      0 0 25px rgba(212, 114, 106, 0.06),
+      0 0 50px rgba(58, 154, 140, 0.04),
+      0 0 35px rgba(106, 142, 186, 0.05);
+  }
+  50% {
+    box-shadow:
+      0 1px 3px rgba(0, 0, 0, 0.02),
+      0 8px 40px rgba(0, 0, 0, 0.05),
+      0 0 38px rgba(212, 114, 106, 0.16),
+      0 0 75px rgba(58, 154, 140, 0.13),
+      0 0 55px rgba(106, 142, 186, 0.12);
+  }
+}
+
+/* Writing or focused: breathing stops, halo holds steady and warm */
+.chat-bubble-wrap:focus-within,
+.chat-bubble-wrap.has-content {
+  animation: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chat-bubble-wrap { animation: none; }
 }
 
 /* State: has content being edited */
@@ -1753,7 +1784,7 @@ body[data-lang="cn"] .voices-header-text {
   transform: translateY(-2px);
 }
 
-/* Empty sheet — Share waits quietly */
+/* Empty sheet — Share waits quietly in black */
 .btn-chat-send:disabled {
   opacity: 0.35;
   cursor: default;
@@ -1762,6 +1793,16 @@ body[data-lang="cn"] .voices-header-text {
 .btn-chat-send:disabled:hover {
   background: var(--btn-dark);
   transform: none;
+}
+
+/* The moment ink hits the sheet, Share comes alive in product teal */
+.chat-bubble-wrap.has-content .btn-chat-send:not(:disabled) {
+  background: var(--teal);
+  box-shadow: 0 2px 14px rgba(58, 154, 140, 0.35);
+}
+.chat-bubble-wrap.has-content .btn-chat-send:not(:disabled):hover {
+  background: color-mix(in srgb, var(--teal) 85%, #1a4a42);
+  box-shadow: 0 4px 18px rgba(58, 154, 140, 0.45);
 }
 
 .btn-chat-send.success {
@@ -10626,9 +10667,11 @@ button.generating {
   animation: mastheadReveal 0.6s 0.45s ease both;
 }
 
-/* Chat bubble entrance */
+/* Chat bubble entrance, then the watercolour halo starts breathing */
 .chat-bubble-wrap {
-  animation: mastheadReveal 0.65s 0.55s ease both;
+  animation:
+    mastheadReveal 0.65s 0.55s ease both,
+    sheetBreath 7s 1.4s ease-in-out infinite;
 }
 
 /* ── masthead-vol subtle emphasis on hover ── */
