@@ -5105,6 +5105,48 @@ function initSkillForge() {
 }
 
 /* ═══ SHOW FORGE COMPLETION ═══ */
+// One italic line on the certificate. Tries the AI endpoint; if it fails
+// (offline, rate-limited) falls back to a curated per-domain line so the
+// card is never blank. No model name anywhere — skills are model-neutral.
+function fillCardBlessing(skillData, domainKey) {
+  const el = document.getElementById('cardBlessing');
+  if (!el) return;
+  const isCn = (typeof currentLang !== 'undefined' && currentLang === 'cn');
+  const FALLBACK = {
+    safety:     { en: 'A boundary drawn with care protects more than it forbids.', cn: '用心划下的边界，守护多于禁止。' },
+    science:    { en: 'Curiosity, given structure, becomes knowledge that lasts.', cn: '好奇心有了结构，便成为长久的知识。' },
+    narrative:  { en: 'Whoever shapes the story shapes what can be imagined.', cn: '塑造故事的人，塑造了想象的边界。' },
+    design:     { en: 'Good judgment about form is judgment about life.', cn: '对形式的判断，就是对生活的判断。' },
+    visual:     { en: 'Teaching a machine to see begins with knowing how you look.', cn: '教机器看见，先看清自己如何凝视。' },
+    experience: { en: 'What you have lived through cannot be scraped — only given.', cn: '亲历过的东西无法被抓取，只能被给予。' },
+    sound:      { en: 'Some truths arrive only through listening.', cn: '有些真相，只有倾听才能抵达。' },
+    ideas:      { en: 'One honest thought, well-formed, outlives a thousand prompts.', cn: '一个诚实而成形的想法，胜过千条指令。' },
+    history:    { en: 'Memory structured is wisdom transferable.', cn: '被结构化的记忆，是可传递的智慧。' },
+    fun:        { en: 'Play is the most serious way humans think.', cn: '玩耍，是人类最严肃的思考方式。' }
+  };
+  const fb = FALLBACK[domainKey] || FALLBACK.ideas;
+  el.textContent = isCn ? fb.cn : fb.en;
+
+  // Upgrade to a personalised line when the AI responds in time.
+  (async () => {
+    try {
+      const resp = await fetch(`${ApiClient.BASE_URL}/forge/blessing`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          skill_name: skillData.title || skillData.titleCn || '',
+          definition: (skillData.desc || skillData.descCn || '').slice(0, 300),
+          language: isCn ? 'zh' : 'en'
+        })
+      });
+      if (!resp.ok) return;
+      const data = await resp.json();
+      const line = (data.blessing || '').trim();
+      if (line && line.length <= 90) el.textContent = line;
+    } catch (e) { /* keep fallback */ }
+  })();
+}
+
 function showForgeCompletion(skillData, soulHash) {
   const completionSection = document.getElementById('forgeCompletionSection');
   const forgeCreatorRights = document.querySelector('.forge-creator-rights');
@@ -5170,6 +5212,39 @@ function showForgeCompletion(skillData, soulHash) {
     const completionEmail = document.getElementById('completionEmail');
 
     if (cardTitle) cardTitle.textContent = skillData.title || skillData.titleCn || '[Skill Title]';
+
+    // ── Domain-themed certificate: accent color, seal glyph, label, serial ──
+    const DOMAIN_CARD_THEME = {
+      safety:     { glyph: '⛨', en: 'SAFETY',     cn: '安全' },
+      science:    { glyph: '✶', en: 'SCIENCE',    cn: '科学' },
+      narrative:  { glyph: '✒', en: 'NARRATIVE',  cn: '叙事' },
+      design:     { glyph: '◈', en: 'DESIGN',     cn: '设计' },
+      visual:     { glyph: '◉', en: 'VISUAL',     cn: '视觉' },
+      experience: { glyph: '❖', en: 'EXPERIENCE', cn: '体验' },
+      sound:      { glyph: '♫', en: 'SOUND',      cn: '声音' },
+      ideas:      { glyph: '✦', en: 'IDEAS',      cn: '想法' },
+      history:    { glyph: '⌛', en: 'HISTORY',    cn: '历史' },
+      fun:        { glyph: '✺', en: 'FUN',        cn: '趣味' }
+    };
+    const cardEl = document.getElementById('commemorativeCard');
+    const domainKey = (skillData.domain || 'ideas').toLowerCase();
+    const theme = DOMAIN_CARD_THEME[domainKey] || DOMAIN_CARD_THEME.ideas;
+    if (cardEl) cardEl.dataset.domain = DOMAIN_CARD_THEME[domainKey] ? domainKey : 'ideas';
+    const sealEl = document.getElementById('cardSeal');
+    if (sealEl) sealEl.textContent = theme.glyph;
+    const domainEl = document.getElementById('cardDomain');
+    if (domainEl) {
+      const cnMode = (typeof currentLang !== 'undefined' && currentLang === 'cn');
+      domainEl.textContent = cnMode ? `${theme.cn} · ${theme.en}` : theme.en;
+    }
+    // Serial number from the soul-hash timestamp — every card is unique
+    const serialEl = document.getElementById('cardSerial');
+    if (serialEl) {
+      const ts = String(soulHash || '').match(/_(\d{6,})$/);
+      serialEl.textContent = '№ 42-' + (ts ? ts[1].slice(-6) : String(Date.now()).slice(-6));
+    }
+    // AI one-line blessing — fetched async; curated fallback per domain.
+    fillCardBlessing(skillData, domainKey);
     // Shorten soul hash display (show only first 14 chars)
     // Full hash format from backend: SOUL_[16-char-hash]_[timestamp]
     // Display format: first 14 characters for consistency across UI
@@ -9808,11 +9883,6 @@ function initVoiceInput() {
     createRecognizer(chatInput, chatBtn);
   }
 
-  // ── Forge feedback textarea ("Tell AI what to change…") ──
-  const forgeBtn = document.getElementById('btnVoiceForge');
-  const forgeInput = document.getElementById('skillFeedback');
-  if (forgeBtn && forgeInput) {
-    forgeBtn.style.display = 'flex';
-    createRecognizer(forgeInput, forgeBtn);
-  }
+  // Forge regen textarea: voice input removed — kept text-only for a
+  // cleaner step-3 layout (mic stays on the homepage Share box only).
 }

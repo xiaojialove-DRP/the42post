@@ -27,6 +27,14 @@ const VALIDATION_SCHEMAS = {
   },
 
   // Forge endpoints
+  'POST /api/forge/blessing': {
+    body: {
+      skill_name: { type: 'string', required: true, minLength: 1, maxLength: 200 },
+      definition: { type: 'string', required: false, maxLength: 2000 },
+      language: { type: 'string', required: false, enum: ['en', 'zh'] }
+    }
+  },
+
   'POST /api/forge/probe': {
     body: {
       idea_text: { type: 'string', required: true, minLength: 10, maxLength: 5000 },

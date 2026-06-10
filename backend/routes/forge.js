@@ -13,7 +13,8 @@ import {
   generateFiveLayerWithClaude,
   generateFlatFiveLayerWithClaude,
   generateSoulHash,
-  callDeepSeekStream
+  callDeepSeekStream,
+  callLLMJSON
 } from '../utils/skillGeneration.js';
 
 const router = express.Router();
@@ -538,6 +539,37 @@ router.post('/generate/stream', rateLimitLLM, optionalAuth, async (req, res, nex
     send('error', { message: err.message });
   } finally {
     res.end();
+  }
+});
+
+// ═══ POST /blessing — one-line AI comment for the creator card ═══
+// Returns a single sentence the certificate prints under the skill name.
+// Client has curated per-domain fallbacks, so failures here are harmless.
+router.post('/blessing', rateLimitLLM, async (req, res) => {
+  try {
+    const { skill_name, definition, language } = req.body || {};
+    const name = String(skill_name || '').slice(0, 80);
+    const def = String(definition || '').slice(0, 300);
+    if (!name) return res.status(400).json({ error: 'Missing input', message: 'skill_name is required' });
+
+    const isZh = language === 'zh';
+    const prompt = `A human just distilled their personal wisdom into an AI skill called "${name}".
+Definition: ${def || '(not provided)'}
+
+Write ONE short sentence (max ${isZh ? '30 Chinese characters' : '14 words'}) — a quiet, intelligent appreciation of what makes this way of thinking valuable. Like an editor's note on a certificate. No flattery words ("amazing", "great"), no emoji, no quotes around it. ${isZh ? 'Respond in Chinese.' : 'Respond in English.'}
+
+Return ONLY JSON: {"blessing": "..."}`;
+
+    const result = await Promise.race([
+      callLLMJSON(prompt, 200),
+      new Promise((_, rej) => setTimeout(() => rej(new Error('blessing timeout')), 8000))
+    ]);
+    const line = String(result?.data?.blessing || '').trim().replace(/^["'“”]|["'“”]$/g, '');
+    if (!line) throw new Error('empty blessing');
+    res.json({ success: true, blessing: line.slice(0, 90) });
+  } catch (err) {
+    // Client falls back to its curated line — return a soft failure.
+    res.status(200).json({ success: false, blessing: '' });
   }
 });
 

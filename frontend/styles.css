@@ -1771,10 +1771,12 @@ body[data-lang="cn"] .voices-header-text {
 
 .voice-textarea-wrap {
   position: relative;
+  flex: 1 1 0;     /* fill the row — without this the regen box collapsed */
+  min-width: 0;
 }
 
 .voice-textarea-wrap .minimal-textarea {
-  padding-right: 44px; /* room for inline mic button */
+  padding-right: 14px;
 }
 
 .btn-voice-inline {
@@ -10198,14 +10200,12 @@ button.generating {
   align-items: stretch;
 }
 
-/* Textarea fills all remaining width */
+/* Textarea fills its wrap (which flexes to all remaining width) */
 .feedback-input-group .minimal-textarea {
-  flex: 1 1 0;
-  min-width: 0;          /* prevent flex child overflow */
   min-height: 88px;
   resize: none;
   box-sizing: border-box;
-  width: auto !important; /* override the generic 100% rule inside flex */
+  width: 100% !important;
 }
 
 /* Regen button — vertical pill on the right */
@@ -10277,37 +10277,118 @@ button.generating {
   all: unset;
   display: flex !important;
   flex-direction: column;
-  align-items: center;
-  justify-content: space-between;
   text-align: center;
   position: relative;
-  /* Square: match width with aspect-ratio */
   width: 100%;
-  max-width: 300px;
-  aspect-ratio: 1 / 1;
+  max-width: 320px;
+  aspect-ratio: 4 / 5;   /* portrait — reads as a collectible card, not a coaster */
   margin: 0 auto 18px !important;
-  padding: 20px 22px 16px;
+  padding: 9px;
   box-sizing: border-box;
-  /* Warm cream background */
-  background: linear-gradient(150deg, #faf5ec 0%, #f3e8d5 55%, #f0e2ce 100%);
-  border: 1px solid rgba(60,48,40,0.16);
-  border-radius: 10px;
-  box-shadow: 0 3px 20px rgba(42,32,24,0.11), 0 1px 4px rgba(42,32,24,0.07);
+  background:
+    radial-gradient(120% 90% at 50% 0%, color-mix(in srgb, var(--card-accent, #c9b458) 14%, transparent) 0%, transparent 55%),
+    linear-gradient(150deg, #fbf6ee 0%, #f4ead8 55%, #f0e2ce 100%);
+  border: 1px solid color-mix(in srgb, var(--card-accent, #8a7c6e) 45%, #d8ccba);
+  border-radius: 12px;
+  box-shadow: 0 6px 28px rgba(42,32,24,0.14), 0 1px 4px rgba(42,32,24,0.08);
   overflow: hidden;
 }
 
-/* Corner ornaments via pseudo-elements */
-.commemorative-card::before,
-.commemorative-card::after {
-  content: '✦';
+/* Accent band along the top edge — instant domain recognition */
+.commemorative-card::before {
+  content: '';
   position: absolute;
-  font-size: var(--font-xs);
-  color: rgba(138,124,110,0.30);
-  line-height: 1;
-  pointer-events: none;
+  top: 0; left: 0; right: 0;
+  height: 5px;
+  background: linear-gradient(90deg,
+    color-mix(in srgb, var(--card-accent, #c9b458) 75%, #fff) 0%,
+    var(--card-accent, #c9b458) 50%,
+    color-mix(in srgb, var(--card-accent, #c9b458) 75%, #fff) 100%);
 }
-.commemorative-card::before { top: 9px;    left: 11px;  }
-.commemorative-card::after  { bottom: 9px; right: 11px; }
+
+/* Inner certificate frame — double-rule, classic document feel */
+.sq-frame {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 14px 16px 12px;
+  box-sizing: border-box;
+  border: 1px solid color-mix(in srgb, var(--card-accent, #8a7c6e) 38%, transparent);
+  outline: 1px solid color-mix(in srgb, var(--card-accent, #8a7c6e) 16%, transparent);
+  outline-offset: 2px;
+  border-radius: 7px;
+}
+
+/* ── Domain seal — a tilted chop/stamp ── */
+.sq-seal {
+  width: 46px;
+  height: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  line-height: 1;
+  color: var(--card-accent, #c9b458);
+  border: 2px solid color-mix(in srgb, var(--card-accent, #c9b458) 70%, transparent);
+  border-radius: 50%;
+  transform: rotate(-6deg);
+  background: color-mix(in srgb, var(--card-accent, #c9b458) 7%, transparent);
+}
+
+/* ── Domain pill under the title ── */
+.sq-domain-pill {
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 2.4px;
+  text-transform: uppercase;
+  color: #fff;
+  background: var(--card-accent, #c9b458);
+  padding: 3px 12px;
+  border-radius: 20px;
+}
+
+/* ── AI blessing — one italic line, the shareable hook ── */
+.sq-blessing {
+  font-family: var(--font-serif, 'Playfair Display', serif);
+  font-style: italic;
+  font-size: 11px;
+  line-height: 1.6;
+  color: #5a4f44;
+  max-width: 92%;
+  min-height: 0;
+}
+.sq-blessing:empty { display: none; }
+.sq-blessing::before { content: '“'; color: var(--card-accent, #c9b458); }
+.sq-blessing::after  { content: '”'; color: var(--card-accent, #c9b458); }
+
+/* ── Bottom row: site + serial ── */
+.sq-bottom-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  width: 100%;
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: 7.5px;
+  letter-spacing: 1px;
+  color: rgba(138,124,110,0.75);
+}
+.sq-serial { font-weight: 700; color: color-mix(in srgb, var(--card-accent, #8a7c6e) 80%, #5a4f44); }
+
+/* ── 10 domain themes: accent color (glyph is set by JS) ── */
+.commemorative-card[data-domain="safety"]     { --card-accent: #7e96a8; }
+.commemorative-card[data-domain="science"]    { --card-accent: #8fae7e; }
+.commemorative-card[data-domain="narrative"]  { --card-accent: #c9a06a; }
+.commemorative-card[data-domain="design"]     { --card-accent: #d98d76; }
+.commemorative-card[data-domain="visual"]     { --card-accent: #a892c4; }
+.commemorative-card[data-domain="experience"] { --card-accent: #c4a35c; }
+.commemorative-card[data-domain="sound"]      { --card-accent: #7fa8b8; }
+.commemorative-card[data-domain="ideas"]      { --card-accent: #b8a23c; }
+.commemorative-card[data-domain="history"]    { --card-accent: #a08a6e; }
+.commemorative-card[data-domain="fun"]        { --card-accent: #cc7e9a; }
 
 /* ── Brand header ── */
 .sq-top {
