@@ -895,6 +895,7 @@ const I18N = {
     wisdom_fable: 'WISDOM FABLE',
     micro_fiction: 'MICRO FICTION',
     chat_bubble_invite: 'Forge your unique thinking and values into Skills that AI truly understands, step by step.\n\nWrite your idea → Refine it carefully → See how it transforms AI\'s responses in the Playground.\n\nWe welcome every authentic voice. Share what makes you singular.',
+    chat_bubble_example: 'e.g. AI should understand the silence of grief…',
     creator_name_placeholder: 'Your name (optional)',
     input_title: 'Share Your Instinct',
     chaos_placeholder: "e.g. AI should know when a compliment feels fake. That's not logic — that's taste.",
@@ -1182,6 +1183,7 @@ const I18N = {
     wisdom_fable: '智慧寓言',
     micro_fiction: '126字微小说',
     chat_bubble_invite: '把您独一无二的思考、审美与珍视，\n一步步铸成 AI 真正能懂的 Skill。\n\n写下您的想法 → 细细锻造 →\n到游乐场亲眼看看它如何改变 AI 的回答。\n\n我们欢迎每一位真实的人，\n分享您独有的声音。',
+    chat_bubble_example: '例如：AI 应该读懂悲伤里的沉默……',
     creator_name_placeholder: '你的名字（可选）',
     input_title: '分享你的直觉',
     chaos_placeholder: '例如：AI 应该能分辨一句赞美是真心的还是客套的。这不是逻辑，这是想法。',
@@ -6333,76 +6335,49 @@ function initHeadlineHero() {
   const chatBubbleWrap = document.querySelector('.chat-bubble-wrap');
 
   if (chaosInput && chatBubblePlaceholder) {
-    // ═══ 现代对话框交互：点击任何地方激活输入 ═══
-    // 用户体验改进：类似ChatGPT的交互模式
-    const activateInput = () => {
-      chaosInput.focus();
-      chatBubblePlaceholder.classList.add('hidden');
-      if (chatBubbleWrap) chatBubbleWrap.classList.add('is-focused');
-    };
+    // ═══ Letter-sheet behaviour ═══
+    // The ghost copy lives INSIDE the sheet and acts as a rich placeholder:
+    // visible whenever the sheet is empty (even while focused), gone the
+    // moment the user types, back the moment they clear it.
+    const shareBtn = document.getElementById('btnTest');
+    const charCount = document.getElementById('chatCharCount');
+    const MAX_CHARS = 2000;
 
-    // 点击placeholder区域激活输入
-    chatBubblePlaceholder.addEventListener('click', activateInput);
-
-    // 点击chat-bubble-wrap的任何地方都能激活输入
+    // Click anywhere on the sheet (except footer buttons) → focus the pen
     if (chatBubbleWrap) {
       chatBubbleWrap.addEventListener('click', (e) => {
-        // 如果点击的是placeholder或footer之外的区域，激活输入
-        if (!e.target.closest('.chat-bubble-footer')) {
-          activateInput();
-        }
+        if (!e.target.closest('.chat-bubble-footer')) chaosInput.focus();
       });
     }
 
-    // ═══ Enhanced Placeholder Management ═══
-    // Auto-hide placeholder when user starts typing
-    chaosInput.addEventListener('input', () => {
-      if (chaosInput.value.trim().length > 0) {
-        chatBubblePlaceholder.classList.add('hidden');
-        // Visual feedback: subtle highlight when typing
-        chaosInput.parentElement.classList.add('has-content');
-      } else {
-        chatBubblePlaceholder.classList.remove('hidden');
-        chaosInput.parentElement.classList.remove('has-content');
-      }
-    });
+    const syncSheet = () => {
+      const hasText = chaosInput.value.trim().length > 0;
+      chatBubblePlaceholder.classList.toggle('hidden', hasText);
+      chaosInput.parentElement.classList.toggle('has-content', hasText);
+      // Share is the only way to submit — disabled on an empty sheet
+      if (shareBtn) shareBtn.disabled = !hasText;
+      // Quiet counter appears once writing starts
+      if (charCount) charCount.textContent = hasText ? `${chaosInput.value.length} / ${MAX_CHARS}` : '';
+      // Auto-grow: the sheet expands with the thought, scrolls past 46vh
+      chaosInput.style.height = 'auto';
+      const cap = Math.round(window.innerHeight * 0.46);
+      chaosInput.style.height = Math.min(chaosInput.scrollHeight, cap) + 'px';
+    };
 
-    // Show placeholder when focus (empty input)
+    chaosInput.addEventListener('input', syncSheet);
+    syncSheet(); // initial state: ghost visible, Share disabled
+
     chaosInput.addEventListener('focus', () => {
-      if (chaosInput.value.trim().length === 0) {
-        chatBubblePlaceholder.classList.add('hidden');
-      }
-      // Add focus state to wrapper
       chaosInput.parentElement.classList.add('is-focused');
     });
 
-    // Restore placeholder when blur (empty input)
     chaosInput.addEventListener('blur', () => {
-      if (chaosInput.value.trim().length === 0) {
-        chatBubblePlaceholder.classList.remove('hidden');
-      }
-      // Remove focus state from wrapper
       chaosInput.parentElement.classList.remove('is-focused');
     });
 
-    // Function to restore placeholder state
-    function restorePlaceholderState() {
-      if (chaosInput.value.trim().length === 0) {
-        chatBubblePlaceholder.classList.remove('hidden');
-      } else {
-        chatBubblePlaceholder.classList.add('hidden');
-      }
-    }
-
-    // Restore state after clearing input
-    chaosInput._restorePlaceholder = restorePlaceholderState;
-
-    // Click on placeholder to focus input
-    chatBubblePlaceholder.addEventListener('click', (e) => {
-      if (e.target.closest('.chat-bubble-invite')) {
-        chaosInput.focus();
-      }
-    });
+    // Other code clears the input programmatically and calls this to
+    // resync ghost/counter/Share state.
+    chaosInput._restorePlaceholder = syncSheet;
   }
 
   // Store idea from homepage for direct forge

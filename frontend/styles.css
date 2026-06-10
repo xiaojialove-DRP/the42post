@@ -1511,19 +1511,48 @@ body[data-lang="cn"] .voices-header-text {
   background: linear-gradient(180deg, #ffffff 0%, #faf8f5 100%);
 }
 
+/* Ghost copy overlays the writing area — absolute, so the textarea and
+   cursor start at the TOP-LEFT of the sheet (it no longer pushes the
+   input down to the middle). padding:inherit keeps it aligned with the
+   wrap's content box at every breakpoint. */
 .chat-bubble-placeholder {
+  position: absolute;
+  inset: 0;
+  padding: inherit;
   pointer-events: none;
-  padding: 12px 0;
-  transition: opacity 0.3s ease, visibility 0.3s ease;
+  transition: opacity 0.25s ease;
   opacity: 1;
-  visibility: visible;
+  overflow: hidden;
 }
+/* first ghost line sits exactly where the textarea's first line starts */
+.chat-bubble-placeholder > :first-child { margin-top: 12px; }
 
 .chat-bubble-placeholder.hidden {
   opacity: 0;
   visibility: hidden;
-  pointer-events: none;
 }
+
+/* The e.g. demonstration line — part of the ghost, fainter */
+.chat-bubble-example {
+  font-family: var(--font-serif);
+  font-size: 14px;
+  font-style: italic;
+  color: var(--ink-faint);
+  margin-top: 16px;
+  user-select: none;
+  white-space: pre-line;
+}
+
+/* Quiet character count, bottom-left of the sheet */
+.chat-char-count {
+  margin-right: auto;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.8px;
+  color: var(--ink-faint);
+  align-self: center;
+}
+.chat-char-count:empty { display: none; }
 
 .chat-bubble-intro {
   font-family: var(--font-serif);
@@ -1579,8 +1608,11 @@ body[data-lang="cn"] .voices-header-text {
   line-height: 1.6;
   padding: 12px 0;
   resize: none;
-  min-height: 60px;
-  max-height: 120px;
+  /* Letter-sheet behaviour: starts a few lines tall at the TOP of the
+     sheet, grows with content (JS autoresize), scrolls past 46vh. */
+  min-height: 150px;
+  max-height: 46vh;
+  overflow-y: auto;
   outline: none;
   transition: color 0.2s ease;
   box-sizing: border-box;
@@ -1719,6 +1751,17 @@ body[data-lang="cn"] .voices-header-text {
 .btn-chat-send:hover {
   background: var(--btn-dark-hover);
   transform: translateY(-2px);
+}
+
+/* Empty sheet — Share waits quietly */
+.btn-chat-send:disabled {
+  opacity: 0.35;
+  cursor: default;
+  transform: none;
+}
+.btn-chat-send:disabled:hover {
+  background: var(--btn-dark);
+  transform: none;
 }
 
 .btn-chat-send.success {
@@ -5685,7 +5728,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
     flex: 1;
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    justify-content: flex-start;
   }
   .chat-bubble-prompt {
     font-size: 14px;
@@ -5810,7 +5853,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
     flex: none !important;
     display: flex !important;
     flex-direction: column !important;
-    justify-content: center !important;
+    justify-content: flex-start !important;
   }
   .chat-bubble-wrap::before {
     display: none !important;
@@ -6120,7 +6163,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
     flex: none !important;
     display: flex !important;
     flex-direction: column !important;
-    justify-content: center !important;
+    justify-content: flex-start !important;
   }
   .chat-bubble-wrap::before {
     display: block !important;
