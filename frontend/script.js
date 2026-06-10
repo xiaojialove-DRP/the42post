@@ -4823,30 +4823,17 @@ function initSkillForge() {
         const creatorRawName = ((usernameValue && usernameValue.trim()) || 'anonymous').replace(/^creator_/i, '');
         const creatorLabel = `creator_${creatorRawName}`;
 
-        // ═══ LANGUAGE DETECTION & PROPER BILINGUAL HANDLING ═══
-        // Detect if user input is Chinese or English
-        const chineseRegex = /[一-鿿]/g;
-        const titleHasChinese = chineseRegex.test(skillNameValue);
-        const descHasChinese = chineseRegex.test(skillDesc);
-
-        let titleEn = skillNameValue;
-        let titleCn = skillNameValue;
-        let descEn = skillDesc;
-        let descCn = skillDesc;
-
-        // If user wrote in Chinese, put it in the CN fields
-        // Backend will auto-translate to English
-        if (titleHasChinese) {
-          titleEn = ''; // Empty - backend will translate CN to EN
-          titleCn = skillNameValue; // Chinese input
-        }
-
-        if (descHasChinese) {
-          descEn = ''; // Empty - backend will translate CN to EN
-          descCn = skillDesc; // Chinese input
-        }
-
-        console.log(`🌐 Language detection: Title CN=${titleHasChinese}, Desc CN=${descHasChinese}`);
+        // ═══ BILINGUAL HANDLING ═══
+        // Always send the user's actual text in BOTH fields. Sending an
+        // empty title (the old "backend will translate" approach) fails
+        // the request validator (title minLength 3) — this was why every
+        // Chinese-language publish got "Bad Request". When title equals
+        // title_cn the backend detects it and backfills the translation
+        // in the background after saving.
+        const titleEn = skillNameValue;
+        const titleCn = skillNameValue;
+        const descEn = skillDesc;
+        const descCn = skillDesc;
 
         // Prepare skill data
         const forgedSkillData = {
@@ -4971,8 +4958,14 @@ function initSkillForge() {
                 ? (errorData.message_cn || '内容需要稍作调整。')
                 : (errorData.message_en || 'Content needs adjustment.');
             } else {
-              // Generic save failure (5xx, network, etc.)
-              userMessage = (isCn ? '保存失败: ' : 'Save failed: ') + (errorData.message || response.statusText) +
+              // Generic save failure (validator 400, 5xx, network, etc.)
+              // Surface validator `details` so the user/we can see WHAT failed,
+              // not just "Bad Request".
+              const detailText = Array.isArray(errorData.details) && errorData.details.length
+                ? errorData.details.join('; ')
+                : '';
+              userMessage = (isCn ? '保存失败: ' : 'Save failed: ')
+                + (errorData.message || detailText || response.statusText) +
                 (isCn
                   ? '\n\n你的草稿已保留。下次打开时可以恢复。'
                   : '\n\nYour draft has been saved. You can restore it next time.');
