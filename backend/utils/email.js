@@ -167,14 +167,70 @@ Congratulations on forging your skill, ${recipientName}!
 export async function sendVerificationEmail(email, verificationLink) {
   return sendViaResend({
     to: email,
-    subject: 'Verify Your THE 42 POST Account',
-    html: `
-      <h2>Welcome to THE 42 POST</h2>
-      <p>Please verify your email address by clicking the link below:</p>
-      <p><a href="${verificationLink}">Verify Email</a></p>
-      <p>This link will expire in 24 hours.</p>
-    `,
-    text: `Welcome to THE 42 POST\n\nVerify your email: ${verificationLink}\n\nThis link will expire in 24 hours.`
+    subject: '验证你的 THE 42 POST 账号 | Verify Your Account',
+    html: `<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Courier New', monospace; background: #f9f9f9; color: #333; }
+  .container { max-width: 600px; margin: 0 auto; background: #fff; }
+  .header { padding: 40px 30px; border-bottom: 2px solid #222; text-align: center; }
+  .header h1 { font-size: 22px; font-weight: bold; letter-spacing: 0.1em; color: #111; }
+  .header p { font-size: 12px; color: #888; margin-top: 6px; letter-spacing: 0.05em; }
+  .body { padding: 40px 30px; }
+  .message { font-size: 14px; line-height: 1.8; color: #333; margin-bottom: 30px; }
+  .message-cn { font-size: 14px; line-height: 1.8; color: #555; margin-bottom: 30px; border-left: 3px solid #ddd; padding-left: 16px; }
+  .btn-wrap { text-align: center; margin: 36px 0; }
+  .btn {
+    display: inline-block;
+    background: #111;
+    color: #fff !important;
+    text-decoration: none;
+    padding: 14px 36px;
+    font-size: 13px;
+    letter-spacing: 0.1em;
+    font-family: 'Courier New', monospace;
+  }
+  .link-fallback { font-size: 11px; color: #888; word-break: break-all; margin-top: 20px; text-align: center; }
+  .footer { padding: 24px 30px; border-top: 1px solid #eee; text-align: center; font-size: 11px; color: #aaa; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>THE 42 POST</h1>
+    <p>AI VALUE ALIGNMENT SKILLS</p>
+  </div>
+  <div class="body">
+    <p class="message">
+      Welcome. You've taken the first step toward shaping how AI thinks, feels, and acts.<br><br>
+      Click below to verify your email and activate your account.
+    </p>
+    <p class="message-cn">
+      欢迎来到 THE 42 POST。<br>
+      请点击下方按钮验证你的邮箱，激活账号。
+    </p>
+    <div class="btn-wrap">
+      <a href="${verificationLink}" class="btn">VERIFY MY ACCOUNT</a>
+    </div>
+    <p class="link-fallback">
+      If the button doesn't work, copy this link:<br>
+      ${verificationLink}
+    </p>
+    <p style="font-size:12px;color:#aaa;margin-top:30px;">
+      This link expires in 24 hours. If you didn't create an account, ignore this email.
+    </p>
+  </div>
+  <div class="footer">
+    THE 42 POST &nbsp;·&nbsp; AI Value Alignment Skills
+  </div>
+</div>
+</body>
+</html>`,
+    text: `Welcome to THE 42 POST\n\nVerify your email:\n${verificationLink}\n\nThis link expires in 24 hours.\nIf you didn't create an account, ignore this email.`
   });
 }
 

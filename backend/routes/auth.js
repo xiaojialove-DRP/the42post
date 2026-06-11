@@ -21,8 +21,56 @@ import {
   isValidUsername,
   validatePassword
 } from '../utils/validation.js';
+import { sendVerificationEmail } from '../utils/email.js';
 
 const router = express.Router();
+
+function verifyPageHtml(status, username = '') {
+  const isSuccess = status === 'success';
+  const title = isSuccess ? '邮箱验证成功 | Email Verified' : '验证链接无效 | Invalid Link';
+  const icon = isSuccess ? '✓' : '✕';
+  const headingEn = isSuccess ? 'Email Verified' : 'Invalid Verification Link';
+  const headingCn = isSuccess ? '邮箱已验证' : '验证链接无效';
+  const bodyEn = isSuccess
+    ? `Welcome, ${username}. Your account is now active.`
+    : 'This link is invalid or has already been used.';
+  const bodyCn = isSuccess
+    ? `欢迎，${username}。你的账号已激活。`
+    : '此链接无效或已使用过。';
+  const accentColor = isSuccess ? '#22c55e' : '#ef4444';
+
+  return `<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>${title}</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Courier New', monospace; background: #f9f9f9; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+  .card { background: #fff; border: 2px solid #222; padding: 48px 40px; max-width: 440px; width: 90%; text-align: center; }
+  .icon { font-size: 48px; color: ${accentColor}; margin-bottom: 20px; }
+  .brand { font-size: 11px; letter-spacing: 0.15em; color: #aaa; margin-bottom: 28px; }
+  h1 { font-size: 20px; color: #111; margin-bottom: 8px; }
+  .cn { font-size: 15px; color: #666; margin-bottom: 28px; }
+  .msg-en { font-size: 13px; color: #444; line-height: 1.6; margin-bottom: 6px; }
+  .msg-cn { font-size: 13px; color: #888; line-height: 1.6; margin-bottom: 32px; }
+  a.btn { display: inline-block; background: #111; color: #fff; text-decoration: none; padding: 12px 28px; font-size: 12px; letter-spacing: 0.1em; }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="brand">THE 42 POST</div>
+  <div class="icon">${icon}</div>
+  <h1>${headingEn}</h1>
+  <p class="cn">${headingCn}</p>
+  <p class="msg-en">${bodyEn}</p>
+  <p class="msg-cn">${bodyCn}</p>
+  <a class="btn" href="/">BACK TO HOME</a>
+</div>
+</body>
+</html>`;
+}
 
 // ═══ FORGE SESSION (zero-friction auth for skill creators) ═══
 // Core philosophy: "Everyone is welcome, especially non-engineers."
@@ -220,8 +268,12 @@ router.post('/register', async (req, res, next) => {
 
     const user = result.rows[0];
 
-    // TODO: Send verification email with verificationToken
-    // NOTE: Do not log verification tokens to console - they are sensitive
+    const baseUrl = (process.env.BACKEND_URL || `${req.protocol}://${req.get('host')}`).replace(/\/$/, '');
+    const verificationLink = `${baseUrl}/api/auth/verify/${verificationToken}`;
+    // Fire-and-forget — don't block registration if email fails
+    sendVerificationEmail(user.email, verificationLink).catch(err =>
+      console.error('Verification email failed to send:', err.message)
+    );
 
     res.status(201).json({
       success: true,
@@ -250,7 +302,12 @@ router.get('/verify/:token', async (req, res, next) => {
       [token]
     );
 
+    const acceptsHtml = req.accepts('html');
+
     if (result.rows.length === 0) {
+      if (acceptsHtml) {
+        return res.status(400).send(verifyPageHtml('error'));
+      }
       return res.status(400).json({
         error: 'Invalid token',
         message: 'Verification token not found or already used'
@@ -259,14 +316,13 @@ router.get('/verify/:token', async (req, res, next) => {
 
     const user = result.rows[0];
 
+    if (acceptsHtml) {
+      return res.send(verifyPageHtml('success', user.username));
+    }
     res.json({
       success: true,
       message: 'Email verified successfully',
-      user: {
-        id: user.id,
-        email: user.email,
-        username: user.username
-      }
+      user: { id: user.id, email: user.email, username: user.username }
     });
   } catch (error) {
     next(error);
