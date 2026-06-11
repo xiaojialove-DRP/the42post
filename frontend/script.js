@@ -4875,24 +4875,78 @@ function initSkillForge() {
             }
           }
 
-          // ─── five_layer safety net ───
-          // If the AI generation step failed (flaky network, abandoned tab,
-          // restored draft), agent42StructuredData is empty and the backend
-          // rejects with "five_layer is required". Never block the user at
-          // the last step: build a minimal structure from what they actually
-          // wrote. Marked source:'local_fallback' for later regeneration.
+          // ─── five_layer recovery ladder ───
+          // If the AI generation step failed earlier (flaky network, restored
+          // draft), the structure is empty at publish. Recovery order:
+          //   1. silently retry generation once right here (~20-30s)
+          //   2. still failing → ask the user: retry again, or publish a
+          //      basic version (informed choice, not silent downgrade)
+          //   3. basic version is marked source:'local_fallback' — the
+          //      backend regenerates it in the background after save.
+          const isEmptyLayer = v => !v || typeof v !== 'object' || Object.keys(v).length === 0;
           let effectiveFiveLayer = window.agent42StructuredData;
-          if (!effectiveFiveLayer || typeof effectiveFiveLayer !== 'object'
-              || Object.keys(effectiveFiveLayer).length === 0) {
-            effectiveFiveLayer = {
-              name: skillNameValue,
-              definition: (window.forgeData && window.forgeData.skillDefinition) || skillDesc.slice(0, 300) || skillNameValue,
-              use_when: useCasesValue || '',
-              not_when: disallowedUsesValue || '',
-              principle: (skillDesc || skillNameValue).slice(0, 200),
-              source: 'local_fallback'
+
+          if (isEmptyLayer(effectiveFiveLayer)) {
+            const cnUI = (typeof currentLang !== 'undefined' && currentLang === 'cn');
+            const regenName = skillNameValue;
+            const regenDef = (window.forgeData && window.forgeData.skillDefinition)
+              || skillDesc.slice(0, 300) || skillNameValue;
+            const regenLang = /[一-鿿]/.test(regenName + regenDef) ? 'zh' : 'en';
+
+            const tryRegenerate = async () => {
+              const resp = await fetch(`${ApiClient.BASE_URL}/forge/preview`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${ApiClient.getToken() || ''}`
+                },
+                body: JSON.stringify({
+                  name: regenName,
+                  definition: regenDef,
+                  domain: selectedDomain || 'ideas',
+                  language: regenLang
+                })
+              });
+              if (!resp.ok) return null;
+              const d = await resp.json().catch(() => null);
+              const skill = d && (d.data || d);
+              return isEmptyLayer(skill) ? null : skill;
             };
-            console.warn('⚠ five_layer was empty at publish — using local fallback built from user input');
+
+            // Attempt 1 — automatic
+            publishBtn.textContent = cnUI ? '⟳ 正在补全 Skill 结构…' : '⟳ Completing skill structure…';
+            try { effectiveFiveLayer = await tryRegenerate(); } catch (e) { effectiveFiveLayer = null; }
+
+            // Attempt 2 — user-approved retry
+            if (isEmptyLayer(effectiveFiveLayer)) {
+              const retry = confirm(cnUI
+                ? 'AI 结构生成未完成（可能是网络波动）。\n\n点「确定」再试一次（约30秒）；\n点「取消」先发布基础版，系统稍后会自动补全结构。'
+                : 'AI structure generation didn\'t finish (possibly a network hiccup).\n\nOK = try once more (~30s);\nCancel = publish a basic version now — the system will complete the structure automatically afterwards.');
+              if (retry) {
+                publishBtn.textContent = cnUI ? '⟳ 再次生成中…' : '⟳ Generating again…';
+                try { effectiveFiveLayer = await tryRegenerate(); } catch (e) { effectiveFiveLayer = null; }
+              }
+            }
+
+            if (!isEmptyLayer(effectiveFiveLayer)) {
+              // Regeneration succeeded — adopt it for the rest of the flow
+              window.agent42StructuredData = effectiveFiveLayer;
+              if (effectiveFiveLayer.ready_to_use_prompt) {
+                window.agent42ReadyToUsePrompt = effectiveFiveLayer.ready_to_use_prompt;
+              }
+            } else {
+              // Basic version, marked for server-side background regeneration
+              effectiveFiveLayer = {
+                name: regenName,
+                definition: regenDef,
+                use_when: useCasesValue || '',
+                not_when: disallowedUsesValue || '',
+                principle: (skillDesc || regenName).slice(0, 200),
+                source: 'local_fallback'
+              };
+              console.warn('⚠ five_layer empty after retries — publishing basic version, backend will regenerate');
+            }
+            publishBtn.textContent = '🔄 保存到数据库...';
           }
 
           const backendPayload = {

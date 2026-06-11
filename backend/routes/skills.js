@@ -708,6 +708,43 @@ router.post('/', optionalAuth, rateLimitForge, async (req, res, next) => {
         }
       });
 
+      // ─── Background: regenerate five_layer for basic (fallback) publishes ───
+      // When the client published with source:'local_fallback' (its AI
+      // generation failed), rebuild the real structure here and upgrade the
+      // record. Quality self-heals minutes after publish, no user action.
+      if (five_layer && five_layer.source === 'local_fallback') {
+        setImmediate(async () => {
+          try {
+            const { generateFlatFiveLayerWithClaude } = await import('../utils/skillGeneration.js');
+            const regenName = title_cn || title;
+            const regenDef = (five_layer.definition || description_cn || description || regenName);
+            const regenLang = /[一-鿿]/.test(regenName + regenDef) ? 'zh' : 'en';
+            const result = await generateFlatFiveLayerWithClaude(
+              String(regenName).trim(),
+              String(regenDef).trim(),
+              domain || 'ideas',
+              '',
+              regenLang
+            );
+            if (result && result.success && result.data && Object.keys(result.data).length) {
+              await db.query(
+                `UPDATE skills SET five_layer=$1,
+                   ready_to_use_prompt=COALESCE(ready_to_use_prompt, $2),
+                   updated_at=CURRENT_TIMESTAMP
+                 WHERE id=$3`,
+                [JSON.stringify(result.data), result.data.ready_to_use_prompt || null, skillId]
+              );
+              await getCache().invalidatePattern('skills_list:*');
+              console.log(`[five_layer] Background regeneration complete for ${skillId}`);
+            } else {
+              console.warn(`[five_layer] Background regeneration returned empty for ${skillId}`);
+            }
+          } catch (regenErr) {
+            console.warn(`[five_layer] Background regeneration failed for ${skillId}:`, regenErr.message);
+          }
+        });
+      }
+
       // ─── Background: backfill translation if skill was saved without it ───
       if (needsTranslation) {
         setImmediate(async () => {
