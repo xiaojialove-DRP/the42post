@@ -4875,13 +4875,33 @@ function initSkillForge() {
             }
           }
 
+          // ─── five_layer safety net ───
+          // If the AI generation step failed (flaky network, abandoned tab,
+          // restored draft), agent42StructuredData is empty and the backend
+          // rejects with "five_layer is required". Never block the user at
+          // the last step: build a minimal structure from what they actually
+          // wrote. Marked source:'local_fallback' for later regeneration.
+          let effectiveFiveLayer = window.agent42StructuredData;
+          if (!effectiveFiveLayer || typeof effectiveFiveLayer !== 'object'
+              || Object.keys(effectiveFiveLayer).length === 0) {
+            effectiveFiveLayer = {
+              name: skillNameValue,
+              definition: (window.forgeData && window.forgeData.skillDefinition) || skillDesc.slice(0, 300) || skillNameValue,
+              use_when: useCasesValue || '',
+              not_when: disallowedUsesValue || '',
+              principle: (skillDesc || skillNameValue).slice(0, 200),
+              source: 'local_fallback'
+            };
+            console.warn('⚠ five_layer was empty at publish — using local fallback built from user input');
+          }
+
           const backendPayload = {
             title: titleEn,
             title_cn: titleCn,
             description: descEn,
             description_cn: descCn,
             domain: selectedDomain || 'ideas',
-            five_layer: window.agent42StructuredData || {},
+            five_layer: effectiveFiveLayer,
             // forge_mode removed - agents are no longer part of the product
             source_agent_id: sourceData.sourceAgentId || agentName,
             commercial_use: commercialValue,
