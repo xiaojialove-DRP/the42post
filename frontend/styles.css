@@ -1586,6 +1586,15 @@ body[data-lang="cn"] .voices-header-text {
   visibility: hidden;
 }
 
+/* CSS-only fallback: hide the ghost whenever the textarea has ANY
+   content, even when the input event never fired (iOS dictation,
+   paste via menu, private-mode quirks). Needs placeholder=" " on the
+   textarea for :placeholder-shown to be meaningful. */
+.chat-bubble-wrap:has(.chat-bubble-input:not(:placeholder-shown)) .chat-bubble-placeholder {
+  opacity: 0;
+  visibility: hidden;
+}
+
 /* The e.g. demonstration line — part of the ghost, fainter */
 .chat-bubble-example {
   font-family: var(--font-serif);
