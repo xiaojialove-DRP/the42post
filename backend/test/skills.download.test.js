@@ -63,14 +63,14 @@ describe('GET /api/download/:id?format=markdown', () => {
     expect(res.headers['content-type']).toMatch(/text\/markdown/i);
   });
 
-  it('Content-Disposition filename uses soul_hash for security', async () => {
+  it('Content-Disposition filename is ASCII-safe and skill-named', async () => {
     const res = await request(app)
       .get(`/api/download/${forgedSkill.id}?format=markdown`)
       .set('X-Anonymous-Id', 'dl-anon-1');
 
-    // Filename uses soul_hash (not skill title) to avoid HTTP header encoding issues
-    // with special characters like Chinese. Format: "The42Post_SOUL_<hash>.md"
-    expect(res.headers['content-disposition']).toMatch(/The42Post_SOUL_.*\.md/);
+    // New format (e83f21a): "42post-skill-<safe-title>.md" — title is
+    // sanitized to ASCII so Chinese titles fall back safely.
+    expect(res.headers['content-disposition']).toMatch(/42post-skill-.*\.md/);
   });
 
   it('markdown body contains the skill title', async () => {
@@ -81,33 +81,39 @@ describe('GET /api/download/:id?format=markdown', () => {
     expect(res.text).toContain('Download Test Skill');
   });
 
-  it('markdown body contains the soul_hash', async () => {
+  it('markdown body carries the protocol footer (provenance)', async () => {
     const res = await request(app)
       .get(`/api/download/${forgedSkill.id}?format=markdown`)
       .set('X-Anonymous-Id', 'dl-anon-1');
 
-    expect(res.text).toContain(forgedSkill.soul_hash);
+    // New format drops the raw soul_hash from the body in favour of a
+    // human-readable provenance footer.
+    expect(res.text).toContain('Human Semantic Capital Protocol');
+    expect(res.text).toContain('THE 42 POST');
   });
 
-  it('markdown body contains all five-layer section headers', async () => {
+  it('markdown body contains the new reader-friendly section headers', async () => {
     const res = await request(app)
       .get(`/api/download/${forgedSkill.id}?format=markdown`)
       .set('X-Anonymous-Id', 'dl-anon-1');
 
     const md = res.text;
-    expect(md).toContain('Layer 1');
-    expect(md).toContain('Layer 2');
-    expect(md).toContain('Layer 3');
-    expect(md).toContain('Layer 4');
-    expect(md).toContain('Layer 5');
+    // New format (e83f21a): named sections replaced "Layer 1..5"
+    expect(md).toContain('Core Belief');
+    expect(md).toContain('When to Use / Avoid');
+    expect(md).toContain("How to Know It's Working");
+    expect(md).toContain('Cultural Adaptations');
+    expect(md).toContain('Licensing');
   });
 
-  it('markdown body includes the ready-to-prompt section', async () => {
+  it('markdown body opens with the Ready to Use system-prompt block', async () => {
     const res = await request(app)
       .get(`/api/download/${forgedSkill.id}?format=markdown`)
       .set('X-Anonymous-Id', 'dl-anon-1');
 
-    expect(res.text).toContain('READY TO PROMPT');
+    expect(res.text).toContain('Ready to Use');
+    // The copy-paste hint mentions it works as a System Prompt
+    expect(res.text).toMatch(/System Prompt/i);
   });
 });
 
