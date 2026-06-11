@@ -738,20 +738,12 @@ export function generateEmailTemplate(
         </ol>
       </div>
 
-      <!-- COMMUNITY DISCOVERY -->
-      <div style="margin-top: 20px; padding: 18px 20px; background: #faf5ed; border: 1px solid #f0d090; border-radius: 4px;">
-        <div style="font-family: 'Courier New', monospace; font-size: 10px; letter-spacing: 2px; color: #8a7c6e; margin-bottom: 10px;">探索社区 · EXPLORE THE COMMUNITY</div>
-        <p style="font-size: 13px; color: #5a4f44; line-height: 1.8; margin-bottom: 14px;">你的 Skill 已加入社区。每一次有人用它测试 AI，都是你的视角在真实世界里发生作用。去档案馆看看其他创作者在铸造什么——</p>
-        <a href="${archiveUrl}" style="display: inline-block; font-size: 13px; color: #2a2018; font-weight: 600; text-decoration: none;">去档案馆看全部 →</a>
-      </div>
     </div>
 
     <!-- FOOTER -->
     <div class="email-footer">
-      <p><a href="${siteUrl}" style="color: #222; text-decoration: none; font-weight: bold;">THE 42 POST</a></p>
-      <p>Forging Human Wisdom for a Better AI Future</p>
-      <p style="margin-top: 15px; border-top: 1px solid #ddd; padding-top: 15px;">感谢您的参与。</p>
-      <p>© 2026 <a href="${siteUrl}" style="color: #999; text-decoration: none;">the42post.com</a> · All rights reserved</p>
+      <p>感谢您的参与！</p>
+      <p style="margin-top: 8px;"><a href="${siteUrl}" style="color: #666; text-decoration: none;">${siteUrl.replace('https://', '')}</a></p>
     </div>
   </div>
 </body>
