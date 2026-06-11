@@ -319,6 +319,21 @@ export function generateEmailTemplate(
   const glyph  = DOMAIN_GLYPH[domainKey]  || DOMAIN_GLYPH.ideas;
   const domainLabel = domainKey.toUpperCase();
 
+  // Compute 8%-tinted background gradient for this domain
+  const DOMAIN_RGB = {
+    safety:[126,150,168], science:[143,174,126], narrative:[201,160,106],
+    design:[217,141,118], visual:[168,146,196],  experience:[196,163,92],
+    sound:[127,168,184],  ideas:[184,162,60],    history:[160,138,110], fun:[204,126,154]
+  };
+  const [dr, dg, db] = DOMAIN_RGB[domainKey] || DOMAIN_RGB.ideas;
+  const mixRgb = (hex, r, g, b, t) => {
+    const br = parseInt(hex.slice(1,3),16), bg_ = parseInt(hex.slice(3,5),16), bb = parseInt(hex.slice(5,7),16);
+    return `rgb(${Math.round(br*(1-t)+r*t)},${Math.round(bg_*(1-t)+g*t)},${Math.round(bb*(1-t)+b*t)})`;
+  };
+  const cardBg1 = mixRgb('#fbf6ee', dr, dg, db, 0.056);
+  const cardBg2 = mixRgb('#f4ead8', dr, dg, db, 0.08);
+  const cardBg3 = mixRgb('#f0e2ce', dr, dg, db, 0.096);
+
   // This returns the same HTML as email-template.html with template variables replaced
   return `<!DOCTYPE html>
 <html lang="zh-CN">
@@ -659,7 +674,7 @@ export function generateEmailTemplate(
           display: inline-block;
           width: 260px;
           padding: 9px;
-          background: linear-gradient(150deg, #fbf6ee 0%, #f4ead8 55%, #f0e2ce 100%);
+          background: linear-gradient(150deg, ${cardBg1} 0%, ${cardBg2} 55%, ${cardBg3} 100%);
           border: 1px solid ${accent}72;
           border-radius: 12px;
           box-shadow: 0 6px 28px rgba(42,32,24,0.14);
