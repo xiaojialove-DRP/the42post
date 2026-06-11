@@ -300,6 +300,7 @@ export function generateEmailTemplate(
   const langchainUrl = downloadUrls.langchain || '#';
   const mcpUrl = downloadUrls.mcp || '#';
   const certificateUrl = downloadUrls.certificate || '#';
+  const siteUrl = downloadUrls.site || 'https://the42post.com';
 
   // This returns the same HTML as email-template.html with template variables replaced
   return `<!DOCTYPE html>
@@ -740,10 +741,10 @@ export function generateEmailTemplate(
 
     <!-- FOOTER -->
     <div class="email-footer">
-      <p><strong>THE 42 POST</strong></p>
+      <p><a href="${siteUrl}" style="color: #222; text-decoration: none; font-weight: bold;">THE 42 POST</a></p>
       <p>Forging Human Wisdom for a Better AI Future</p>
       <p style="margin-top: 15px; border-top: 1px solid #ddd; padding-top: 15px;">有任何问题？直接回复这封邮件即可。</p>
-      <p>© 2026 THE 42 POST · All rights reserved</p>
+      <p>© 2026 <a href="${siteUrl}" style="color: #999; text-decoration: none;">the42post.com</a> · All rights reserved</p>
     </div>
   </div>
 </body>

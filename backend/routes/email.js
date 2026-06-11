@@ -62,12 +62,13 @@ router.post('/send-forge-success', async (req, res, next) => {
     };
 
     // Construct download URLs
-    const apiBaseUrl = process.env.FRONTEND_URL || 'https://the42post.com';
+    const apiBaseUrl = (process.env.FRONTEND_URL || 'https://the42post.com').replace(/\/$/, '');
     const downloadUrls = {
       markdown: `${apiBaseUrl}/api/download/${skillId}?format=markdown`,
       langchain: `${apiBaseUrl}/api/download/${skillId}?format=langchain`,
       mcp: `${apiBaseUrl}/api/download/${skillId}?format=mcp`,
-      certificate: `${apiBaseUrl}/api/download/${skillId}?format=certificate`
+      certificate: `${apiBaseUrl}/api/download/${skillId}?format=certificate`,
+      site: apiBaseUrl
     };
 
     const emailHtml = generateEmailTemplate(
