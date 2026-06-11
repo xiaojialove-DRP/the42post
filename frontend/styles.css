@@ -10394,9 +10394,10 @@ button.generating {
   margin: 0 auto 18px !important;
   padding: 9px;
   box-sizing: border-box;
-  background:
-    radial-gradient(120% 90% at 50% 0%, color-mix(in srgb, var(--card-accent, #c9b458) 14%, transparent) 0%, transparent 55%),
-    linear-gradient(150deg, #fbf6ee 0%, #f4ead8 55%, #f0e2ce 100%);
+  background: linear-gradient(150deg,
+    color-mix(in srgb, var(--card-accent, #b8a23c) 5.6%, #fbf6ee) 0%,
+    color-mix(in srgb, var(--card-accent, #b8a23c) 8%,   #f4ead8) 55%,
+    color-mix(in srgb, var(--card-accent, #b8a23c) 9.6%, #f0e2ce) 100%);
   border: 1px solid color-mix(in srgb, var(--card-accent, #8a7c6e) 45%, #d8ccba);
   border-radius: 12px;
   box-shadow: 0 6px 28px rgba(42,32,24,0.14), 0 1px 4px rgba(42,32,24,0.08);
