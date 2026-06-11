@@ -784,8 +784,10 @@ export function generateEmailTemplate(
     <!-- FOOTER -->
     <div class="email-footer">
       <p>感谢您的参与！</p>
-      <p style="margin-top: 6px; color: #aaa;">Forging Human Wisdom for a Better AI Future</p>
-      <p style="margin-top: 10px;"><a href="${siteUrl}" style="color: #666; text-decoration: none;">www.the42post.com</a></p>
+      <p style="color: #bbb; margin-top: 2px;">Thank you for your participation.</p>
+      <p style="margin-top: 14px;"><a href="${siteUrl}" style="color: #666; text-decoration: none; font-weight: bold;">www.the42post.com</a></p>
+      <p style="margin-top: 4px; color: #aaa;">Forging Human Wisdom for a Better AI Future</p>
+      <p style="margin-top: 14px; border-top: 1px solid #eee; padding-top: 12px; color: #ccc; font-size: 10px;">© 2026 The 42 Post · All rights reserved</p>
     </div>
   </div>
 </body>
