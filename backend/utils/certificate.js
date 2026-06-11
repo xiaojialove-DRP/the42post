@@ -301,6 +301,7 @@ export function generateEmailTemplate(
   const mcpUrl = downloadUrls.mcp || '#';
   const certificateUrl = downloadUrls.certificate || '#';
   const siteUrl = downloadUrls.site || 'https://the42post.com';
+  const archiveUrl = `${siteUrl}/archive.html`;
 
   // This returns the same HTML as email-template.html with template variables replaced
   return `<!DOCTYPE html>
@@ -357,12 +358,12 @@ export function generateEmailTemplate(
     }
 
     .congratulation {
-      padding: 20px;
-      background: #f0f8f0;
-      border-left: 4px solid #22c55e;
+      padding: 20px 24px;
+      background: #eef7f1;
       margin: 20px 0;
       font-size: 13px;
       line-height: 1.8;
+      border-radius: 2px;
     }
 
     .skill-card-section {
@@ -734,8 +735,14 @@ export function generateEmailTemplate(
           <li>选择一种格式下载，集成到你的 Agent 系统</li>
           <li>在 Playground 体验你的 Skill 效果</li>
           <li>分享你的 Skill 链接到社区，让更多人发现它</li>
-          <li>定期检查 Impact Dashboard，看你的 Skill 如何被使用</li>
         </ol>
+      </div>
+
+      <!-- COMMUNITY DISCOVERY -->
+      <div style="margin-top: 20px; padding: 18px 20px; background: #faf5ed; border: 1px solid #f0d090; border-radius: 4px;">
+        <div style="font-family: 'Courier New', monospace; font-size: 10px; letter-spacing: 2px; color: #8a7c6e; margin-bottom: 10px;">探索社区 · EXPLORE THE COMMUNITY</div>
+        <p style="font-size: 13px; color: #5a4f44; line-height: 1.8; margin-bottom: 14px;">你的 Skill 已加入社区。每一次有人用它测试 AI，都是你的视角在真实世界里发生作用。去档案馆看看其他创作者在铸造什么——</p>
+        <a href="${archiveUrl}" style="display: inline-block; font-size: 13px; color: #2a2018; font-weight: 600; text-decoration: none;">去档案馆看全部 →</a>
       </div>
     </div>
 
@@ -743,7 +750,7 @@ export function generateEmailTemplate(
     <div class="email-footer">
       <p><a href="${siteUrl}" style="color: #222; text-decoration: none; font-weight: bold;">THE 42 POST</a></p>
       <p>Forging Human Wisdom for a Better AI Future</p>
-      <p style="margin-top: 15px; border-top: 1px solid #ddd; padding-top: 15px;">有任何问题？直接回复这封邮件即可。</p>
+      <p style="margin-top: 15px; border-top: 1px solid #ddd; padding-top: 15px;">感谢您的参与。</p>
       <p>© 2026 <a href="${siteUrl}" style="color: #999; text-decoration: none;">the42post.com</a> · All rights reserved</p>
     </div>
   </div>
