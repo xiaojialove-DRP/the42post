@@ -9875,8 +9875,10 @@ function initVoiceInput() {
   // user switched the page to 中文. Page toggle wins over box content.
   function getLang(targetEl) {
     const text = (targetEl && targetEl.value || '').trim();
-    if (/[一-鿿]/.test(text)) return 'zh-CN';
-    if ((document.body.dataset.lang || 'en') === 'cn') return 'zh-CN';
+    if (/[一-鿿㐀-䶿]/.test(text)) return 'zh-CN';
+    const pageLang = (typeof currentLang !== 'undefined' ? currentLang : null)
+                     || document.body.dataset.lang || 'en';
+    if (pageLang === 'cn') return 'zh-CN';
     if ((navigator.language || '').toLowerCase().startsWith('zh')) return 'zh-CN';
     return 'en-US';
   }
@@ -9946,9 +9948,9 @@ function initVoiceInput() {
         rec.start();
         listening = true;
         setBtn('recording');
-        // Show which language we're listening in — makes a wrong pick
-        // obvious instead of mysterious garbage output.
-        btn.title = rec.lang === 'zh-CN' ? '正在听写：中文' : 'Listening: English';
+        const isChinese = rec.lang === 'zh-CN';
+        btn.dataset.voiceLang = isChinese ? '中' : 'EN';
+        btn.title = isChinese ? '正在听写：中文' : 'Listening: English';
       } catch (e) {
         listening = false;
         setBtn('idle');
@@ -9960,6 +9962,7 @@ function initVoiceInput() {
       rec = null;
       listening = false;
       setBtn('idle');
+      delete btn.dataset.voiceLang;
       try { old && old.stop(); } catch (_) {}
     }
 

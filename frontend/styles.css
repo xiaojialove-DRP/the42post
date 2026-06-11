@@ -1870,6 +1870,22 @@ body[data-lang="cn"] .voices-header-text {
   animation: voice-pulse 1.2s ease-in-out infinite;
 }
 
+.btn-voice-input.recording::after {
+  content: attr(data-voice-lang);
+  position: absolute;
+  top: -7px;
+  right: -7px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0;
+  background: #e53935;
+  color: #fff;
+  border-radius: 20px;
+  padding: 1px 5px;
+  pointer-events: none;
+  font-family: var(--font-mono, monospace);
+}
+
 .btn-voice-input.voice-ready {
   border-color: #43a047;
   color: #43a047;
