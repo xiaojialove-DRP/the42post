@@ -286,7 +286,8 @@ export function generateEmailTemplate(
   soulHash,
   createdDate,
   downloadUrls = {},
-  cardImageBase64 = null
+  cardImageBase64 = null,
+  blessing = ''
 ) {
   const title = skillData.title || 'Untitled Skill';
   const author = skillData.author || skillData.username || 'Creator';
@@ -723,6 +724,11 @@ export function generateEmailTemplate(
               padding: 2px 10px;
               border-radius: 20px;
             ">${domainLabel}</div>
+
+            ${blessing ? `<!-- blessing -->
+            <div style="font-size: 9px; font-style: italic; color: #5a4f44; text-align: center; line-height: 1.55; padding: 2px 10px; font-family: Georgia, serif;">
+              <span style="color: ${accent};">“</span>${esc(blessing)}<span style="color: ${accent};">”</span>
+            </div>` : ''}
 
             <!-- divider -->
             <div style="width: 80%; height: 1px; background: ${accent}30; margin: 2px 0;"></div>

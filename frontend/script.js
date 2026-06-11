@@ -5223,27 +5223,71 @@ function showForgeCompletion(skillData, soulHash) {
   const forgeNav = document.querySelector('.forge-nav');
   const skillPackageSection = document.getElementById('skillPackageSection');
 
-  // Send forge success email with card image (async, non-blocking)
-  // Surface any failure to the user via a small banner — silent failure was
-  // the reason users kept reporting "my email never arrived".
+  // ── Blessing: fetch once, share between card and email ──
+  // Fallback lines are shown on the card immediately; the AI may upgrade them.
+  // The email waits up to 3.5 s so it gets the same line as the card.
+  const _isCn = (typeof currentLang !== 'undefined' && currentLang === 'cn');
+  const _domainKeyEarly = ((skillData.domain || 'ideas')).toLowerCase();
+  const _BLESSING_FALLBACK = {
+    safety:     { en: 'A boundary drawn with care protects more than it forbids.', cn: '用心划下的边界，守护多于禁止。' },
+    science:    { en: 'Curiosity, given structure, becomes knowledge that lasts.', cn: '好奇心有了结构，便成为长久的知识。' },
+    narrative:  { en: 'Whoever shapes the story shapes what can be imagined.', cn: '塑造故事的人，塑造了想象的边界。' },
+    design:     { en: 'Good judgment about form is judgment about life.', cn: '对形式的判断，就是对生活的判断。' },
+    visual:     { en: 'Teaching a machine to see begins with knowing how you look.', cn: '教机器看见，先看清自己如何凝视。' },
+    experience: { en: 'What you have lived through cannot be scraped — only given.', cn: '亲历过的东西无法被抓取，只能被给予。' },
+    sound:      { en: 'Some truths arrive only through listening.', cn: '有些真相，只有倾听才能抵达。' },
+    ideas:      { en: 'One honest thought, well-formed, outlives a thousand prompts.', cn: '一个诚实而成形的想法，胜过千条指令。' },
+    history:    { en: 'Memory structured is wisdom transferable.', cn: '被结构化的记忆，是可传递的智慧。' },
+    fun:        { en: 'Play is the most serious way humans think.', cn: '玩耍，是人类最严肃的思考方式。' }
+  };
+  const _fb = _BLESSING_FALLBACK[_domainKeyEarly] || _BLESSING_FALLBACK.ideas;
+  const _fallbackLine = _isCn ? _fb.cn : _fb.en;
+
+  // Pre-populate card with fallback so it's never blank
+  const _blessingEl = document.getElementById('cardBlessing');
+  if (_blessingEl) _blessingEl.textContent = _fallbackLine;
+
+  // Fetch AI blessing; resolves with the best line available
+  const _blessingPromise = (async () => {
+    try {
+      const resp = await fetch(`${ApiClient.BASE_URL}/forge/blessing`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          skill_name: skillData.title || skillData.titleCn || '',
+          definition: (skillData.desc || skillData.descCn || '').slice(0, 300),
+          language: _isCn ? 'zh' : 'en'
+        })
+      });
+      if (!resp.ok) return _fallbackLine;
+      const data = await resp.json();
+      const line = (data.blessing || '').trim();
+      return (line && line.length <= 90) ? line : _fallbackLine;
+    } catch (e) { return _fallbackLine; }
+  })();
+
+  // Update card when AI responds (may arrive after email is already sent)
+  _blessingPromise.then(line => { if (_blessingEl) _blessingEl.textContent = line; });
+
+  // Send forge success email — waits up to 3.5 s for the blessing
   if (skillData && skillData.email) {
     (async () => {
       try {
-        // Ensure we have required fields for email
         const emailSkillTitle = skillData.title || skillData.titleCn || 'Unnamed Skill';
         const emailSoulHash = soulHash || skillData.soulHash || skillData.soul_hash || 'SOUL_UNKNOWN';
         const emailSkillId = skillData.id || skillData.backendId;
 
         if (!emailSkillTitle || !emailSoulHash) {
           console.warn('⚠️ Missing required email fields:', { title: emailSkillTitle, hash: emailSoulHash });
-          showEmailStatusBanner({
-            success: false,
-            error: 'Skill title or soul-hash missing for email'
-          }, skillData.email);
+          showEmailStatusBanner({ success: false, error: 'Skill title or soul-hash missing for email' }, skillData.email);
           return;
         }
 
-        // Send forge success email (without card image to avoid size issues)
+        const blessing = await Promise.race([
+          _blessingPromise,
+          new Promise(r => setTimeout(() => r(_fallbackLine), 3500))
+        ]);
+
         const emailResult = await sendForgeSuccessEmail({
           recipientEmail: skillData.email,
           recipientName: skillData.author || skillData.username,
@@ -5251,10 +5295,10 @@ function showForgeCompletion(skillData, soulHash) {
           skillId: emailSkillId,
           soulHash: emailSoulHash,
           createdDate: new Date().toISOString(),
-          domain: skillData.domain || 'ideas'
+          domain: skillData.domain || 'ideas',
+          blessing
         });
 
-        // Show confirmation banner on success, hint on failure
         showEmailStatusBanner(emailResult, skillData.email);
       } catch (err) {
         console.error('Email sending failed:', err.message);
@@ -5307,8 +5351,7 @@ function showForgeCompletion(skillData, soulHash) {
       const cnMode = (typeof currentLang !== 'undefined' && currentLang === 'cn');
       domainEl.textContent = cnMode ? `${theme.cn} · ${theme.en}` : theme.en;
     }
-    // AI one-line blessing — fetched async; curated fallback per domain.
-    fillCardBlessing(skillData, domainKey);
+    // blessing is pre-populated above (before email send) — no extra call needed
     // Shorten soul hash display (show only first 14 chars)
     // Full hash format from backend: SOUL_[16-char-hash]_[timestamp]
     // Display format: first 14 characters for consistency across UI
@@ -5449,7 +5492,8 @@ async function sendForgeSuccessEmail(options) {
     soulHash,
     createdDate = new Date().toISOString(),
     cardImageBase64,
-    domain = 'ideas'
+    domain = 'ideas',
+    blessing = ''
   } = options;
 
   try {
@@ -5468,7 +5512,8 @@ async function sendForgeSuccessEmail(options) {
           soulHash,
           createdDate,
           cardImageBase64,
-          domain
+          domain,
+          blessing
         })
       }
     );

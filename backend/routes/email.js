@@ -24,7 +24,8 @@ router.post('/send-forge-success', async (req, res, next) => {
       soulHash,
       createdDate,
       cardImageBase64,
-      domain
+      domain,
+      blessing
     } = req.body;
 
     // Validation
@@ -78,7 +79,8 @@ router.post('/send-forge-success', async (req, res, next) => {
       soulHash,
       createdDate || new Date().toISOString(),
       downloadUrls,
-      cardImageBase64
+      cardImageBase64,
+      blessing || ''
     );
 
     // Send email
