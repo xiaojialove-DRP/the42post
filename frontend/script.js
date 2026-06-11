@@ -5250,7 +5250,8 @@ function showForgeCompletion(skillData, soulHash) {
           skillTitle: emailSkillTitle,
           skillId: emailSkillId,
           soulHash: emailSoulHash,
-          createdDate: new Date().toISOString()
+          createdDate: new Date().toISOString(),
+          domain: skillData.domain || 'ideas'
         });
 
         // Show confirmation banner on success, hint on failure
@@ -5447,7 +5448,8 @@ async function sendForgeSuccessEmail(options) {
     skillId,
     soulHash,
     createdDate = new Date().toISOString(),
-    cardImageBase64
+    cardImageBase64,
+    domain = 'ideas'
   } = options;
 
   try {
@@ -5465,7 +5467,8 @@ async function sendForgeSuccessEmail(options) {
           skillId,
           soulHash,
           createdDate,
-          cardImageBase64
+          cardImageBase64,
+          domain
         })
       }
     );

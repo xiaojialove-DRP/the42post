@@ -303,6 +303,22 @@ export function generateEmailTemplate(
   const siteUrl = downloadUrls.site || 'https://the42post.com';
   const archiveUrl = `${siteUrl}/archive.html`;
 
+  // Domain accent colours — matches styles.css card themes
+  const DOMAIN_ACCENT = {
+    safety: '#7e96a8', science: '#8fae7e', narrative: '#c9a06a',
+    design: '#d98d76', visual: '#a892c4', experience: '#c4a35c',
+    sound: '#7fa8b8', ideas: '#b8a23c', history: '#a08a6e', fun: '#cc7e9a'
+  };
+  const DOMAIN_GLYPH = {
+    safety: '⛨', science: '✶', narrative: '✒', design: '◈',
+    visual: '◉', experience: '❖', sound: '♫', ideas: '✦',
+    history: '⌛', fun: '✺'
+  };
+  const domainKey = (skillData.domain || 'ideas').toLowerCase();
+  const accent = DOMAIN_ACCENT[domainKey] || DOMAIN_ACCENT.ideas;
+  const glyph  = DOMAIN_GLYPH[domainKey]  || DOMAIN_GLYPH.ideas;
+  const domainLabel = domainKey.toUpperCase();
+
   // This returns the same HTML as email-template.html with template variables replaced
   return `<!DOCTYPE html>
 <html lang="zh-CN">
@@ -638,52 +654,77 @@ export function generateEmailTemplate(
           <img src="${cardImageBase64}" alt="Creator Card" style="max-width: 100%; height: auto; border-radius: 4px; display: inline-block;">
         </div>
         ` : `
-        <!-- COMMEMORATIVE CARD - Creator's Certificate (HTML Fallback) -->
-        <div class="commemorative-card">
-          <div class="card-border-outer">
-            <div class="card-border-inner">
-              <!-- Header -->
-              <div class="card-title-main">The 42 Post</div>
-              <div class="card-header">Creator's Certificate · 创作者证书</div>
+        <!-- COMMEMORATIVE CARD - domain-themed warm version -->
+        <div style="
+          display: inline-block;
+          width: 260px;
+          padding: 9px;
+          background: linear-gradient(150deg, #fbf6ee 0%, #f4ead8 55%, #f0e2ce 100%);
+          border: 1px solid ${accent}72;
+          border-radius: 12px;
+          box-shadow: 0 6px 28px rgba(42,32,24,0.14);
+          text-align: center;
+          font-family: 'Courier New', monospace;
+          box-sizing: border-box;
+        ">
+          <!-- inner frame -->
+          <div style="
+            border: 1px solid ${accent}60;
+            outline: 1px solid ${accent}28;
+            outline-offset: 2px;
+            border-radius: 7px;
+            padding: 16px 14px 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 7px;
+          ">
+            <!-- brand -->
+            <div style="font-size: 10px; font-weight: 700; letter-spacing: 3px; color: #3c3028; text-transform: uppercase;">THE 42 POST</div>
+            <div style="font-size: 10px; font-style: italic; color: #8a7c6e; letter-spacing: 0.3px;">Creator's Certificate</div>
 
-              <!-- Crest/Icon -->
-              <div class="card-divider-top"></div>
-              <div class="card-crest">✨</div>
-              <div class="card-divider-line"></div>
+            <!-- domain seal -->
+            <div style="
+              width: 38px; height: 38px;
+              display: flex; align-items: center; justify-content: center;
+              font-size: 18px;
+              color: ${accent};
+              border: 2px solid ${accent}b0;
+              border-radius: 50%;
+              background: ${accent}12;
+              transform: rotate(-6deg);
+              margin: 4px 0;
+            ">${glyph}</div>
 
-              <!-- Creator Role -->
-              <div class="card-creator-role">Community Creator</div>
+            <!-- skill name -->
+            <div style="font-size: 14px; font-weight: 700; color: #2a2018; font-family: Georgia, serif; line-height: 1.3;">${esc(title)}</div>
 
-              <!-- Skill Info -->
-              <div class="card-skill-name">${esc(title)}</div>
-              <div class="card-meta">
-                <p>Created by: ${esc(author)}</p>
-              </div>
+            <!-- domain pill -->
+            <div style="
+              font-size: 8px; font-weight: 700; letter-spacing: 2.4px;
+              text-transform: uppercase;
+              color: ${accent};
+              border: 1px solid ${accent}90;
+              padding: 2px 10px;
+              border-radius: 20px;
+            ">${domainLabel}</div>
 
-              <!-- Rights Info -->
-              <div class="card-rights">
-                License: ⊕ Open · Remix: ✓
-              </div>
+            <!-- divider -->
+            <div style="width: 80%; height: 1px; background: ${accent}30; margin: 2px 0;"></div>
 
-              <!-- Soul Hash (Prominent) -->
-              <div class="card-divider-bottom"></div>
-              <div style="text-align: center; margin: 12px 0;">
-                <div style="font-size: 9px; color: #999; letter-spacing: 2px; margin-bottom: 6px; text-transform: uppercase;">Soul-Hash</div>
-                <div style="font-size: 16px; font-family: 'JetBrains Mono', monospace; font-weight: 600; letter-spacing: 1px; color: #333; word-break: break-all;">${esc(soulHash)}</div>
-              </div>
-
-              <!-- Rights Info and Date -->
-              <div style="font-size: 10px; color: #888; text-align: center; margin: 8px 0;">
-                License: ⊕ Open · Remix: ✓
-              </div>
-              <div class="card-forged-date">Forged: ${formattedDate}</div>
-
-              <!-- Divider -->
-              <div class="card-divider-bottom"></div>
-
-              <!-- Footer -->
-              <div class="card-footer">www.the42post.com</div>
+            <!-- creator + date -->
+            <div style="font-size: 9px; color: #8a7c6e; letter-spacing: 0.6px;">
+              Forged by ${esc(author)} · ${formattedDate}
             </div>
+
+            <!-- soul hash -->
+            <div style="font-size: 9px; color: #8a7c6e; letter-spacing: 1px; font-weight: 700; color: ${accent}; word-break: break-all;">${esc(soulHash ? soulHash.substring(0, 14) : '')}</div>
+
+            <!-- divider -->
+            <div style="width: 80%; height: 1px; background: ${accent}30; margin: 2px 0;"></div>
+
+            <!-- website -->
+            <div style="font-size: 7.5px; letter-spacing: 2px; color: rgba(138,124,110,0.65);">the42post.com</div>
           </div>
         </div>
         `}

@@ -23,7 +23,8 @@ router.post('/send-forge-success', async (req, res, next) => {
       skillId,
       soulHash,
       createdDate,
-      cardImageBase64
+      cardImageBase64,
+      domain
     } = req.body;
 
     // Validation
@@ -58,7 +59,8 @@ router.post('/send-forge-success', async (req, res, next) => {
     // Generate email HTML with download links and card image
     const skillData = {
       title: skillTitle,
-      author: recipientName || 'Creator'
+      author: recipientName || 'Creator',
+      domain: domain || 'ideas'
     };
 
     // Construct download URLs
