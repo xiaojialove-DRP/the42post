@@ -9817,17 +9817,17 @@ function initVoiceInput() {
   // Desktop: continuous mode with manual stop.
   const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
 
-  // Pick recognition language per session, smartest hint first:
-  // 1. what's already typed in the box (CJK → zh, latin words → en)
-  // 2. the page language toggle
-  // 3. the browser/system language
-  // Web Speech API can't auto-detect mid-stream, so we re-evaluate on
-  // every mic tap — type a few Chinese characters and the next tap
-  // listens in Chinese.
+  // Pick recognition language per mic tap:
+  // 1. CJK already in the box → zh-CN (unfakeable signal)
+  // 2. the page language toggle (the user's explicit intent)
+  // 3. browser/system language hint
+  // Deliberately NO "latin text → en-US" rule: when recognition once ran
+  // in the wrong language, its English garbage output would re-trigger
+  // that rule and lock every later session into English — even after the
+  // user switched the page to 中文. Page toggle wins over box content.
   function getLang(targetEl) {
     const text = (targetEl && targetEl.value || '').trim();
     if (/[一-鿿]/.test(text)) return 'zh-CN';
-    if (/[a-zA-Z]{2,}/.test(text)) return 'en-US';
     if ((document.body.dataset.lang || 'en') === 'cn') return 'zh-CN';
     if ((navigator.language || '').toLowerCase().startsWith('zh')) return 'zh-CN';
     return 'en-US';
@@ -9898,6 +9898,9 @@ function initVoiceInput() {
         rec.start();
         listening = true;
         setBtn('recording');
+        // Show which language we're listening in — makes a wrong pick
+        // obvious instead of mysterious garbage output.
+        btn.title = rec.lang === 'zh-CN' ? '正在听写：中文' : 'Listening: English';
       } catch (e) {
         listening = false;
         setBtn('idle');
