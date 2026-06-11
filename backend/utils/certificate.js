@@ -784,7 +784,8 @@ export function generateEmailTemplate(
     <!-- FOOTER -->
     <div class="email-footer">
       <p>感谢您的参与！</p>
-      <p style="margin-top: 8px;"><a href="${siteUrl}" style="color: #666; text-decoration: none;">${siteUrl.replace('https://', '')}</a></p>
+      <p style="margin-top: 6px; color: #aaa;">Forging Human Wisdom for a Better AI Future</p>
+      <p style="margin-top: 10px;"><a href="${siteUrl}" style="color: #666; text-decoration: none;">www.the42post.com</a></p>
     </div>
   </div>
 </body>
