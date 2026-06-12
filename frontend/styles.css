@@ -4143,9 +4143,9 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 
 .howto-title {
   font-family: var(--font-head);
-  font-size: 18px;
+  font-size: 28px;
   color: var(--ink);
-  margin-bottom: 12px;
+  margin-bottom: 20px;
 }
 
 .about-section { margin-bottom: 16px; }
