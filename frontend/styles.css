@@ -4219,9 +4219,9 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 
 /* ═══ HOW TO PLAY ═══ */
 .howto-rule {
-  margin-bottom: 10px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid var(--rule-light);
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
 }
 
 .howto-rule:last-child { border-bottom: none; }
