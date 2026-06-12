@@ -4236,9 +4236,9 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 }
 
 .howto-rule p {
-  font-size: 11px;
+  font-size: 14px;
   color: var(--ink-light);
-  line-height: 1.6;
+  line-height: 1.8;
   margin-bottom: 0;
 }
 
@@ -10820,11 +10820,11 @@ body[data-lang="cn"] .text-cn-inline {
 }
 
 .howto-rule h3 {
-  font-size: 18px;
-  font-weight: 600;
-  color: #1a1a1a;
-  margin-top: 24px;
-  margin-bottom: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink, #1a1a1a);
+  margin-top: 6px;
+  margin-bottom: 2px;
 }
 
 .about-section h4,
@@ -10938,15 +10938,14 @@ h1, h2, h3, h4, h5, h6 {
 
   /* Tighten rule spacing on mobile */
   .howto-rule {
-    margin-bottom: 12px;   /* from 20px: 40% reduction */
-    padding-bottom: 8px;   /* from 16px: 50% reduction */
-    border-bottom: none;   /* hide dividers on mobile to reduce visual clutter */
+    margin-bottom: 6px;
+    padding-bottom: 6px;
+    border-bottom: none;
   }
 
-  /* Improve readability with tighter line-height */
   .howto-rule p {
-    font-size: 11px;        /* from 12px: save space */
-    line-height: 1.6;       /* from 1.8: tighter leading */
+    font-size: 14px;
+    line-height: 1.8;
   }
 
   /* Restore bottom border for last rule if needed for visual separation */
