@@ -5685,45 +5685,51 @@ async function downloadCreatorCard(skillData, soulHash) {
     return;
   }
 
+  const btn = event?.target;
+  const originalText = btn ? btn.textContent : '';
+  if (btn) { btn.textContent = '⏳ Processing...'; btn.disabled = true; }
+
+  const restoreBtn = () => {
+    if (btn) { btn.textContent = originalText; btn.disabled = false; }
+  };
+
   try {
-    // Show loading state
-    const btn = event?.target;
-    if (btn) {
-      const originalText = btn.textContent;
-      btn.textContent = '⏳ Processing...';
-      btn.disabled = true;
-
-      // Convert card to image using html2canvas
-      const canvas = await html2canvas(cardElement, {
-        scale: 2,
-        backgroundColor: '#f0ebe2',
-        logging: false,
-        useCORS: true,
-        allowTaint: true
-      });
-
-      // Convert canvas to PNG blob and download
-      canvas.toBlob((blob) => {
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `Creator_Card_${soulHash || 'certificate'}.png`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-
-        // Restore button
-        btn.textContent = originalText;
-        btn.disabled = false;
-      }, 'image/png');
+    // html2canvas can't parse color(srgb …) — convert to rgb() before capture
+    const computed = window.getComputedStyle(cardElement);
+    const resolvedBg = (computed.backgroundImage || '')
+      .replace(/color\(srgb\s+([\d.]+)\s+([\d.]+)\s+([\d.]+)\)/g,
+        (_, r, g, b) => `rgb(${Math.round(r*255)},${Math.round(g*255)},${Math.round(b*255)})`);
+    const prevStyle = cardElement.getAttribute('style') || '';
+    if (resolvedBg) {
+      cardElement.style.backgroundImage = resolvedBg;
     }
+
+    const canvas = await html2canvas(cardElement, {
+      scale: 2,
+      backgroundColor: null,
+      logging: false,
+      useCORS: true,
+      allowTaint: true
+    });
+
+    // Restore original style
+    cardElement.setAttribute('style', prevStyle);
+
+    canvas.toBlob((blob) => {
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `Creator_Card_${soulHash || 'certificate'}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      restoreBtn();
+    }, 'image/png');
   } catch (error) {
     console.error('Failed to generate card image:', error);
     alert('Failed to generate creator card image. Please try again.');
-    if (event?.target) {
-      event.target.disabled = false;
-    }
+    restoreBtn();
   }
 }
 
