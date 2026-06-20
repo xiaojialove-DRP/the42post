@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>THE 42 POST — 10s Promo</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{width:100%;height:100%;background:#111;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:'Playfair Display',serif;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+
+.vp{width:960px;height:540px;position:relative;border-radius:0;overflow:hidden;background:#080705;flex-shrink:0;}
+.vs{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:60px;opacity:0;transition:opacity .45s ease;}
+.vs.on{opacity:1;}
+.s1,.s4{background:#080705;}
+.s2,.s3{background:#faf5ed;}
+
+.fa{opacity:0;transition:opacity .5s;}
+.fb{opacity:0;transform:translateY(12px);transition:opacity .55s,transform .55s ease;}
+.fc{opacity:0;transform:scale(.93);transition:opacity .55s,transform .55s cubic-bezier(.34,1.4,.64,1);}
+.fa.on,.fb.on,.fc.on{opacity:1;transform:none;}
+
+.s1-tag{font-family:'Space Mono',monospace;font-size:13px;letter-spacing:.28em;color:#b8a23c;margin-bottom:24px;}
+.s1-h{font-family:'Playfair Display',serif;font-size:52px;font-weight:400;color:#f5ede0;line-height:1.15;}
+.s1-sub{font-family:'Playfair Display',serif;font-size:26px;font-style:italic;color:#7a6e5f;margin-top:16px;}
+.s1-rule{width:48px;height:1px;background:#b8a23c;margin:22px auto 0;}
+
+.s2-label{font-family:'Space Mono',monospace;font-size:12px;letter-spacing:.26em;color:#b8a23c;margin-bottom:16px;}
+.s2-box{background:#fff;border:1.5px solid #e0d5c5;border-radius:10px;padding:22px 28px;width:580px;text-align:left;}
+.s2-text{font-family:'Playfair Display',serif;font-size:22px;color:#1a1209;font-style:italic;line-height:1.6;}
+.s2-cur{display:inline-block;width:2px;height:1.1em;background:#b8a23c;margin-left:3px;vertical-align:text-bottom;animation:blink .8s step-end infinite;}
+.s2-steps{display:flex;gap:20px;margin-top:20px;align-items:center;justify-content:center;}
+.s2-step{font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.1em;color:#bbb;display:flex;align-items:center;gap:5px;}
+.s2-step.done{color:#5a9a6f;}.s2-step.act{color:#b8a23c;}
+.s2-dot{width:7px;height:7px;border-radius:50%;background:currentColor;}
+.s2-arr{color:#ccc;font-size:14px;}
+
+.s3-card{background:#f4ead8;border:1px solid rgba(184,162,60,.2);border-radius:12px;padding:22px 32px;width:360px;}
+.s3-pill{display:inline-block;padding:3px 10px;border:1px solid #7c6fb5;border-radius:20px;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.14em;color:#7c6fb5;margin-bottom:10px;}
+.s3-title{font-family:'Playfair Display',serif;font-size:20px;font-weight:700;color:#1a1209;margin-bottom:8px;line-height:1.3;}
+.s3-blessing{font-family:'Playfair Display',serif;font-size:13px;font-style:italic;color:#8a7050;margin-bottom:12px;line-height:1.55;}
+.s3-div{border:none;border-top:.5px solid rgba(184,162,60,.25);margin:8px 0;}
+.s3-hash{font-family:'Space Mono',monospace;font-size:11px;color:#b8a23c;letter-spacing:.05em;}
+.s3-cap{font-family:'Playfair Display',serif;font-size:20px;color:#5a4f44;margin-top:20px;}
+
+.s4-brand{font-family:'Space Mono',monospace;font-size:14px;letter-spacing:.26em;color:#b8a23c;margin-bottom:16px;}
+.s4-cta{font-family:'Playfair Display',serif;font-size:52px;font-weight:400;color:#f5ede0;line-height:1.2;}
+.s4-url{font-family:'Space Mono',monospace;font-size:17px;color:#b8a23c;margin-top:20px;}
+.s4-pills{display:flex;gap:8px;margin-top:24px;flex-wrap:wrap;justify-content:center;}
+.s4-pl{padding:4px 12px;border-radius:20px;border:1px solid;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.12em;}
+
+#vbar{position:absolute;bottom:0;left:0;height:3px;background:#b8a23c;width:0;z-index:99;}
+
+.controls{margin-top:20px;display:flex;gap:12px;align-items:center;}
+.ctrl-btn{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);border-radius:24px;padding:8px 20px;font-family:'Space Mono',monospace;font-size:11px;color:rgba(255,255,255,.7);cursor:pointer;letter-spacing:.12em;transition:background .2s;}
+.ctrl-btn:hover{background:rgba(255,255,255,.15);}
+.ctrl-time{font-family:'Space Mono',monospace;font-size:11px;color:rgba(255,255,255,.35);letter-spacing:.1em;}
+</style>
+</head>
+<body>
+
+<div class="vp" id="vp">
+  <div id="vbar"></div>
+
+  <div class="vs s1" id="vs1">
+    <div class="s1-tag fa" id="e1a">THE 42 POST  ·  V0.1.0</div>
+    <div class="s1-h fb" id="e1b">AI grows smarter every day.</div>
+    <div class="s1-sub fa" id="e1c">But is it learning YOUR wisdom?</div>
+    <div class="s1-rule fa" id="e1d"></div>
+  </div>
+
+  <div class="vs s2" id="vs2">
+    <div class="s2-label fa" id="e2a">— SKILL FORGE —</div>
+    <div class="s2-box fb" id="e2b">
+      <div class="s2-text"><span id="e2t"></span><span class="s2-cur"></span></div>
+    </div>
+    <div class="s2-steps fa" id="e2d">
+      <div class="s2-step done"><div class="s2-dot"></div>IDEA</div>
+      <div class="s2-arr">→</div>
+      <div class="s2-step done"><div class="s2-dot"></div>GENERATE</div>
+      <div class="s2-arr">→</div>
+      <div class="s2-step act" id="e2f3"><div class="s2-dot"></div>FORGE</div>
+      <div class="s2-arr">→</div>
+      <div class="s2-step" id="e2f4"><div class="s2-dot"></div>PUBLISH</div>
+    </div>
+  </div>
+
+  <div class="vs s3" id="vs3">
+    <div class="s3-card fc" id="e3a">
+      <div class="s3-pill">◈ NARRATIVE</div>
+      <div class="s3-title">Silence as a Creative Act</div>
+      <div class="s3-blessing">"Creativity breathes in the space between words —<br>the silence that makes meaning possible."</div>
+      <hr class="s3-div">
+      <div class="s3-hash" id="e3h">SOUL · ______</div>
+    </div>
+    <div class="s3-cap fa" id="e3c">Your wisdom. Certified. Yours forever.</div>
+  </div>
+
+  <div class="vs s4" id="vs4">
+    <div class="s4-brand fa" id="e4a">✦  THE 42 POST  ✦</div>
+    <div class="s4-cta fb" id="e4b">Forge your first skill.</div>
+    <div class="s4-url fa" id="e4c">the42post.com →</div>
+    <div class="s4-pills fa" id="e4d">
+      <div class="s4-pl" style="color:#7c6fb5;border-color:#7c6fb5">narrative</div>
+      <div class="s4-pl" style="color:#b8a23c;border-color:#b8a23c">ideas</div>
+      <div class="s4-pl" style="color:#c17830;border-color:#c17830">design</div>
+      <div class="s4-pl" style="color:#5a8a6f;border-color:#5a8a6f">science</div>
+      <div class="s4-pl" style="color:#c1584a;border-color:#c1584a">visual</div>
+    </div>
+  </div>
+</div>
+
+<div class="controls">
+  <button class="ctrl-btn" onclick="vpGo()">↺ REPLAY</button>
+  <span class="ctrl-time" id="ctrlTime">0.0s / 10.0s</span>
+</div>
+
+<script>
+const TOTAL=10000,SCENES=[0,2500,5500,8000];
+let raf,start,tint,timers=[],cur=-1;
+function g(id){return document.getElementById(id);}
+function on(id){const e=g(id);if(e)e.classList.add('on');}
+function off(id){const e=g(id);if(e)e.classList.remove('on');}
+function later(fn,ms){timers.push(setTimeout(fn,ms));}
+
+function hashAnim(){
+  const tgt='A8F3K2',abc='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let n=0;
+  const iv=setInterval(()=>{
+    let s='';
+    for(let i=0;i<6;i++) s+=i<n?tgt[i]:abc[Math.floor(Math.random()*abc.length)];
+    g('e3h').textContent='SOUL · '+s;
+    if(n>=6){clearInterval(iv);g('e3h').textContent='SOUL · '+tgt;}
+    n+=0.25;
+  },60);
+}
+
+function typeText(){
+  const txt="Creativity needs silence to breathe.";
+  clearInterval(tint);g('e2t').textContent='';let i=0;
+  tint=setInterval(()=>{
+    if(i<=txt.length){g('e2t').textContent=txt.slice(0,i);i++;}
+    else clearInterval(tint);
+  },56);
+}
+
+function resetAll(){
+  timers.forEach(clearTimeout);timers=[];
+  clearInterval(tint);if(raf)cancelAnimationFrame(raf);
+  ['vs1','vs2','vs3','vs4'].forEach(off);
+  ['e1a','e1b','e1c','e1d','e2a','e2b','e2d','e3a','e3c','e4a','e4b','e4c','e4d'].forEach(off);
+  ['si1','si2','si3','si4'].forEach(id=>{const e=g(id);if(e)e.classList.remove('on');});
+  g('e2f3').className='s2-step act';
+  g('e2f4').className='s2-step';
+  g('e2t').textContent='';
+  g('e3h').textContent='SOUL · ______';
+  g('vbar').style.width='0';
+}
+
+function sc1(){on('vs1');later(()=>on('e1a'),200);later(()=>on('e1b'),650);later(()=>on('e1c'),1250);later(()=>on('e1d'),1800);}
+function sc2(){off('vs1');on('vs2');later(()=>on('e2a'),100);later(()=>{on('e2b');typeText();},350);later(()=>on('e2d'),750);later(()=>{g('e2f3').className='s2-step done';g('e2f4').className='s2-step act';},2350);}
+function sc3(){off('vs2');on('vs3');later(()=>{on('e3a');hashAnim();},200);later(()=>on('e3c'),950);}
+function sc4(){off('vs3');on('vs4');later(()=>on('e4a'),100);later(()=>on('e4b'),380);later(()=>on('e4c'),880);later(()=>on('e4d'),1180);}
+
+function vpGo(){
+  resetAll();start=performance.now();cur=-1;
+  const fns=[sc1,sc2,sc3,sc4];
+  function tick(now){
+    const e=now-start;
+    g('vbar').style.width=Math.min(e/TOTAL*100,100)+'%';
+    const sec=(Math.min(e,TOTAL)/1000).toFixed(1);
+    g('ctrlTime').textContent=sec+'s / 10.0s';
+    let s=-1;
+    for(let i=0;i<SCENES.length;i++) if(e>=SCENES[i]) s=i;
+    if(s!==cur&&s>=0){cur=s;fns[s]();}
+    if(e<TOTAL) raf=requestAnimationFrame(tick);
+  }
+  raf=requestAnimationFrame(tick);
+}
+vpGo();
+</script>
+</body>
+</html>
