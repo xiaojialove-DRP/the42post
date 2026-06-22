@@ -370,6 +370,26 @@
       color: var(--ink-faint);
     }
 
+    /* Fallback for browsers without color-mix() support (Safari < 16.2,
+       released Dec 2022). An unsupported color-mix() makes the whole
+       declaration invalid, so it's dropped rather than falling back —
+       cards and dock items would render with no border/background at
+       all and visually merge into the canvas/dock background. This
+       block only takes effect when color-mix() isn't recognized. */
+    @supports not (color: color-mix(in srgb, red, blue)) {
+      .dock-item { border: 1px solid var(--dock-color, #ddd); background: #fafafa; }
+      .dock-item:hover { color: var(--ink); box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+      .task-card { background: #fffcf8; border: 1px solid #e8e0d8; }
+      .task-card.focused { border-color: var(--card-color, #888); }
+      .card-header { background: #f8f4ee; border-bottom: 1px solid #e8e0d8; }
+      .card-domain-label { color: #444; }
+      .card-close { border: 1px solid #ddd; }
+      .card-task-label { color: #333; }
+      .card-skill-tag { border: 1px solid #ddd; background: #fff; }
+      .card-footer { border-top: 1px solid #eee; }
+      .creation-skill { background: #fff; }
+    }
+
     .card-btn-start {
       font-family: var(--font-mono);
       font-size: 8px;
