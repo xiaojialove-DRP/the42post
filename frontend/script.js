@@ -6043,6 +6043,16 @@ function initAgentView() {
   if (window.location.hash === '#archive') {
     showAgentArchive();
   }
+
+  // Deep-link: playground.html's 7-scenario farewell message links here after
+  // a user hits the anti-addiction limit, inviting them to forge their own Skill.
+  if (window.location.hash === '#forge') {
+    const forgeOverlay = document.getElementById('forgeOverlay');
+    if (forgeOverlay) forgeOverlay.classList.add('active');
+    document.querySelectorAll('.forge-page').forEach(p => p.classList.remove('active'));
+    const forgePage1 = document.getElementById('forgePage1');
+    if (forgePage1) forgePage1.classList.add('active');
+  }
 }
 
 /* ═══ FORGE TAGS ═══ */

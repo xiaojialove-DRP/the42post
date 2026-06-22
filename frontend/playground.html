@@ -1376,6 +1376,13 @@
       font-style: italic;
       letter-spacing: 0.2px;
     }
+    .twin-farewell-msg a {
+      color: #b8915a;
+      font-weight: 700;
+      text-decoration: underline;
+      font-style: normal;
+    }
+    .twin-farewell-msg a:hover { color: #8b6a35; }
 
     /* New card flies in from the bottom */
     .task-card.fly-in-from-bottom {
@@ -2075,8 +2082,8 @@
       // Check if we've reached the scenario limit
       if (scenarioLimitReached()) {
         alert(isCn
-          ? '你已经完成了 7 个场景，很棒了。休息一下吧 ☕️'
-          : 'You\'ve explored 7 scenarios — well played. Time for a break ☕️');
+          ? '你已经体验了 7 个场景，很棒了。休息一下吧 ☕️ 或者锻造一个你自己的 Skill。'
+          : 'You\'ve explored 7 scenarios — well played. Time for a break ☕️ Or forge a Skill of your own.');
         return;
       }
 
@@ -2127,8 +2134,8 @@
           const actions = stageThanks.querySelector('.twin-thanks-actions');
           if (actions) {
             actions.innerHTML = `<div class="twin-farewell-msg">${isCn
-              ? '你已经体验了 7 个场景，很棒了。休息一下吧 ☕️'
-              : 'You\'ve explored 7 scenarios — well played. Time for a break ☕️'}</div>`;
+              ? '你已经体验了 7 个场景，很棒了。休息一下吧 ☕️ 或者<a href="index.html#forge">锻造一个你自己的 Skill</a>。'
+              : 'You\'ve explored 7 scenarios — well played. Time for a break ☕️ Or <a href="index.html#forge">forge a Skill of your own</a>.'}</div>`;
           }
         }
         return;
@@ -2163,8 +2170,8 @@
           const actions = stageThanks.querySelector('.twin-thanks-actions');
           if (actions) {
             actions.innerHTML = `<div class="twin-farewell-msg">${isCn
-              ? '你已经体验了 7 个场景，很棒了。休息一下吧 ☕️'
-              : 'You\'ve explored 7 scenarios — well played. Time for a break ☕️'}</div>`;
+              ? '你已经体验了 7 个场景，很棒了。休息一下吧 ☕️ 或者<a href="index.html#forge">锻造一个你自己的 Skill</a>。'
+              : 'You\'ve explored 7 scenarios — well played. Time for a break ☕️ Or <a href="index.html#forge">forge a Skill of your own</a>.'}</div>`;
           }
         }
         return;
