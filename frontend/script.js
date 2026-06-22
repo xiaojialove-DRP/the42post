@@ -1048,7 +1048,6 @@ const I18N = {
     arena_clear_all: '✕ CLEAR ALL',
     arena_random_task: '↻ RANDOM TASK',
     arena_back_home: '← BACK TO POST',
-    arena_all_creations: 'ALL CREATIONS',
     arena_canvas_empty_title: 'Your canvas awaits.',
     arena_canvas_empty_hint: 'TAP A SCENARIO CARD BELOW TO START A GAME',
     arena_taste_question: 'TASTE QUESTION',
@@ -1060,8 +1059,6 @@ const I18N = {
     arena_close_canvas: 'CLOSE CANVAS ↑',
     arena_submit_fusion: '⚔ SUBMIT FUSION',
     arena_submit_placeholder: 'Write your answer. How would an AI with taste handle this situation?',
-    creations_title: 'My Creative Works',
-    creations_subtitle: 'Summary of all your creative answers',
     /* ── Overlays: About & How It Works ── */
     about_title: 'About',
     howto_title: 'How It Works',
@@ -1372,7 +1369,6 @@ const I18N = {
     arena_clear_all: '✕ 清除全部',
     arena_random_task: '↻ 随机任务',
     arena_back_home: '← 返回创意',
-    arena_all_creations: '全部创意',
     arena_canvas_empty_title: '你的画布已准备好。',
     arena_canvas_empty_hint: '点击下方场景卡片以开启游戏',
     arena_taste_question: '品味问题',
@@ -1384,8 +1380,6 @@ const I18N = {
     arena_close_canvas: '关闭画布 ↑',
     arena_submit_fusion: '⚔ 提交创意',
     arena_submit_placeholder: '写下你的答案。有品味的AI会如何处理这种情况？',
-    creations_title: '🎴 我的创意作品',
-    creations_subtitle: '我的所有创意答案汇总',
     /* ── 信息框：关于 & 怎么玩 ── */
     about_title: '关于',
     howto_title: '怎么玩',
