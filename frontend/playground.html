@@ -728,6 +728,7 @@
       padding: 24px 20px;
       border-bottom: 1px solid var(--rule);
       background: #f8f4ee;
+      cursor: pointer;
     }
 
     .creations-title {
@@ -1710,18 +1711,19 @@
       const cards = getCreativeCards();
       const grid = document.getElementById('libraryGrid');
       const count = document.getElementById('libraryCount');
+      if (!grid) return; // legacy card-library view, not present on every page
       const isChineseMode = (typeof currentLang !== 'undefined' && currentLang === 'cn');
 
       if (cards.length === 0) {
         const emptyCountText = isChineseMode ? '0 张卡片' : '0 cards';
         const emptyMsg = isChineseMode ? '暂无创意卡片。在Playground中创建你的第一张卡片吧！' : 'No creative cards yet. Create your first card in the Playground!';
-        count.textContent = emptyCountText;
+        if (count) count.textContent = emptyCountText;
         grid.innerHTML = `<div class="library-empty">${emptyMsg}</div>`;
         return;
       }
 
       const countText = isChineseMode ? cards.length + ' 张卡片' : cards.length + ' cards';
-      count.textContent = countText;
+      if (count) count.textContent = countText;
       grid.innerHTML = cards.map(card => `
         <div class="library-card">
           <div class="library-card-task">${card.taskTitle}</div>
@@ -1775,36 +1777,27 @@
     }
 
     function setupCreationsButton() {
-      const btnAllCreations = document.getElementById('btnAllCreations');
-      const creationsView = document.getElementById('creationsView');
-      
-      if (!btnAllCreations) return;
-      
-      btnAllCreations.addEventListener('click', () => {
-        if (creationsView.classList.contains('active')) {
+      // Delegated on document rather than bound directly to #btnAllCreations —
+      // a direct listener here was silently inert on initial page load (only
+      // worked if re-attached after the fact), root cause unconfirmed.
+      // Delegation sidesteps it reliably.
+      document.addEventListener('click', (e) => {
+        const creationsView = document.getElementById('creationsView');
+        if (!creationsView) return;
+
+        if (e.target.closest('#btnAllCreations')) {
+          if (creationsView.classList.contains('active')) {
+            creationsView.classList.remove('active');
+          } else {
+            creationsView.classList.add('active');
+            displayCreations();
+          }
+          return;
+        }
+        if (e.target.closest('.creations-header') || e.target.closest('#btnCloseCreations')) {
           creationsView.classList.remove('active');
-        } else {
-          creationsView.classList.add('active');
-          displayCreations();
         }
       });
-      
-      // 点击关闭（在header点击）
-      const header = document.querySelector('.creations-header');
-      if (header) {
-        header.style.cursor = 'pointer';
-        header.addEventListener('click', () => {
-          creationsView.classList.remove('active');
-        });
-      
-      const btnClose = document.getElementById('btnCloseCreations');
-      if (btnClose) {
-        btnClose.addEventListener('click', (e) => {
-          e.stopPropagation();
-          creationsView.classList.remove('active');
-        });
-      }
-      }
     }
 
 
