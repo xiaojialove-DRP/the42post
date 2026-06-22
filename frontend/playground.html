@@ -2083,15 +2083,63 @@
       setTimeout(() => card.classList.remove('spawning'), 350);
     }
 
+    /* Calm, in-canvas farewell card — matches the existing twin-farewell-msg
+       style used after rating. Avoids alert()/toast for this message: a toast
+       briefly covers the top bar and reads as an aggressive system warning,
+       which doesn't fit the rest of the site's quiet, editorial tone. */
+    function spawnFarewellCard() {
+      const canvas = document.getElementById('workshopCanvas');
+      const empty = document.getElementById('canvasEmpty');
+      empty.classList.add('hidden');
+      const isCn = (typeof currentLang !== 'undefined' && currentLang === 'cn');
+
+      const card = document.createElement('div');
+      card.className = 'task-card spawning';
+      card.dataset.cardId = ++cardIdCounter;
+      card.style.zIndex = ++highestZ;
+
+      const isMobileView = window.innerWidth <= 768;
+      const cardW = isMobileView ? Math.min(window.innerWidth - 24, 380) : 380;
+      card.style.width = cardW + 'px';
+
+      if (isMobileView) {
+        card.style.left = Math.max(8, (window.innerWidth - cardW) / 2) + 'px';
+        card.style.top = '12px';
+      } else {
+        const maxX = Math.max(40, canvas.clientWidth - cardW - 40);
+        const maxY = Math.max(30, canvas.clientHeight - 220);
+        card.style.left = (40 + Math.random() * maxX) + 'px';
+        card.style.top = (30 + Math.random() * maxY) + 'px';
+      }
+
+      card.innerHTML = `
+        <div class="card-header">
+          <div class="card-header-left"><span class="twin-header-dot">●</span></div>
+          <div class="card-header-right"><button class="card-close" title="${t('playground_close')}">✕</button></div>
+        </div>
+        <div class="card-body" style="padding:24px 20px;">
+          <div class="twin-farewell-msg" style="padding:0;">${isCn
+            ? '你已经体验了 7 个场景，很棒了。休息一下吧 ☕️ 或者<a href="index.html#forge">锻造一个你自己的 Skill</a>。'
+            : 'You\'ve explored 7 scenarios — well played. Time for a break ☕️ Or <a href="index.html#forge">forge a Skill of your own</a>.'}</div>
+        </div>
+      `;
+      card.querySelector('.card-close').addEventListener('click', (e) => {
+        e.stopPropagation();
+        card.remove();
+        checkEmpty();
+      });
+
+      canvas.appendChild(card);
+      setTimeout(() => card.classList.remove('spawning'), 350);
+    }
+
     /* ── Spawn random from repo (with anti-addiction limit check) ── */
     function spawnRandomFromRepo(repo) {
       const isCn = (typeof currentLang !== 'undefined' && currentLang === 'cn');
 
       // Check if we've reached the scenario limit
       if (scenarioLimitReached()) {
-        alert(isCn
-          ? '你已经体验了 7 个场景，很棒了。休息一下吧 ☕️ 或者锻造一个你自己的 Skill。'
-          : 'You\'ve explored 7 scenarios — well played. Time for a break ☕️ Or forge a Skill of your own.');
+        spawnFarewellCard();
         return;
       }
 
