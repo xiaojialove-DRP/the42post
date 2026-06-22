@@ -9264,6 +9264,7 @@ button.generating {
 
 /* Connector line */
 .forge-step-line {
+  display: block !important;
   flex: 0 0 auto !important;
   width: 20px !important;
   height: 1px !important;
