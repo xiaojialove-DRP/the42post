@@ -50,7 +50,8 @@
       color: var(--ink);
       font-family: var(--font-serif);
       font-size: 14px;
-      height: 100vh;
+      height: 100vh; /* fallback for browsers without dvh support */
+      height: 100dvh; /* accounts for mobile Safari's dynamic toolbar, prevents the dock from landing behind it */
       overflow: hidden;
       display: flex;
       flex-direction: column;
