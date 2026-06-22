@@ -6789,7 +6789,10 @@ function initAboutHowTo() {
 
   // Footer About link
   if (footerAboutBtn && aboutOverlay) {
-    footerAboutBtn.addEventListener('click', () => aboutOverlay.classList.add('active'));
+    footerAboutBtn.addEventListener('click', () => {
+      if (howtoOverlay) howtoOverlay.classList.remove('active');
+      aboutOverlay.classList.add('active');
+    });
   }
   if (aboutClose && aboutOverlay) {
     aboutClose.addEventListener('click', () => aboutOverlay.classList.remove('active'));
@@ -6800,7 +6803,10 @@ function initAboutHowTo() {
 
   // Footer HowTo link
   if (footerHowtoBtn && howtoOverlay) {
-    footerHowtoBtn.addEventListener('click', () => howtoOverlay.classList.add('active'));
+    footerHowtoBtn.addEventListener('click', () => {
+      if (aboutOverlay) aboutOverlay.classList.remove('active');
+      howtoOverlay.classList.add('active');
+    });
   }
   if (howtoClose && howtoOverlay) {
     howtoClose.addEventListener('click', () => howtoOverlay.classList.remove('active'));
@@ -6808,6 +6814,13 @@ function initAboutHowTo() {
       if (e.target === howtoOverlay) howtoOverlay.classList.remove('active');
     });
   }
+
+  // Escape key closes whichever of the two is open
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    if (aboutOverlay) aboutOverlay.classList.remove('active');
+    if (howtoOverlay) howtoOverlay.classList.remove('active');
+  });
 }
 
 /* ═══ SKILLS FEED — dynamic display of latest skills ═══ */
