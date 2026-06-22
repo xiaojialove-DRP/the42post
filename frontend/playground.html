@@ -7,6 +7,11 @@
   <link rel="dns-prefetch" href="https://fonts.font.im">
   <link rel="preconnect" href="https://fonts.font.im" crossorigin>
   <link href="https://fonts.font.im/css2?family=JetBrains+Mono:wght@400;500;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Noto+Serif+SC:wght@400;700&display=swap" rel="stylesheet">
+  <!-- Notyf — script.js overrides window.alert() to route through it; without
+       this include the override silently swallows every alert() into console.log -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.css" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.css"></noscript>
+  <script src="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.js"></script>
   <style>
     :root {
       --ink: #111111;
