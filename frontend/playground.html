@@ -2205,10 +2205,12 @@
         card.style.width = newWidth + 'px';
         card.style.height = newHeight + 'px';
       } else {
-        // Clamp to keep at least 40px of card header visible on screen
+        // Clamp to keep at least 40px of card edge visible on screen — symmetric
+        // on all four sides so a card taller than the viewport can still be
+        // dragged up far enough to reach content/buttons past the bottom edge.
         const minLeft = -(card.offsetWidth - 40);
         const maxLeft = window.innerWidth - 40;
-        const minTop = 0;
+        const minTop = -(card.offsetHeight - 100);
         const maxTop = window.innerHeight - 40;
         card.style.left = Math.min(maxLeft, Math.max(minLeft, e.clientX - startX)) + 'px';
         card.style.top = Math.min(maxTop, Math.max(minTop, e.clientY - startY)) + 'px';
@@ -2238,8 +2240,9 @@
       } else {
         const minLeft = -(card.offsetWidth - 40);
         const maxLeft = window.innerWidth - 40;
+        const minTop = -(card.offsetHeight - 100);
         card.style.left = Math.min(maxLeft, Math.max(minLeft, touch.clientX - startX)) + 'px';
-        card.style.top = Math.min(window.innerHeight - 40, Math.max(0, touch.clientY - startY)) + 'px';
+        card.style.top = Math.min(window.innerHeight - 40, Math.max(minTop, touch.clientY - startY)) + 'px';
       }
     }, { passive: true });
 
