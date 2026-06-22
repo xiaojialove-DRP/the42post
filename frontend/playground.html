@@ -3005,7 +3005,7 @@
         stageRate.classList.add(isSmallScreen ? 'fade-animation' : 'expand-animation');
       } catch (err) {
         console.error('❌ Twin Test error:', err);
-        stageLoading.innerHTML = `<div style="color:#b85a4a;font-size:12px;line-height:1.5;">
+        stageLoading.innerHTML = `<div style="color:#b85a4a;font-size:12px;line-height:1.5;width:100%;overflow-wrap:break-word;">
           <strong>${t('playground_generation_error')}</strong><br/>
           ${escapeHtml(err.message)}<br/>
           <span style="font-size:11px;color:#8a7a6e;">${t('console_check')}</span>
