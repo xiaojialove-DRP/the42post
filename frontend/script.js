@@ -7666,10 +7666,10 @@ ${(() => {
 
 ### 🧪 Layer 4: Evaluation / 验证
 
-${fiveLayer ? `\n**Metric:** \`${fiveLayer.evaluation.metric}\`\n` : 'No evaluation metric defined'}
+${fiveLayer && fiveLayer.evaluation ? `\n**Metric:** \`${fiveLayer.evaluation.metric}\`\n` : 'No evaluation metric defined'}
 
 ${(() => {
-  if (!fiveLayer || !fiveLayer.evaluation.test_cases || fiveLayer.evaluation.test_cases.length === 0) {
+  if (!fiveLayer || !fiveLayer.evaluation || !fiveLayer.evaluation.test_cases || fiveLayer.evaluation.test_cases.length === 0) {
     return '*No test cases generated — complete the Intuition Probe to auto-generate.*';
   }
 
@@ -7683,7 +7683,7 @@ ${(() => {
   return testMd;
 })()}
 
-${fiveLayer && fiveLayer.evaluation.silent_failures && fiveLayer.evaluation.silent_failures.length > 0 ? `
+${fiveLayer && fiveLayer.evaluation && fiveLayer.evaluation.silent_failures && fiveLayer.evaluation.silent_failures.length > 0 ? `
 **Anti-patterns & Silent Failures:**
 ${fiveLayer.evaluation.silent_failures.map(failure => `- ${failure}`).join('\n')}
 ` : ''}
