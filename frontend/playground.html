@@ -294,6 +294,16 @@
       border-radius: 2px;
       transition: all 0.15s;
       line-height: 1;
+      position: relative;
+    }
+    /* Visual box stays small to fit the compact card header, but the
+       actual tappable area is expanded to ~44px via this invisible
+       pseudo-element, so the touch target meets a comfortable minimum
+       without changing the card's proportions. */
+    .card-close::before {
+      content: '';
+      position: absolute;
+      inset: -13px;
     }
 
     .card-close:hover {
@@ -776,7 +786,7 @@
         padding: 6px 10px;
         font-size: 10px;
         flex-shrink: 0;
-        min-height: 32px;
+        min-height: 44px;
         border: 1px solid color-mix(in srgb, var(--dock-color, #ddd) 20%, #ddd);
       }
       .dock-item .dock-icon {
@@ -795,6 +805,10 @@
       .twin-resp-text { font-size: 13px; line-height: 1.4; }
       .twin-question { font-size: 12px; }
       .twin-skill-line { font-size: 13px; }
+      /* 16px floor — anything smaller makes iOS Safari auto-zoom the page
+         on focus, which then has to un-zoom on blur. Jarring on a field
+         this close to the keyboard. */
+      .twin-rate-comment { font-size: 16px; }
       .workshop-canvas { padding: 12px 10px; }
       .task-card { padding: 14px; }
       .card-title { font-size: 14px; }
@@ -1329,8 +1343,8 @@
 </div>
 
 
-  <script src="skills.js?v=20260622-mobilefix1"></script>
-  <script src="script.js?v=20260622-mobilefix1"></script>
+  <script src="skills.js?v=20260622-mobilefix4"></script>
+  <script src="script.js?v=20260622-mobilefix4"></script>
   <script>
     /* ═══════════════════════════════════════
        CREATIVE PLAYGROUND — Poolsuite-style
@@ -2804,6 +2818,11 @@
       commentEl.addEventListener('input', () => {
         counterEl.textContent = `${commentEl.value.length} / 140`;
       });
+
+      // autoGrowTextarea/scrollIntoViewOnFocus are defined in script.js,
+      // shared across index.html and playground.html.
+      autoGrowTextarea(commentEl, 110);
+      scrollIntoViewOnFocus(commentEl);
     }
 
     async function submitTwinFeedback(card, task, repo, rating, comment) {

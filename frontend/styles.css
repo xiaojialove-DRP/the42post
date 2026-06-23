@@ -2774,6 +2774,9 @@ body[data-lang="cn"] .footer-text-muted {
   text-decoration: none;
   transition: color 0.25s ease, transform 0.2s ease;
 }
+@media (max-width: 768px) {
+  .footer-social-icon { width: 44px; height: 44px; }
+}
 
 .footer-social-icon svg {
   width: 20px;
@@ -6056,6 +6059,14 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
     right: 10px;
     font-size: 16px;
   }
+  /* #forgeClose (ID) needed to reliably beat the later, unconditional
+     .forge-close{width:30px!important} rule elsewhere in this file —
+     same specificity class-vs-class plus !important is a source-order
+     tiebreak, and that other rule sits after this one. */
+  #forgeClose {
+    width: 44px !important;
+    height: 44px !important;
+  }
   .forge-steps {
     gap: 4px;
     flex-wrap: wrap;
@@ -6629,6 +6640,10 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
   transform: scale(0.98);
 }
 
+@media (max-width: 768px) {
+  .skill-action-btn { min-width: 44px; min-height: 44px; font-size: 17px; }
+}
+
 /* Star button - filled state */
 .skill-action-btn.star-btn.starred {
   color: #d4726a;
@@ -6841,6 +6856,9 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
   transition: all 0.2s;
 }
 .zoom-btn:hover { color: var(--ink); border-color: #b8a89a; }
+@media (max-width: 768px) {
+  .zoom-btn { width: 40px; height: 40px; font-size: 16px; }
+}
 .zoom-info {
   font-size: var(--font-xs);
   color: #b8a89a;
@@ -10407,7 +10425,12 @@ button.generating {
   position: relative;
   width: 100%;
   max-width: 320px;
-  aspect-ratio: 4 / 5;   /* portrait — reads as a collectible card, not a coaster */
+  /* min-height, not aspect-ratio: a long Skill title wraps to 3-4 lines,
+     and a hard aspect-ratio locked the box height regardless of content,
+     silently clipping the SOUL hash line off the bottom (overflow:hidden
+     below). 290px keeps the short-title case looking like a tall portrait
+     certificate; longer content now pushes the card taller instead. */
+  min-height: 290px;
   margin: 0 auto 18px !important;
   padding: 9px;
   box-sizing: border-box;

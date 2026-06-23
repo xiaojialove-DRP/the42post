@@ -34,6 +34,41 @@ function escapeHtml(str) {
     .replace(/'/g, '&#039;');
 }
 
+/* ═══ MOBILE TEXTAREA UX HELPERS ═══
+   Two recurring pain points on phones: (1) a fixed-height textarea with
+   overflow hidden and no resize handle silently clips long input — the
+   user keeps typing into text they can no longer see; (2) the on-screen
+   keyboard covers the field they just focused, especially inside a
+   scrollable modal, and nothing scrolls it back into view. */
+
+// Grows a textarea to fit its content (up to maxHeightPx, default 40% of
+// viewport height), falling back to internal scroll beyond that cap.
+function autoGrowTextarea(el, maxHeightPx) {
+  if (!el) return () => {};
+  const max = maxHeightPx || Math.round(window.innerHeight * 0.4);
+  const sync = () => {
+    el.style.height = 'auto';
+    const next = Math.min(el.scrollHeight, max);
+    el.style.height = next + 'px';
+    el.style.overflowY = el.scrollHeight > max ? 'auto' : 'hidden';
+  };
+  el.addEventListener('input', sync);
+  sync();
+  return sync;
+}
+
+// Scrolls a field into view shortly after focus, so the virtual keyboard
+// (which shrinks the visual viewport after its open animation finishes)
+// doesn't end up covering the very field the user just tapped into.
+function scrollIntoViewOnFocus(el) {
+  if (!el) return;
+  el.addEventListener('focus', () => {
+    setTimeout(() => {
+      el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    }, 300);
+  });
+}
+
 /* ═══ TOAST NOTIFICATION SYSTEM ═══ */
 let notyfInstance = null;
 
@@ -2867,6 +2902,18 @@ function initSkillForge() {
     window.visualViewport.addEventListener('resize', onViewportResize);
     window.visualViewport.addEventListener('scroll', onViewportResize);
   }
+
+  // ── Mobile keyboard: textarea auto-grow + scroll into view on focus ──
+  // forgeSkillIdea previously had overflow:hidden with no JS to grow it,
+  // so once typed text exceeded the fixed min-height it was silently
+  // clipped with no scrollbar and no way to see it. skillFeedback (Step 3
+  // regen notes) had the same gap.
+  ['forgeSkillIdea', 'skillFeedback'].forEach((id) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    autoGrowTextarea(el);
+    scrollIntoViewOnFocus(el);
+  });
 
   // ─── Draft Recovery: offer to restore an unsubmitted forge ───
   // If the previous session's POST /skills failed (network drop, 5xx)
