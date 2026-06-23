@@ -1,11 +1,17 @@
 /**
  * TEST: Authentication flow
  *
- * Tests user registration, login, and email verification
- * 1. POST /api/auth/register → user created with verification token
+ * /register and /verify were removed (no-registration product decision —
+ * forge-session is the only entry point, Soul-Hash serves as identity).
+ * /login and /me are kept as live API surface even though no frontend
+ * flow calls them, so they still need coverage. With no /register left
+ * to create fixtures through, tests insert verified users directly into
+ * the test DB instead.
+ *
+ * 1. createVerifiedUser() → inserts a ready-to-login user directly
  * 2. POST /api/auth/login → JWT token issued on successful login
- * 3. GET  /api/auth/verify/:token → email verification
- * 4. GET  /api/auth/me → returns current user data with JWT
+ * 3. GET  /api/auth/me → returns current user data with JWT
+ * 4. POST /api/auth/forge-session → zero-friction anonymous auth
  */
 
 // Set test environment variables before importing anything
@@ -15,9 +21,23 @@ process.env.NODE_ENV = 'test';
 import { describe, it, expect, beforeAll } from 'vitest';
 import request from 'supertest';
 import express from 'express';
+import { v4 as uuidv4 } from 'uuid';
 import { createTestDb } from './helpers/db.js';
 
-let app, db;
+let app, db, hashPassword;
+
+// Inserts a user directly into the test DB, bypassing the removed
+// /register endpoint. Returns the generated user id.
+async function createVerifiedUser({ email, username, password }) {
+  const id = uuidv4();
+  const passwordHash = await hashPassword(password);
+  await db.query(
+    `INSERT INTO users (id, email, username, password_hash, account_type, verified)
+     VALUES ($1, $2, $3, $4, $5, 1)`,
+    [id, email, username, passwordHash, 'direct_knight']
+  );
+  return id;
+}
 
 beforeAll(async () => {
   db = createTestDb();
@@ -26,7 +46,12 @@ beforeAll(async () => {
   app = express();
   app.use(express.json());
 
-  // Import auth router AFTER patching global.__db__
+  // utils/auth.js (and anything that transitively imports it, like the
+  // auth router) must be dynamically imported here, AFTER the env vars
+  // above are set — it reads JWT_SECRET into a top-level const at module
+  // load time, so a static import of it at the top of this file would
+  // get hoisted ahead of the process.env assignments and cache undefined.
+  ({ hashPassword } = await import('../utils/auth.js'));
   const { default: authRouter } = await import('../routes/auth.js');
   app.use('/api/auth', authRouter);
 
@@ -36,173 +61,13 @@ beforeAll(async () => {
   });
 });
 
-describe('POST /api/auth/register', () => {
-  it('registers a user with valid data', async () => {
-    const res = await request(app)
-      .post('/api/auth/register')
-      .send({
-        email: 'testuser@example.com',
-        username: 'testuser',
-        password: 'ValidPassword123!',
-        account_type: 'direct_knight'
-      });
-
-    if (res.status !== 201) {
-      console.error('Registration failed:', res.status, res.body);
-    }
-    expect(res.status).toBe(201);
-    expect(res.body.success).toBe(true);
-    expect(res.body.email).toBe('testuser@example.com');
-    expect(res.body.username).toBe('testuser');
-    expect(res.body.requires_verification).toBe(true);
-    expect(res.body.user_id).toBeTruthy();
-  });
-
-  it('rejects registration with missing email', async () => {
-    const res = await request(app)
-      .post('/api/auth/register')
-      .send({
-        username: 'testuser2',
-        password: 'ValidPassword123!',
-        account_type: 'direct_knight'
-      });
-
-    expect(res.status).toBe(400);
-    expect(res.body.error).toMatch(/missing/i);
-  });
-
-  it('rejects registration with invalid email', async () => {
-    const res = await request(app)
-      .post('/api/auth/register')
-      .send({
-        email: 'not-an-email',
-        username: 'testuser3',
-        password: 'ValidPassword123!',
-        account_type: 'direct_knight'
-      });
-
-    expect(res.status).toBe(400);
-    expect(res.body.error).toMatch(/invalid email/i);
-  });
-
-  it('rejects registration with weak password', async () => {
-    const res = await request(app)
-      .post('/api/auth/register')
-      .send({
-        email: 'testuser4@example.com',
-        username: 'testuser4',
-        password: 'weak',
-        account_type: 'direct_knight'
-      });
-
-    expect(res.status).toBe(400);
-    expect(res.body.error).toMatch(/weak password/i);
-  });
-
-  it('rejects registration with invalid username (too short)', async () => {
-    const res = await request(app)
-      .post('/api/auth/register')
-      .send({
-        email: 'testuser5@example.com',
-        username: 'ab',
-        password: 'ValidPassword123!',
-        account_type: 'direct_knight'
-      });
-
-    expect(res.status).toBe(400);
-    expect(res.body.error).toMatch(/invalid username/i);
-  });
-
-  it('rejects registration with invalid account_type', async () => {
-    const res = await request(app)
-      .post('/api/auth/register')
-      .send({
-        email: 'testuser6@example.com',
-        username: 'testuser6',
-        password: 'ValidPassword123!',
-        account_type: 'invalid_type'
-      });
-
-    expect(res.status).toBe(400);
-    expect(res.body.error).toMatch(/invalid account type/i);
-  });
-
-  it('rejects duplicate email', async () => {
-    // Register first user
-    await request(app)
-      .post('/api/auth/register')
-      .send({
-        email: 'duplicate@example.com',
-        username: 'user1',
-        password: 'ValidPassword123!',
-        account_type: 'direct_knight'
-      });
-
-    // Try to register with same email
-    const res = await request(app)
-      .post('/api/auth/register')
-      .send({
-        email: 'duplicate@example.com',
-        username: 'user2',
-        password: 'ValidPassword123!',
-        account_type: 'direct_knight'
-      });
-
-    if (res.status >= 400) {
-      console.error('Duplicate email test:', res.status, res.body);
-    }
-    expect([400, 409]).toContain(res.status);
-    expect(res.body.error).toBeTruthy();
-  });
-
-  it('rejects duplicate username', async () => {
-    // Register first user
-    await request(app)
-      .post('/api/auth/register')
-      .send({
-        email: 'user3@example.com',
-        username: 'uniqueuser',
-        password: 'ValidPassword123!',
-        account_type: 'direct_knight'
-      });
-
-    // Try to register with same username
-    const res = await request(app)
-      .post('/api/auth/register')
-      .send({
-        email: 'user4@example.com',
-        username: 'uniqueuser',
-        password: 'ValidPassword123!',
-        account_type: 'direct_knight'
-      });
-
-    if (res.status >= 400) {
-      console.error('Duplicate username test:', res.status, res.body);
-    }
-    expect([400, 409]).toContain(res.status);
-    expect(res.body.error).toBeTruthy();
-  });
-});
-
 describe('POST /api/auth/login', () => {
   beforeAll(async () => {
-    // Create a test user for login tests
-    const registerRes = await request(app)
-      .post('/api/auth/register')
-      .send({
-        email: 'logintest@example.com',
-        username: 'loginuser',
-        password: 'LoginPass123!',
-        account_type: 'direct_knight'
-      });
-
-    // Verify the user's email for login test
-    if (registerRes.body.user_id) {
-      await db.query(
-        'UPDATE users SET verified = 1 WHERE id = $1',
-        [registerRes.body.user_id]
-      );
-    }
+    await createVerifiedUser({
+      email: 'logintest@example.com',
+      username: 'loginuser',
+      password: 'LoginPass123!'
+    });
   });
 
   it('logs in with valid credentials', async () => {
@@ -274,23 +139,11 @@ describe('GET /api/auth/me', () => {
   let validToken;
 
   beforeAll(async () => {
-    // Create and login a test user to get a token
-    const registerRes = await request(app)
-      .post('/api/auth/register')
-      .send({
-        email: 'metest@example.com',
-        username: 'meuser',
-        password: 'MePass123!',
-        account_type: 'direct_knight'
-      });
-
-    // Verify email so login is permitted
-    if (registerRes.body.user_id) {
-      await db.query(
-        'UPDATE users SET verified = 1 WHERE id = $1',
-        [registerRes.body.user_id]
-      );
-    }
+    await createVerifiedUser({
+      email: 'metest@example.com',
+      username: 'meuser',
+      password: 'MePass123!'
+    });
 
     const loginRes = await request(app)
       .post('/api/auth/login')
