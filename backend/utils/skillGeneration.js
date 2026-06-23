@@ -14,6 +14,7 @@
    ═══════════════════════════════════════════════════════ */
 
 import crypto from 'crypto';
+import { logger } from './logger.js';
 
 // ═══ INITIALIZE DEEPSEEK CLIENT ═══
 if (!process.env.DEEPSEEK_API_KEY) {
@@ -244,11 +245,24 @@ export async function callLLMJSON(prompt, maxTokens = 1500) {
     ...FALLBACK_MODELS.map(m => ({ model: m, delay: 0 }))
   ];
 
+  const startedAt = Date.now();
   let lastError;
-  for (const attempt of attempts) {
+  for (let i = 0; i < attempts.length; i++) {
+    const attempt = attempts[i];
     if (attempt.delay) await sleep(attempt.delay);
     try {
       const result = await callDeepSeekSingle(attempt.model, prompt, maxTokens);
+      const durationMs = Date.now() - startedAt;
+      // The one line that answers "did the LLM call actually work, and how
+      // long did it take" — previously only failures were ever logged, so
+      // there was no way to see this in production without a thrown error.
+      logger.info('llm_call_succeeded', {
+        model: attempt.model,
+        usedFallback: attempt.model !== PRIMARY_MODEL,
+        attemptNumber: i + 1,
+        durationMs,
+        outputTokens: result.usage?.output_tokens
+      });
       if (attempt.model !== PRIMARY_MODEL) {
         console.warn(`⚠ DeepSeek primary (${PRIMARY_MODEL}) unavailable, succeeded with fallback: ${attempt.model}`);
       }
@@ -257,11 +271,18 @@ export async function callLLMJSON(prompt, maxTokens = 1500) {
       lastError = err;
       const msg = err.message || '';
       if (!isRetryable(msg)) {
+        logger.warn('llm_call_failed_non_retryable', { model: attempt.model, message: msg.substring(0, 160) });
         throw err;
       }
       console.warn(`⚠ DeepSeek call failed on ${attempt.model}: ${msg.substring(0, 160)}`);
     }
   }
+  logger.error('llm_call_exhausted', {
+    primaryModel: PRIMARY_MODEL,
+    attempts: attempts.length,
+    durationMs: Date.now() - startedAt,
+    lastError: (lastError?.message || '').substring(0, 200)
+  });
   throw lastError || new Error('All DeepSeek attempts exhausted');
 }
 
@@ -281,14 +302,17 @@ function isExternalFailure(msg) {
 async function callWithFallback(prompt, maxTokens, label, mapData, fallbackFn = null) {
   try {
     const { data, model, usage } = await callLLMJSON(prompt, maxTokens);
+    logger.info('skill_generation_step_succeeded', { label, model });
     return { success: true, data: mapData(data), model, usage };
   } catch (error) {
     const msg = error.message || '';
     console.error(`❌ DeepSeek ${label} error:`, msg);
     if (isExternalFailure(msg) && fallbackFn) {
+      logger.warn('skill_generation_step_fell_back_to_template', { label, reason: msg.substring(0, 160) });
       console.warn(`⚠ Falling back to template ${label} so forge flow is not blocked.`);
       return fallbackFn();
     }
+    logger.error('skill_generation_step_failed', { label, message: msg.substring(0, 200) });
     return { success: false, message: `${label} failed: ${msg}` };
   }
 }

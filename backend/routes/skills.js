@@ -17,6 +17,7 @@ import { moderateSkill } from '../utils/moderation.js';
 import { rateLimitForge } from '../middleware/rateLimiter.js';
 import { getCache, CACHE_TTL } from '../utils/cache.js';
 import { v4 as uuidv4 } from 'uuid';
+import { logger } from '../utils/logger.js';
 
 const router = express.Router();
 
@@ -653,6 +654,16 @@ router.post('/', optionalAuth, rateLimitForge, async (req, res, next) => {
       const savedSkill = verifyResult.rows[0];
 
       await client.query('COMMIT');
+
+      // The only durable confirmation that a forge session actually produced
+      // a saved Skill — everything upstream of this (probe, generate) logs
+      // its own steps, but nothing previously marked "and it landed in the
+      // database" as distinct from "the response was sent".
+      logger.info('skill_saved', {
+        skillId: savedSkill.id,
+        domain: savedSkill.domain,
+        forgeMode: resolvedForgeMode
+      });
 
       // Invalidate skills list cache so new skill appears immediately
       await getCache().invalidatePattern('skills_list:*');

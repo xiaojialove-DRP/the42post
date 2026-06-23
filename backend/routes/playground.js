@@ -17,6 +17,19 @@ import { v4 as uuidv4 } from 'uuid';
 import { db } from '../utils/db.js';
 import { rateLimitLLM, rateLimitTwinTest } from '../middleware/rateLimiter.js';
 import { callLLMJSON } from '../utils/skillGeneration.js';
+import { logger } from '../utils/logger.js';
+
+// Rough language check: does this text contain enough CJK characters to be
+// Chinese? Used as a guardrail for the exact failure class found in
+// production — a Skill forged in Chinese pulling an English scenario's
+// response into Chinese too, because its prompt block was longer/more
+// dominant than the trailing language instruction. Not a hard gate (forge
+// flow should never block on this), just a log line that makes the mismatch
+// visible immediately instead of waiting for a user screenshot.
+function looksChinese(text) {
+  const cjk = (text.match(/[一-鿿]/g) || []).length;
+  return cjk > text.length * 0.1;
+}
 
 const router = express.Router();
 
@@ -310,6 +323,15 @@ router.post('/test', rateLimitLLM, async (req, res, next) => {
       return res.status(502).json({
         error: 'Empty response',
         message: 'One of the responses came back empty'
+      });
+    }
+
+    logger.info('twin_test_generated', { skillId: skill_id, expectedCn: isCn });
+    const withIsCn = looksChinese(withText);
+    const withoutIsCn = looksChinese(withoutText);
+    if (withIsCn !== isCn || withoutIsCn !== isCn) {
+      logger.warn('twin_test_language_mismatch', {
+        skillId: skill_id, expectedCn: isCn, withTextIsCn: withIsCn, withoutTextIsCn: withoutIsCn
       });
     }
 
