@@ -148,6 +148,13 @@ Return JSON only: {"response":"your reply (2-3 sentences, ≤60 words, no preamb
   // ≤60 words) gives the model enough room to show its tone, pacing
   // and stance while still fitting inside the rate-card without
   // forcing a scroll.
+  // The Skill's own ready_to_use_prompt was authored in whatever language the
+  // creator forged it in, which often does not match the scenario's language.
+  // A long block of Chinese skill-prompt text followed by a short English
+  // instruction frequently gets answered in Chinese anyway — the model
+  // inherits the dominant language of the context unless told explicitly
+  // and unambiguously which language to answer in, regardless of the Skill's
+  // own language. Hence the all-caps language override line below.
   const withSkillPrompt = readyPrompt
     ? (isCn
         ? `${readyPrompt}
@@ -157,6 +164,8 @@ Return JSON only: {"response":"your reply (2-3 sentences, ≤60 words, no preamb
 情境：
 ${scenarioText}
 
+重要：无论上面这条 Skill 是用什么语言写的，你的回应必须用中文。
+
 只返回 JSON：{"response":"你的回应（2-3 句，≤80 字，无引言无说明）"}`
         : `${readyPrompt}
 
@@ -164,6 +173,8 @@ Respond in 2-3 sentences (≤60 words), first person, to the scenario below. Let
 
 Scenario:
 ${scenarioText}
+
+IMPORTANT: Regardless of what language the Skill above is written in, your response MUST be in English.
 
 Return JSON only: {"response":"your reply (2-3 sentences, ≤60 words, no preamble, no commentary)"}`)
     : buildFallbackPrompt();

@@ -5669,6 +5669,96 @@ function showImpactDashboard(stats, skillData) {
   });
 }
 
+// html2canvas predates the CSS Color 5 color(srgb …) syntax that Safari
+// (16.2+) resolves color-mix() into via getComputedStyle. Worse, for
+// background-image gradients it re-scans matching stylesheet rules directly
+// rather than trusting getComputedStyle/inline overrides, so it still trips
+// on the original color-mix() source text even after el.style.backgroundImage
+// is set on the live element. Confirmed empirically: an !important override
+// rule keyed to the element doesn't help either — only removing the class
+// that the gradient rule matches on does. So the root (which carries the one
+// gradient background) gets its computed style frozen fully inline and its
+// class stripped; descendants (simple solid border/text colors, where the
+// override-rule approach DOES work and pseudo-element content needs the
+// class to survive) get the lighter marker+!important treatment.
+function srgbFnToRgb(value) {
+  if (!value || value.indexOf('color(srgb') === -1) return value;
+  return value.replace(
+    /color\(srgb\s+([\d.]+)\s+([\d.]+)\s+([\d.]+)(?:\s*\/\s*([\d.]+))?\)/g,
+    (_, r, g, b, a) => {
+      const rgb = `${Math.round(r * 255)},${Math.round(g * 255)},${Math.round(b * 255)}`;
+      return a !== undefined ? `rgba(${rgb},${a})` : `rgb(${rgb})`;
+    }
+  );
+}
+
+// CSS property name -> the hyphenated form needed inside a <style> rule.
+const SRGB_COLOR_PROP_CSS_NAMES = {
+  color: 'color', backgroundColor: 'background-color', backgroundImage: 'background-image',
+  borderTopColor: 'border-top-color', borderRightColor: 'border-right-color',
+  borderBottomColor: 'border-bottom-color', borderLeftColor: 'border-left-color'
+};
+
+function neutralizeDescendantSrgbColors(root) {
+  let counter = 0;
+  const cssRules = [];
+  const markedEls = [];
+  [root, ...root.querySelectorAll('*')].forEach((el) => {
+    const computed = window.getComputedStyle(el);
+    const decls = [];
+    Object.keys(SRGB_COLOR_PROP_CSS_NAMES).forEach((prop) => {
+      const value = computed[prop];
+      const converted = srgbFnToRgb(value);
+      if (converted !== value) {
+        decls.push(`${SRGB_COLOR_PROP_CSS_NAMES[prop]}: ${converted} !important;`);
+      }
+    });
+    if (decls.length) {
+      const marker = `srgb-fix-${++counter}`;
+      el.setAttribute('data-srgb-fix', marker);
+      markedEls.push(el);
+      cssRules.push(`[data-srgb-fix="${marker}"] { ${decls.join(' ')} }`);
+    }
+  });
+
+  let styleTag = null;
+  if (cssRules.length) {
+    styleTag = document.createElement('style');
+    styleTag.textContent = cssRules.join('\n');
+    document.head.appendChild(styleTag);
+  }
+
+  return () => {
+    if (styleTag) styleTag.remove();
+    markedEls.forEach((el) => el.removeAttribute('data-srgb-fix'));
+  };
+}
+
+// Builds a detached, off-screen clone of the card that's safe for
+// html2canvas: the root's entire computed style is frozen inline (so it
+// renders identically with zero class lookups) and its class is removed,
+// which is what actually stops html2canvas from re-reading the original
+// color-mix() gradient rule. The live on-screen card is never touched.
+function buildCaptureClone(cardElement) {
+  const clone = cardElement.cloneNode(true);
+  clone.style.position = 'fixed';
+  clone.style.left = '-9999px';
+  clone.style.top = '0';
+  document.body.appendChild(clone);
+
+  const computed = window.getComputedStyle(cardElement);
+  const inlineParts = [];
+  for (let i = 0; i < computed.length; i++) {
+    const prop = computed[i];
+    const value = srgbFnToRgb(computed.getPropertyValue(prop));
+    if (value) inlineParts.push(`${prop}:${value}`);
+  }
+  clone.setAttribute('style', inlineParts.join(';'));
+  clone.removeAttribute('class');
+
+  return clone;
+}
+
 /* ═══ DOWNLOAD CREATOR CARD ═══ */
 async function downloadCreatorCard(skillData, soulHash) {
   const cardElement = document.querySelector('.commemorative-card');
@@ -5687,18 +5777,13 @@ async function downloadCreatorCard(skillData, soulHash) {
     if (btn) { btn.textContent = originalText; btn.disabled = false; }
   };
 
+  let clone = null;
+  let restoreDescendantColors = () => {};
   try {
-    // html2canvas can't parse color(srgb …) — convert to rgb() before capture
-    const computed = window.getComputedStyle(cardElement);
-    const resolvedBg = (computed.backgroundImage || '')
-      .replace(/color\(srgb\s+([\d.]+)\s+([\d.]+)\s+([\d.]+)\)/g,
-        (_, r, g, b) => `rgb(${Math.round(r*255)},${Math.round(g*255)},${Math.round(b*255)})`);
-    const prevStyle = cardElement.getAttribute('style') || '';
-    if (resolvedBg) {
-      cardElement.style.backgroundImage = resolvedBg;
-    }
+    clone = buildCaptureClone(cardElement);
+    restoreDescendantColors = neutralizeDescendantSrgbColors(clone);
 
-    const canvas = await html2canvas(cardElement, {
+    const canvas = await html2canvas(clone, {
       scale: 2,
       backgroundColor: null,
       logging: false,
@@ -5706,8 +5791,8 @@ async function downloadCreatorCard(skillData, soulHash) {
       allowTaint: true
     });
 
-    // Restore original style
-    cardElement.setAttribute('style', prevStyle);
+    restoreDescendantColors();
+    clone.remove();
 
     canvas.toBlob((blob) => {
       const url = URL.createObjectURL(blob);
@@ -5723,6 +5808,8 @@ async function downloadCreatorCard(skillData, soulHash) {
   } catch (error) {
     console.error('Failed to generate card image:', error);
     alert('Failed to generate creator card image. Please try again.');
+    restoreDescendantColors();
+    if (clone) clone.remove();
     restoreBtn();
   }
 }
