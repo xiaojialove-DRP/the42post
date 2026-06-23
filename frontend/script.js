@@ -8824,6 +8824,16 @@ async function initAgentArchiveView() {
     })();
   } // end initDomainGrid
 
+  // syncArchiveStarStates() batch-fetches star state for every visible card
+  // on load and applies it as "source of truth" once it resolves. If a user
+  // stars a card while that batch request is still in flight, its
+  // late-arriving (now-stale) result would otherwise overwrite the user's
+  // own click a moment later, silently un-starring it with no error. Skill
+  // ids in this set were touched locally and should win. Declared at this
+  // shared scope (not inside attachArchiveSkillListeners) because that
+  // function and syncArchiveStarStates are siblings, not nested.
+  const locallyToggledSkillIds = new Set();
+
   // Attach listeners to skill action buttons in archive grid
   function attachArchiveSkillListeners() {
     // Star buttons
@@ -8833,6 +8843,7 @@ async function initAgentArchiveView() {
         if (btn.disabled) return;
 
         const skillId = btn.dataset.skillId;
+        locallyToggledSkillIds.add(skillId);
         const skillItem = btn.closest('.skill-item');
         const downloadBtn = skillItem?.querySelector('.download-btn');
         const starCountEl = skillItem?.querySelector('.skill-stars');
@@ -8933,6 +8944,7 @@ async function initAgentArchiveView() {
 
       btns.forEach(btn => {
         const id = btn.dataset.skillId;
+        if (locallyToggledSkillIds.has(id)) return;
         const data = stars[id];
         if (!data) return;
 
