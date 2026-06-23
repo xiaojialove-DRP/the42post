@@ -355,7 +355,6 @@ const API = {
 // Consolidate all initialization into a single DOMContentLoaded handler
 function initializeApp() {
   initI18n();
-  initSkillGrids();
   initSlotGrid();
   initConnectAgent();
   initSkillForge();
@@ -467,340 +466,6 @@ async function _resubmitSkillToDB(skill) {
   } catch (e) {
     // Fail silently — will retry on next page load
   }
-}
-
-/* ═══ SKILL GRIDS ═══ */
-/* ═══ SKILL GRIDS - ENHANCED WITH STAR/DOWNLOAD SYSTEM ═══ */
-function initSkillGrids() {
-  const vibeGrid = document.getElementById('vibeGrid');
-  const voicesContainer = document.getElementById('voicesContainer');
-  const currentUser = ApiClient.getUser();
-
-  // Load starred skills from localStorage
-  const starredSkills = safeStorage.getJSON('starred_skills', {});
-
-  function renderSkillCard(skill) {
-    const lang = document.body.dataset.lang || 'en';
-    // Fallback to the other language when the primary is null/empty.
-    // Prevents "English suddenly disappears" when title or desc only exists in one lang.
-    const title = lang === 'cn'
-      ? (skill.titleCn || skill.title || '')
-      : (skill.title || skill.titleCn || '');
-    const desc = lang === 'cn'
-      ? (skill.descCn || skill.desc || '')
-      : (skill.desc || skill.descCn || '');
-    const isStarred = starredSkills[skill.id] === true;
-    const userId = currentUser?.id || 'anonymous';
-    const canDownload = isStarred;
-
-    return `
-      <div class="skill-card" data-skill-id="${escapeHtml(skill.id)}">
-        <!-- Card Header -->
-        <div class="skill-card-header">
-          <span class="skill-title">${escapeHtml(title)}</span>
-          <span class="skill-starlight">✨ ${escapeHtml(skill.starlight)}</span>
-        </div>
-
-        <!-- Soul Hash -->
-        <div class="skill-card-hash">
-          <code class="soul-hash">${skill.soul_hash ? escapeHtml(skill.soul_hash.substring(0, 14)) : 'SH-GENERATED'}</code>
-        </div>
-
-        <!-- Description -->
-        <div class="skill-card-desc">${escapeHtml(desc)}</div>
-
-        <!-- Footer with interactions -->
-        <div class="skill-card-footer">
-          <div class="skill-card-meta">
-            <span class="skill-author">${escapeHtml(skill.author)}</span>
-            <span class="skill-domain">${escapeHtml(skill.domain)}</span>
-          </div>
-          
-          <!-- Action Buttons -->
-          <div class="skill-card-actions">
-            <!-- Star Button (echoes the celestial archive above) -->
-            <button class="btn-star" data-skill-id="${skill.id}" title="Light up this skill">
-              <span class="star-icon">${isStarred ? '★' : '☆'}</span>
-              <span class="star-count">${skill.stars || 0}</span>
-            </button>
-
-            <!-- Download Button (star first to enable) -->
-            <button class="btn-download"
-                    data-skill-id="${skill.id}"
-                    ${canDownload ? '' : 'disabled'}
-                    title="${canDownload ? 'Download this skill' : 'Star first to download'}">
-              <span class="download-icon">⬇</span>
-              <span class="download-count">${skill.downloads || 0}</span>
-            </button>
-
-            <!-- Playground: live-test this skill in the arena -->
-            <button class="btn-playground" data-skill-id="${skill.id}" title="Test this skill in Playground">
-              <span class="playground-icon">▶</span>
-            </button>
-
-            <!-- View Full Skill Button -->
-            <button class="btn-view-full" data-skill-id="${skill.id}" title="View full skill details">
-              →
-            </button>
-          </div>
-        </div>
-      </div>
-    `;
-  }
-
-  if (voicesContainer) {
-    const _voiceSkills = (typeof SkillStore !== 'undefined' && SkillStore.size() > 0) ? SkillStore.sample(6) : SHARED_SKILLS.slice(0, 6);
-    voicesContainer.innerHTML = _voiceSkills.map(renderSkillCard).join('');
-  }
-
-  // Attach event listeners
-  attachSkillCardListeners();
-}
-
-/* ═══ SKILL CARD EVENT LISTENERS ═══ */
-function attachSkillCardListeners() {
-  const starredSkills = safeStorage.getJSON('starred_skills', {});
-
-  // ═══ LOAD STAR STATUS FROM BACKEND ═══
-  // Sync user's star state with backend on page load
-  document.querySelectorAll('.btn-star').forEach(async (btn) => {
-    const skillId = btn.dataset.skillId;
-    try {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/skills/${skillId}/stars`, {
-        headers: {
-          'X-Anonymous-Id': getAnonymousId()
-        }
-      });
-      if (response.ok) {
-        const result = await response.json();
-        const starBtn = btn;
-        const countSpan = starBtn.querySelector('.star-count');
-        const iconSpan = starBtn.querySelector('.star-icon');
-
-        // Update star count from backend
-        if (countSpan && result.totalStars) {
-          countSpan.textContent = result.totalStars;
-        }
-
-        // Update star state if user has already starred this
-        if (result.userStarred) {
-          starredSkills[skillId] = true;
-          if (iconSpan) iconSpan.textContent = '★';
-        } else {
-          delete starredSkills[skillId];
-          if (iconSpan) iconSpan.textContent = '☆';
-        }
-
-        // Sync with localStorage
-        safeStorage.setItem('starred_skills', JSON.stringify(starredSkills));
-      }
-    } catch (error) {
-      console.warn(`Could not load star status for skill ${skillId}:`, error);
-    }
-  });
-
-  // Star button handler (with backend sync)
-  document.querySelectorAll('.btn-star').forEach(btn => {
-    btn.addEventListener('click', async (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-
-      // RACE CONDITION FIX: Prevent double-click by checking disabled state first
-      if (btn.disabled) return;
-
-      const skillId = btn.dataset.skillId;
-      
-      // NOTE: We don't check if skill exists here because:
-      // 1. The skill might be in a different data source
-      // 2. If it doesn't exist, the backend API will return 404
-      // 3. We let the backend be the source of truth for validation
-      
-      if (!skillId) return;
-
-      // Determine new state
-      const isCurrentlyStar = starredSkills[skillId];
-      const newStarred = !isCurrentlyStar;
-
-      // Show loading state
-      const originalIcon = btn.querySelector('.star-icon').textContent;
-      btn.querySelector('.star-icon').textContent = '⏳';
-      btn.disabled = true;
-
-      try {
-        // Call backend API to save star
-        const anonId = getAnonymousId();
-        const response = await fetch(`${API_CONFIG.BASE_URL}/skills/${skillId}/star`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Anonymous-Id': anonId
-          },
-          body: JSON.stringify({ starred: newStarred })
-        });
-
-        if (!response.ok) {
-          throw new Error(`Star API error: ${response.status}`);
-        }
-
-        const result = await response.json();
-
-        // Update local state - get skill object and sync star count
-        const skill = findSkillById(skillId);
-        if (skill) {
-          skill.stars = result.totalStars;
-        }
-
-        if (newStarred) {
-          starredSkills[skillId] = true;
-        } else {
-          delete starredSkills[skillId];
-        }
-
-        // Save to localStorage as backup
-        safeStorage.setItem('starred_skills', JSON.stringify(starredSkills));
-
-        // Update button with the new star count from backend
-        btn.querySelector('.star-icon').textContent = newStarred ? '⭐' : '☆';
-        btn.querySelector('.star-count').textContent = result.totalStars;
-
-        // Enable/disable download button
-        const downloadBtn = btn.parentElement?.querySelector('.btn-download');
-        if (downloadBtn) {
-          if (newStarred) {
-            downloadBtn.disabled = false;
-            downloadBtn.title = 'Download this skill';
-          } else {
-            downloadBtn.disabled = true;
-            downloadBtn.title = 'Star first to download';
-          }
-        }
-
-        // Show success message
-        showSuccess(newStarred ? 'Skill starred! ⭐' : 'Star removed');
-      } catch (error) {
-        console.error('Error updating star:', error);
-        // Revert UI on error
-        btn.querySelector('.star-icon').textContent = originalIcon;
-        
-        // Provide specific error messages
-        if (error.message && error.message.includes('404')) {
-          showToastI18n('error_skill_not_found', 'error');
-        } else if (error.message && error.message.includes('400')) {
-          showToastI18n('error_invalid_request', 'error');
-        } else {
-          showToastI18n('error_star_failed', 'error');
-        }
-      } finally {
-        btn.disabled = false;
-      }
-    });
-  });
-
-  // Download button handler (with backend sync)
-  document.querySelectorAll('.btn-download').forEach(btn => {
-    btn.addEventListener('click', async (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-
-      // RACE CONDITION FIX: Prevent double-click
-      if (btn.disabled) return;
-
-      const skillId = btn.dataset.skillId;
-      
-      if (!skillId) {
-        showToastI18n('error_invalid_skill_id', 'error');
-        return;
-      }
-      
-      if (!starredSkills[skillId]) {
-        showToastI18n('warning_star_first', 'warning');
-        return;
-      }
-
-      // Show loading state
-      const originalText = btn.textContent;
-      btn.textContent = '⏳ Downloading...';
-      btn.disabled = true;
-
-      try {
-        // Get skill object for metadata
-        const skill = findSkillById(skillId);
-
-        // Call backend download API
-        const anonId = getAnonymousId();
-        const downloadUrl = `${API_CONFIG.BASE_URL}/download/${skillId}?format=markdown`;
-
-        const response = await fetch(downloadUrl, {
-          headers: {
-            'X-Anonymous-Id': anonId
-          }
-        });
-
-        if (!response.ok) {
-          throw new Error(`Download error: ${response.status}`);
-        }
-
-        const blob = await response.blob();
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `The42Post_${skill ? skill.title.replace(/\s+/g, '_') : skillId}.md`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-
-        // Update download count
-        if (skill) {
-          skill.downloads = (skill.downloads || 0) + 1;
-          btn.querySelector('.download-count').textContent = skill.downloads;
-        }
-
-        showToastI18n('success_skill_downloaded', 'success');
-      } catch (error) {
-        console.error('Download error:', { skillId, error: error.message, status: error.status });
-        const msg = error.message === 'Download error: 404'
-          ? 'Skill not found or not published'
-          : 'Download failed. Check console for details.';
-        showError(msg);
-      } finally {
-        btn.textContent = originalText;
-        btn.disabled = false;
-      }
-    });
-  });
-
-  // View full skill button handler
-  document.querySelectorAll('.btn-view-full').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      const skillId = btn.dataset.skillId;
-      const skill = findSkillById(skillId);
-
-      if (!skill) return;
-      showSkillModal(skill);
-    });
-  });
-
-  // Playground button handler — opens arena with this skill pre-loaded
-  // for the With Skill vs Without Skill twin test.
-  function attachPlaygroundHandlers() {
-    document.querySelectorAll('.btn-playground').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        const skillId = btn.dataset.skillId;
-        if (!skillId) {
-          console.warn('No skill ID on playground button');
-          return;
-        }
-        console.log('Opening Playground with skill:', skillId);
-        window.location.href = `playground.html?skill=${encodeURIComponent(skillId)}`;
-      });
-    });
-  }
-  attachPlaygroundHandlers();
 }
 
 /* ═══ GENERATE MARKDOWN ═══ */
@@ -2286,18 +1951,28 @@ function generateSkillFromIdea(idea, probeChoice) {
   // 基于用户想法和直觉探针选择生成技能
   // idea 包含了用户的核心想法
   // probeChoice 反映了用户的立场（a=舒适区, b=反题, c=道德边界）
+  // This is the last-resort, fully offline fallback used only when both
+  // DeepSeek and Claude are unreachable — it must match the idea's own
+  // language rather than assume Chinese, or English users silently get a
+  // Chinese-only result with no error shown.
+  const isCn = (document.body.dataset.lang === 'cn') || /[一-鿿]/.test(idea || '');
 
   if (!idea) {
-    return {
+    return isCn ? {
       name: "Untitled Skill",
       definition: "基于你的输入生成的技能定义...",
       useWhen: "适用场景",
       refuseWhen: "不适用场景"
+    } : {
+      name: "Untitled Skill",
+      definition: "A skill definition generated from your input...",
+      useWhen: "Applicable scenario",
+      refuseWhen: "Non-applicable scenario"
     };
   }
 
   // 从想法中提取关键词，创建技能名称
-  const ideaWords = idea.split(/[，。，、\s]+/).filter(w => w.length > 2);
+  const ideaWords = idea.split(/[，。、,.\s]+/).filter(w => w.length > 2);
 
   // 根据直觉探针选择调整语气
   const choiceDescriptions = {
@@ -2346,7 +2021,7 @@ function generateSkillFromIdea(idea, probeChoice) {
     } else {
       skillDefinition = "不惜代价保护隐私，拒绝任何不必要的数据收集或使用。";
     }
-  } else {
+  } else if (isCn) {
     // 通用技能名称
     const skillNameWords = ideaWords.slice(0, 2).join('');
     skillName = skillNameWords ? `${skillNameWords} / ${ideaWords[0]} Skill` : "Custom Skill";
@@ -2358,18 +2033,40 @@ function generateSkillFromIdea(idea, probeChoice) {
     } else {
       skillDefinition = `激进地推进这一想法，甚至挑战现状和期待。`;
     }
+  } else {
+    // Generic English skill name — join with a space, not concatenation.
+    const skillNameWords = ideaWords.slice(0, 2)
+      .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+      .join(' ');
+    skillName = skillNameWords || "Custom Skill";
+
+    if (probeChoice === 'a') {
+      skillDefinition = `Centers on the user's stated need, taking a practical and direct approach to realize this idea.`;
+    } else if (probeChoice === 'b') {
+      skillDefinition = `Balances competing constraints and opportunities, adapting flexibly to the situation at hand.`;
+    } else {
+      skillDefinition = `Pushes this idea forward unapologetically, even where it challenges the status quo or expectations.`;
+    }
   }
 
-  const useWhenOptions = [
+  const useWhenOptions = isCn ? [
     "当用户表达相关需求或问题时",
     "在特定的上下文或情景中会自动触发",
     "用户明确要求或隐含期望这种行为时"
+  ] : [
+    "When the user expresses a related need or question",
+    "Triggers automatically in a specific context or situation",
+    "When the user explicitly requests or implicitly expects this behavior"
   ];
 
-  const refuseWhenOptions = [
+  const refuseWhenOptions = isCn ? [
     "当应用此技能会造成直接伤害或违反其他基本原则时",
     "在与其他核心值相冲突的情况下",
     "用户明确拒绝或取消激活此技能时"
+  ] : [
+    "When applying this skill would cause direct harm or violate other core principles",
+    "When it conflicts with other core values",
+    "When the user explicitly declines or deactivates this skill"
   ];
 
   return {
