@@ -307,7 +307,26 @@ async function callWithFallback(prompt, maxTokens, label, mapData, fallbackFn = 
   } catch (error) {
     const msg = error.message || '';
     console.error(`❌ DeepSeek ${label} error:`, msg);
-    if (isExternalFailure(msg) && fallbackFn) {
+    if (!isExternalFailure(msg)) {
+      logger.error('skill_generation_step_failed', { label, message: msg.substring(0, 200) });
+      return { success: false, message: `${label} failed: ${msg}` };
+    }
+
+    // DeepSeek is down — this file's own header documents Claude as the
+    // designed fallback tier (and every export here is even named
+    // "...WithClaude"), but callClaudeJSON previously had zero call sites.
+    // Try it before giving up to a static template.
+    if (ANTHROPIC_KEY) {
+      try {
+        const { data, model, usage } = await callClaudeJSON(prompt, maxTokens);
+        logger.info('skill_generation_step_succeeded', { label, model, usedFallback: true });
+        return { success: true, data: mapData(data), model, usage };
+      } catch (claudeError) {
+        logger.warn('skill_generation_claude_fallback_failed', { label, message: (claudeError.message || '').substring(0, 160) });
+      }
+    }
+
+    if (fallbackFn) {
       logger.warn('skill_generation_step_fell_back_to_template', { label, reason: msg.substring(0, 160) });
       console.warn(`⚠ Falling back to template ${label} so forge flow is not blocked.`);
       return fallbackFn();
