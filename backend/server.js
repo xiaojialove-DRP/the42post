@@ -3,9 +3,19 @@
    Rigorous, verifiable machine execution layer
    ═══════════════════════════════════════════════════════ */
 
+// MUST be the first import. Every other import below is a static ES module
+// import, which Node hoists and evaluates before any of this file's own
+// top-level code — including a later `dotenv.config()` call. Several modules
+// (utils/auth.js JWT_SECRET, utils/skillGeneration.js API keys, utils/email.js)
+// read process.env into module-level consts at import time, so if dotenv
+// loads .env after those imports run, they permanently cache `undefined`
+// for the life of the process even though process.env looks correct
+// afterward. 'dotenv/config' runs config() as its own import side effect,
+// so listing it first guarantees .env is loaded before anything else.
+import 'dotenv/config';
+
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
 import pg from 'pg';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
@@ -32,8 +42,6 @@ import { corsOptions, logCorsConfiguration } from './config/cors.js';
 import { initializeCache } from './utils/cache.js';
 import { isOriginWhitelisted, getWhitelistedOrigins } from './config/cors.js';
 import { logger } from './utils/logger.js';
-
-dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
