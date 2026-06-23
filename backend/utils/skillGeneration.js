@@ -296,12 +296,36 @@ function isExternalFailure(msg) {
   );
 }
 
+// ─── DeepSeek, with Claude as the real second attempt ───
+// This file's own header documents Claude as the designed fallback tier
+// (and every export below is even named "...WithClaude"), but
+// callClaudeJSON previously had zero call sites anywhere in the codebase —
+// every caller, including the Twin Test route, went straight from a
+// DeepSeek failure to either a static template or a raw error. Shared so
+// both callWithFallback (forge generation) and routes/playground.js
+// (Twin Test) get the same real fallback instead of duplicating it.
+export async function callLLMWithClaudeFallback(prompt, maxTokens, label = 'llm call') {
+  try {
+    return await callLLMJSON(prompt, maxTokens);
+  } catch (error) {
+    const msg = error.message || '';
+    if (isExternalFailure(msg) && ANTHROPIC_KEY) {
+      try {
+        return await callClaudeJSON(prompt, maxTokens);
+      } catch (claudeError) {
+        logger.warn('skill_generation_claude_fallback_failed', { label, message: (claudeError.message || '').substring(0, 160) });
+      }
+    }
+    throw error;
+  }
+}
+
 // ─── Shared try/catch wrapper for all LLM generate functions ───
 // mapData: (rawData) => normalised data object
 // fallbackFn: () => { success, fallback, data, model } — called only on external failures
 async function callWithFallback(prompt, maxTokens, label, mapData, fallbackFn = null) {
   try {
-    const { data, model, usage } = await callLLMJSON(prompt, maxTokens);
+    const { data, model, usage } = await callLLMWithClaudeFallback(prompt, maxTokens, label);
     logger.info('skill_generation_step_succeeded', { label, model });
     return { success: true, data: mapData(data), model, usage };
   } catch (error) {
@@ -310,20 +334,6 @@ async function callWithFallback(prompt, maxTokens, label, mapData, fallbackFn = 
     if (!isExternalFailure(msg)) {
       logger.error('skill_generation_step_failed', { label, message: msg.substring(0, 200) });
       return { success: false, message: `${label} failed: ${msg}` };
-    }
-
-    // DeepSeek is down — this file's own header documents Claude as the
-    // designed fallback tier (and every export here is even named
-    // "...WithClaude"), but callClaudeJSON previously had zero call sites.
-    // Try it before giving up to a static template.
-    if (ANTHROPIC_KEY) {
-      try {
-        const { data, model, usage } = await callClaudeJSON(prompt, maxTokens);
-        logger.info('skill_generation_step_succeeded', { label, model, usedFallback: true });
-        return { success: true, data: mapData(data), model, usage };
-      } catch (claudeError) {
-        logger.warn('skill_generation_claude_fallback_failed', { label, message: (claudeError.message || '').substring(0, 160) });
-      }
     }
 
     if (fallbackFn) {

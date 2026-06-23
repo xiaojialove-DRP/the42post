@@ -16,7 +16,7 @@ import express from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import { db } from '../utils/db.js';
 import { rateLimitLLM, rateLimitTwinTest } from '../middleware/rateLimiter.js';
-import { callLLMJSON } from '../utils/skillGeneration.js';
+import { callLLMWithClaudeFallback } from '../utils/skillGeneration.js';
 import { logger } from '../utils/logger.js';
 
 // Rough language check: does this text contain enough CJK characters to be
@@ -282,9 +282,9 @@ router.post('/test', rateLimitLLM, async (req, res, next) => {
     try {
       [withResp, withoutResp] = await Promise.race([
         Promise.all([
-          callLLMJSON(withSkillPrompt, 400)
+          callLLMWithClaudeFallback(withSkillPrompt, 400, 'twin_test_with_skill')
             .catch(e => ({ error: e.message, code: 'GENERATION_ERROR' })),
-          callLLMJSON(withoutSkillPrompt, 400)
+          callLLMWithClaudeFallback(withoutSkillPrompt, 400, 'twin_test_without_skill')
             .catch(e => ({ error: e.message, code: 'GENERATION_ERROR' }))
         ]),
         new Promise((_, reject) =>
@@ -309,10 +309,18 @@ router.post('/test', rateLimitLLM, async (req, res, next) => {
     }
 
     if (withResp.error || withoutResp.error) {
-      console.error('❌ Playground twin-test generation error:', withResp.error || withoutResp.error);
+      const rawError = withResp.error || withoutResp.error || 'Unknown generation error';
+      console.error('❌ Playground twin-test generation error:', rawError);
+      logger.error('twin_test_generation_failed', { skillId: skill_id, message: rawError.substring(0, 200) });
+      // Never forward the raw provider error (API keys, status codes, JSON
+      // shape) to the client — it briefly rendered verbatim in the UI
+      // ("DeepSeek HTTP 401: {...}") before this fix. The real message is
+      // already logged server-side above for diagnosis.
       return res.status(502).json({
         error: 'Generation failed',
-        message: withResp.error || withoutResp.error || 'Unknown generation error'
+        message: isCn
+          ? '生成暂时失败了，请稍后再试一次。'
+          : 'Generation failed for now — please try again in a moment.'
       });
     }
 
@@ -346,7 +354,7 @@ router.post('/test', rateLimitLLM, async (req, res, next) => {
     const diagPrompt = buildDiagnosticPrompt(scenarioText, withText, withoutText, skillSide, isCn, skill);
     let diagnostic = '';
     try {
-      const diagResp = await callLLMJSON(diagPrompt, 100);
+      const diagResp = await callLLMWithClaudeFallback(diagPrompt, 100, 'twin_test_diagnostic');
       diagnostic = (diagResp.data?.diagnostic || '').trim();
     } catch (e) {
       console.warn('Diagnostic generation skipped:', e.message);
