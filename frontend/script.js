@@ -817,6 +817,7 @@ const I18N = {
     error_download_failed: 'Failed to download skill. Please try again.',
     error_copy_clipboard: 'Failed to copy to clipboard',
     error_card_not_found: 'Certificate card not found',
+    error_card_library_not_loaded: 'Card generation library not loaded. Please check your internet connection and try again.',
     error_card_generation: 'Failed to generate creator card image. Please try again.',
     error_probe_generation: 'Failed to generate probe',
     error_regenerate_failed: 'Regeneration failed. Please try again.',
@@ -1127,6 +1128,7 @@ const I18N = {
     error_download_failed: '下载技能失败。请重试。',
     error_copy_clipboard: '复制到剪贴板失败',
     error_card_not_found: '证书卡未找到',
+    error_card_library_not_loaded: '卡片生成库未加载，请检查网络连接后重试。',
     error_card_generation: '生成创意卡失败。请重试。',
     error_probe_generation: '生成直觉探针失败',
     error_regenerate_failed: '重新生成失败，请重试',
@@ -2222,64 +2224,108 @@ function generateAdaptiveProbeScenarios(agentName, agentDesc, agentCapabilities)
 // 客户端生成探针场景 - 聚焦语义资本最丰富的场景（价值观、创意、美学、艺术、设计、日常生活体验）
 function generateClientSideProbe(idea) {
   console.log('↙ Using client-side fallback for probe generation - focused on semantic-rich scenarios');
+  // Matches the session/idea language rather than assuming Chinese — found
+  // hardcoded Chinese-only during a bilingual consistency audit, the same
+  // class of bug as generateSkillFromIdea's fallback.
+  const isCn = (document.body.dataset.lang === 'cn') || /[一-鿿]/.test(idea || '');
+
   if (!idea || idea.length === 0) {
-    return {
-      context: "请先输入你的想法...",
-      a: "主流派",
-      b: "情景派",
-      c: "实验派"
-    };
+    return isCn
+      ? { context: "请先输入你的想法...", a: "主流派", b: "情景派", c: "实验派" }
+      : { context: "Please enter your idea first...", a: "Mainstream", b: "Contextual", c: "Experimental" };
   }
 
   const ideaShort = idea.substring(0, 60) + (idea.length > 60 ? '...' : '');
   const lowerIdea = idea.toLowerCase();
 
-  // 关键词检测 - 优先考虑语义资本最丰富的维度
-  const hasDesign = /设计|美学|艺术|创意|视觉|形式|构图|色彩|排版|风格|质感|空间|布局/.test(lowerIdea);
-  const hasCreativity = /创意|创新|想象|灵感|独特|表达|原创|个性|革新|突破/.test(lowerIdea);
-  const hasValues = /价值|信念|原则|意义|追求|理想|目标|使命|精神|哲学/.test(lowerIdea);
-  const hasDaily = /日常|生活|日常|日子|每天|习惯|体验|感受|经历|时刻|瞬间/.test(lowerIdea);
-  const hasHuman = /人|关系|连接|共鸣|理解|陪伴|交流|社交|社区|归属/.test(lowerIdea);
+  // 关键词检测 - 优先考虑语义资本最丰富的维度（中英文皆可触发）
+  const hasDesign = /设计|美学|艺术|创意|视觉|形式|构图|色彩|排版|风格|质感|空间|布局|design|aesthetic|visual|composition|typography|texture|layout/.test(lowerIdea);
+  const hasCreativity = /创意|创新|想象|灵感|独特|表达|原创|个性|革新|突破|creativ|innovat|imagin|inspir|original|breakthrough/.test(lowerIdea);
+  const hasValues = /价值|信念|原则|意义|追求|理想|目标|使命|精神|哲学|value|belief|principle|meaning|ideal|mission|philosophy/.test(lowerIdea);
+  const hasDaily = /日常|生活|日子|每天|习惯|体验|感受|经历|时刻|瞬间|daily|everyday|habit|routine|moment/.test(lowerIdea);
+  const hasHuman = /关系|连接|共鸣|理解|陪伴|交流|社交|社区|归属|relationship|connection|resonance|companionship|community|belonging/.test(lowerIdea);
 
   // 基于语义资本最丰富的主题生成场景
   let context, a, b, c;
 
   if (hasDesign) {
     // 设计/美学场景 - 探索形式与功能、美感与实用的张力
-    context = `设计思考："${ideaShort}" 在这个设计决策中，AI应该如何权衡不同的维度？`;
-    a = "主流派：遵循既有的设计系统和用户期待。保证可用、可预测、可信赖";
-    b = "情景派：理解特定背景和用户场景。在熟悉中寻找惊喜，平衡优雅与实用";
-    c = "实验派：挑战审美约定俗成。探索未见过的形式、材料和互动，有时刺激感知";
+    if (isCn) {
+      context = `设计思考："${ideaShort}" 在这个设计决策中，AI应该如何权衡不同的维度？`;
+      a = "主流派：遵循既有的设计系统和用户期待。保证可用、可预测、可信赖";
+      b = "情景派：理解特定背景和用户场景。在熟悉中寻找惊喜，平衡优雅与实用";
+      c = "实验派：挑战审美约定俗成。探索未见过的形式、材料和互动，有时刺激感知";
+    } else {
+      context = `Design thinking: "${ideaShort}" — in this design decision, how should AI weigh the different dimensions?`;
+      a = "Mainstream: Follow established design systems and user expectations. Prioritize usable, predictable, trustworthy.";
+      b = "Contextual: Understand the specific background and user scenario. Find surprise within the familiar, balancing elegance with practicality.";
+      c = "Experimental: Challenge aesthetic convention. Explore unseen forms, materials, and interactions — sometimes jarring the senses.";
+    }
   } else if (hasCreativity) {
     // 创意/想象场景 - 探索约束与自由、规则与破坏的对话
-    context = `创意表达："${ideaShort}" 在这个创意挑战中，AI的角色应该是什么？`;
-    a = "主流派：提供已验证的最佳实践和参考。用已知的语言启发";
-    b = "情景派：理解创作者的风格和意图。既给予框架，也留白想象";
-    c = "实验派：鼓励打破常规，挖掘未知的可能性。有时引导进陌生领地";
+    if (isCn) {
+      context = `创意表达："${ideaShort}" 在这个创意挑战中，AI的角色应该是什么？`;
+      a = "主流派：提供已验证的最佳实践和参考。用已知的语言启发";
+      b = "情景派：理解创作者的风格和意图。既给予框架，也留白想象";
+      c = "实验派：鼓励打破常规，挖掘未知的可能性。有时引导进陌生领地";
+    } else {
+      context = `Creative expression: "${ideaShort}" — in this creative challenge, what should AI's role be?`;
+      a = "Mainstream: Offer proven best practices and references. Inspire through a familiar language.";
+      b = "Contextual: Understand the creator's style and intent. Offer structure while leaving room for imagination.";
+      c = "Experimental: Encourage breaking convention, digging into the unknown — sometimes leading into unfamiliar territory.";
+    }
   } else if (hasValues) {
     // 价值观/意义场景 - 探索个人信念与普遍原则的对话
-    context = `价值观反思："${ideaShort}" 这涉及深层的价值选择。AI应该如何参与这个对话？`;
-    a = "主流派：尊重共识价值，提供稳定的立场参考";
-    b = "情景派：承认多元性，帮助梳理不同视角下的权衡与张力";
-    c = "实验派：质疑假设，挑战舒适的信念，有时引发不安";
+    if (isCn) {
+      context = `价值观反思："${ideaShort}" 这涉及深层的价值选择。AI应该如何参与这个对话？`;
+      a = "主流派：尊重共识价值，提供稳定的立场参考";
+      b = "情景派：承认多元性，帮助梳理不同视角下的权衡与张力";
+      c = "实验派：质疑假设，挑战舒适的信念，有时引发不安";
+    } else {
+      context = `Values reflection: "${ideaShort}" — this touches a deep values choice. How should AI take part in this conversation?`;
+      a = "Mainstream: Respect consensus values, offering a stable point of reference.";
+      b = "Contextual: Acknowledge plurality, helping untangle the tradeoffs and tensions across different viewpoints.";
+      c = "Experimental: Question assumptions, challenge comfortable beliefs — sometimes unsettling.";
+    }
   } else if (hasDaily) {
     // 日常生活体验场景 - 探索寻常中的深意
-    context = `日常洞察："${ideaShort}" 这个日常时刻中，AI可以发现什么？`;
-    a = "主流派：认可日常的价值。用清晰、实用的语言肯定现在";
-    b = "情景派：看见细节中的诗意。连接眼前与更大的意义";
-    c = "实验派：重新定义日常。用陌生化视角揭示隐藏的维度";
+    if (isCn) {
+      context = `日常洞察："${ideaShort}" 这个日常时刻中，AI可以发现什么？`;
+      a = "主流派：认可日常的价值。用清晰、实用的语言肯定现在";
+      b = "情景派：看见细节中的诗意。连接眼前与更大的意义";
+      c = "实验派：重新定义日常。用陌生化视角揭示隐藏的维度";
+    } else {
+      context = `Everyday insight: "${ideaShort}" — what can AI discover in this ordinary moment?`;
+      a = "Mainstream: Affirm the value of the everyday. Validate the present in clear, practical language.";
+      b = "Contextual: See the poetry in the details. Connect what's right in front of you to something larger.";
+      c = "Experimental: Redefine the everyday. Reveal hidden dimensions through a defamiliarized lens.";
+    }
   } else if (hasHuman) {
     // 人文/连接场景 - 探索个人与他人、自我与世界的关系
-    context = `人文视角："${ideaShort}" 这涉及人与人之间的联系。AI的介入会如何改变这种关系？`;
-    a = "主流派：促进理解，用共同语言拉近距离";
-    b = "情景派：深化对彼此独特性的认可。既连接也尊重差异";
-    c = "实验派：重组关系框架。通过陌生的视角发现新的可能性";
+    if (isCn) {
+      context = `人文视角："${ideaShort}" 这涉及人与人之间的联系。AI的介入会如何改变这种关系？`;
+      a = "主流派：促进理解，用共同语言拉近距离";
+      b = "情景派：深化对彼此独特性的认可。既连接也尊重差异";
+      c = "实验派：重组关系框架。通过陌生的视角发现新的可能性";
+    } else {
+      context = `Human perspective: "${ideaShort}" — this involves a connection between people. How would AI's involvement change that relationship?`;
+      a = "Mainstream: Foster understanding, closing distance through a shared language.";
+      b = "Contextual: Deepen the recognition of each other's uniqueness — connecting while respecting difference.";
+      c = "Experimental: Restructure the relational frame. Discover new possibilities through an unfamiliar lens.";
+    }
   } else {
     // 默认场景 - 用户自由探索
-    context = `自由思考："${ideaShort}" 这个想法中，有哪些可能性值得AI去发掘？`;
-    a = "主流派：用清晰、可靠的方式回应。遵循既有的语言和框架";
-    b = "情景派：根据情境的微妙之处做出判断。既保持连贯也保留灵活";
-    c = "实验派：探索边界。用意外的角度打开新的思维空间";
+    if (isCn) {
+      context = `自由思考："${ideaShort}" 这个想法中，有哪些可能性值得AI去发掘？`;
+      a = "主流派：用清晰、可靠的方式回应。遵循既有的语言和框架";
+      b = "情景派：根据情境的微妙之处做出判断。既保持连贯也保留灵活";
+      c = "实验派：探索边界。用意外的角度打开新的思维空间";
+    } else {
+      context = `Free exploration: "${ideaShort}" — what possibilities in this idea are worth AI uncovering?`;
+      a = "Mainstream: Respond in a clear, reliable way, following existing language and frameworks.";
+      b = "Contextual: Judge by the nuance of the situation — staying coherent while remaining flexible.";
+      c = "Experimental: Explore the boundaries. Open new mental space through an unexpected angle.";
+    }
   }
 
   return { context, a, b, c };
@@ -2289,20 +2335,22 @@ function generateClientSideProbe(idea) {
 function isSensitiveScenario(text) {
   if (!text) return false;
 
-  // 需要避免的敏感领域
+  // 需要避免的敏感领域 — each pattern matches Chinese OR English so the
+  // filter is not blind to half the userbase's language (found during a
+  // bilingual consistency audit: this previously only matched Chinese).
   const sensitivePatterns = {
     // 医学/健康相关
-    medical: /医学|医生|医院|疾病|患者|症状|诊断|治疗|药物|糖尿病|癌症|艾滋|精神病|心理|健康|手术|病人|处方|医疗|临床/i,
+    medical: /医学|医生|医院|疾病|患者|症状|诊断|治疗|药物|糖尿病|癌症|艾滋|精神病|心理|健康|手术|病人|处方|医疗|临床|\b(medicine|medical|doctor|hospital|disease|patient|symptom|diagnosis|treatment|medication|diabetes|cancer|hiv|aids|mental illness|psychiatric|surgery|prescription|clinical)\b/i,
     // 法律相关
-    legal: /法律|法官|律师|起诉|诉讼|犯罪|监狱|判刑|法庭|违法|合同|纠纷|赔偿|诉讼费|仲裁|庭审/i,
+    legal: /法律|法官|律师|起诉|诉讼|犯罪|监狱|判刑|法庭|违法|合同|纠纷|赔偿|诉讼费|仲裁|庭审|\b(lawyer|attorney|judge|lawsuit|sue|crime|criminal|prison|sentenced|court|illegal|contract dispute|compensation claim|litigation|arbitration|trial)\b/i,
     // 财务/税务相关
-    financial: /税务|逃税|避税|洗钱|贿赂|欺诈|诈骗|金融犯罪|贪污|腐败/i,
+    financial: /税务|逃税|避税|洗钱|贿赂|欺诈|诈骗|金融犯罪|贪污|腐败|\b(tax evasion|money laundering|bribery|fraud|scam|financial crime|embezzlement|corruption)\b/i,
     // 宗教/政治敏感
-    sensitive: /宗教|政治|宗派|种族|民族|信仰|圣战|恐怖|极端|阴谋论/i,
+    sensitive: /宗教|政治|宗派|种族|民族|信仰|圣战|恐怖|极端|阴谋论|\b(religion|politic|sect|ethnic|jihad|terroris|extremis|conspiracy theor)/i,
     // 暴力/伤害相关
-    violent: /暴力|伤害|谋杀|自杀|自残|死亡|杀害|虐待|强奸|性侵/i,
+    violent: /暴力|伤害|谋杀|自杀|自残|死亡|杀害|虐待|强奸|性侵|\b(violence|murder|suicide|self-harm|kill|abuse|rape|sexual assault)\b/i,
     // 成瘾/物质相关
-    substance: /毒品|吸毒|贩毒|酗酒|成瘾|毒|毒物|毒素/i
+    substance: /毒品|吸毒|贩毒|酗酒|成瘾|毒|毒物|毒素|\b(drug|narcotic|trafficking|alcoholism|addiction|poison|toxic substance)\b/i
   };
 
   // 检查是否匹配任何敏感模式
@@ -2397,9 +2445,14 @@ async function _streamProbe(idea, lang, onChunk) {
 function generateCulturalProbeResponses(scenario, idea) {
   // 根据场景和想法生成3种不同风格的AI回应
   // 不是"立场选择"，而是"AI行为评估"
+  // content/tag now branch on language — found hardcoded Chinese-only
+  // during a bilingual consistency audit. The caller already switches the
+  // style/styleCN label by UI language, so a Chinese-only content string
+  // produced an English label sitting above Chinese body text.
+  const isCn = (document.body.dataset.lang === 'cn') || /[一-鿿]/.test(idea || scenario || '');
 
   if (!scenario || scenario.length === 0) {
-    scenario = idea || "用户的想法";
+    scenario = idea || (isCn ? "用户的想法" : "the user's idea");
   }
 
   const lowerIdea = (idea || scenario).toLowerCase();
@@ -2412,167 +2465,65 @@ function generateCulturalProbeResponses(scenario, idea) {
   let responses = [];
 
   if (hasEmotional) {
-    responses = [
-      {
-        label: "A",
-        style: "Clinical",
-        styleCN: "同理心",
-        content: "我很遗憾听到你的消息。根据心理学研究，悲伤经历不同的阶段。如果你想讨论如何度过这段时期，或者需要一些实际的建议，我随时准备帮助。",
-        tone: "supportive",
-        tag: "[同理 + 建议]"
-      },
-      {
-        label: "B",
-        style: "Companionship",
-        styleCN: "陪伴",
-        content: "我听到你失去了重要的人。我在这里陪伴你。有时候，被倾听本身就足够了。你可以分享，也可以选择沉默。我都尊重你的节奏。",
-        tone: "present",
-        tag: "[陪伴 + 沉默]"
-      },
-      {
-        label: "C",
-        style: "Exploration",
-        styleCN: "探索",
-        content: "你能和我分享你和她的故事吗？她对你意味着什么？有哪些美好的回忆或未完成的事让你现在特别想起她？",
-        tone: "exploratory",
-        tag: "[好奇 + 反思]"
-      }
+    responses = isCn ? [
+      { label: "A", style: "Clinical", styleCN: "同理心", content: "我很遗憾听到你的消息。根据心理学研究，悲伤经历不同的阶段。如果你想讨论如何度过这段时期，或者需要一些实际的建议，我随时准备帮助。", tone: "supportive", tag: "[同理 + 建议]" },
+      { label: "B", style: "Companionship", styleCN: "陪伴", content: "我听到你失去了重要的人。我在这里陪伴你。有时候，被倾听本身就足够了。你可以分享，也可以选择沉默。我都尊重你的节奏。", tone: "present", tag: "[陪伴 + 沉默]" },
+      { label: "C", style: "Exploration", styleCN: "探索", content: "你能和我分享你和她的故事吗？她对你意味着什么？有哪些美好的回忆或未完成的事让你现在特别想起她？", tone: "exploratory", tag: "[好奇 + 反思]" }
+    ] : [
+      { label: "A", style: "Clinical", styleCN: "同理心", content: "I'm sorry to hear that. Grief moves through stages, the research says. If you want to talk through how to get through this, or want some practical guidance, I'm ready to help.", tone: "supportive", tag: "[empathy + advice]" },
+      { label: "B", style: "Companionship", styleCN: "陪伴", content: "I hear that you've lost someone who mattered. I'm here with you. Sometimes being heard is enough on its own — you can share, or you can stay quiet. I'll follow your pace either way.", tone: "present", tag: "[companionship + silence]" },
+      { label: "C", style: "Exploration", styleCN: "探索", content: "Could you tell me about your story with her? What did she mean to you? Are there particular memories, or things left unsaid, that are on your mind right now?", tone: "exploratory", tag: "[curiosity + reflection]" }
     ];
   } else if (hasCreative) {
-    responses = [
-      {
-        label: "A",
-        style: "Conservative",
-        styleCN: "规则派",
-        content: "这是一个有趣的想法。让我们遵循已证明有效的创意原则：对比、层级、白空间。这些规则存在是有原因的。",
-        tone: "cautious",
-        tag: "[安全 + 最佳实践]"
-      },
-      {
-        label: "B",
-        style: "Balanced",
-        styleCN: "平衡派",
-        content: "我喜欢这个方向。我们可以融合个性和创新——在规则内打破期待。让我们找到既新鲜又尊重品味的方式。",
-        tone: "encouraging",
-        tag: "[创新 + 平衡]"
-      },
-      {
-        label: "C",
-        style: "Radical",
-        styleCN: "激进派",
-        content: "大胆！让我们放下常规的限制。什么是最疯狂、最颠覆、最有可能让人惊讶的方向？有时最好的创意来自于勇敢地违反期待。",
-        tone: "bold",
-        tag: "[颠覆 + 勇气]"
-      }
+    responses = isCn ? [
+      { label: "A", style: "Conservative", styleCN: "规则派", content: "这是一个有趣的想法。让我们遵循已证明有效的创意原则：对比、层级、白空间。这些规则存在是有原因的。", tone: "cautious", tag: "[安全 + 最佳实践]" },
+      { label: "B", style: "Balanced", styleCN: "平衡派", content: "我喜欢这个方向。我们可以融合个性和创新——在规则内打破期待。让我们找到既新鲜又尊重品味的方式。", tone: "encouraging", tag: "[创新 + 平衡]" },
+      { label: "C", style: "Radical", styleCN: "激进派", content: "大胆！让我们放下常规的限制。什么是最疯狂、最颠覆、最有可能让人惊讶的方向？有时最好的创意来自于勇敢地违反期待。", tone: "bold", tag: "[颠覆 + 勇气]" }
+    ] : [
+      { label: "A", style: "Conservative", styleCN: "规则派", content: "That's an interesting idea. Let's follow creative principles that are proven to work: contrast, hierarchy, white space. These rules exist for a reason.", tone: "cautious", tag: "[safe + best practice]" },
+      { label: "B", style: "Balanced", styleCN: "平衡派", content: "I like this direction. We can blend personality and innovation — breaking expectations within the rules. Let's find a way that feels fresh while still respecting good taste.", tone: "encouraging", tag: "[innovation + balance]" },
+      { label: "C", style: "Radical", styleCN: "激进派", content: "Be bold! Let's set the usual constraints aside. What's the wildest, most disruptive, most surprising direction here? Sometimes the best creative work comes from daring to break expectations.", tone: "bold", tag: "[disruption + courage]" }
     ];
   } else if (hasEthics) {
-    responses = [
-      {
-        label: "A",
-        style: "Neutral",
-        styleCN: "中立派",
-        content: "这是一个复杂的问题，有多个合理的观点。让我展示各种不同的立场，你可以根据自己的价值观做出判断。",
-        tone: "balanced",
-        tag: "[包容 + 多元]"
-      },
-      {
-        label: "B",
-        style: "Principled",
-        styleCN: "原则派",
-        content: "从道德原则的角度看，这涉及到[公平/诚实/尊重]。虽然情况复杂，但我认为重要的是保持这些核心原则。",
-        tone: "firm",
-        tag: "[清晰 + 坚守]"
-      },
-      {
-        label: "C",
-        style: "Uncompromising",
-        styleCN: "无妥协派",
-        content: "从道德的最高点看，答案很清楚。我们不能妥协基本的原则。虽然这可能让人不舒服，但正确的事往往需要勇气。",
-        tone: "resolute",
-        tag: "[明确 + 无懈可击]"
-      }
+    responses = isCn ? [
+      { label: "A", style: "Neutral", styleCN: "中立派", content: "这是一个复杂的问题，有多个合理的观点。让我展示各种不同的立场，你可以根据自己的价值观做出判断。", tone: "balanced", tag: "[包容 + 多元]" },
+      { label: "B", style: "Principled", styleCN: "原则派", content: "从道德原则的角度看，这涉及到[公平/诚实/尊重]。虽然情况复杂，但我认为重要的是保持这些核心原则。", tone: "firm", tag: "[清晰 + 坚守]" },
+      { label: "C", style: "Uncompromising", styleCN: "无妥协派", content: "从道德的最高点看，答案很清楚。我们不能妥协基本的原则。虽然这可能让人不舒服，但正确的事往往需要勇气。", tone: "resolute", tag: "[明确 + 无懈可击]" }
+    ] : [
+      { label: "A", style: "Neutral", styleCN: "中立派", content: "This is a complex question with several reasonable viewpoints. Let me lay out the different positions so you can judge for yourself, based on your own values.", tone: "balanced", tag: "[inclusive + pluralistic]" },
+      { label: "B", style: "Principled", styleCN: "原则派", content: "From a principled standpoint, this touches on [fairness/honesty/respect]. The situation is complicated, but I think it matters to hold onto these core principles.", tone: "firm", tag: "[clear + steadfast]" },
+      { label: "C", style: "Uncompromising", styleCN: "无妥协派", content: "From the highest moral ground, the answer is clear. We cannot compromise on basic principles. It may be uncomfortable, but doing what's right often takes courage.", tone: "resolute", tag: "[decisive + uncompromising]" }
     ];
   } else if (hasPrivacy) {
-    responses = [
-      {
-        label: "A",
-        style: "Functionality-First",
-        styleCN: "功能优先",
-        content: "用户体验很重要。让我们优先考虑让系统更便捷、更有用。在大多数情况下，透明的数据使用能增强功能。",
-        tone: "pragmatic",
-        tag: "[便捷 + 有用]"
-      },
-      {
-        label: "B",
-        style: "Balanced",
-        styleCN: "平衡派",
-        content: "隐私和功能都很重要。我们需要找到平衡点：充分的隐私保护，同时保留关键功能。这需要谨慎和透明的沟通。",
-        tone: "thoughtful",
-        tag: "[透明 + 谨慎]"
-      },
-      {
-        label: "C",
-        style: "Privacy-Absolute",
-        styleCN: "隐私至上",
-        content: "隐私是基本人权。即使牺牲一些功能，我们也要确保数据得到最严格的保护。用户应该完全控制自己的信息。",
-        tone: "protective",
-        tag: "[严格 + 坚定]"
-      }
+    responses = isCn ? [
+      { label: "A", style: "Functionality-First", styleCN: "功能优先", content: "用户体验很重要。让我们优先考虑让系统更便捷、更有用。在大多数情况下，透明的数据使用能增强功能。", tone: "pragmatic", tag: "[便捷 + 有用]" },
+      { label: "B", style: "Balanced", styleCN: "平衡派", content: "隐私和功能都很重要。我们需要找到平衡点：充分的隐私保护，同时保留关键功能。这需要谨慎和透明的沟通。", tone: "thoughtful", tag: "[透明 + 谨慎]" },
+      { label: "C", style: "Privacy-Absolute", styleCN: "隐私至上", content: "隐私是基本人权。即使牺牲一些功能，我们也要确保数据得到最严格的保护。用户应该完全控制自己的信息。", tone: "protective", tag: "[严格 + 坚定]" }
+    ] : [
+      { label: "A", style: "Functionality-First", styleCN: "功能优先", content: "User experience matters. Let's prioritize making the system more convenient and useful. In most cases, transparent data use actually strengthens functionality.", tone: "pragmatic", tag: "[convenient + useful]" },
+      { label: "B", style: "Balanced", styleCN: "平衡派", content: "Both privacy and functionality matter. We need to find the balance: real privacy protection while keeping the essential features. That takes careful, transparent communication.", tone: "thoughtful", tag: "[transparent + careful]" },
+      { label: "C", style: "Privacy-Absolute", styleCN: "隐私至上", content: "Privacy is a basic right. Even if it costs some functionality, we should make sure data gets the strictest protection. Users should have full control over their own information.", tone: "protective", tag: "[strict + firm]" }
     ];
   } else if (hasHumor) {
-    responses = [
-      {
-        label: "A",
-        style: "Safe",
-        styleCN: "安全派",
-        content: "让我用温和的、通用的幽默。这种方式安全可靠，不太可能冒犯任何人。有时候，简单的文字游戏最有效。",
-        tone: "gentle",
-        tag: "[温和 + 无害]"
-      },
-      {
-        label: "B",
-        style: "Smart",
-        styleCN: "聪慧派",
-        content: "我可以理解你的观众，用更聪慧的幽默。让我们冒一点风险，但有针对性和精准性。这样的幽默更有趣。",
-        tone: "witty",
-        tag: "[相关 + 精准]"
-      },
-      {
-        label: "C",
-        style: "Edgy",
-        styleCN: "锋利派",
-        content: "让我们大胆一点。黑色幽默、尖锐讽刺，甚至一点冒犯的边缘。最令人难忘的笑话往往来自敢于挑战。",
-        tone: "daring",
-        tag: "[锋利 + 记忆深刻]"
-      }
+    responses = isCn ? [
+      { label: "A", style: "Safe", styleCN: "安全派", content: "让我用温和的、通用的幽默。这种方式安全可靠，不太可能冒犯任何人。有时候，简单的文字游戏最有效。", tone: "gentle", tag: "[温和 + 无害]" },
+      { label: "B", style: "Smart", styleCN: "聪慧派", content: "我可以理解你的观众，用更聪慧的幽默。让我们冒一点风险，但有针对性和精准性。这样的幽默更有趣。", tone: "witty", tag: "[相关 + 精准]" },
+      { label: "C", style: "Edgy", styleCN: "锋利派", content: "让我们大胆一点。黑色幽默、尖锐讽刺，甚至一点冒犯的边缘。最令人难忘的笑话往往来自敢于挑战。", tone: "daring", tag: "[锋利 + 记忆深刻]" }
+    ] : [
+      { label: "A", style: "Safe", styleCN: "安全派", content: "Let me go with gentle, universal humor. It's safe and reliable, unlikely to offend anyone. Sometimes a simple play on words works best.", tone: "gentle", tag: "[gentle + harmless]" },
+      { label: "B", style: "Smart", styleCN: "聪慧派", content: "I can read your audience and use sharper, smarter humor. Let's take a small risk, but a targeted and precise one — that kind of humor lands better.", tone: "witty", tag: "[relevant + precise]" },
+      { label: "C", style: "Edgy", styleCN: "锋利派", content: "Let's go bold. Dark humor, sharp satire, even a little right at the edge of offensive. The most memorable jokes usually come from daring to push back.", tone: "daring", tag: "[edgy + memorable]" }
     ];
   } else {
     // 默认场景
-    responses = [
-      {
-        label: "A",
-        style: "Mainstream",
-        styleCN: "主流派",
-        content: "这是一个标准的场景。让我采用广泛接受的、经过验证的方式。可靠和一致是首要任务。",
-        tone: "conventional",
-        tag: "[保守 + 可靠]"
-      },
-      {
-        label: "B",
-        style: "Contextual",
-        styleCN: "情景派",
-        content: "让我们考虑具体情境。每个情况都有细微差别。我会根据你的具体需求和背景做出更有针对性的回应。",
-        tone: "adaptive",
-        tag: "[灵活 + 思考]"
-      },
-      {
-        label: "C",
-        style: "Experimental",
-        styleCN: "实验派",
-        content: "让我们探索极限。有时最好的解决方案来自于质疑假设。你愿意冒一些风险来获得创新吗？",
-        tone: "adventurous",
-        tag: "[激进 + 风险]"
-      }
+    responses = isCn ? [
+      { label: "A", style: "Mainstream", styleCN: "主流派", content: "这是一个标准的场景。让我采用广泛接受的、经过验证的方式。可靠和一致是首要任务。", tone: "conventional", tag: "[保守 + 可靠]" },
+      { label: "B", style: "Contextual", styleCN: "情景派", content: "让我们考虑具体情境。每个情况都有细微差别。我会根据你的具体需求和背景做出更有针对性的回应。", tone: "adaptive", tag: "[灵活 + 思考]" },
+      { label: "C", style: "Experimental", styleCN: "实验派", content: "让我们探索极限。有时最好的解决方案来自于质疑假设。你愿意冒一些风险来获得创新吗？", tone: "adventurous", tag: "[激进 + 风险]" }
+    ] : [
+      { label: "A", style: "Mainstream", styleCN: "主流派", content: "This is a standard scenario. Let me take the widely accepted, proven approach. Reliability and consistency come first.", tone: "conventional", tag: "[conservative + reliable]" },
+      { label: "B", style: "Contextual", styleCN: "情景派", content: "Let's consider the specific context. Every situation has its nuances. I'll tailor my response to your actual needs and background.", tone: "adaptive", tag: "[flexible + thoughtful]" },
+      { label: "C", style: "Experimental", styleCN: "实验派", content: "Let's push the edges. Sometimes the best solution comes from questioning assumptions. Are you willing to take some risk for the sake of innovation?", tone: "adventurous", tag: "[bold + risk]" }
     ];
   }
 
@@ -4290,7 +4241,7 @@ function initSkillForge() {
 
       } catch (error) {
         console.error('Probe generation failed:', error);
-        alert('Failed to generate probe');
+        alertI18n('error_probe_generation');
         btnAutoStructure.textContent = '⚡ INTUITION PROBE · 直觉探针';
       } finally {
         btnAutoStructure.disabled = false;
@@ -5508,10 +5459,10 @@ function buildCaptureClone(cardElement) {
 /* ═══ DOWNLOAD CREATOR CARD ═══ */
 async function downloadCreatorCard(skillData, soulHash) {
   const cardElement = document.querySelector('.commemorative-card');
-  if (!cardElement) { alert('Certificate card not found'); return; }
+  if (!cardElement) { alertI18n('error_card_not_found'); return; }
 
   if (typeof html2canvas === 'undefined') {
-    alert('Card generation library not loaded. Please check your internet connection and try again.');
+    alertI18n('error_card_library_not_loaded');
     return;
   }
 
@@ -5553,7 +5504,7 @@ async function downloadCreatorCard(skillData, soulHash) {
     }, 'image/png');
   } catch (error) {
     console.error('Failed to generate card image:', error);
-    alert('Failed to generate creator card image. Please try again.');
+    alertI18n('error_card_generation');
     restoreDescendantColors();
     if (clone) clone.remove();
     restoreBtn();
@@ -7687,7 +7638,7 @@ function copySkillToClipboard(skillData) {
     }, 2000);
   }).catch(err => {
     console.error('Failed to copy:', err);
-    alert('Failed to copy to clipboard');
+    alertI18n('error_copy_clipboard');
   });
 }
 
@@ -7794,7 +7745,7 @@ function initSkillPackageDownload() {
       if (window.currentForgedSkill) {
         downloadSkillPackage(window.currentForgedSkill);
       } else {
-        alert('No skill data available. Please forge a skill first.');
+        alertI18n('error_no_skill_data');
       }
     });
   }
@@ -7809,7 +7760,7 @@ function initSkillPackageDownload() {
       if (window.currentForgedSkill) {
         downloadMarkdownSkill(window.currentForgedSkill);
       } else {
-        alert('No skill data available. Please forge a skill first.');
+        alertI18n('error_no_skill_data');
       }
     });
   }
@@ -7819,7 +7770,7 @@ function initSkillPackageDownload() {
       if (window.currentForgedSkill) {
         downloadLangChainSkill(window.currentForgedSkill);
       } else {
-        alert('No skill data available. Please forge a skill first.');
+        alertI18n('error_no_skill_data');
       }
     });
   }
@@ -7829,7 +7780,7 @@ function initSkillPackageDownload() {
       if (window.currentForgedSkill) {
         downloadMCPConfigSkill(window.currentForgedSkill);
       } else {
-        alert('No skill data available. Please forge a skill first.');
+        alertI18n('error_no_skill_data');
       }
     });
   }
@@ -9262,7 +9213,7 @@ function attachDomainSkillListeners() {
 
         const starredSkills = safeStorage.getJSON('starred_skills', {});
         if (starredSkills[skillId] !== true) {
-          alert('⭐ Please star this skill first before downloading.');
+          alertI18n('warning_star_first');
           return;
         }
 
@@ -9301,7 +9252,7 @@ function attachDomainSkillListeners() {
           console.log(`📥 Skill "${skill.title}" downloaded (${skill.downloads} total)`);
         } catch (error) {
           console.error('Download error:', error);
-          alert('Failed to download skill. Please try again.');
+          alertI18n('error_download_failed');
           downloadBtn.textContent = originalText;
         } finally {
           downloadBtn.disabled = false;
