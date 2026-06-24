@@ -307,22 +307,6 @@ const API = {
     });
   },
 
-  // Generate 5-layer skill structure
-  async generateSkill(skillName, ideaText, probeData, selectedResponse, domain = 'ideas', language = 'en') {
-    if (!ApiClient.isAuthenticated()) {
-      console.warn('⚠ Not authenticated, using fallback skill generation');
-      return { success: false, fallback: true };
-    }
-    return await ApiClient.post('/forge/generate', {
-      skill_name: skillName,
-      idea_text: ideaText,
-      probe_data: probeData,
-      selected_response: selectedResponse,
-      domain: domain,
-      language: language
-    });
-  },
-
   // Get published skills
   async getSkills(options = {}) {
     const params = new URLSearchParams({
@@ -617,7 +601,6 @@ const I18N = {
     score_awaiting: 'LISTENING...',
     score_standing: 'Taking it in.',
     score_footer_p: 'Your perspective deserves to be heard. Let\'s make it real.',
-    btn_deploy: 'Make It Real',
     scanning: 'LISTENING TO YOUR INSTINCT...',
     covenant_unlocked: 'YOUR VOICE HAS BEEN HEARD',
     ally_suggestion: 'THIS SPARKS SOMETHING — LET\'S EXPLORE',
@@ -643,7 +626,6 @@ const I18N = {
     btn_taste: 'SHARE YOUR THOUGHT',
     btn_arena: '☉ PLAYGROUND',
     deploy_hint: 'This matters. Let\'s turn it into something AI can learn from.',
-    btn_deploy: 'MAKE IT REAL →',
     btn_go_deeper: 'Go deeper → Turn this into a taste skill',
     showcase_title: 'THIS WEEK\'S QUESTION',
     creator_name_placeholder: 'Your name (optional)',
@@ -904,7 +886,6 @@ const I18N = {
     score_awaiting: '正在倾听...',
     score_standing: '正在感受。',
     score_footer_p: '你的视角值得被听到。让我们把它变成现实。',
-    btn_deploy: '让它成为现实',
     scanning: '正在倾听你的直觉...',
     covenant_unlocked: '你的声音已被听到',
     ally_suggestion: '有共鸣——我们来深入探讨',
@@ -930,7 +911,6 @@ const I18N = {
     btn_taste: '分享你的想法',
     btn_arena: '☉ 创意游乐场',
     deploy_hint: '这很重要。让我们把它变成 AI 可以学习的东西。',
-    btn_deploy: '让它成为现实 →',
     btn_go_deeper: '深入 → 将它变成想法技能',
     showcase_title: '本周问题',
     creator_name_placeholder: '你的名字（可选）',
@@ -1032,7 +1012,6 @@ const I18N = {
     forge_package_desc: '选择你的格式并下载锻造好的技能以进行集成。',
     forge_package_note: '所有格式都包含完整的五层技能架构。根据你的集成需求进行选择。',
     /* ── 档案库 / 品味档案库 ── */
-    archive_title: 'THE 42 POST · Skill 储藏室',
     archive_back_home: '← 返回首页',
     forge_research_note: '✦ 谢谢你贡献了一条关于 AI 边界的人类判断数据。目前全球这类数据极为稀缺。',
     archive_most_starred: '✦ 最新 42 个 Skill',
@@ -1866,18 +1845,7 @@ function startFiveLayerAnimation() {
         // 自动生成技能数据 (支持两条路径)
         if (window.forgeData) {
           // Local hardcoded fallback (used only when AI is unreachable)
-          const buildLocalFallback = () => {
-            if (window.forgeData.path === 'a' || !window.forgeData.path) {
-              return generateSkillFromIdea(window.forgeData.idea, window.forgeData.probeChoice);
-            }
-            const agentCapabilities = `${window.forgeData.agentName} ${window.forgeData.agentDesc}`.toLowerCase();
-            return generateSkillFromAgentCapabilities(
-              window.forgeData.agentName,
-              window.forgeData.agentDesc,
-              agentCapabilities,
-              window.forgeData.probeChoice
-            );
-          };
+          const buildLocalFallback = () => generateSkillFromIdea(window.forgeData.idea, window.forgeData.probeChoice);
 
           // Map probe choice (a/b/c) → backend selected_response key
           const choiceToResponse = { a: 'thesis', b: 'antithesis', c: 'extreme' };
@@ -2079,146 +2047,6 @@ function generateSkillFromIdea(idea, probeChoice) {
     useWhen: useWhenOptions[0],
     refuseWhen: refuseWhenOptions[0]
   };
-}
-
-function generateSkillFromAgentCapabilities(agentName, agentDesc, agentCapabilities, probeChoice) {
-  // 为PATH B (Direct Knight)生成技能
-  // 基于Agent的实际能力生成相关的技能
-
-  let skillName = '';
-  let skillDefinition = '';
-
-  // 检测Agent的功能类型
-  const isTranslator = /翻译|translate|language|语言|多语言|multilingual/.test(agentCapabilities);
-  const isCodeGen = /代码|code|编程|programming|开发|developer|software/.test(agentCapabilities);
-  const isAnalysis = /分析|analysis|analyze|数据|data|统计|statistic/.test(agentCapabilities);
-  const isCreative = /创意|创意|design|art|creative|writing|写作/.test(agentCapabilities);
-  const isConversation = /对话|chat|conversation|聊天|问答|qa/.test(agentCapabilities);
-
-  if (isTranslator) {
-    skillName = `${agentName} 的文化敏感性 / Cultural Awareness`;
-    if (probeChoice === 'a') {
-      skillDefinition = "精确翻译，保留原文的所有含义和文化背景，即使这可能带来复杂性。";
-    } else if (probeChoice === 'b') {
-      skillDefinition = "在忠实原意和文化适配之间平衡，使翻译既准确又能被目标观众理解。";
-    } else {
-      skillDefinition = "优先考虑文化适配性，根据目标文化重新诠释内容，有时会调整表达方式。";
-    }
-  } else if (isCodeGen) {
-    skillName = `${agentName} 的安全意识 / Security Mindfulness`;
-    if (probeChoice === 'a') {
-      skillDefinition = "按要求生成任何代码，提供完整的文档和风险警告，让用户做出知情的决定。";
-    } else if (probeChoice === 'b') {
-      skillDefinition = "生成代码时包含默认的安全最佳实践，但允许用户在必要时覆盖它们。";
-    } else {
-      skillDefinition = "拒绝生成明显不安全的代码，积极推荐安全替代方案和最佳实践。";
-    }
-  } else if (isAnalysis) {
-    skillName = `${agentName} 的数据诚实 / Data Integrity`;
-    if (probeChoice === 'a') {
-      skillDefinition = "展示所有数据，包括支持和反驳用户假设的证据，完全透明。";
-    } else if (probeChoice === 'b') {
-      skillDefinition = "平衡呈现数据，突出关键发现，同时承认局限性和不确定性。";
-    } else {
-      skillDefinition = "强调与常见观点相矛盾的数据，挑战预设，推动更深的理解。";
-    }
-  } else if (isCreative) {
-    skillName = `${agentName} 的创意责任 / Creative Responsibility`;
-    if (probeChoice === 'a') {
-      skillDefinition = "完全的创意自由，生成用户请求的任何内容，信任用户的判断。";
-    } else if (probeChoice === 'b') {
-      skillDefinition = "生成创意内容并提供背景和潜在影响的反思，帮助用户做出有意识的选择。";
-    } else {
-      skillDefinition = "在创意自由和社会责任之间平衡，拒绝可能造成实质伤害的内容。";
-    }
-  } else if (isConversation) {
-    skillName = `${agentName} 的对话品质 / Conversational Wisdom`;
-    if (probeChoice === 'a') {
-      skillDefinition = "快速、实用、面向解决方案，优先回应用户的直接需求。";
-    } else if (probeChoice === 'b') {
-      skillDefinition = "深度倾听和理解，在提供建议前先确认理解，平衡同理心和实用性。";
-    } else {
-      skillDefinition = "深刻反思问题的复杂性，有时承认没有简单答案，促进用户的自我思考。";
-    }
-  } else {
-    // 通用Agent技能
-    skillName = `${agentName} 的使用原则 / Usage Principles`;
-    if (probeChoice === 'a') {
-      skillDefinition = "优先考虑效率和用户满意度，充分利用Agent的全部能力。";
-    } else if (probeChoice === 'b') {
-      skillDefinition = "在多个利益相关者的需求之间平衡，确保负责任的使用。";
-    } else {
-      skillDefinition = "坚持原则性的使用方式，甚至在这意味着限制功能或用户体验的情况下。";
-    }
-  }
-
-  const useWhenOptions = [
-    `当使用${agentName}时，这些原则应该指导决策`,
-    `在与${agentName}交互的各种场景中都应该考虑`,
-    `在任何使用${agentName}的关键或敏感情景中自动激活`
-  ];
-
-  const refuseWhenOptions = [
-    `当直接应用会违反其他更基本的原则时`,
-    `在与用户明确的偏好相冲突的情况下`,
-    `当用户明确指示跳过这些原则时`
-  ];
-
-  return {
-    name: skillName,
-    definition: skillDefinition,
-    useWhen: useWhenOptions[0],
-    refuseWhen: refuseWhenOptions[0]
-  };
-}
-
-function generateAdaptiveProbeScenarios(agentName, agentDesc, agentCapabilities) {
-  // 基于Agent的能力生成自适应直觉探针
-  // 场景和选择应该反映Agent的实际功能域
-
-  let context, a, b, c;
-
-  // 检测Agent的功能类型
-  const isTranslator = /翻译|translate|language|语言|多语言|multilingual/.test(agentCapabilities);
-  const isCodeGen = /代码|code|编程|programming|开发|developer|software/.test(agentCapabilities);
-  const isAnalysis = /分析|analysis|analyze|数据|data|统计|statistic/.test(agentCapabilities);
-  const isCreative = /创意|创意|design|art|creative|writing|写作/.test(agentCapabilities);
-  const isConversation = /对话|chat|conversation|聊天|问答|qa/.test(agentCapabilities);
-
-  if (isTranslator) {
-    context = `你的Agent "${agentName}" 是一个翻译工具。用户上传了一份包含文化敏感内容的文档要求翻译。你的Agent应该如何处理？`;
-    a = "直译所有内容，包括可能令人不适的文化表达（字面、准确、但有风险）";
-    b = "在忠实原意和文化适配之间平衡，使用本地习语但保留核心意思（精准、尊重）";
-    c = "重新阐释内容以适应目标文化，必要时删除或调整敏感表达（适应性强、但可能偏离原文）";
-  } else if (isCodeGen) {
-    context = `你的Agent "${agentName}" 生成代码。用户要求生成一个可能有安全风险的功能。你的Agent应该如何回应？`;
-    a = "按要求生成代码，并添加详细注释说明风险（信任用户、提供完整信息）";
-    b = "生成代码但添加默认的安全检查，让用户可以覆盖它们（平衡功能和安全）";
-    c = "拒绝生成，解释风险，提供安全替代方案（保护优先、但可能限制灵活性）";
-  } else if (isAnalysis) {
-    context = `你的Agent "${agentName}" 执行数据分析。分析结果可能支持用户的既定观点。你的Agent应该如何处理？`;
-    a = "客观呈现数据，突出支持用户观点的部分（用户中心、直接）";
-    b = "展示完整的数据，包括支持和反驳用户观点的证据（平衡、透明）";
-    c = "强调与用户假设矛盾的数据，挑战预设（客观、但可能显得对抗性）";
-  } else if (isCreative) {
-    context = `你的Agent "${agentName}" 创建创意内容。用户要求生成可能会冒犯某些群体的内容。你的Agent应该如何反应？`;
-    a = "按请求生成，假设用户知道自己在做什么（创意自由、信任用户）";
-    b = "生成内容但添加背景和观点上下文，帮助用户理解潜在影响（创意+责任）";
-    c = "拒绝生成，解释为什么这样的内容可能有害，提供建设性替代（伦理、但限制性）";
-  } else if (isConversation) {
-    context = `你的Agent "${agentName}" 与用户对话。用户分享了个人困境，寻求建议。你的Agent应该采取什么立场？`;
-    a = "快速提供实用建议和资源（高效、有用）";
-    b = "先倾听和理解，然后提供平衡的视角（共情、有思考）";
-    c = "深刻反思问题的复杂性，有时拒绝简化答案（深度、但可能有些模糊）";
-  } else {
-    // 默认通用Agent场景
-    context = `你的Agent "${agentName}" 正在执行一项任务。出现了利益冲突或道德灰色地带。你的Agent应该如何决策？`;
-    a = "优先考虑效率和用户满意度（实用、直接）";
-    b = "在多个利益相关者的需求之间平衡（有思考、公平）";
-    c = "坚持原则性的立场，即使这意味着拒绝请求或损失效率（伦理第一）";
-  }
-
-  return { context, a, b, c };
 }
 
 // 客户端生成探针场景 - 聚焦语义资本最丰富的场景（价值观、创意、美学、艺术、设计、日常生活体验）
@@ -9345,187 +9173,6 @@ function generateDomainSkillMarkdown(skill) {
   markdown += `**Remixing:** ${skill.remix || 'share-alike'}\n`;
 
   return markdown;
-}
-
-/* ═══════════════ EMAIL TEMPLATE FUNCTIONS ═══════════════ */
-
-/**
- * Generate email HTML content with Skill data
- * Used for backend email sending
- */
-function generateForgeSuccessEmail(skillData) {
-  const soulHash = skillData.id;
-  const skillTitle = skillData.title;
-  const creatorName = skillData.author || 'Creator';
-  const createdDate = new Date().toISOString().split('T')[0];
-  const domain = skillData.domain_cn || skillData.domain;
-
-  // Generate download URLs (these would be actual backend URLs)
-  const baseUrl = window.location.origin;
-  const downloadMarkdownUrl = `${baseUrl}/api/skills/${soulHash}/download?format=markdown`;
-  const downloadLangChainUrl = `${baseUrl}/api/skills/${soulHash}/download?format=langchain`;
-  const downloadMCPUrl = `${baseUrl}/api/skills/${soulHash}/download?format=mcp`;
-  const dashboardLink = `${baseUrl}?soul_hash=${soulHash}&token=${skillData.tracking_token}`;
-  const playgroundLink = `${baseUrl}?skill=${soulHash}#playground`;
-
-  // Escape user-provided values before HTML email injection
-  const safeSkillTitle = escapeHtml(skillTitle);
-  const safeSoulHash = escapeHtml(soulHash);
-  const safeCreatorName = escapeHtml(creatorName);
-  const safeDomain = escapeHtml(String(domain || ''));
-
-  // Read email template and replace variables
-  let emailHtml = `
-    <!DOCTYPE html>
-    <html lang="zh-CN">
-    <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Playfair Display', 'Courier New', serif; background: #f9f9f9; color: #333; line-height: 1.6; }
-        .email-container { max-width: 700px; margin: 0 auto; background: white; }
-        .email-header { padding: 40px 30px; border-bottom: 2px solid #222; text-align: center; }
-        .email-header h1 { font-size: 28px; font-weight: bold; margin-bottom: 10px; color: #222; }
-        .email-header p { font-size: 14px; color: #666; }
-        .email-body { padding: 40px 30px; }
-        .greeting { font-size: 14px; margin-bottom: 20px; color: #333; }
-        .congratulation { padding: 20px; background: #f0f8f0; border-left: 4px solid #22c55e; margin: 20px 0; font-size: 13px; line-height: 1.8; }
-        .card-section { margin: 40px 0; text-align: center; }
-        .card-title { font-size: 16px; font-weight: bold; margin-bottom: 15px; color: #222; }
-        .commemorative-card { background: linear-gradient(135deg, #f5f5f0 0%, #ffffff 100%); border: 2px solid #222; padding: 30px; max-width: 500px; margin: 0 auto; text-align: center; font-family: 'Courier New', monospace; }
-        .card-header { font-size: 12px; font-weight: bold; letter-spacing: 1px; color: #666; margin-bottom: 15px; }
-        .card-content { padding: 20px 0; }
-        .card-crest { font-size: 36px; margin-bottom: 10px; }
-        .card-title-main { font-size: 18px; font-weight: bold; margin-bottom: 10px; color: #222; font-family: 'Playfair Display', serif; }
-        .card-soul-hash { font-size: 11px; color: #999; background: #f0f0f0; padding: 8px; border-radius: 3px; margin: 10px 0; word-break: break-all; }
-        .card-meta { font-size: 11px; color: #888; margin: 15px 0; line-height: 1.8; }
-        .card-divider { border-top: 1px solid #ddd; margin: 15px 0; }
-        .card-tagline { font-size: 12px; color: #666; font-style: italic; margin: 12px 0 8px; letter-spacing: 0.5px; }
-        .card-footer { font-size: 11px; color: #888; font-weight: 400; letter-spacing: 0.5px; }
-        .install-section { margin: 40px 0; padding: 30px; background: #fafafa; border-radius: 4px; }
-        .install-title { font-size: 18px; font-weight: bold; text-align: center; margin-bottom: 10px; color: #222; font-family: 'Playfair Display', serif; }
-        .install-subtitle { font-size: 13px; text-align: center; color: #666; margin-bottom: 30px; font-family: serif; }
-        .formats-row { display: flex; gap: 20px; justify-content: space-around; flex-wrap: wrap; }
-        .format-option { background: white; padding: 20px; border: 1px solid #ddd; border-radius: 3px; max-width: 200px; text-align: center; }
-        .format-icon { font-size: 32px; margin-bottom: 10px; }
-        .format-name { display: block; font-size: 14px; font-weight: bold; color: #222; margin-bottom: 5px; }
-        .format-type { display: block; font-size: 11px; color: #666; margin-bottom: 10px; font-style: italic; }
-        .format-desc { font-size: 11px; color: #888; margin-bottom: 12px; line-height: 1.5; }
-        .download-btn { display: inline-block; background: #222; color: white; padding: 8px 12px; text-decoration: none; border-radius: 2px; font-size: 11px; font-weight: bold; letter-spacing: 0.5px; }
-        .download-btn:hover { background: #444; }
-        .install-note { text-align: center; font-size: 12px; color: #999; margin-top: 20px; padding: 15px; border-top: 1px solid #ddd; font-style: italic; }
-        .action-section { margin: 30px 0; text-align: center; }
-        .action-btn { display: inline-block; background: #222; color: white; padding: 12px 24px; text-decoration: none; border-radius: 3px; font-size: 12px; font-weight: bold; letter-spacing: 0.5px; margin: 10px 5px; }
-        .action-btn:hover { background: #444; }
-        .action-btn-secondary { background: white; color: #222; border: 1px solid #222; }
-        .action-btn-secondary:hover { background: #f5f5f5; }
-        .email-footer { padding: 30px; border-top: 2px solid #ddd; background: #f9f9f9; font-size: 11px; color: #999; text-align: center; }
-        .footer-divider { margin: 15px 0; border-top: 1px solid #ddd; }
-        h3 { font-size: 14px; font-weight: bold; color: #222; margin: 20px 0 10px 0; }
-        .steps-list { font-size: 12px; color: #666; line-height: 1.8; margin: 10px 0; }
-        .steps-list li { margin-left: 20px; }
-      </style>
-    </head>
-    <body>
-      <div class="email-container">
-        <div class="email-header">
-          <h1>✨ 你的 Skill 已成功铸造 ✨</h1>
-          <p>Your Skill Has Been Forged Successfully</p>
-        </div>
-
-        <div class="email-body">
-          <p class="greeting">亲爱的创作者，</p>
-
-          <div class="congratulation">
-            <p>恭喜！你的 Skill 已成功创建并上线至 THE 42 POST 社区。</p>
-            <p style="margin-top: 10px;">现在你可以安装它到你的 Agent 系统中，或分享给他人。</p>
-          </div>
-
-          <div class="card-section">
-            <div class="card-title">📊 你的纪念卡片</div>
-            <div class="commemorative-card">
-              <div class="card-header">THE 42 POST · SKILL FORGED</div>
-              <div class="card-content">
-                <div class="card-crest">✨</div>
-                <div class="card-title-main">${safeSkillTitle}</div>
-                <div class="card-soul-hash">Soul-Hash: ${safeSoulHash}</div>
-                <div class="card-meta">
-                  <p>Created by: ${safeCreatorName}</p>
-                  <p>Date: ${createdDate}</p>
-                  <p>Domain: ${safeDomain}</p>
-                </div>
-                <div class="card-divider"></div>
-                <div class="card-tagline">Forging Human Wisdom for a Better AI Future</div>
-                <div class="card-footer">www.the42post.com</div>
-              </div>
-            </div>
-          </div>
-
-          <div class="install-section">
-            <div class="install-title">INSTALL YOUR SKILL</div>
-            <div class="install-subtitle">Choose your format and download your forged skill for integration.</div>
-
-            <div class="formats-row">
-              <div class="format-option">
-                <div class="format-icon">📖</div>
-                <div class="format-name">Markdown</div>
-                <div class="format-type">Human-Readable</div>
-                <div class="format-desc">Perfect for documentation, sharing, and reading. Standard SKILL.md format.</div>
-                <a href="${downloadMarkdownUrl}" class="download-btn">↓ DOWNLOAD</a>
-              </div>
-
-              <div class="format-option">
-                <div class="format-icon">🐍</div>
-                <div class="format-name">LangChain</div>
-                <div class="format-type">Python Developer</div>
-                <div class="format-desc">Python-friendly format for LangChain framework integration. Ready to use in your agent.</div>
-                <a href="${downloadLangChainUrl}" class="download-btn">↓ DOWNLOAD</a>
-              </div>
-
-              <div class="format-option">
-                <div class="format-icon">⚙️</div>
-                <div class="format-name">MCP Config</div>
-                <div class="format-type">System Deployment</div>
-                <div class="format-desc">JSON configuration for Model Context Protocol deployment and system integration.</div>
-                <a href="${downloadMCPUrl}" class="download-btn">↓ DOWNLOAD</a>
-              </div>
-            </div>
-
-            <div class="install-note">
-              All formats contain the complete five-layer skill architecture. Choose based on your integration needs.
-            </div>
-          </div>
-
-          <div class="action-section">
-            <a href="${dashboardLink}" class="action-btn">📊 查看 Impact Dashboard</a>
-            <a href="${playgroundLink}" class="action-btn action-btn-secondary">🎮 前往 Playground 试试</a>
-          </div>
-
-          <h3>接下来你可以：</h3>
-          <div class="steps-list">
-            <ol>
-              <li>下载并安装上述 3 种格式之一到你的系统</li>
-              <li>在 Playground 体验你的 Skill 效果</li>
-              <li>分享你的 Skill 链接到社区，让更多人发现它</li>
-              <li>定期检查 Impact Dashboard 查看数据变化</li>
-            </ol>
-          </div>
-        </div>
-
-        <div class="email-footer">
-          <p><strong>THE 42 POST</strong></p>
-          <p>Forging Human Wisdom for a Better AI Future</p>
-          <div class="footer-divider"></div>
-          <p>有任何问题？直接回复这封邮件即可。</p>
-          <p>© 2026 THE 42 POST · All rights reserved</p>
-        </div>
-      </div>
-    </body>
-    </html>
-  `;
-
-  return emailHtml;
 }
 
 /* ═══════════════ DASHBOARD CARD FUNCTIONS ═══════════════ */
