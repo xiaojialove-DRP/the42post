@@ -511,6 +511,11 @@ router.post('/vote', rateLimitTwinTest, async (req, res, next) => {
     }
 
     // Idempotent: a second vote on the same test_id is ignored (first vote wins).
+    // effectiveChosenSide is what is/will be persisted - the first vote's
+    // value if one already exists, otherwise this request's value - so the
+    // response below always reflects the same vote as the database, even
+    // when a retry or double-tap resubmits a different chosen_side.
+    const effectiveChosenSide = row.chosen_side || chosen_side;
     if (!row.chosen_side) {
       const votedForSkill = chosen_side === row.skill_side ? 1 : 0;
       await db.query(
@@ -538,7 +543,7 @@ router.post('/vote', rateLimitTwinTest, async (req, res, next) => {
     res.json({
       success: true,
       skill_side: row.skill_side,
-      voted_for_skill: chosen_side === row.skill_side,
+      voted_for_skill: effectiveChosenSide === row.skill_side,
       diagnostic: row.diagnostic || '',
       total_votes: total,
       wins,

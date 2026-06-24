@@ -139,6 +139,9 @@ export function createTestDb() {
       original_idea TEXT,
       ai_outputs TEXT,
       final_skill_data TEXT,
+      country_code TEXT,
+      accept_language TEXT,
+      probe_session_id TEXT,
       created_at TEXT DEFAULT CURRENT_TIMESTAMP
     );
 
@@ -149,6 +152,26 @@ export function createTestDb() {
       anonymous_id TEXT,
       skill_side TEXT,
       diagnostic TEXT,
+      chosen_side TEXT,
+      voted_for_skill INTEGER,
+      scenario_text TEXT,
+      response_a_text TEXT,
+      response_b_text TEXT,
+      decision_ms INTEGER,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      voted_at TEXT
+    );
+
+    CREATE TABLE IF NOT EXISTS skill_feedback (
+      id TEXT PRIMARY KEY,
+      skill_id TEXT NOT NULL REFERENCES skills(id) ON DELETE CASCADE,
+      scenario_key TEXT,
+      anonymous_id TEXT,
+      rating TEXT NOT NULL,
+      comment TEXT,
+      response_a TEXT,
+      response_b TEXT,
+      skill_side TEXT,
       created_at TEXT DEFAULT CURRENT_TIMESTAMP
     );
 
