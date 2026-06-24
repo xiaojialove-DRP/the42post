@@ -2597,7 +2597,11 @@
         skills.forEach(s => {
           const opt = document.createElement('option');
           opt.value = s.id;
-          const baseLabel = `${getSkillTitle(s)} · ${s.domain || '—'} (⭐${s.starlight_score || 0})`;
+          // Domain dropped from the label - it's the raw DB value (e.g.
+          // "03-ethics-values"), an internal seed-data taxonomy slug with
+          // no cleaned-up display mapping wired in here, so it just reads
+          // as confusing internal noise next to a skill name and star count.
+          const baseLabel = `${getSkillTitle(s)} (⭐${s.starlight_score || 0})`;
           if (s.is_mine) {
             // Mark user's own forged skills
             const latestPrefix = I18N && I18N[currentLang] && I18N[currentLang]['playground_latest_forge']
