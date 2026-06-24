@@ -2,6 +2,88 @@
 
 All notable changes to THE 42 POST.
 
+## [1.6.0] — 2026-06-24
+
+A debug-focused stretch: real bugs reported by actual users (Reddit, screenshots), a backend reliability pass, a full bilingual consistency audit, mobile edge-case testing, CI from scratch, and a large dead-code cleanup. Most entries below were found and fixed in the same session by reproducing the bug live, not just reading code.
+
+### Bug Fixes — reported by real users
+
+- **Twin Test language mixing** — A Skill forged in Chinese could pull an English scenario's response into Chinese too; the Skill's prompt block was longer/more dominant than the trailing language instruction. Added an explicit, unambiguous language instruction regardless of the Skill's own language.
+- **Archive download silently crashed for almost every skill** — `generateSkillMarkdown` assumed `fiveLayer.evaluation` was always present; it's `null` for most real skills.
+- **`displayCardLibrary()` crash blocked all init after it** — broke Archive→Playground skill pre-selection as a side effect, with no visible error.
+- **Drag-clamp asymmetry** — tall Twin Test cards could be dragged until their action buttons were off-screen, with no way to drag back.
+- **Dock category list** opened centered with no scroll affordance; now starts at item 1 with an edge-fade hint.
+- **About/HowTo modals** could stack open simultaneously; added mutual exclusion and Escape-to-close.
+- **Playground alerts were silently swallowed** — never actually shown to users.
+- Removed the entire "My Creative Works" personal card-library feature — redundant with the preset Skill library.
+
+### Mobile
+
+- Keyboard occlusion and textarea input experience on Forge (`autoGrowTextarea`, scroll-into-view on focus).
+- Touch targets enlarged to ~44px across buttons, dock items, and close affordances.
+- Card layout fixes at 360–480px widths (clipping from a fixed `aspect-ratio` switched to `min-height`).
+- Twin Test response cards: removed a 260px cap that silently clipped longer answers behind a barely-visible scrollbar, then re-capped generously (`min(420px, 45vh)`) with internal scroll after finding the uncapped version could push rating buttons off-page entirely on an extreme-length response with no page-level scroll to recover.
+- Verified at 360px width and in landscape orientation; found and left open a landscape-specific issue where Playground's fixed-height canvas can clip a spawned card's action buttons with no scroll (tracked, not yet fixed — needs a broader look at the canvas/drag-and-drop sizing).
+
+### Backend Reliability
+
+- `JWT_SECRET` (and other `.env`-sourced keys, including a real configured Claude key) were silently `undefined` at runtime in any environment relying on `.env`-file loading — `dotenv.config()` ran after server.js's own static imports, which are always hoisted ahead of it. Fixed by importing `dotenv/config` first.
+- Wired up `dbRetry.js`'s retry logic (built earlier, never called) for read-only queries.
+- Added structured logging across LLM calls, skill saves, and the Twin Test flow.
+- **Claude fallback was fully built but never wired up** despite the file's own header and every export name documenting it as the design. Twin Test in particular had no fallback at all and would render the raw provider error (including partial API key text) straight into the UI on a DeepSeek failure.
+- Archive star race condition — starring a skill could be silently un-done moments later if a slower batch-sync request resolved after the user's own click.
+- `POST /playground/vote` computed its response from the current request instead of the persisted vote, which could disagree with the database on a repeat vote with a different choice.
+
+### Bilingual Consistency (full audit)
+
+- Forge success email body was 100% hardcoded Chinese regardless of session language.
+- Two client-side offline fallback generators (probe + Twin Test response) were hardcoded Chinese with no language branch.
+- Sensitive-content detection in one fallback path only matched Chinese patterns, missing equivalent English content.
+- Eight raw `alert()` error messages had no Chinese version.
+- Forge probe-selection confirmation mixed a Chinese prefix into an English session.
+- Username hint examples taught users to type the `creator_` prefix the backend already adds automatically.
+- Skill picker dropdown leaked a raw internal domain taxonomy code (e.g. `03-ethics-values`) into the label shown to users.
+
+### Infrastructure
+
+- **CI added from scratch** — GitHub Actions now runs the backend test suite and a frontend syntax check on every push and PR to main. Found and fixed three real gaps along the way: a PAT missing the `workflow` scope, an `actions/setup-node` cache path that didn't resolve under this job's `working-directory`, and `backend/package-lock.json` having been gitignored and never committed (so `npm ci` had nothing to install from in a fresh checkout).
+- Backend test coverage for `playground.js` (Twin Test, vote, feedback, picker, stats) went from zero to 25 tests — this was the route with the most severe bug found this round. Also fixed the in-memory test schema, which had drifted from the real schema (`skill_test_votes` missing six columns, `skill_feedback` missing entirely).
+- Removed `/register` and `/verify` — no registration flow by design; Soul-Hash plus anonymous forge-session covers identity for a research project.
+- `.env.example` updated to document `DEEPSEEK_API_KEY`, the actual primary provider (was undocumented).
+
+### Removed (confirmed zero callers)
+
+- Three frontend functions left over from a removed agent-mode path, plus an entirely unreachable ~180-line email template that was never the one actually used.
+- Two backend forge routes (`/forge/generate`, `/forge/generate/stream`) and their dedicated generator — the real five-layer structure is built via a different, lighter endpoint plus an async self-heal pass after publish.
+- The forge-completion "export package" UI (Markdown/LangChain/MCP download buttons) — hardcoded `display:none`, never shown by any code path, confirmed via its own `showForgeCompletion()` explicitly hiding it again.
+- `routes/search.js` in full (`/search`, `/search/trending`, `/search/domain/:domain`) — Archive's search box filters an already-fetched list client-side instead.
+- Stale/duplicate i18n dictionary entries with zero usage.
+
+---
+
+## [1.5.0] — 2026-06-20
+
+### Features
+
+- SEO basics — title, meta description, Open Graph tags, JSON-LD structured data.
+- Playground: 7-scenario limit now ends on an in-canvas farewell card (replacing a plain alert) inviting the user to forge their own Skill, with a working `#forge` deep link back to the Forge modal.
+
+### Removed
+
+- `/register` and `/verify` email-verification flow — no registration model for a research project where Soul-Hash already serves as identity. `/login`, `/me`, and anonymous forge-session kept.
+
+### Bug Fixes
+
+- Card download crash — `html2canvas` couldn't parse `color-mix()`/`color(srgb...)` and re-scanned the original CSS rule for gradients; fixed by cloning the card and stripping the class before capture, restoring the download button on error.
+- Voice input now picks recognition language from `currentLang` directly, with a 中/EN badge on the mic while recording.
+
+### UX & Copy
+
+- How It Works modal — typography and spacing now match About (size, line-height, no dividers).
+- Email — forge-success card background tinted 8% per domain to match the on-screen commemorative card; same AI "blessing" line synced between card and email.
+
+---
+
 ## [1.4.0] — 2026-06-06
 
 ### Features
