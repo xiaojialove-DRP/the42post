@@ -818,7 +818,7 @@ const I18N = {
     playground_close: 'Close',
     console_check: '(check browser console)',
     archive_back_home: '← Back Home',
-    forge_research_note: '✦ Thank you for contributing a human judgment on AI boundaries. This kind of data is extremely rare globally.',
+    forge_research_note: '✦ Thank you for contributing a human judgment on AI boundaries.',
     archive_most_starred: '✦ Latest 42 Skills',
     archive_honor_subtitle: 'Most Recently Forged · Live Archive',
     archive_readable_title: 'Skill Archive',
@@ -981,7 +981,7 @@ const I18N = {
     forge_domain_fun: '趣味',
     /* ── 档案库 / 品味档案库 ── */
     archive_back_home: '← 返回首页',
-    forge_research_note: '✦ 谢谢你贡献了一条关于 AI 边界的人类判断数据。目前全球这类数据极为稀缺。',
+    forge_research_note: '✦ 谢谢你贡献了一条关于 AI 边界的人类判断数据。',
     archive_most_starred: '✦ 最新 42 个 Skill',
     archive_honor_subtitle: '最近铸造 · 实时档案',
     archive_readable_title: 'Skill 储藏室',

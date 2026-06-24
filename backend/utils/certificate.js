@@ -758,7 +758,7 @@ export function generateEmailTemplate(
             <div style="width: 80%; height: 1px; background: ${accent}30; margin: 2px 0;"></div>
 
             <!-- website -->
-            <div style="font-size: 7.5px; letter-spacing: 2px; color: rgba(138,124,110,0.65);">the42post.com</div>
+            <div style="font-size: 7.5px; letter-spacing: 2px; color: rgba(138,124,110,0.65);">www.the42post.com</div>
           </div>
         </div>
         `}
