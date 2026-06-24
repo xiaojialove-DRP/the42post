@@ -1113,11 +1113,18 @@
     .twin-rate-card.twin-rate-skill .twin-rate-tag { color: #b8851e; }
     .twin-rate-text {
       font-size: 13px; line-height: 1.55; color: #2a2520;
-      /* No max-height: the backend asks the LLM for a 2-3 sentence
-         (~60 word) budget, but models routinely overshoot it, and a
-         capped+scrolling box hid the rest of the response with no
-         visual cue — the one thing this screen exists to show. Let
-         the card grow; the grid row stretches both sides to match. */
+      /* The backend asks for a 2-3 sentence (~60 word) budget but models
+         routinely overshoot it. A tight 260px cap hid the rest behind a
+         near-invisible scrollbar (the original bug); removing the cap
+         entirely fixed that but broke worse on a truly extreme overshoot
+         — body on this page is overflow-y:hidden (the canvas/drag layout
+         has no page-level scroll), so a card taller than the viewport
+         left the rating buttons permanently unreachable. This cap is
+         generous enough that normal overshoot (2-3x budget) never
+         scrolls, but still caps the pathological case and scrolls
+         internally instead of pushing the rest of the page out of reach.
+         vh-based so it also shrinks on short landscape viewports. */
+      max-height: min(420px, 45vh); overflow-y: auto;
       overflow-wrap: break-word; word-break: break-word;
     }
     .twin-rate-diagnostic {
