@@ -643,7 +643,7 @@ const I18N = {
     forge_username_ph: 'Username',
     forge_email_ph: 'Email',
     username_rules: '3-32 characters. Letters, numbers, underscore only. Cannot start with a number.',
-    username_example_valid: 'Valid: creator_lala, lala_2024',
+    username_example_valid: 'Valid: lala, lala_2024',
     forge_thought: 'YOUR THOUGHT',
     forge_instruction: 'Any skill you wish or don\'t wish AI to have. Any idea counts.',
     forge_idea_ph: 'e.g. AI should understand the silence of grief…',
@@ -700,8 +700,6 @@ const I18N = {
     forge_confirm_btn: 'Continue to Publish →',
     forge_rights_title: 'RIGHTS & PUBLISH',
     forge_creator_rights: 'CREATOR RIGHTS',
-    forge_author_label: 'AUTHOR',
-    forge_author_ph: 'Your name or pseudonym',
     forge_commercial_label: 'COMMERCIAL USE',
     forge_remix_label: 'REMIX',
     forge_tag_allowed: 'Allowed',
@@ -928,7 +926,7 @@ const I18N = {
     forge_username_ph: '用户名',
     forge_email_ph: '邮箱',
     username_rules: '3-32 个字符。仅支持字母、数字、下划线。不能以数字开头。',
-    username_example_valid: '有效: creator_lala, lala_2024',
+    username_example_valid: '有效: lala, lala_2024',
     forge_thought: '你的想法',
     forge_instruction: '你希望 AI 拥有或最不希望它拥有的技能。任何想法都可以。',
     forge_idea_ph: '例：我希望 AI 能理解人类悲伤时的沉默…',
@@ -959,8 +957,6 @@ const I18N = {
     forge_confirm_btn: '继续发布 →',
     forge_rights_title: '权益与发布',
     forge_creator_rights: '创作者权益',
-    forge_author_label: '作者署名',
-    forge_author_ph: '你的名字或笔名',
     forge_commercial_label: '商用条件',
     forge_remix_label: '二次创作',
     forge_tag_allowed: '允许',
@@ -5588,11 +5584,9 @@ function initShareTaste() {
       // Pre-fill forge from taste card
       const skillNameEl = document.getElementById('forgeSkillName');
       const nativeTextEl = document.getElementById('forgeNativeText');
-      const authorEl = document.getElementById('forgeAuthor');
 
       if (skillNameEl && card) skillNameEl.value = card.text.substring(0, 60);
       if (nativeTextEl && card) nativeTextEl.value = card.text;
-      if (authorEl && card) authorEl.value = card.author || '';
 
       // Show step 1
       document.querySelectorAll('.forge-page').forEach(p => p.classList.remove('active'));
