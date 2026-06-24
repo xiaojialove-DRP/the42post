@@ -1113,12 +1113,12 @@
     .twin-rate-card.twin-rate-skill .twin-rate-tag { color: #b8851e; }
     .twin-rate-text {
       font-size: 13px; line-height: 1.55; color: #2a2520;
-      /* Sized for the 2-3 sentence (≤80字 / ≤60 words) budget the
-         backend asks the LLM for. Scrollbar appears only on edge
-         cases where the model overshoots. */
-      max-height: 260px; overflow-y: auto;
+      /* No max-height: the backend asks the LLM for a 2-3 sentence
+         (~60 word) budget, but models routinely overshoot it, and a
+         capped+scrolling box hid the rest of the response with no
+         visual cue — the one thing this screen exists to show. Let
+         the card grow; the grid row stretches both sides to match. */
       overflow-wrap: break-word; word-break: break-word;
-      padding-right: 4px;
     }
     .twin-rate-diagnostic {
       margin-top: 14px; padding: 9px 12px;
