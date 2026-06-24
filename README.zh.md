@@ -1,5 +1,7 @@
 # THE 42 POST 🛸
 
+[![CI](https://github.com/xiaojialove-DRP/the42post/actions/workflows/ci.yml/badge.svg)](https://github.com/xiaojialove-DRP/the42post/actions/workflows/ci.yml)
+
 **一个人人可参与锻造 AI 价值观的开放研究平台**
 
 让普通人参与定义、分享和验证 AI 系统的价值观。

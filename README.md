@@ -1,5 +1,7 @@
 # THE 42 POST
 
+[![CI](https://github.com/xiaojialove-DRP/the42post/actions/workflows/ci.yml/badge.svg)](https://github.com/xiaojialove-DRP/the42post/actions/workflows/ci.yml)
+
 **An open-source platform for human-centered AI value alignment.**
 
 🌐 [中文版本](./README.zh.md) · [Live Platform](https://www.the42post.com) · [Report Issues](https://github.com/xiaojialove-DRP/the42post/issues)
