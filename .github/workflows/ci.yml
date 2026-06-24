@@ -16,11 +16,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # No npm cache here: actions/setup-node's cache-dependency-path glob
+      # did not resolve against backend/package-lock.json when combined
+      # with this job's working-directory default (failed in CI with
+      # "Some specified paths were not resolved"). Caching is a speed
+      # optimization, not a correctness requirement - dropped it rather
+      # than fight the path resolution to get a reliably green workflow.
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: backend/package-lock.json
 
       - name: Install dependencies
         run: npm ci
