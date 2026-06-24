@@ -64,7 +64,12 @@ function scrollIntoViewOnFocus(el) {
   if (!el) return;
   el.addEventListener('focus', () => {
     setTimeout(() => {
-      el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      // 'nearest' (not 'center') — centering this field could push an
+      // earlier field (e.g. username, right above the idea textarea)
+      // above the top of the keyboard-shrunk viewport with no visible
+      // trace it's still there. 'nearest' scrolls just enough to clear
+      // the keyboard without yanking unrelated fields out of view.
+      el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
     }, 300);
   });
 }
