@@ -1,6 +1,9 @@
 # Dependencies
+# package-lock.json is intentionally NOT ignored - this is an application,
+# not a library, so the lockfile is committed to pin exact dependency
+# versions across every machine and CI run. npm ci (used in CI) requires
+# it to exist in the repo.
 node_modules/
-package-lock.json
 yarn.lock
 
 # Environment
