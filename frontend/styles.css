@@ -10507,14 +10507,19 @@ button.generating {
 .sq-blessing::before { content: '“'; color: var(--card-accent, #c9b458); }
 .sq-blessing::after  { content: '”'; color: var(--card-accent, #c9b458); }
 
-/* ── One-line attribution: "Forged by xiaojia · Jun 10, 2026" ── */
+/* ── Attribution: "Forged by xiaojia · Jun 10, 2026" ──
+   Wraps onto a second line instead of overflowing the card — a longer
+   creator name plus a longer date string can exceed the card's width
+   (confirmed: 224px content in a 206px box), and nowrap let the excess
+   spill sideways into the card's decorative inner border. */
 .sq-meta-line {
   display: flex;
+  flex-wrap: wrap;
   justify-content: center;
   align-items: baseline;
-  gap: 7px;
+  gap: 4px 7px;
   width: 100%;
-  white-space: nowrap;
+  max-width: 92%;
   font-family: var(--font-mono, 'JetBrains Mono', monospace);
   font-size: 9px;
   letter-spacing: 0.6px;

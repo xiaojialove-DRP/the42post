@@ -5287,11 +5287,30 @@ async function downloadCreatorCard(skillData, soulHash) {
     restoreDescendantColors();
     clone.remove();
 
-    canvas.toBlob((blob) => {
+    const filename = `Creator_Card_${soulHash || 'certificate'}.png`;
+
+    canvas.toBlob(async (blob) => {
+      // Mobile Safari: a clicked <a download> on a blob: URL usually just
+      // opens the image in-page instead of saving it — there's no visible
+      // error, but nothing lands in Photos either ("can't download to my
+      // phone"). The Web Share sheet's "Save Image" is the reliable path
+      // there, so prefer it whenever the platform supports sharing files.
+      const file = new File([blob], filename, { type: 'image/png' });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        try {
+          await navigator.share({ files: [file], title: 'THE 42 POST — Creator Card' });
+          restoreBtn();
+          return;
+        } catch (shareError) {
+          if (shareError?.name === 'AbortError') { restoreBtn(); return; } // user cancelled the share sheet
+          // any other share failure — fall through to the direct-download path below
+        }
+      }
+
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `Creator_Card_${soulHash || 'certificate'}.png`;
+      link.download = filename;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
