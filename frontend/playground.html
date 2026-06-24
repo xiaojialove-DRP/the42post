@@ -739,6 +739,20 @@
         padding: 16px;
         border-radius: 10px;
       }
+      /* Mobile twin-test cards spawn pinned at top:12px (not randomly
+         placed like desktop), and the rate stage — two response cards
+         plus buttons plus a comment box — can run far taller than the
+         canvas below that fixed point. The canvas itself doesn't scroll
+         (it's the drag-and-drop surface), so the overflow was silently
+         clipped with no way to reach it short of dragging the card by
+         its header. Measured case: an 804px-tall body against a 590px
+         budget. Capping the body and letting it scroll internally keeps
+         the header (and its drag handle) in place while making the rest
+         reachable with an ordinary scroll. */
+      .card-body--twin {
+        max-height: calc(100vh - 220px);
+        overflow-y: auto;
+      }
       .card-title {
         font-size: 15px;
       }
