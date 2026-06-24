@@ -764,6 +764,7 @@ const I18N = {
     howto_title: 'How It Works',
     /* ── Forge Preview Modal ── */
     preview_scenario_placeholder: 'Scenario will generate based on your input',
+    probe_you_selected: '✓ You selected',
     forge_begin_forging: 'Begin Forging →',
     preview_full_skill: 'Full Skill Preview',
     preview_basic_info: 'Basic Info',
@@ -1085,6 +1086,7 @@ const I18N = {
     howto_title: '怎么玩',
     /* ── 锻造预览 Modal ── */
     preview_scenario_placeholder: '场景将基于你的输入生成',
+    probe_you_selected: '✓ 你选择了',
     forge_begin_forging: '开始铸造',
     preview_full_skill: '预览完整技能',
     preview_basic_info: '基本信息',
