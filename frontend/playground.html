@@ -739,20 +739,6 @@
         padding: 16px;
         border-radius: 10px;
       }
-      /* Mobile twin-test cards spawn pinned at top:12px (not randomly
-         placed like desktop), and the rate stage — two response cards
-         plus buttons plus a comment box — can run far taller than the
-         canvas below that fixed point. The canvas itself doesn't scroll
-         (it's the drag-and-drop surface), so the overflow was silently
-         clipped with no way to reach it short of dragging the card by
-         its header. Measured case: an 804px-tall body against a 590px
-         budget. Capping the body and letting it scroll internally keeps
-         the header (and its drag handle) in place while making the rest
-         reachable with an ordinary scroll. */
-      .card-body--twin {
-        max-height: calc(100vh - 220px);
-        overflow-y: auto;
-      }
       .card-title {
         font-size: 15px;
       }
@@ -775,6 +761,28 @@
       .dock-item {
         padding: 6px 10px;
         font-size: 10px;
+      }
+    }
+
+    /* Twin-test cards spawn pinned at top:12px (not randomly placed like
+       desktop) on any narrow OR short viewport — see isShortViewport in
+       spawnTwinTestCard. The rate stage (two response cards, buttons, a
+       comment box) can run far taller than the canvas below that fixed
+       point, especially on a landscape phone where the canvas is only
+       ~200-280px tall. The canvas itself doesn't scroll (it's the
+       drag-and-drop surface), so the overflow was silently clipped with
+       no way to reach it short of dragging the card by its header — not
+       a discoverable gesture for a rating form. Capping the body and
+       letting it scroll internally keeps the header (and its drag
+       handle) in place while making the rest reachable with an ordinary
+       scroll. Measured: 804px body vs a 590px portrait budget; the same
+       220px offset also clears the much tighter landscape case (canvas
+       ~220px tall) with room to spare, since the card now pins near the
+       canvas top there too instead of spawning at a random depth. */
+    @media (max-width: 768px), (max-height: 500px) {
+      .card-body--twin {
+        max-height: calc(100vh - 220px);
+        overflow-y: auto;
       }
     }
 
@@ -2277,12 +2285,20 @@
       card.style.zIndex = ++highestZ;
 
       const isMobileView = window.innerWidth <= 768;
+      // A landscape phone is wide (>768, so isMobileView is false) but has
+      // a canvas only ~200-280px tall — far short of this card's ~520-650px
+      // rate-stage height. The desktop branch's random placement assumes
+      // there's room to spare and only nudges the card a little; on a
+      // canvas this short it can still land the card lower than the
+      // little room available. Treat "short" the same as "narrow" for
+      // positioning purposes (pin near the top, don't randomize).
+      const isShortViewport = window.innerHeight <= 500;
       const cardW = isMobileView ? Math.min(window.innerWidth - 24, 380) : 420;
       card.style.setProperty('--card-color', repo.color);
       card.style.width = cardW + 'px';
 
-      if (isMobileView) {
-        // On mobile: center horizontally, top of canvas — no random positioning
+      if (isMobileView || isShortViewport) {
+        // Pinned, predictable position — center horizontally, top of canvas
         card.style.left = Math.max(8, (window.innerWidth - cardW) / 2) + 'px';
         card.style.top = '12px';
       } else {
