@@ -296,6 +296,12 @@ export function generateEmailTemplate(
     month: 'short',
     day: 'numeric'
   });
+  // Detected from the skill's own content rather than a passed-in language
+  // flag — no language field reaches this function from its caller, and
+  // this matches the same content-based detection routes/skills.js already
+  // uses to self-heal five_layer language after publish. Found this whole
+  // email body hardcoded Chinese-only during a bilingual consistency audit.
+  const isCn = /[一-鿿]/.test(title + (blessing || ''));
 
   const markdownUrl = downloadUrls.markdown || '#';
   const langchainUrl = downloadUrls.langchain || '#';
@@ -337,7 +343,7 @@ export function generateEmailTemplate(
 
   // This returns the same HTML as email-template.html with template variables replaced
   return `<!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="${isCn ? 'zh-CN' : 'en'}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -647,19 +653,26 @@ export function generateEmailTemplate(
   <div class="email-container">
     <!-- HEADER -->
     <div class="email-header">
-      <h1>✨ 你的 Skill 已成功铸造 ✨</h1>
-      <p>Your Skill Has Been Forged Successfully</p>
+      <h1>${isCn ? '✨ 你的 Skill 已成功铸造 ✨' : '✨ Your Skill Has Been Forged ✨'}</h1>
+      <p>${isCn ? 'Your Skill Has Been Forged Successfully' : 'Your idea is now a Skill, live on THE 42 POST'}</p>
     </div>
 
     <!-- BODY -->
     <div class="email-body">
-      <p class="greeting">亲爱的创作者，</p>
+      <p class="greeting">${isCn ? '亲爱的创作者，' : 'Dear creator,'}</p>
 
       <div class="congratulation">
+        ${isCn ? `
         <p><strong>恭喜！🎉 你已成功铸造了一份独特的 Skill。</strong></p>
         <p style="margin-top: 10px;">你的想法、你的品味、你对世界的独特视角，现已被结构化、被记录、被验证。</p>
         <p style="margin-top: 10px;">这个 Skill 现已上线至 THE 42 POST 社区，准备好被采纳、被使用、被改进。</p>
         <p style="margin-top: 10px;">接下来，你可以在邮件下方找到所有安装包，集成到你的系统中，或分享给志同道合的伙伴。</p>
+        ` : `
+        <p><strong>Congratulations! 🎉 You have successfully forged a unique Skill.</strong></p>
+        <p style="margin-top: 10px;">Your idea, your taste, your particular way of seeing the world — it's now structured, recorded, and verified.</p>
+        <p style="margin-top: 10px;">This Skill is now live in the THE 42 POST community, ready to be adopted, used, and improved on.</p>
+        <p style="margin-top: 10px;">Below, you'll find every install package — integrate it into your own system, or share it with someone who'd get it.</p>
+        `}
       </div>
 
       <!-- COMMEMORATIVE CARD SECTION -->
@@ -791,13 +804,21 @@ export function generateEmailTemplate(
       </div>
 
       <!-- NEXT STEPS -->
-      <h3>接下来你可以：</h3>
+      <h3>${isCn ? '接下来你可以：' : 'What you can do next:'}</h3>
       <div class="steps-list">
+        ${isCn ? `
         <ol>
           <li>选择一种格式下载，集成到你的 Agent 系统</li>
           <li>在 Playground 体验你的 Skill 效果</li>
           <li>分享你的 Skill 链接到社区，让更多人发现它</li>
         </ol>
+        ` : `
+        <ol>
+          <li>Download a format and integrate it into your own agent system</li>
+          <li>Try your Skill out for yourself in the Playground</li>
+          <li>Share your Skill's link so others in the community can find it</li>
+        </ol>
+        `}
       </div>
 
     </div>
