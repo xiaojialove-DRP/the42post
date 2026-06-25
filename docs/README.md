@@ -18,7 +18,8 @@
 ### **Getting Started**
 
 - **[Local Setup](SETUP.md)** — Environment configuration, dependencies, database setup
-- **[Deployment](guides/DEPLOYMENT.md)** — Deploy to Railway, Docker, self-hosted
+- **[Deployment](guides/DEPLOYMENT.md)** — Deploy to Zeabur, Docker, self-hosted
+- **[LLM Configuration](../backend/docs/LLM_CONFIGURATION.md)** — DeepSeek/Claude provider chain, rate limits, troubleshooting
 - **[Mobile Optimization](guides/MOBILE_OPTIMIZATION_GUIDE.md)** — Responsive design principles
 
 ### **Understanding THE 42 POST**
@@ -31,7 +32,7 @@
 
 - **[Contributing Guide](CONTRIBUTING.md)** — Code style, PR process, commit conventions
 - **[Backend Setup](../backend/README.md)** — Backend-specific environment
-- **[Email Setup](../backend/EMAIL_API_SETUP.md)** — Mailer configuration (Anthropic, SendGrid, etc.)
+- **[Email Setup](SETUP.md#email-setup-optional)** — Resend HTTP API configuration
 
 ---
 
@@ -62,7 +63,7 @@ PUBLISHING (skill goes public, email sent)
 ### Key Features
 
 - **Soul-Hash ID**: Unique, permanent identifier for each skill
-- **Creator Card**: Shareable proof of authorship (PNG/PDF)
+- **Creator Card**: Shareable proof of authorship (PNG)
 - **Playground**: Interactive canvas for exploring skills
 - **Archive**: Public library of all published skills
 
@@ -85,5 +86,5 @@ PUBLISHING (skill goes public, email sent)
 
 ---
 
-**Last Updated**: April 2026  
+**Last Updated**: June 2026  
 **Status**: Production Ready ✅
