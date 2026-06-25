@@ -7,7 +7,8 @@ This guide walks you through setting up THE 42 POST for local development.
 - **Node.js** 18 or higher ([Download](https://nodejs.org/))
 - **npm** or **yarn** (included with Node.js)
 - **PostgreSQL** 14+ (optional, for production-like setup) or use SQLite for quick start
-- **Anthropic API key** (get one at [console.anthropic.com](https://console.anthropic.com))
+- **DeepSeek API key** (get one at [platform.deepseek.com](https://platform.deepseek.com)) — primary LLM, required for real Skill/Twin Test generation
+- **Anthropic API key** (optional — get one at [console.anthropic.com](https://console.anthropic.com)) — only used as a fallback if the DeepSeek call fails
 
 ## Quick Start (5 minutes)
 
@@ -34,10 +35,11 @@ nano .env
 ```
 
 **Key environment variables to set:**
-- `ANTHROPIC_API_KEY` — Get from [Anthropic Console](https://console.anthropic.com)
+- `DEEPSEEK_API_KEY` — Get from [DeepSeek Platform](https://platform.deepseek.com) — required for real generation; without it the app falls back to template-based output
+- `ANTHROPIC_API_KEY` — Optional, only used as a fallback if DeepSeek fails. Leave unset to skip it.
 - `JWT_SECRET` — Random 32+ character string (for authentication)
 - `SIGNING_SECRET` — Random 32+ character string (for data signing)
-- `DATABASE_URL` — Default SQLite path: `sqlite:./data/42post.db`
+- `POSTGRES_URI` — Only needed for a production-like PostgreSQL setup. Leave unset and the app uses a local SQLite file automatically — zero config.
 
 ### 3. Initialize Database
 
@@ -97,10 +99,7 @@ You should see THE 42 POST homepage!
 
 #### Option A: SQLite (Quick Start) ✓ Recommended
 
-```bash
-# In .env:
-DATABASE_URL=sqlite:./data/42post.db
-```
+Nothing to configure — leave `POSTGRES_URI` and `DATABASE_URL` unset in `.env`, and the server automatically creates a local `database.sqlite3` file on first run.
 
 **Pros:** No external database needed, auto-creates file
 **Cons:** Not suitable for production, single-user only
@@ -121,33 +120,34 @@ DATABASE_URL=sqlite:./data/42post.db
 createdb 42post_db
 
 # In .env:
-DATABASE_URL=postgresql://username:password@localhost:5432/42post_db
+POSTGRES_URI=postgresql://username:password@localhost:5432/42post_db
 ```
 
-### Anthropic API Key Setup
+### DeepSeek API Key Setup
 
-1. Visit [console.anthropic.com](https://console.anthropic.com)
+1. Visit [platform.deepseek.com](https://platform.deepseek.com)
 2. Sign up / Log in
 3. Navigate to **API Keys**
 4. Create a new API key
 5. Copy the key and paste into `.env`:
    ```
-   ANTHROPIC_API_KEY=sk-ant-...
+   DEEPSEEK_API_KEY=your_key
    ```
+
+#### (Optional) Anthropic Fallback
+
+Only called if the DeepSeek request fails. Get a key at [console.anthropic.com](https://console.anthropic.com) and add `ANTHROPIC_API_KEY=your_key` to `.env`. Leave it unset to skip this fallback entirely — the app works fine without it.
 
 ### Email Setup (Optional)
 
-For email functionality (skill verification, notifications):
+Publish-confirmation emails (with the Creator Card attached) go through [Resend](https://resend.com)'s HTTP API, not SMTP — most cloud platforms block outbound SMTP ports, so this project never uses it.
 
 ```bash
 # In .env:
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_USER=your-email@gmail.com
-SMTP_PASSWORD=your_app_password
+RESEND_API_KEY=re_your_resend_api_key
 ```
 
-For Gmail, use an [App Password](https://support.google.com/accounts/answer/185833), not your regular password.
+Get a key at [resend.com/api-keys](https://resend.com/api-keys). Without it, emails are logged to the console instead of actually sent — fine for local dev.
 
 ---
 
@@ -157,11 +157,12 @@ For Gmail, use an [App Password](https://support.google.com/accounts/answer/1858
 
 ```
 the42post/
-├── frontend/              # Vanilla JavaScript UI
-│   ├── index.html
+├── frontend/              # Vanilla JavaScript UI, no build step
+│   ├── index.html         # Homepage + Skill Forge
+│   ├── playground.html    # Twin Test Playground
+│   ├── archive.html       # Skill Archive
 │   ├── script.js
-│   ├── styles.css
-│   └── arena.html
+│   └── styles.css
 ├── backend/              # Express.js API server
 │   ├── server.js
 │   ├── routes/
@@ -327,4 +328,4 @@ After setup is complete:
 
 ## Production Deployment
 
-For deploying to Railway or other platforms, see [guides/DEPLOYMENT.md](./guides/DEPLOYMENT.md).
+For deploying to Zeabur or other platforms, see [guides/DEPLOYMENT.md](./guides/DEPLOYMENT.md).
