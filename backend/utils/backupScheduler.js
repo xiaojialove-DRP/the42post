@@ -2,7 +2,7 @@
    Backup Scheduler — Daily SQLite snapshot with 7-day retention
    ═══════════════════════════════════════════════════════
 
-   Why: Railway redeploys preserve the Volume but never the running container.
+   Why: Zeabur redeploys preserve the Volume but never the running container.
    If a deploy or migration corrupts the DB (or someone accidentally drops a
    table), having yesterday's snapshot on disk lets us roll back in minutes
    without losing more than a day of user-generated skills.
@@ -16,9 +16,10 @@
          └── ...                       ← up to 7 days back
 
    How to restore (manual):
-     1. Stop the service (Railway → Settings → Pause)
-     2. SSH into the container or use Railway CLI:
-          railway run bash
+     1. Stop the service via Zeabur's dashboard.
+     2. Get a shell on the container (check Zeabur's current docs for the
+        exact CLI/dashboard flow — this changed from Railway's `railway run
+        bash` when we migrated and hasn't been re-verified since):
           cd /app/data
           cp backups/backup-YYYY-MM-DD.sqlite3 database.sqlite3
      3. Resume the service.

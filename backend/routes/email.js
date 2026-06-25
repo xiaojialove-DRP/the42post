@@ -260,7 +260,7 @@ router.post('/send-verification', async (req, res, next) => {
 /**
  * GET /api/email/diagnostics
  * Report whether email config env vars are present (without leaking the key).
- * Use this to quickly verify Railway Variables are set correctly.
+ * Use this to quickly verify Zeabur environment variables are set correctly.
  */
 router.get('/diagnostics', (req, res) => {
   const apiKeyPresent = !!process.env.RESEND_API_KEY;

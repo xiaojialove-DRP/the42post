@@ -20,7 +20,7 @@ import { logger } from './logger.js';
 if (!process.env.DEEPSEEK_API_KEY) {
   console.error('❌ CRITICAL: DEEPSEEK_API_KEY not set!');
   console.error('Skill generation will not work without this environment variable.');
-  console.error('Please set DEEPSEEK_API_KEY in your Railway variables.');
+  console.error('Please set DEEPSEEK_API_KEY in your Zeabur environment variables.');
 }
 
 // deepseek-chat = latest V3.2-Exp (general purpose, fast, cheap)

@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════
-   Auto-seed 42 Skills on Startup (for Railway & Production)
+   Auto-seed 42 Skills on Startup (for Zeabur & Production)
    ═══════════════════════════════════════════════════════ */
 
 import fs from 'fs';

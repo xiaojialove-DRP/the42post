@@ -1,9 +1,9 @@
 /* ═══════════════════════════════════════════════════════
    Email Service — Resend (HTTP API)
 
-   Why Resend (not SMTP): Railway blocks outbound SMTP ports
+   Why Resend (not SMTP): Zeabur blocks outbound SMTP ports
    (25/465/587) to prevent spam, so nodemailer always times out.
-   Resend uses HTTPS (port 443), works reliably on Railway, and
+   Resend uses HTTPS (port 443), works reliably on Zeabur, and
    has a generous free tier (3,000 emails / month).
 
    Env:
@@ -30,14 +30,14 @@ if (!RESEND_API_KEY) {
   console.warn('⚠️  WARNING: RESEND_API_KEY not set!');
   console.warn('   Emails will NOT be delivered — only logged to console.');
   console.warn('   Get a key at https://resend.com/api-keys');
-  console.warn('   Then set RESEND_API_KEY in Railway Variables.');
+  console.warn('   Then set RESEND_API_KEY in Zeabur environment variables.');
 } else {
   console.log(`✅ Email service: Resend (from: ${EMAIL_FROM_NAME} <${EMAIL_FROM}>)`);
   if (USING_TEST_SENDER) {
     console.warn('⚠️  Using Resend TEST sender (onboarding@resend.dev).');
     console.warn('   This address can ONLY deliver to the Resend account owner\'s verified email.');
     console.warn('   To send to real users, verify a domain at https://resend.com/domains');
-    console.warn('   and set EMAIL_FROM=you@yourdomain.com in Railway Variables.');
+    console.warn('   and set EMAIL_FROM=you@yourdomain.com in Zeabur environment variables.');
   }
 }
 

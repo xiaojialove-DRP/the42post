@@ -6,13 +6,11 @@ import { db } from '../server.js';
 
 export async function initDatabase() {
   try {
-    // NOTE: server.js forces SQLite ("Always use SQLite for now"), so even
-    // when Railway provides a postgresql:// DATABASE_URL we run on SQLite.
-    // SQLite has no CREATE EXTENSION concept (UUIDs handled in adapter
-    // layer via randomblob/v4 helpers), so this block is intentionally
-    // disabled. If we ever flip back to real PostgreSQL, restore the
-    // CREATE EXTENSION call AND gate it on the actual db.dialect, not
-    // DATABASE_URL.
+    // NOTE: server.js picks PostgreSQL when POSTGRES_URI/DATABASE_URL is set
+    // (Zeabur auto-injects POSTGRES_URI), else SQLite for local dev. Either
+    // way, UUIDs are handled in the adapter layer (randomblob/v4 helpers),
+    // not via Postgres's CREATE EXTENSION "uuid-ossp" — so this block is
+    // intentionally disabled on both dialects, not just on SQLite.
     // (Was: CREATE EXTENSION IF NOT EXISTS "uuid-ossp" — now disabled.)
 
     // Create users table

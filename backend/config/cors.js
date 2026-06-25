@@ -18,11 +18,6 @@ const WHITELISTED_ORIGINS = [
   'http://127.0.0.1:3000',
   'http://127.0.0.1:8765',
 
-  // Production (Railway)
-  'https://the42post.railway.app',
-  'https://42post.railway.app',
-  'https://www.the42post.railway.app',
-
   // Custom domains
   'https://www.the42post.com',
   'https://the42post.com',

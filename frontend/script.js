@@ -150,7 +150,7 @@ function getDefaultAPIUrl() {
   if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
     return 'http://localhost:3000/api';
   }
-  // For production (Railway, Vercel, etc), use the same domain
+  // For production (Zeabur, Vercel, etc), use the same domain
   return `${window.location.protocol}//${window.location.host}/api`;
 }
 

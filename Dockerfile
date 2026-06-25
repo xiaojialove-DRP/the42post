@@ -1,4 +1,4 @@
-# THE 42 POST - Dockerfile for Railway Deployment
+# THE 42 POST - Dockerfile for Zeabur Deployment
 FROM node:18
 
 WORKDIR /app
@@ -13,7 +13,7 @@ RUN mkdir -p /app/day1 && cp -r /app/frontend/* /app/day1/
 WORKDIR /app/backend
 RUN npm install --omit=dev --no-optional
 
-# Expose port (Railway sets PORT env var, defaults to 3000)
+# Expose port (Zeabur sets PORT env var, defaults to 3000)
 EXPOSE 3000 8080
 
 # Set NODE_ENV for production
