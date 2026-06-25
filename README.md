@@ -50,7 +50,7 @@ No setup required. Visit [the42post.com](https://www.the42post.com):
 ```bash
 git clone https://github.com/xiaojialove-DRP/the42post.git
 cd the42post/backend
-cp .env.example .env       # fill in ANTHROPIC_API_KEY and other vars
+cp .env.example .env       # fill in DEEPSEEK_API_KEY and other vars
 npm install
 npm start
 ```
@@ -61,13 +61,47 @@ See [docs/SETUP.md](docs/SETUP.md) for full environment configuration and [docs/
 
 ## Architecture
 
+```mermaid
+graph TB
+    subgraph "Client Layer"
+        Browser["🌐 Web Browser<br/>Static HTML/CSS/Vanilla JS<br/>no build step"]
+    end
+
+    subgraph "Application Layer"
+        API["🔌 Express.js API Server<br/>Node.js Backend<br/>also serves the frontend statically"]
+    end
+
+    subgraph "External Services"
+        DeepSeek["🤖 DeepSeek API<br/>primary LLM — raw HTTPS fetch"]
+        Claude["🤖 Claude API<br/>fallback LLM — raw HTTPS fetch"]
+        Resend["📧 Resend<br/>Email — HTTP API"]
+    end
+
+    subgraph "Data Layer"
+        DB["💾 Database<br/>SQLite (dev) / PostgreSQL (prod)"]
+    end
+
+    Browser -->|HTTP/REST<br/>JSON| API
+    API -->|Skill generation,<br/>Twin Test responses| DeepSeek
+    API -->|On DeepSeek failure| Claude
+    API -->|Publish + feedback<br/>notifications| Resend
+    API -->|SQL<br/>Read/Write| DB
+
+    style Browser fill:#e1f5ff
+    style API fill:#f3e5f5
+    style DeepSeek fill:#fff3e0
+    style Claude fill:#fff3e0
+    style Resend fill:#f3e5f5
+    style DB fill:#e8f5e9
+```
+
 ```
 frontend/          Static HTML/CSS/JS — no build step required
 backend/
   routes/          REST API endpoints
-  utils/           LLM adapter, email, cache, validation
+  utils/           LLM calls (DeepSeek/Claude), email, cache, validation
   middleware/       Rate limiting, error handling
-  db/              SQLite schema and seed data
+  db/              SQLite/PostgreSQL schema and seed data
 docs/              Architecture, API reference, guides
 ```
 

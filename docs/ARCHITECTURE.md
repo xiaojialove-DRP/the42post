@@ -1,6 +1,6 @@
 # System Architecture
 
-THE 42 POST is a distributed, human-centered AI value alignment platform combining frontend interactivity, backend API services, external AI integration, and database persistence.
+THE 42 POST is a research platform for human-centered AI value alignment: anyone can author a **Skill** (a structured statement of a value or principle) and test it head-to-head against a baseline AI response in the **Twin Test Playground**. The backend's job is mostly LLM orchestration and structured data collection, not a conventional CRUD app.
 
 ---
 
@@ -9,33 +9,59 @@ THE 42 POST is a distributed, human-centered AI value alignment platform combini
 ```mermaid
 graph TB
     subgraph "Client Layer"
-        Browser["🌐 Web Browser<br/>Vue.js Frontend"]
+        Browser["🌐 Web Browser<br/>Static HTML/CSS/Vanilla JS<br/>no build step"]
     end
-    
+
     subgraph "Application Layer"
-        API["🔌 Express.js API Server<br/>Node.js Backend"]
+        API["🔌 Express.js API Server<br/>Node.js Backend<br/>also serves the frontend statically"]
     end
-    
+
     subgraph "External Services"
-        Claude["🤖 Claude API<br/>Anthropic"]
-        Email["📧 SMTP Service<br/>Email Notifications"]
+        DeepSeek["🤖 DeepSeek API<br/>primary LLM — raw HTTPS fetch"]
+        Claude["🤖 Claude API<br/>fallback LLM — raw HTTPS fetch"]
+        Resend["📧 Resend<br/>Email — HTTP API"]
     end
-    
+
     subgraph "Data Layer"
-        DB["💾 Database<br/>SQLite/PostgreSQL"]
+        DB["💾 Database<br/>SQLite (dev) / PostgreSQL (prod)"]
     end
-    
+
     Browser -->|HTTP/REST<br/>JSON| API
-    API -->|API Call<br/>Skill Generation| Claude
-    API -->|SMTP<br/>Send Emails| Email
+    API -->|Skill generation,<br/>Twin Test responses| DeepSeek
+    API -->|On DeepSeek failure| Claude
+    API -->|Publish + feedback<br/>notifications| Resend
     API -->|SQL<br/>Read/Write| DB
-    
+
     style Browser fill:#e1f5ff
     style API fill:#f3e5f5
+    style DeepSeek fill:#fff3e0
     style Claude fill:#fff3e0
-    style Email fill:#f3e5f5
+    style Resend fill:#f3e5f5
     style DB fill:#e8f5e9
 ```
+
+Neither LLM is called through an official SDK — both are plain `fetch()` calls against their REST endpoints (`api.deepseek.com/chat/completions`, `api.anthropic.com/v1/messages`). DeepSeek is primary; Claude is a fallback used when DeepSeek's call fails, not a load-balanced second option.
+
+---
+
+## 🪪 Identity Model
+
+There's no public registration flow. The identity every creator actually uses is lighter-weight:
+
+```mermaid
+graph LR
+    A["Creator provides<br/>email + username"] -->|POST /api/auth/forge-session| B["Find or create<br/>users row — no password"]
+    B -->|Issues a real JWT| T["Bearer token"]
+    T -->|Authorization header| C["Forge a Skill,<br/>fetch own skills, etc."]
+    C -->|On publish| D["Generate Soul-Hash<br/>14-char identity"]
+    D --> E["Creator Card<br/>proof of contribution"]
+
+    style A fill:#e3f2fd
+    style D fill:#c8e6c9
+    style E fill:#c8e6c9
+```
+
+The JWT mechanism itself is very much live — `forge-session` issues a real token (`bcryptjs`/`jsonwebtoken` under the hood), and the frontend sends it as `Authorization: Bearer <token>` on follow-up calls like `GET /api/skills/user/skills`. **What's dormant specifically is the password path**: `POST /api/auth/login` checks a `password_hash` column that nothing in the live product ever populates, and `GET /api/auth/me` has no frontend caller either. Don't build against `/login` expecting real users to exist there — the identity that actually matters is the anonymous email+username pair from `forge-session`.
 
 ---
 
@@ -43,17 +69,17 @@ graph TB
 
 ```mermaid
 graph LR
-    Step1["🎯 IDEA<br/>Input & Concept<br/>2-3 min"]
-    Step2["⚙️ GENERATE<br/>AI Creates Structure<br/>1-2 min"]
-    Step3["👁️ REVIEW<br/>Preview & Edit<br/>3-5 min"]
-    Step4["📤 PUBLISH<br/>Share to Library<br/>1 min"]
-    
-    Step1 -->|User describes<br/>idea & dimension| Step2
-    Step2 -->|AI generates<br/>five-layer structure| Step3
-    Step3 -->|User reviews &<br/>provides feedback| Step2
-    Step3 -->|User confirms<br/>skill ready| Step4
-    Step4 -->|Publish to<br/>public library| Result["✅ Skill Published<br/>Soul-Hash ID<br/>Email Notification"]
-    
+    Step1["🎯 IDEA<br/>Describe the value/idea"]
+    Step2["⚙️ GENERATING<br/>AI drafts the structure"]
+    Step3["🔧 FORGE & EDIT<br/>Review, regenerate, refine"]
+    Step4["📤 PUBLISHING<br/>Soul-Hash + Creator Card"]
+
+    Step1 -->|POST /api/forge/probe| Step2
+    Step2 -->|POST /api/forge/preview-from-probe<br/>or /preview| Step3
+    Step3 -->|Edit feedback loops back| Step2
+    Step3 -->|Confirm| Step4
+    Step4 -->|POST /api/skills| Result["✅ Published<br/>Soul-Hash ID<br/>Email + Creator Card"]
+
     style Step1 fill:#e3f2fd
     style Step2 fill:#f3e5f5
     style Step3 fill:#fff3e0
@@ -68,19 +94,19 @@ graph LR
 ```mermaid
 graph TB
     Skill["🛠️ Skill Definition"]
-    
+
     Layer1["📝 DEFINING<br/>Core principle statement"]
     Layer2["🌍 INSTANTIATING<br/>Real-world examples<br/>Before/After scenarios"]
     Layer3["🚧 FENCING<br/>Boundary conditions<br/>When to apply/not apply"]
     Layer4["✅ VALIDATING<br/>Test cases<br/>Verification criteria"]
     Layer5["🌏 CONTEXTUALIZING<br/>Cultural adaptations<br/>Global perspectives"]
-    
+
     Skill --> Layer1
     Skill --> Layer2
     Skill --> Layer3
     Skill --> Layer4
     Skill --> Layer5
-    
+
     style Skill fill:#e1f5ff
     style Layer1 fill:#fff9c4
     style Layer2 fill:#ffe0b2
@@ -93,185 +119,114 @@ graph TB
 
 ## 📡 API Architecture
 
-### Core API Routes
+### Mounted Routes (`backend/server.js`)
 
 ```
-┌─ /api/auth
-│  ├─ POST /register         (Create new user account)
-│  ├─ POST /login            (User authentication)
-│  └─ POST /refresh          (Token refresh)
-│
-├─ /api/skills
-│  ├─ GET /                  (List all skills)
-│  ├─ GET /:id               (Get specific skill)
-│  ├─ POST /                 (Create new skill)
-│  ├─ PATCH /:id             (Update skill)
-│  └─ DELETE /:id            (Delete skill)
+├─ /api/auth
+│  ├─ POST /forge-session    (find-or-create anonymous identity — the real one)
+│  ├─ POST /login            (dormant — no live caller, see Identity Model)
+│  └─ GET  /me                (dormant — no live caller either, though a forge-session token would satisfy it)
 │
 ├─ /api/forge
-│  ├─ POST /probe            (Generate intuition probe)
-│  ├─ POST /generate         (Generate five-layer structure)
-│  └─ POST /regenerate       (Regenerate specific layer)
+│  ├─ POST /probe                  (generate an intuition probe from the idea)
+│  ├─ POST /probe/stream           (streaming variant)
+│  ├─ POST /preview-from-probe     (build the five-layer structure)
+│  ├─ POST /preview                (build it directly, skipping the probe step)
+│  ├─ POST /save-probe-session     (persist probe interaction for research data)
+│  └─ POST /blessing               (the short AI "blessing" line shown on the Creator Card)
 │
-├─ /api/search
-│  ├─ GET /                  (Search skills)
-│  └─ GET /domains           (List all domains)
+├─ /api/skills
+│  ├─ GET  /                       (list, with 5-minute in-memory cache)
+│  ├─ GET  /:skill_id
+│  ├─ POST /                       (publish)
+│  ├─ GET  /user/skills             (requireAuth — works with a forge-session token)
+│  ├─ POST /:skill_id/star, GET /:skill_id/stars, GET /stars/batch  (starring)
+│  └─ PATCH /:skill_id, DELETE /:skill_id, GET /:skill_id/manifest  (edit/manage)
+│
+├─ /api/playground
+│  ├─ POST /test               (run the Twin Test: baseline vs. skill response)
+│  ├─ POST /vote                (record which response the user preferred)
+│  ├─ POST /feedback            (optional free-text comment)
+│  ├─ GET  /picker              (skill list for the "pick a skill" dropdown)
+│  └─ GET  /stats/:skill_id, /stats-batch
 │
 ├─ /api/email
-│  ├─ POST /send-forge-success    (Send publish notification)
-│  └─ GET /certificate/:id        (Download creator certificate)
+│  └─ POST /send-forge-success  (publish confirmation + Creator Card, via Resend)
 │
-└─ /api/agents
-   └─ POST /shadow-probe     (Test skill with Shadow Agent)
+├─ /api/download/:skillId       (server-rendered Creator Card, downloadable)
+│
+└─ /health, /api/health         (uptime checks)
 ```
 
-### Request/Response Flow
+A handful of `/api/admin/*` routes (seeding, diagnostics, creator-name backfills) live directly in `server.js`, gated behind a `requireAdminKey` check — operational tooling, not part of the public API surface.
+
+### Request/Response Flow: Forging a Skill
 
 ```mermaid
 sequenceDiagram
-    participant User as 👤 User
+    participant User as 👤 Creator
     participant Frontend as 🌐 Frontend
     participant API as 🔌 API Server
-    participant Claude as 🤖 Claude API
+    participant LLM as 🤖 DeepSeek (→ Claude on failure)
     participant DB as 💾 Database
-    
-    User->>Frontend: Enter skill idea
-    Frontend->>API: POST /api/forge/generate
-    API->>Claude: Generate five layers
-    Claude-->>API: Return structure
-    API->>DB: Save draft
-    DB-->>API: Confirm save
-    API-->>Frontend: Return JSON structure
-    Frontend-->>User: Display preview modal
-    
-    User->>Frontend: Click Publish
+
+    User->>Frontend: Describe an idea
+    Frontend->>API: POST /api/forge/probe
+    API->>LLM: Generate intuition probe
+    LLM-->>API: Probe questions
+    API-->>Frontend: Display probe
+    User->>Frontend: Answer / proceed
+
+    Frontend->>API: POST /api/forge/preview-from-probe
+    API->>LLM: Generate five-layer structure
+    LLM-->>API: Structured Skill draft
+    API-->>Frontend: Show in FORGE & EDIT step
+
+    User->>Frontend: Confirm publish
     Frontend->>API: POST /api/skills
-    API->>DB: Store published skill
-    DB-->>API: Success + skill_id
-    API->>Email: Send confirmation
-    API-->>Frontend: Return success
-    Frontend-->>User: Show completion card
+    API->>DB: Store skill, generate Soul-Hash
+    API->>Resend: Send confirmation email
+    API-->>Frontend: Success + Soul-Hash
+    Frontend-->>User: Creator Card + Playground CTA
 ```
 
 ---
 
-## 💾 Database Schema
+## 💾 Database
 
-```mermaid
-erDiagram
-    USERS ||--o{ SKILLS : creates
-    USERS ||--o{ EMAIL_LOGS : receives
-    SKILLS ||--o{ SKILL_VERSIONS : has
-    SKILLS ||--o{ DOMAINS : belongs_to
-    
-    USERS {
-        int user_id PK
-        string email UK
-        string username
-        string password_hash
-        boolean email_verified
-        timestamp created_at
-        timestamp updated_at
-    }
-    
-    SKILLS {
-        int skill_id PK
-        int user_id FK
-        string skill_name
-        text defining_layer
-        json instantiating_layer
-        json fencing_layer
-        json validating_layer
-        json contextualizing_layer
-        string soul_hash UK
-        string status
-        timestamp created_at
-        timestamp published_at
-    }
-    
-    SKILL_VERSIONS {
-        int version_id PK
-        int skill_id FK
-        int version_number
-        json five_layer_structure
-        timestamp created_at
-    }
-    
-    DOMAINS {
-        int domain_id PK
-        string domain_name
-        string description
-    }
-    
-    EMAIL_LOGS {
-        int log_id PK
-        int user_id FK
-        int skill_id FK
-        string email_type
-        string status
-        timestamp sent_at
-    }
-```
+SQLite locally (zero config), PostgreSQL in production when `POSTGRES_URI` is set (`backend/db/connectionPool.js` / `sqlite-adapter.js` switch transparently). Real tables, by purpose rather than full column lists (see `backend/db/init.js` for exact schema):
+
+| Table | Purpose |
+|---|---|
+| `users` | Anonymous-by-default creator identity (email + username); password fields exist but are unused in practice |
+| `skills` | Published Skills — the five-layer structure, Soul-Hash, domain, etc. |
+| `skill_versions` | Edit history for a Skill |
+| `skill_manifests` | Export/packaging metadata |
+| `probe_logs`, `probe_sessions` | Research data from the intuition-probe step |
+| `skill_test_votes` | Twin Test results — which response (baseline vs. skill) the user preferred |
+| `skill_feedback` | Optional free-text comments left after a Twin Test |
+| `skill_usage_logs`, `user_skill_interactions` | Engagement tracking |
+| `forging_histories` | Full record of a creator's forge session (idea, language, locale) |
+| `moderation_logs` | Content-safety flags |
 
 ---
 
-## 🔐 Authentication & Authorization Flow
+## 🔄 Integration Points
 
-```mermaid
-graph TD
-    A["User Registration<br/>Email + Password"] -->|Hash password<br/>Store in DB| B["User Account Created"]
-    
-    C["User Login<br/>Email + Password"] -->|Verify hash| D{Credentials Valid?}
-    D -->|Yes| E["Generate JWT<br/>24h expiry"]
-    D -->|No| F["Return 401<br/>Unauthorized"]
-    
-    E -->|Token in<br/>Authorization Header| G["Protected Routes<br/>Middleware Check"]
-    
-    G -->|Token valid| H["Grant Access<br/>to Resources"]
-    G -->|Token expired| I["401 Unauthorized<br/>Request token refresh"]
-    
-    style A fill:#bbdefb
-    style C fill:#bbdefb
-    style E fill:#c8e6c9
-    style H fill:#c8e6c9
-    style F fill:#ffccbc
-    style I fill:#ffccbc
-```
+### LLM Integration
+- **Primary**: DeepSeek (`deepseek-chat`, configurable via `DEEPSEEK_MODEL`) — plain `fetch()` against `api.deepseek.com`, no SDK
+- **Fallback**: Claude (`api.anthropic.com/v1/messages`) — used when the DeepSeek call fails, not load-balanced
+- **Use cases**: intuition probes, five-layer Skill generation, Twin Test baseline/skill responses, the Creator Card "blessing" line
+- A multi-provider abstraction (`backend/utils/llmAdapter.js`, Gemini-era) and the `@google/generative-ai` dependency still exist in the repo but have no live caller — left over from an earlier provider, not part of the running system
 
----
+### Email — Resend, not SMTP
+- **Why**: Zeabur (the deploy target) blocks outbound SMTP ports (25/465/587) to prevent spam, so Nodemailer-style SMTP always times out there. Resend uses HTTPS, so it works.
+- **Templates**: publish confirmation with the Creator Card attached
 
-## 📊 Data Flow: Complete Skill Creation Journey
-
-```mermaid
-graph TD
-    A["🎯 Creator enters idea<br/>Select creative dimension"] -->|POST /forge/probe| B["Generate Intuition Probe<br/>via Claude API"]
-    B -->|Display on page| C["Creator reviews probe"]
-    C -->|Feels comfortable| D["Move to GENERATE step"]
-    
-    D -->|POST /forge/generate<br/>with idea & feedback| E["Claude API generates<br/>five-layer structure"]
-    E -->|Save draft to DB| F["Display in GENERATE step<br/>with animation"]
-    
-    F -->|Creator proceeds| G["REVIEW step<br/>Preview modal opens"]
-    G -->|Edit title/definition<br/>or request regeneration| H{Creator Decision}
-    
-    H -->|Edit layer| I["POST /forge/regenerate<br/>with feedback"]
-    I -->|Claude regenerates<br/>specific layer| E
-    
-    H -->|Confirm & proceed| J["PUBLISH step"]
-    
-    J -->|Choose license<br/>Accept covenant| K["POST /api/skills<br/>Publish to library"]
-    
-    K -->|Success| L["Generate Soul-Hash<br/>Create certificate"]
-    L -->|Save to DB| M["Send confirmation email<br/>via SMTP"]
-    
-    M -->|Deliver| N["✅ Creator receives<br/>notification + card download"]
-    
-    style A fill:#e3f2fd
-    style E fill:#f3e5f5
-    style G fill:#fff3e0
-    style J fill:#e8f5e9
-    style N fill:#c8e6c9
-```
+### Database Flexibility
+- **Development**: SQLite, file-based, zero configuration
+- **Production**: PostgreSQL via `POSTGRES_URI`
+- **Caching**: skill list cached in-memory for 5 minutes, invalidated on publish
 
 ---
 
@@ -280,103 +235,38 @@ graph TD
 ### Frontend (`frontend/`)
 ```
 frontend/
-├── index.html              (Main application - 850 lines)
-├── script.js               (App logic - 6,567 lines)
-├── styles.css              (Responsive design - 134 KB)
-├── arena.html              (Shadow Agent experience page)
-├── skills.js               (Sample skills data)
-└── utils/                  (Helper functions)
+├── index.html              (Homepage + Skill Forge modal)
+├── playground.html         (Twin Test Playground — drag-and-drop card canvas)
+├── archive.html            (Skill Archive — browse/search published Skills)
+├── script.js               (Shared app logic; large, single file, no build step)
+├── styles.css
+├── js/utils.js, utils/api.js   (small shared helpers)
+└── skillStore.js, skills.js    (local skill data helpers)
 ```
 
 ### Backend (`backend/`)
 ```
 backend/
-├── server.js               (Express app entry point)
+├── server.js               (Express entry point; mounts routes, serves frontend statically)
 ├── routes/
-│   ├── auth.js             (Register, login, refresh)
-│   ├── skills.js           (CRUD operations)
-│   ├── forge.js            (Skill generation)
-│   ├── search.js           (Discovery & filtering)
-│   ├── email.js            (Notifications)
-│   └── agents.js           (Shadow Agent API)
+│   ├── auth.js             (forge-session — the real identity flow; login/me are dormant)
+│   ├── forge.js             (probe, preview, blessing — Skill generation)
+│   ├── skills.js            (publish, list, author lookup, star sync)
+│   ├── playground.js        (Twin Test, vote, feedback, picker, stats)
+│   ├── email.js             (Resend integration)
+│   ├── downloads.js         (server-rendered Creator Card)
+│   └── health.js
 ├── utils/
-│   ├── email-service.js    (Nodemailer config)
-│   ├── certificate.js      (Certificate generation)
-│   └── jwt-utils.js        (Token management)
+│   ├── skillGeneration.js   (DeepSeek/Claude calls — the real LLM integration)
+│   ├── certificate.js       (Creator Card HTML/email templates)
+│   ├── email.js             (Resend wrapper)
+│   ├── validation.js, moderation.js, cache.js, dbRetry.js, logger.js
 ├── middleware/
-│   ├── auth.js             (JWT verification)
-│   ├── error-handler.js    (Error management)
-│   └── logger.js           (Request logging)
-├── db/
-│   └── init.js             (SQLite/PostgreSQL schema)
-└── .env.example            (Configuration template)
-```
-
----
-
-## 🔄 Integration Points
-
-### Claude API Integration
-- **Endpoint**: `https://api.anthropic.com/v1/messages`
-- **Use Cases**:
-  - Generate intuition probes from user ideas
-  - Create five-layer skill structures
-  - Regenerate specific layers based on feedback
-- **Model**: Claude 3.5 Sonnet
-- **Rate Limiting**: Based on Anthropic API plan
-
-### Email Service Integration
-- **Provider**: Nodemailer (SMTP compatible)
-- **Supported**: Gmail, SendGrid, custom SMTP
-- **Dev Mode**: Console logging (no actual sending)
-- **Templates**:
-  - Skill publication confirmation
-  - Creator certificate download link
-  - Feedback notifications
-
-### Database Flexibility
-- **Development**: SQLite (file-based, zero configuration)
-- **Production**: PostgreSQL (scalable, enterprise-ready)
-- **Migration**: Connection string via `DATABASE_URL`
-
----
-
-## 📈 Deployment Architecture
-
-```mermaid
-graph TB
-    subgraph "Developer Machine"
-        LocalFE["Frontend<br/>localhost:8080"]
-        LocalBE["Backend<br/>localhost:3000"]
-        LocalDB["SQLite<br/>database.sqlite3"]
-    end
-    
-    subgraph "Production Environment"
-        CDN["🌐 CDN<br/>Static Assets"]
-        Prod_BE["☁️ App Server<br/>Node.js/Express<br/>Railway/Heroku/Docker"]
-        Prod_DB["☁️ PostgreSQL<br/>Managed Database"]
-    end
-    
-    subgraph "External APIs"
-        Anthropic["Claude API<br/>Anthropic"]
-        SMTP["SMTP Service<br/>Gmail/SendGrid"]
-    end
-    
-    LocalFE -->|Development| LocalBE
-    LocalBE -->|Development| LocalDB
-    
-    Prod_BE -->|Production| Prod_DB
-    Prod_BE -->|API calls| Anthropic
-    Prod_BE -->|Send emails| SMTP
-    
-    CDN -->|Serve static| Browser["User Browser"]
-    Browser -->|REST API| Prod_BE
-    
-    style LocalFE fill:#c8e6c9
-    style LocalBE fill:#c8e6c9
-    style LocalDB fill:#c8e6c9
-    style Prod_BE fill:#bbdefb
-    style Prod_DB fill:#bbdefb
+│   ├── errorHandler.js, requestValidator.js, requestLogger.js, rateLimiter.js
+└── db/
+    ├── init.js              (schema — source of truth, not this doc)
+    ├── connectionPool.js, sqlite-adapter.js
+    └── seed-skills-on-startup.js
 ```
 
 ---
@@ -385,36 +275,63 @@ graph TB
 
 | Decision | Rationale | Trade-offs |
 |----------|-----------|-----------|
-| **Frontend: Vue.js + Vanilla JS** | Lightweight, no build step, fast dev | Limited for large-scale complexity |
-| **Backend: Express.js** | Minimal, flexible, large ecosystem | Less opinionated than frameworks |
-| **DB: SQLite + PostgreSQL** | SQLite for dev simplicity, PostgreSQL for prod scale | Migration complexity |
-| **JWT Auth** | Stateless, scalable, works with multiple servers | No server-side session control |
-| **Claude API** | State-of-the-art AI, best for creative generation | External dependency, API costs |
-| **Nodemailer** | Simple, flexible, supports multiple providers | Not a managed service |
-| **Five-Layer Structure** | Domain-specific, human-centered, verifiable | More complex than flat structure |
+| **Frontend: vanilla HTML/CSS/JS, no framework** | No build step, anyone can clone and open it | `script.js` is large; no component model |
+| **Backend: Express.js** | Minimal, flexible | Less opinionated than a full framework |
+| **DeepSeek primary, Claude fallback** | DeepSeek is fast and cheap for the generation volume this needs; Claude covers the failure case | Two providers to keep working, raw `fetch()` instead of a maintained SDK |
+| **Resend over SMTP** | Zeabur blocks outbound SMTP ports; Resend's HTTP API works there | Tied to one provider's API shape |
+| **SQLite + PostgreSQL** | SQLite for zero-config local dev, PostgreSQL for production scale | Two schemas to keep in sync (see `backend/test/helpers/db.js`) |
+| **Anonymous forge-session (no passwords)** | This is a research project — Soul-Hash already serves as a verifiable identity, registration is friction with no real benefit | The `/login` JWT path exists in code but is unused; don't assume it's a real account system |
+| **Five-Layer Skill Structure** | Domain-specific, human-centered, verifiable, more than a flat description | More complex to generate and review than a single text field |
 
 ---
 
-## 🚀 Performance Considerations
+## 📈 Deployment
 
-- **Frontend**: CSS-in-style, minimal JavaScript (vanilla)
-- **Backend**: Async/await, connection pooling for DB
-- **Database**: Indexed queries on `user_id`, `skill_id`, `email`
-- **API**: Compression, caching headers for static assets
-- **External APIs**: Implement retry logic, error handling
+```mermaid
+graph TB
+    subgraph "Developer Machine"
+        LocalBE["Backend + static frontend<br/>localhost:3000"]
+        LocalDB["SQLite<br/>database.sqlite3"]
+    end
+
+    subgraph "Production (Zeabur / Docker)"
+        Prod_BE["☁️ Express App<br/>serves frontend statically<br/>+ API"]
+        Prod_DB["☁️ PostgreSQL<br/>via POSTGRES_URI"]
+    end
+
+    subgraph "External APIs"
+        DeepSeek["DeepSeek API"]
+        Claude["Claude API (fallback)"]
+        Resend["Resend (email)"]
+    end
+
+    LocalBE --> LocalDB
+    Prod_BE --> Prod_DB
+    Prod_BE --> DeepSeek
+    Prod_BE --> Claude
+    Prod_BE --> Resend
+    Browser["User Browser"] -->|HTTP| Prod_BE
+
+    style LocalBE fill:#c8e6c9
+    style LocalDB fill:#c8e6c9
+    style Prod_BE fill:#bbdefb
+    style Prod_DB fill:#bbdefb
+```
+
+One process serves both the API and the static frontend (`express.static`) — there's no separate CDN or frontend build/deploy step. `Procfile` and `Dockerfile` both start the same `backend/server.js`.
 
 ---
 
 ## 🔒 Security Considerations
 
-- **Authentication**: JWT with 24h expiry, refresh tokens
-- **Database**: Parameterized queries (prevent SQL injection)
-- **Passwords**: Bcrypt hashing, never stored in plain text
-- **Environment Variables**: `.env` file (never committed to git)
-- **CORS**: Configured to allow frontend domain only
-- **Rate Limiting**: Implement on `/api/auth` and `/api/forge` endpoints
+- **Rate limiting**: applied per-route to the expensive LLM-calling endpoints (`rateLimitLLM` in `forge.js`, `playground.js`), not as a single blanket app-wide limiter
+- **Validation**: `requestValidator` middleware + `utils/validation.js` (username/email format, content checks)
+- **Moderation**: `utils/moderation.js` flags sensitive content before it reaches the LLM or gets published
+- **Database**: parameterized queries throughout (no string-concatenated SQL)
+- **Environment variables**: `.env`, never committed (`.env.example` documents what's needed)
+- **Admin routes**: gated behind `requireAdminKey`, not JWT — separate from the (dormant) user-login path
 
 ---
 
-**Last Updated**: 2026-04-20  
-**Version**: 1.0.0
+**Last Updated**: 2026-06-25
+**Reflects**: the actual running system as of this date — verified against `server.js` route mounts, `package.json` dependencies, and `db/init.js`, not carried over from an earlier draft.
