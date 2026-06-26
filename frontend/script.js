@@ -599,8 +599,6 @@ const I18N = {
     footer_1: '"Taste is the last infrastructure."',
     footer_2: '"The scarcest resource in the age of AI."',
     footer_3: '"Everyone is welcome. Especially non-engineers."',
-    knight_card_title: 'Creator Card',
-    knight_card_desc: 'Your perspective has been recorded. Download your card as proof of contribution.',
     btn_download_card: '↓ DOWNLOAD CREATOR CARD',
     score_awaiting: 'LISTENING...',
     score_standing: 'Taking it in.',
@@ -865,8 +863,6 @@ const I18N = {
     footer_1: '"想象力是最后的基础设施。"',
     footer_2: '"AI 时代最稀缺的资源。"',
     footer_3: '"欢迎每一个人。尤其是非工程师。"',
-    knight_card_title: '创作者凭证',
-    knight_card_desc: '你的视角已被记录。下载你的创作者卡片作为贡献证明。',
     btn_download_card: '↓ 下载创作者卡片',
     score_awaiting: '正在倾听...',
     score_standing: '正在感受。',
@@ -2329,7 +2325,6 @@ function initSkillForge() {
   const overlay = document.getElementById('forgeOverlay');
   const slot00 = document.getElementById('slot00');
   const closeBtn = document.getElementById('forgeClose');
-  const knightCardSection = document.getElementById('knightCardSection');
   let selectedDomain = null;
 
   // ── Mobile keyboard: prevent layout jump when keyboard appears/dismisses ──
@@ -2723,7 +2718,6 @@ function initSkillForge() {
     document.querySelectorAll('.probe-btn.selected').forEach(b => b.classList.remove('selected'));
 
     overlay.classList.add('active');
-    if (knightCardSection) knightCardSection.classList.remove('visible');
     document.querySelectorAll('.forge-page').forEach(p => p.classList.remove('active'));
     const page0 = document.getElementById('forgePage0');
     const page1 = document.getElementById('forgePage1');
@@ -5322,140 +5316,6 @@ async function downloadCreatorCard(skillData, soulHash) {
     if (clone) clone.remove();
     restoreBtn();
   }
-}
-
-/* ═══ KNIGHT CARD GENERATOR ═══ */
-function generateKnightCard(soulHash, inviteCode) {
-  const canvas = document.getElementById('knightCardCanvas');
-  if (!canvas) return;
-  const ctx = canvas.getContext('2d');
-  const w = 600, h = 380;
-
-  // Background — parchment
-  ctx.fillStyle = '#faf8f4';
-  ctx.fillRect(0, 0, w, h);
-
-  // Double border
-  ctx.strokeStyle = '#1a1a1a';
-  ctx.lineWidth = 3;
-  ctx.strokeRect(12, 12, w - 24, h - 24);
-  ctx.lineWidth = 1;
-  ctx.strokeRect(18, 18, w - 36, h - 36);
-
-  // Header line
-  ctx.fillStyle = '#1a1a1a';
-  ctx.fillRect(30, 55, w - 60, 2);
-
-  // Title
-  ctx.font = '28px "Playfair Display", Georgia, serif';
-  ctx.fillStyle = '#1a1a1a';
-  ctx.textAlign = 'center';
-  ctx.fillText('The 42 Post', w / 2, 48);
-
-  // Subtitle
-  ctx.font = 'italic 12px "Playfair Display", Georgia, serif';
-  ctx.fillStyle = '#666';
-  ctx.fillText('Knight Credential Card · 骑士凭证', w / 2, 76);
-
-  // Shield icon (simplified)
-  ctx.beginPath();
-  ctx.moveTo(w / 2, 92);
-  ctx.lineTo(w / 2 + 16, 100);
-  ctx.lineTo(w / 2 + 16, 116);
-  ctx.quadraticCurveTo(w / 2 + 16, 128, w / 2, 134);
-  ctx.quadraticCurveTo(w / 2 - 16, 128, w / 2 - 16, 116);
-  ctx.lineTo(w / 2 - 16, 100);
-  ctx.closePath();
-  ctx.strokeStyle = '#1a1a1a';
-  ctx.lineWidth = 1.5;
-  ctx.stroke();
-
-  ctx.font = 'bold 11px "Playfair Display", Georgia, serif';
-  ctx.fillStyle = '#1a1a1a';
-  ctx.fillText('42', w / 2, 118);
-
-  // Divider
-  ctx.fillStyle = '#1a1a1a';
-  ctx.fillRect(w / 2 - 80, 144, 160, 1);
-
-  // Agent name
-  const agentLinkEl = document.getElementById('forgeAgentLink');
-  const agentName = agentLinkEl && agentLinkEl.value.trim() ? agentLinkEl.value.trim() : 'Community Creator';
-  ctx.font = '18px "Playfair Display", Georgia, serif';
-  ctx.fillStyle = '#1a1a1a';
-  ctx.fillText(agentName, w / 2, 170);
-
-  // Skill name
-  const skillNameEl = document.getElementById('forgeSkillName');
-  const skillName = skillNameEl ? skillNameEl.value || 'Unnamed Skill' : 'Unnamed Skill';
-  ctx.font = 'italic 13px "Playfair Display", Georgia, serif';
-  ctx.fillStyle = '#4a4a4a';
-  ctx.fillText(`Skill: ${skillName}`, w / 2, 192);
-
-  // Author
-  const authorEl = document.getElementById('forgeAuthor');
-  const authorName = authorEl ? authorEl.value.trim() || 'Anonymous' : 'Anonymous';
-  ctx.font = '11px "Playfair Display", Georgia, serif';
-  ctx.fillStyle = '#666';
-  ctx.fillText(`Created by ${authorName}`, w / 2, 210);
-
-  // License info
-  const commercialTagsEl = document.getElementById('commercialTags');
-  const commercialSel = commercialTagsEl ? commercialTagsEl.querySelector('.forge-tag.selected') : null;
-  const commercialVal = commercialSel ? commercialSel.dataset.value : 'authorized';
-  const remixTagsEl = document.getElementById('remixTags');
-  const remixSel = remixTagsEl ? remixTagsEl.querySelector('.forge-tag.selected') : null;
-  const remixVal = remixSel ? remixSel.dataset.value : 'share-alike';
-  const licenseStr = `License: ${commercialVal === 'allowed' ? '◎ Open' : commercialVal === 'prohibited' ? '⊘ Non-commercial' : '◉ Authorization Required'} · Remix: ${remixVal === 'yes' ? '✓' : remixVal === 'no' ? '✗' : '≈ Share-alike'}`;
-  ctx.font = '9px "JetBrains Mono", monospace';
-  ctx.fillStyle = '#888';
-  ctx.fillText(licenseStr, w / 2, 226);
-
-  // Soul Hash
-  ctx.font = '11px "JetBrains Mono", monospace';
-  ctx.fillStyle = '#1a1a1a';
-  ctx.fillText(`Soul-Hash: ${soulHash}`, w / 2, 244);
-
-  // Date
-  const now = new Date();
-  const dateStr = `${now.getFullYear()}.${String(now.getMonth() + 1).padStart(2, '0')}.${String(now.getDate()).padStart(2, '0')}`;
-  ctx.fillText(`Forged: ${dateStr}`, w / 2, 260);
-
-  // Divider
-  ctx.fillStyle = '#d0cec8';
-  ctx.fillRect(30, 274, w - 60, 1);
-
-  // Bottom line
-  ctx.fillStyle = '#1a1a1a';
-  ctx.fillRect(30, 294, w - 60, 1);
-  ctx.font = '8px "JetBrains Mono", monospace';
-  ctx.fillStyle = '#aaa';
-  ctx.fillText('THE 42 POST · PROTOCOL CAMELOT · HUMAN VALUES ALIGNMENT', w / 2, 310);
-
-  // Show preview as image
-  setTimeout(() => {
-    const preview = document.getElementById('knightCardPreview');
-    if (preview) {
-      preview.innerHTML = '';
-      const img = document.createElement('img');
-      img.src = canvas.toDataURL('image/png');
-      img.style.width = '100%';
-      img.style.maxWidth = '500px';
-      img.style.border = '1px solid #d0cec8';
-      preview.appendChild(img);
-    }
-
-    // Download handler
-    const downloadBtn = document.getElementById('btnDownloadCard');
-    if (downloadBtn) {
-      downloadBtn.onclick = () => {
-        const link = document.createElement('a');
-        link.download = `42post-knight-card-${soulHash}.png`;
-        link.href = canvas.toDataURL('image/png');
-        link.click();
-      };
-    }
-  }, 50);
 }
 
 /* ═══ TASTE TAG EXTRACTION ═══ */

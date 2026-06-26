@@ -221,43 +221,6 @@ router.get('/certificate/:skill_id', async (req, res, next) => {
 });
 
 /**
- * POST /api/email/send-verification
- * Send account verification email
- */
-router.post('/send-verification', async (req, res, next) => {
-  try {
-    const { email, verificationToken } = req.body;
-
-    if (!email || !verificationToken) {
-      return res.status(400).json({
-        error: 'Missing input',
-        message: 'email and verificationToken are required'
-      });
-    }
-
-    const verificationLink = `${process.env.FRONTEND_URL}/verify?token=${verificationToken}`;
-
-    const { sendVerificationEmail } = await import('../utils/email.js');
-    const result = await sendVerificationEmail(email, verificationLink);
-
-    if (!result.success) {
-      return res.status(500).json({
-        error: 'Email sending failed',
-        message: result.error
-      });
-    }
-
-    res.json({
-      success: true,
-      message: 'Verification email sent',
-      messageId: result.messageId
-    });
-  } catch (error) {
-    next(error);
-  }
-});
-
-/**
  * GET /api/email/diagnostics
  * Report whether email config env vars are present (without leaking the key).
  * Use this to quickly verify Zeabur environment variables are set correctly.

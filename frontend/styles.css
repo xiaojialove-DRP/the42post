@@ -4274,50 +4274,6 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
   text-transform: uppercase;
 }
 
-/* ═══ KNIGHT CARD (Forge Step 4 Download) ═══ */
-.knight-card-section {
-  margin-top: 20px;
-  padding: 20px;
-  border: 2px solid var(--ink);
-  background: var(--paper);
-  text-align: center;
-  display: none;
-}
-
-.knight-card-section.visible { display: block; }
-
-.knight-card-title {
-  font-family: var(--font-head);
-  font-size: 18px;
-  color: var(--ink);
-  margin-bottom: 8px;
-}
-
-.knight-card-desc {
-  font-size: 11px;
-  color: var(--ink-muted);
-  margin-bottom: 12px;
-}
-
-.btn-download-card {
-  background: var(--ink);
-  border: 1px solid var(--ink);
-  color: var(--paper);
-  font-family: var(--font-mono);
-  font-size: var(--font-xs);
-  letter-spacing: 2px;
-  padding: 8px 24px;
-  cursor: pointer;
-  transition: background 0.25s, color 0.25s, border-color 0.25s, opacity 0.25s, transform 0.25s;
-  text-transform: uppercase;
-}
-
-.btn-download-card:hover {
-  background: transparent;
-  color: var(--ink);
-}
-
-/* ═══ SKILL PACKAGE DOWNLOAD ═══ */
 .skill-package-section {
   margin-top: 32px;
   padding: 28px 32px;

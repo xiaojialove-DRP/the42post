@@ -5,7 +5,6 @@
  * 1. POST /api/email/send-forge-success → validates required fields
  * 2. POST /api/email/test → test email configuration
  * 3. GET  /api/email/diagnostics → reports email config status
- * 4. POST /api/email/send-verification → validates email format
  */
 
 import { describe, it, expect, beforeAll } from 'vitest';
@@ -120,42 +119,6 @@ describe('POST /api/email/test', () => {
 
     // Should return 500 if SMTP not configured, but should parse the email
     // In test environment, SMTP will fail, but we're testing the validation logic
-    expect([200, 500]).toContain(res.status);
-  });
-});
-
-describe('POST /api/email/send-verification', () => {
-  it('rejects request with missing email', async () => {
-    const res = await request(app)
-      .post('/api/email/send-verification')
-      .send({
-        verificationToken: 'token123'
-      });
-
-    expect(res.status).toBe(400);
-    expect(res.body.error).toMatch(/missing/i);
-  });
-
-  it('rejects request with missing verificationToken', async () => {
-    const res = await request(app)
-      .post('/api/email/send-verification')
-      .send({
-        email: 'verify@example.com'
-      });
-
-    expect(res.status).toBe(400);
-    expect(res.body.error).toMatch(/missing/i);
-  });
-
-  it('accepts request with valid email and token', async () => {
-    const res = await request(app)
-      .post('/api/email/send-verification')
-      .send({
-        email: 'verify@example.com',
-        verificationToken: 'token123abc'
-      });
-
-    // Should return 500 if SMTP not configured, but validation should pass
     expect([200, 500]).toContain(res.status);
   });
 });
