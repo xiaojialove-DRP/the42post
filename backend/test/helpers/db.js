@@ -25,6 +25,7 @@ export function createTestDb() {
       account_type TEXT NOT NULL DEFAULT 'standard',
       verification_token TEXT,
       verified INTEGER DEFAULT 0,
+      background TEXT,
       created_at TEXT DEFAULT CURRENT_TIMESTAMP,
       updated_at TEXT DEFAULT CURRENT_TIMESTAMP
     );
@@ -172,6 +173,15 @@ export function createTestDb() {
       response_a TEXT,
       response_b TEXT,
       skill_side TEXT,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS analytics_events (
+      id TEXT PRIMARY KEY,
+      event_name TEXT NOT NULL,
+      page TEXT,
+      anonymous_id TEXT,
+      metadata TEXT,
       created_at TEXT DEFAULT CURRENT_TIMESTAMP
     );
 

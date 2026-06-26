@@ -31,6 +31,7 @@ import emailRoutes from './routes/email.js';
 import downloadsRoutes from './routes/downloads.js';
 import playgroundRoutes from './routes/playground.js';
 import healthRoutes from './routes/health.js';
+import analyticsRoutes from './routes/analytics.js';
 
 import { initDatabase } from './db/init.js';
 import { seedSkillsIfNeeded } from './db/seed-skills-on-startup.js';
@@ -187,6 +188,7 @@ app.use('/api/skills', skillsRoutes);
 app.use('/api/email', emailRoutes);
 app.use('/api/download', downloadsRoutes);
 app.use('/api/playground', playgroundRoutes);
+app.use('/api/analytics', analyticsRoutes);
 
 // ═══ ADMIN UTILITIES ═══
 // Guard: require ADMIN_KEY header for all /api/admin/* routes
@@ -469,6 +471,29 @@ app.get('/api/admin/diagnostics', requireAdminKey, async (req, res) => {
   } catch (err) {
     const isDev = process.env.NODE_ENV !== 'production';
     res.status(500).json({ error: isDev ? err.message : 'Internal server error', ...(isDev && { stack: err.stack }) });
+  }
+});
+
+// Funnel analytics summary — counts per tracked event, all-time.
+// Compare e.g. forge_step1_started vs forge_published to see drop-off.
+app.get('/api/admin/analytics-summary', requireAdminKey, async (req, res) => {
+  try {
+    const byEvent = await db.query(
+      `SELECT event_name, COUNT(*) as count
+       FROM analytics_events
+       GROUP BY event_name
+       ORDER BY count DESC`
+    );
+    const total = await db.query('SELECT COUNT(*) as count FROM analytics_events');
+
+    res.json({
+      success: true,
+      total_events: total.rows[0]?.count || 0,
+      by_event: byEvent.rows
+    });
+  } catch (err) {
+    const isDev = process.env.NODE_ENV !== 'production';
+    res.status(500).json({ error: isDev ? err.message : 'Internal server error' });
   }
 });
 

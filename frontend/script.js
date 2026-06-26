@@ -263,13 +263,15 @@ const ApiClient = {
   },
 
   // Zero-friction session: email + username → JWT.
-  // Auto-provisions a user on the backend if none exists.
-  async establishForgeSession(email, username) {
+  // Auto-provisions a user on the backend if none exists. background is
+  // optional (profession / field of study) — only ever set once per
+  // identity, the backend won't overwrite an existing answer.
+  async establishForgeSession(email, username, background) {
     try {
       const resp = await fetch(`${API_CONFIG.BASE_URL}/auth/forge-session`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, username })
+        body: JSON.stringify({ email, username, background })
       });
       const data = await resp.json().catch(() => ({}));
       if (!resp.ok || !data.token) {
@@ -288,6 +290,25 @@ const ApiClient = {
 
 // BASE_URL helper (backwards-compatible reference used throughout the file)
 ApiClient.BASE_URL = API_CONFIG.BASE_URL;
+
+// ═══ MINIMAL FUNNEL TRACKING ═══
+// Fire-and-forget — never awaited by callers, never throws, never blocks
+// the UI. A dropped analytics event should be invisible to a real user.
+function trackEvent(eventName, metadata) {
+  try {
+    const anonId = (typeof getAnonymousId === 'function') ? getAnonymousId() : null;
+    fetch(`${API_CONFIG.BASE_URL}/analytics/track`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        event: eventName,
+        page: window.location.pathname.replace(/^\//, '') || 'index.html',
+        anonymous_id: anonId,
+        metadata: metadata || null
+      })
+    }).catch(() => {});
+  } catch (e) { /* tracking must never break the page */ }
+}
 
 // API Methods for Forge (Skill Creation)
 const API = {
@@ -644,6 +665,7 @@ const I18N = {
     forge_account: 'ACCOUNT',
     forge_username_ph: 'Username',
     forge_email_ph: 'Email',
+    forge_background_ph: 'Profession / field of study',
     username_rules: '3-32 characters. Letters, numbers, underscore only. Cannot start with a number.',
     username_example_valid: 'Valid: lala, lala_2024',
     forge_thought: 'YOUR THOUGHT',
@@ -908,6 +930,7 @@ const I18N = {
     forge_account: '账户',
     forge_username_ph: '用户名',
     forge_email_ph: '邮箱',
+    forge_background_ph: '你的职业 / 学习背景（可选）',
     username_rules: '3-32 个字符。仅支持字母、数字、下划线。不能以数字开头。',
     username_example_valid: '有效: lala, lala_2024',
     forge_thought: '你的想法',
@@ -2718,6 +2741,7 @@ function initSkillForge() {
     document.querySelectorAll('.probe-btn.selected').forEach(b => b.classList.remove('selected'));
 
     overlay.classList.add('active');
+    trackEvent('forge_step1_started');
     document.querySelectorAll('.forge-page').forEach(p => p.classList.remove('active'));
     const page0 = document.getElementById('forgePage0');
     const page1 = document.getElementById('forgePage1');
@@ -2779,6 +2803,7 @@ function initSkillForge() {
     btnForgeBegin.addEventListener('click', async () => {
       const username = document.getElementById('forgeUsername').value.trim();
       const email = document.getElementById('forgeEmail').value.trim();
+      const background = document.getElementById('forgeBackground')?.value.trim() || '';
       const idea = document.getElementById('forgeSkillIdea').value.trim();
       const probeChoice = window.probeChoice || (window.forgeData?.probeChoice);
 
@@ -2790,7 +2815,7 @@ function initSkillForge() {
 
       // Establish forge session (zero-friction JWT)
       btnForgeBegin.disabled = true;
-      const sess = await ApiClient.establishForgeSession(email, username);
+      const sess = await ApiClient.establishForgeSession(email, username, background);
       btnForgeBegin.disabled = false;
       if (!sess.ok) {
         alert('无法建立会话 / Session failed: ' + (sess.message || 'Unknown error'));
@@ -2828,6 +2853,7 @@ function initSkillForge() {
       // Validate required fields (domain selection moved to Step 2)
       const username = document.getElementById('forgeUsername').value.trim();
       const email = document.getElementById('forgeEmail').value.trim();
+      const background = document.getElementById('forgeBackground')?.value.trim() || '';
       const idea = document.getElementById('forgeSkillIdea').value.trim();
 
       if (!username) { alertI18n('error_enter_username'); return; }
@@ -2841,7 +2867,7 @@ function initSkillForge() {
       btnGenerateProbe.disabled = true;
       btnGenerateProbe.textContent = isCn ? '⟳ 正在思考中...' : '⟳ Thinking...';
 
-      const sess = await ApiClient.establishForgeSession(email, username);
+      const sess = await ApiClient.establishForgeSession(email, username, background);
       if (!sess.ok) {
         btnGenerateProbe.disabled = false;
         btnGenerateProbe.textContent = originalText;
@@ -2881,6 +2907,8 @@ function initSkillForge() {
       // Clear streaming flag
       const probeScEl = document.getElementById('probeScenarioText');
       if (probeScEl) delete probeScEl.dataset.streaming;
+
+      trackEvent('forge_probe_generated');
 
       // 恢复按钮状态
       btnGenerateProbe.disabled = false;
@@ -4252,8 +4280,10 @@ function initSkillForge() {
         // Collect account info (Step 1)
         const emailInput = document.getElementById('forgeEmail');
         const usernameInput = document.getElementById('forgeUsername');
+        const backgroundInput = document.getElementById('forgeBackground');
         const emailValue = emailInput ? emailInput.value.trim() : '';
         const usernameValue = usernameInput ? usernameInput.value.trim() : '';
+        const backgroundValue = backgroundInput ? backgroundInput.value.trim() : '';
 
         if (!emailValue || !usernameValue) {
           alertI18n('error_fill_email_username');
@@ -4345,7 +4375,7 @@ function initSkillForge() {
           // (e.g. token was cleared mid-flow), re-establish it from the
           // email+username the user supplied at Step 1.
           if (!ApiClient.getToken() && emailValue && usernameValue) {
-            const sess = await ApiClient.establishForgeSession(emailValue, usernameValue);
+            const sess = await ApiClient.establishForgeSession(emailValue, usernameValue, backgroundValue);
             if (!sess.ok) {
               alert('无法建立会话 / Session failed: ' + (sess.message || 'Unknown error'));
               publishBtn.textContent = '⚔ PUBLISH & FORGE';
@@ -4696,6 +4726,7 @@ function fillCardBlessing(skillData, domainKey) {
 }
 
 function showForgeCompletion(skillData, soulHash) {
+  trackEvent('forge_published', { domain: skillData?.domain || null });
   const completionSection = document.getElementById('forgeCompletionSection');
   const forgeCreatorRights = document.querySelector('.forge-creator-rights');
   const forgeOath = document.querySelector('.forge-oath');
@@ -7355,6 +7386,7 @@ async function initAgentArchiveView() {
   const tooltip = document.getElementById('starTooltip');
 
   if (!canvas || !canvasWrap) return;
+  trackEvent('archive_viewed');
 
   // Mobile: keep star map but enable touch interactions
 

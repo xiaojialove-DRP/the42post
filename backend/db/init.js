@@ -30,6 +30,11 @@ export async function initDatabase() {
     await db.query(`CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)`);
     await db.query(`CREATE INDEX IF NOT EXISTS idx_users_username ON users(username)`);
 
+    // background: optional, free-text "profession / field of study" — the
+    // one participant-background field the research side actually asked
+    // for, collected once per identity (not re-asked per Skill forged).
+    try { await db.query(`ALTER TABLE users ADD COLUMN background TEXT`); } catch {}
+
     // Create skills table
     await db.query(`
       CREATE TABLE IF NOT EXISTS skills (
@@ -354,6 +359,24 @@ export async function initDatabase() {
     } catch (e) {
       console.warn('Creator name normalization skipped:', e.message);
     }
+
+    // ─── analytics_events: lightweight funnel tracking ───
+    // Not a real analytics platform — there wasn't any visibility at all
+    // into where people drop off (e.g. open Forge but never publish), so
+    // this is the minimum needed to answer that, built on the stack
+    // that's already here instead of standing up a separate service.
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS analytics_events (
+        id TEXT PRIMARY KEY,
+        event_name VARCHAR(100) NOT NULL,
+        page VARCHAR(100),
+        anonymous_id VARCHAR(255),
+        metadata TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    await db.query(`CREATE INDEX IF NOT EXISTS idx_analytics_events_name ON analytics_events(event_name)`);
+    await db.query(`CREATE INDEX IF NOT EXISTS idx_analytics_events_created ON analytics_events(created_at)`);
 
     console.log('✓ All database tables initialized');
   } catch (error) {

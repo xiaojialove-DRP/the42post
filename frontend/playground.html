@@ -1340,7 +1340,7 @@
 
 
   <script src="skills.js?v=20260622-mobilefix4"></script>
-  <script src="script.js?v=20260626-nofeedbackbox"></script>
+  <script src="script.js?v=20260626-analytics1"></script>
   <script>
     /* ═══════════════════════════════════════
        CREATIVE PLAYGROUND — Poolsuite-style
@@ -2771,6 +2771,7 @@
         stageLoading.hidden = true;
         stageRate.hidden = false;
         stageRate.classList.add(isSmallScreen ? 'fade-animation' : 'expand-animation');
+        if (typeof trackEvent === 'function') trackEvent('playground_test_started', { skill_id: skill.id });
       } catch (err) {
         console.error('❌ Twin Test error:', err);
         stageLoading.innerHTML = `<div style="color:#b85a4a;font-size:12px;line-height:1.5;width:100%;overflow-wrap:break-word;">
@@ -2797,6 +2798,7 @@
           });
           btn.classList.add('selected');
           stageRate.dataset.rating = btn.dataset.rating;
+          if (typeof trackEvent === 'function') trackEvent('playground_test_rated', { rating: btn.dataset.rating });
           // Brief flash so the user sees their tap register before the
           // card transitions to the thank-you stage.
           await new Promise(r => setTimeout(r, 120));

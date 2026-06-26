@@ -28,7 +28,11 @@ const router = express.Router();
 // SECURITY: Validates email and username formats to prevent injection
 router.post('/forge-session', async (req, res, next) => {
   try {
-    const { email, username } = req.body || {};
+    const { email, username, background } = req.body || {};
+    // Optional, free-text "profession / field of study" — the one
+    // participant-background field the research side asked for. Never
+    // required, never blocks forging if omitted or malformed.
+    const backgroundNorm = (typeof background === 'string' ? background.trim() : '').slice(0, 200) || null;
 
     if (!email || !email.trim()) {
       return res.status(400).json({
@@ -64,7 +68,7 @@ router.post('/forge-session', async (req, res, next) => {
 
     // Try to find existing user by email
     const existing = await db.query(
-      'SELECT id, email, username, account_type FROM users WHERE email = $1',
+      'SELECT id, email, username, account_type, background FROM users WHERE email = $1',
       [emailNorm]
     );
 
@@ -85,6 +89,15 @@ router.post('/forge-session', async (req, res, next) => {
           console.warn('Username update skipped (likely collision):', e.message);
         }
       }
+      // Backfill background if they supplied one and didn't have one yet —
+      // never overwrite an existing answer with a blank resubmit.
+      if (backgroundNorm && !user.background) {
+        await db.query(
+          'UPDATE users SET background = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2',
+          [backgroundNorm, user.id]
+        );
+        user.background = backgroundNorm;
+      }
     } else {
       // Create a new forger identity — verified by default, no password dance.
       const newId = uuidv4();
@@ -93,30 +106,32 @@ router.post('/forge-session', async (req, res, next) => {
 
       try {
         await db.query(
-          `INSERT INTO users (id, email, username, password_hash, account_type, verified)
-           VALUES ($1, $2, $3, $4, $5, 1)`,
-          [newId, emailNorm, usernameNorm, syntheticHash, accountType]
+          `INSERT INTO users (id, email, username, password_hash, account_type, verified, background)
+           VALUES ($1, $2, $3, $4, $5, 1, $6)`,
+          [newId, emailNorm, usernameNorm, syntheticHash, accountType, backgroundNorm]
         );
         user = {
           id: newId,
           email: emailNorm,
           username: usernameNorm,
-          account_type: accountType
+          account_type: accountType,
+          background: backgroundNorm
         };
       } catch (e) {
         // Username unique collision — append suffix and retry once
         if (String(e.message || '').toLowerCase().includes('unique')) {
           const retryName = `${usernameNorm}-${newId.substring(0, 6)}`;
           await db.query(
-            `INSERT INTO users (id, email, username, password_hash, account_type, verified)
-             VALUES ($1, $2, $3, $4, $5, 1)`,
-            [newId, emailNorm, retryName, syntheticHash, accountType]
+            `INSERT INTO users (id, email, username, password_hash, account_type, verified, background)
+             VALUES ($1, $2, $3, $4, $5, 1, $6)`,
+            [newId, emailNorm, retryName, syntheticHash, accountType, backgroundNorm]
           );
           user = {
             id: newId,
             email: emailNorm,
             username: retryName,
-            account_type: accountType
+            account_type: accountType,
+            background: backgroundNorm
           };
         } else {
           throw e;
