@@ -7735,6 +7735,21 @@ async function initAgentArchiveView() {
   // This is critical for Archive action buttons (star, download, play) to work
   window.allSkills = allSkills;
 
+  // ═══ TWIN TEST "BETTER" COUNTS — feeds star brightness in the celestial map ═══
+  // One unconditional batch call (no skill_ids needed — the route returns
+  // every skill that has votes), so this never costs more requests as the
+  // skill count grows.
+  try {
+    const statsResp = await fetch(`${ApiClient.BASE_URL}/playground/stats-batch`);
+    if (statsResp.ok) {
+      const statsData = await statsResp.json();
+      const stats = statsData.stats || {};
+      allSkills.forEach(s => { s.betterVotes = stats[s.id]?.better || 0; });
+    }
+  } catch (e) {
+    console.warn('Archive: failed to fetch Twin Test stats:', e.message);
+  }
+
   function resizeCanvas() {
     const rect = canvasWrap.getBoundingClientRect();
     cw = rect.width;
@@ -7806,8 +7821,12 @@ async function initAgentArchiveView() {
 
       return {
         x, y, baseX: x, baseY: y,
-        size: 3.5 + (s.starlight || 5) * 0.2,
+        // betterVotes weighted higher than starlight per point — a Twin
+        // Test "clearly better" vote took real effort (run the test, read
+        // both responses, decide) versus a one-tap star.
+        size: 3.5 + (s.starlight || 5) * 0.2 + (s.betterVotes || 0) * 0.4,
         starlight: s.starlight || 5,
+        betterVotes: s.betterVotes || 0,
         title, titleCn,
         desc, descCn,
         agent: s.agent || `creator_${s.creator_name || 'Anonymous'}`,
@@ -7826,14 +7845,19 @@ async function initAgentArchiveView() {
     }));
     console.log(`✓ Archive: Created ${nodes.length} nodes for celestial canvas`, nodeSample);
 
-    // ═══ DETERMINISTIC EDGE GENERATION ═══
+    // ═══ EDGE GENERATION — same-domain relationships, not decoration ═══
+    // Used to be a pure distance + coin-flip decision with zero connection
+    // to what the skills actually are. mapDomain() is the same lookup the
+    // node color above already uses, so a line now means "these two are
+    // the same domain" — same thing the color already implies, but made
+    // explicit and visible between any two nodes regardless of where the
+    // spiral layout happened to place them.
     edges = [];
     for (let i = 0; i < nodes.length; i++) {
       for (let j = i + 1; j < nodes.length; j++) {
-        const dist = Math.hypot(nodes[i].baseX - nodes[j].baseX, nodes[i].baseY - nodes[j].baseY);
-        // Use seeded random for edge decision (consistent per layout)
-        const edgeRand = seededRandom(i * 1000 + j, 2000);
-        if (dist < 160 && edgeRand > 0.45) edges.push([i, j]);
+        if (mapDomain(nodes[i].domain) === mapDomain(nodes[j].domain)) {
+          edges.push([i, j]);
+        }
       }
     }
   }
@@ -7886,7 +7910,7 @@ async function initAgentArchiveView() {
       const isClk = clickedNode === i;
       const highlight = isHov || isClk;
       
-      const glowR = (n.size * 6 + n.starlight * 0.5) * breathe * (highlight ? 2.5 : 1);
+      const glowR = (n.size * 6 + n.starlight * 0.5 + n.betterVotes * 1.0) * breathe * (highlight ? 2.5 : 1);
       const glow = ctx.createRadialGradient(n.x, n.y, 0, n.x, n.y, glowR);
       glow.addColorStop(0, `rgba(${n.color.r}, ${n.color.g}, ${n.color.b}, ${highlight ? 0.5 : 0.3})`);
       glow.addColorStop(0.35, `rgba(${n.color.r}, ${n.color.g}, ${n.color.b}, ${highlight ? 0.12 : 0.06})`);
