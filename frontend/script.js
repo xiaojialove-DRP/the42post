@@ -7014,11 +7014,68 @@ function initHonorMirror() {
    SKILL PACKAGE SYSTEM — Download & Agent Archive
    ═══════════════════════════════════════════════════════ */
 
+// Five-layer data exists in 3 different shapes across real skills: rich
+// (principle/exemplars/boundaries as real objects — older/seed skills),
+// and the current shape from generateFlatFiveLayerWithClaude (the live
+// forge path), where every layer is just a plain string. Reading
+// skillData.fiveLayerSkill directly skips that second shape entirely —
+// every real field comes back undefined and the export shows nothing but
+// placeholder text ("Boundaries to be defined", etc) even though the
+// skill has real content. Mirrors normalizeFiveLayer() in
+// backend/routes/downloads.js so both exports treat the same data the
+// same way.
+function normalizeFiveLayerForExport(fl) {
+  if (!fl) return null;
+
+  if (fl.principle || fl.reasoning || (Array.isArray(fl.exemplars) && fl.exemplars.length)) {
+    return {
+      principle: fl.principle || fl.defining || '',
+      reasoning: fl.reasoning || '',
+      exemplars: Array.isArray(fl.exemplars) ? fl.exemplars : [],
+      boundaries: fl.boundaries || null,
+      evaluation: fl.evaluation || null,
+      cultural_variants: fl.cultural_variants || null
+    };
+  }
+
+  if (fl.instantiating && typeof fl.instantiating === 'object') {
+    // Older structured shape — kept for any legacy data that still has it.
+    return fl;
+  }
+
+  // Current flat-string shape.
+  const exemplars = (typeof fl.instantiating === 'string' && fl.instantiating.trim())
+    ? [{ label: '', text: fl.instantiating.trim(), note: '' }]
+    : [];
+
+  const boundaries = (typeof fl.fencing === 'string' && fl.fencing.trim()) ? {
+    applies_when: [fl.fencing.trim()],
+    does_not_apply: [],
+    tension_zones: []
+  } : null;
+
+  const evaluation = (typeof fl.validating === 'string' && fl.validating.trim()) ? {
+    metric: '',
+    test_cases: [{ prompt: '', expected: fl.validating.trim(), pass_criteria: '' }],
+    silent_failures: []
+  } : null;
+
+  return {
+    principle: fl.defining || fl.definition || '',
+    reasoning: '',
+    exemplars,
+    boundaries,
+    evaluation,
+    cultural_variants: null,
+    contextualizing: (typeof fl.contextualizing === 'string' && fl.contextualizing) || ''
+  };
+}
+
 // Generate human-readable SKILL.md format
 function generateSkillMarkdown(skillData) {
   const now = new Date();
   const timestamp = now.toISOString().split('T')[0];
-  const fiveLayer = skillData.fiveLayerSkill || null;
+  const fiveLayer = normalizeFiveLayerForExport(skillData.fiveLayerSkill || null);
 
   // Use full soul_hash for markdown export
   const fullSoulHash = skillData.soul_hash || skillData.soulHash || 'SOUL_UNKNOWN';
@@ -7155,7 +7212,9 @@ ${fiveLayer.evaluation.silent_failures.map(failure => `- ${failure}`).join('\n')
 
 ${(() => {
   if (!fiveLayer || !fiveLayer.cultural_variants) {
-    return '*Cultural adaptation pending — will be generated based on probe responses.*';
+    return (fiveLayer && fiveLayer.contextualizing)
+      ? fiveLayer.contextualizing
+      : '*Cultural adaptation pending — will be generated based on probe responses.*';
   }
 
   let culturalMd = '';

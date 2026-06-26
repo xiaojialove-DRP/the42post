@@ -217,12 +217,12 @@ router.get('/:skillId', async (req, res, next) => {
 function normalizeFiveLayer(fl) {
   if (!fl) return null;
 
-  // Already new format
-  if (fl.principle || fl.reasoning || fl.exemplars) {
+  // Rich/structured format — exemplars is a real array of {label,text,note}
+  if (fl.principle || fl.reasoning || (Array.isArray(fl.exemplars) && fl.exemplars.length)) {
     return {
       principle:        fl.principle || fl.defining || '',
       reasoning:        fl.reasoning || '',
-      exemplars:        fl.exemplars || [],
+      exemplars:        Array.isArray(fl.exemplars) ? fl.exemplars : [],
       boundaries:       fl.boundaries || null,
       evaluation:       fl.evaluation || null,
       cultural_variants: fl.cultural_variants || null,
@@ -230,9 +230,9 @@ function normalizeFiveLayer(fl) {
     };
   }
 
-  // Old format — map to new
-  const exemplars = [];
-  if (fl.instantiating) {
+  // Older structured format — instantiating/fencing are objects, validating is an array
+  if (fl.instantiating && typeof fl.instantiating === 'object') {
+    const exemplars = [];
     if (fl.instantiating.before || fl.instantiating.after) {
       exemplars.push({
         label: 'Before → After',
@@ -243,28 +243,57 @@ function normalizeFiveLayer(fl) {
         note: ''
       });
     }
+
+    const boundaries = fl.fencing ? {
+      applies_when:   fl.fencing.apply    ? [fl.fencing.apply]    : [],
+      does_not_apply: fl.fencing.notApply ? [fl.fencing.notApply] : [],
+      tension_zones:  []
+    } : null;
+
+    const evaluation = Array.isArray(fl.validating) && fl.validating.length ? {
+      test_cases: fl.validating.map(v => ({ prompt: v, expected: '', pass_criteria: '' })),
+      metric: '',
+      silent_failures: []
+    } : null;
+
+    return {
+      principle:        fl.defining || '',
+      reasoning:        '',
+      exemplars,
+      boundaries,
+      evaluation,
+      cultural_variants: null,
+      contextualizing:  fl.contextualizing || ''
+    };
   }
 
-  const boundaries = fl.fencing ? {
-    applies_when:   fl.fencing.apply    ? [fl.fencing.apply]    : [],
-    does_not_apply: fl.fencing.notApply ? [fl.fencing.notApply] : [],
+  // Current format — generateFlatFiveLayerWithClaude (the live forge path)
+  // saves every layer as a plain string, not an object/array. This is what
+  // real skills forged today actually look like.
+  const exemplars = (typeof fl.instantiating === 'string' && fl.instantiating.trim())
+    ? [{ label: '', text: fl.instantiating.trim(), note: '' }]
+    : [];
+
+  const boundaries = (typeof fl.fencing === 'string' && fl.fencing.trim()) ? {
+    applies_when:   [fl.fencing.trim()],
+    does_not_apply: [],
     tension_zones:  []
   } : null;
 
-  const evaluation = fl.validating && fl.validating.length ? {
-    test_cases: fl.validating.map(v => ({ prompt: v, expected: '', pass_criteria: '' })),
+  const evaluation = (typeof fl.validating === 'string' && fl.validating.trim()) ? {
+    test_cases: [{ prompt: '', expected: fl.validating.trim(), pass_criteria: '' }],
     metric: '',
     silent_failures: []
   } : null;
 
   return {
-    principle:        fl.defining || '',
+    principle:        fl.defining || fl.definition || '',
     reasoning:        '',
     exemplars,
     boundaries,
     evaluation,
     cultural_variants: null,
-    contextualizing:  fl.contextualizing || ''
+    contextualizing:  (typeof fl.contextualizing === 'string' && fl.contextualizing) || ''
   };
 }
 
@@ -356,7 +385,7 @@ ${fl && fl.principle ? fl.principle : (skillData.desc || '')}
 
   if (fl && fl.exemplars && fl.exemplars.length > 0) {
     fl.exemplars.forEach((ex, i) => {
-      md += `\n### ${i + 1}. ${ex.label || ''}\n\n${ex.text || ''}\n`;
+      md += ex.label ? `\n### ${i + 1}. ${ex.label}\n\n${ex.text || ''}\n` : `\n### ${i + 1}\n\n${ex.text || ''}\n`;
       if (ex.note) md += `\n> ${ex.note}\n`;
     });
   } else {
@@ -429,17 +458,13 @@ ${fl && fl.principle ? fl.principle : (skillData.desc || '')}
     ? (isCn ? '✅ 可改编' : '✅ Remix allowed')
     : (isCn ? '❌ 不可改编' : '❌ No derivatives');
 
-  const creatorDisplay = skillData.email && !skillData.email.includes('@the42post.local')
-    ? `${skillData.author} · ${skillData.email}`
-    : skillData.author;
-
   md += `\n---\n\n## ${L.licensing}
 
 | | |
 |---|---|
 | **${L.commercial}** | ${licenseCommercial} |
 | **${L.remix}** | ${licenseRemix} |
-| **${L.creator}** | ${creatorDisplay} |
+| **${L.creator}** | ${skillData.author} |
 
 ---
 
@@ -454,7 +479,12 @@ ${fl && fl.principle ? fl.principle : (skillData.desc || '')}
  * Generate Python/LangChain format
  */
 function generateAgentSkillFormat(skillData) {
-  const fiveLayer = skillData.fiveLayerSkill || null;
+  // normalizeFiveLayer() handles all three five_layer shapes that exist in
+  // the DB (rich/structured, older object-shaped, and the current flat-
+  // string shape from generateFlatFiveLayerWithClaude) — reading
+  // skillData.fiveLayerSkill directly here used to skip that entirely, so
+  // every real skill produced an empty `layers: {}` with no error raised.
+  const fiveLayer = normalizeFiveLayer(skillData.fiveLayerSkill);
 
   if (fiveLayer) {
     const agentJson = JSON.stringify({
@@ -469,11 +499,11 @@ function generateAgentSkillFormat(skillData) {
         remix: skillData.remix
       },
       layers: {
-        principle: fiveLayer.principle,
-        exemplars: fiveLayer.exemplars,
-        boundaries: fiveLayer.boundaries,
-        evaluation: fiveLayer.evaluation,
-        cultural_variants: fiveLayer.cultural_variants
+        principle: fiveLayer.principle || '',
+        exemplars: fiveLayer.exemplars || [],
+        boundaries: fiveLayer.boundaries || {},
+        evaluation: fiveLayer.evaluation || {},
+        cultural_variants: fiveLayer.cultural_variants || {}
       },
       probe_data: fiveLayer.probe_data || {}
     }, null, 2);
@@ -595,7 +625,11 @@ function generateMCPConfigFormat(skillData) {
       expected_output: 'Aligned response respecting the skill\'s five-layer principles'
     },
     support: {
-      creator_contact: skillData.email || 'creator@the42post.com',
+      // No creator_contact field here on purpose — this used to be the
+      // creator's real email address (skillData.email), baked into a
+      // file anyone can download. Identity on this platform is meant to
+      // be anonymous-by-default (username only); feedback_url below is
+      // the actual intended contact path and carries no PII.
       documentation_url: 'https://the42post.com/skills/' + skillData.soulHash,
       feedback_url: 'https://the42post.com/skills/' + skillData.soulHash + '/feedback'
     }
