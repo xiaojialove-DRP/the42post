@@ -827,10 +827,6 @@
       .twin-resp-text { font-size: 13px; line-height: 1.4; }
       .twin-question { font-size: 12px; }
       .twin-skill-line { font-size: 13px; }
-      /* 16px floor — anything smaller makes iOS Safari auto-zoom the page
-         on focus, which then has to un-zoom on blur. Jarring on a field
-         this close to the keyboard. */
-      .twin-rate-comment { font-size: 16px; }
       .workshop-canvas { padding: 12px 10px; }
       .task-card { padding: 14px; }
       .card-title { font-size: 14px; }
@@ -1090,8 +1086,8 @@
        A/B sit side-by-side. The skill side gets a green-tinted card +
        🔥 tag so the user sees which response was generated under the
        skill before reacting. Below the cards: a server-generated
-       one-line diagnostic, the rating prompt, three reaction buttons,
-       and an optional 140-char comment box. */
+       one-line diagnostic, the rating prompt, and three reaction
+       buttons. */
     .twin-rate-grid {
       display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
     }
@@ -1195,35 +1191,6 @@
       font-size: 9px; color: #2a2520; font-weight: 500;
       letter-spacing: 0.2px;
     }
-    /* Always-visible optional note. Sits at minimum visual weight
-       under the rating buttons — single line tall by default, with a
-       paper-thin underline rather than a heavy border so it reads as
-       "an inviting whisper" rather than "another required field".
-       Grows up to 4 lines as the user types. */
-    .twin-rate-comment {
-      width: 100%; margin-top: 12px;
-      padding: 8px 0;
-      background: transparent;
-      border: none;
-      border-bottom: 1px solid #d4c8a8;
-      border-radius: 0;
-      font-family: inherit; font-size: 13px; color: #2a2520;
-      line-height: 1.5;
-      resize: none;
-      max-height: 110px;
-      transition: border-color 0.15s ease;
-    }
-    .twin-rate-comment::placeholder {
-      color: #a89a85; font-style: italic;
-    }
-    .twin-rate-comment:focus {
-      outline: none; border-bottom-color: #2a2520;
-    }
-    .twin-rate-counter {
-      display: block; margin-top: 4px; text-align: right;
-      font-size: 10px; color: #a89a85; font-family: 'JetBrains Mono', monospace;
-    }
-
     /* ─── Thank-you stage ──────────────────────────────────────────
        Warm closer + two "keep playing" actions. */
     .twin-thanks {
@@ -1373,7 +1340,7 @@
 
 
   <script src="skills.js?v=20260622-mobilefix4"></script>
-  <script src="script.js?v=20260624-deadcode3"></script>
+  <script src="script.js?v=20260626-nofeedbackbox"></script>
   <script>
     /* ═══════════════════════════════════════
        CREATIVE PLAYGROUND — Poolsuite-style
@@ -2399,18 +2366,6 @@
                 <span class="twin-rate-word">Can't tell</span>
               </button>
             </div>
-            <!-- Always-visible optional note. The textarea sits in
-                 the flow at minimal weight (one line tall, paper
-                 background, no border drama) so it doesn't compete
-                 with the rating buttons. Whatever's typed when the
-                 user taps a rating is sent with the feedback; if
-                 they tap without typing, no note is recorded. -->
-            <textarea class="twin-rate-comment"
-                      data-comment
-                      maxlength="140"
-                      rows="4"
-                      placeholder="${t('playground_feedback')}"></textarea>
-            <span class="twin-rate-counter" data-comment-counter>0 / 140</span>
           </div>
 
           <!-- Thank-you stage. Single CTA per user feedback — two
@@ -2710,8 +2665,8 @@
           skill_side, diagnostic.
        2. Render both responses with the skill side labelled up-front
           (no blind pick).
-       3. User picks one of three reactions (🔥 / 😐 / 🤔) plus an
-          optional 140-char comment, hits Submit.
+       3. User picks one of three reactions (🔥 / 😐 / 🤔) — that tap
+          immediately submits.
        4. POST /api/playground/feedback → thank-you + counts. */
     async function runTwinTest(card, task, repo) {
       const skill = window.TWIN_TEST_SKILL;
@@ -2810,9 +2765,6 @@
           b.classList.remove('selected');
           b.disabled = false;
         });
-        const commentEl = stageRate.querySelector('[data-comment]');
-        commentEl.value = '';
-        stageRate.querySelector('[data-comment-counter]').textContent = '0 / 140';
         delete stageRate.dataset.rating;
         delete stageRate.dataset.submitting;
 
@@ -2831,13 +2783,9 @@
 
     /* One-time wiring for the rate stage's interactive bits. Bound
        once per card. Tap-to-submit model: clicking a reaction button
-       immediately fires submitTwinFeedback. The optional note
-       textarea is always visible underneath; whatever's typed at the
-       moment of tap goes along with the feedback. */
+       immediately fires submitTwinFeedback. */
     function wireTwinRateStage(card, task, repo) {
       const stageRate = card.querySelector('.twin-rate');
-      const commentEl = stageRate.querySelector('[data-comment]');
-      const counterEl = stageRate.querySelector('[data-comment-counter]');
 
       stageRate.querySelectorAll('.twin-rate-btn').forEach(btn => {
         btn.addEventListener('click', async () => {
@@ -2852,21 +2800,12 @@
           // Brief flash so the user sees their tap register before the
           // card transitions to the thank-you stage.
           await new Promise(r => setTimeout(r, 120));
-          await submitTwinFeedback(card, task, repo, btn.dataset.rating, commentEl.value.trim());
+          await submitTwinFeedback(card, task, repo, btn.dataset.rating);
         });
       });
-
-      commentEl.addEventListener('input', () => {
-        counterEl.textContent = `${commentEl.value.length} / 140`;
-      });
-
-      // autoGrowTextarea/scrollIntoViewOnFocus are defined in script.js,
-      // shared across index.html and playground.html.
-      autoGrowTextarea(commentEl, 110);
-      scrollIntoViewOnFocus(commentEl);
     }
 
-    async function submitTwinFeedback(card, task, repo, rating, comment) {
+    async function submitTwinFeedback(card, task, repo, rating) {
       const isCn = (typeof currentLang !== 'undefined' && currentLang === 'cn');
       const stageRate = card.querySelector('.twin-rate');
       const stageThanks = card.querySelector('.twin-thanks');
@@ -2878,7 +2817,6 @@
           body: JSON.stringify({
             test_id: card.dataset.testId,
             rating,
-            comment: comment || '',
             anonymous_id: getAnonymousId()
           })
         });

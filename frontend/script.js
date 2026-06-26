@@ -805,7 +805,6 @@ const I18N = {
     /* ── Playground complete messages ── */
     playground_select: '— Select —',
     playground_how_skill: 'How was this Skill?',
-    playground_feedback: '💭 Anything else? (optional, 140 chars)',
     playground_clearly_better: 'Clearly better',
     playground_not_great: 'Not great',
     playground_cant_tell: "Can't tell",
@@ -1001,7 +1000,6 @@ const I18N = {
     /* ── Playground 完整消息 ── */
     playground_select: '— 选择 —',
     playground_how_skill: '这个 Skill 效果怎么样？',
-    playground_feedback: '💭 有其他想法？（可选，140字以内）',
     playground_clearly_better: '明显更好',
     playground_not_great: '不大好',
     playground_cant_tell: '没感觉到区别',
