@@ -1287,6 +1287,15 @@ async function loadSkillsFromDB() {
         author: creatorLabel,
         commercial: skill.commercial_use || 'authorized',
         remix: skill.remix_allowed ? 'share-alike' : 'no',
+        // Top-level column, falling back to the copy that sometimes only
+        // lives inside five_layer (generateFlatFiveLayerWithClaude writes
+        // it there too). Missing here meant every markdown/LangChain
+        // export showed "System prompt to be generated during skill
+        // forging" even for skills that had a real one all along.
+        ready_to_use_prompt: skill.ready_to_use_prompt || (() => {
+          try { return (skill.five_layer ? JSON.parse(skill.five_layer) : {}).ready_to_use_prompt || ''; }
+          catch { return ''; }
+        })(),
         five_layer: (() => {
           try {
             const fl = skill.five_layer ? JSON.parse(skill.five_layer) : {};
@@ -1306,9 +1315,10 @@ async function loadSkillsFromDB() {
               instantiating: fl.instantiating || '',
               fencing: fl.fencing || '',
               validating: fl.validating || [],
-              contextualizing: fl.contextualizing || ''
+              contextualizing: fl.contextualizing || '',
+              ready_to_use_prompt: fl.ready_to_use_prompt || ''
             };
-          } catch { return { defining: '', instantiating: '', fencing: '', validating: [], contextualizing: '', principle: '', exemplars: [] }; }
+          } catch { return { defining: '', instantiating: '', fencing: '', validating: [], contextualizing: '', principle: '', exemplars: [], ready_to_use_prompt: '' }; }
         })()
       };
     });
@@ -6934,23 +6944,80 @@ function generateSkillMarkdown(skillData) {
   const timestamp = now.toISOString().split('T')[0];
   const fiveLayer = normalizeFiveLayerForExport(skillData.fiveLayerSkill || null);
 
+  // Follows the CURRENT viewer's UI language toggle, not the skill's own
+  // forging language — downloading from a Chinese-UI session should give
+  // Chinese labels even for a Skill originally forged in English, and
+  // vice versa. Generated content (principle/exemplars/etc) stays in
+  // whatever language it was actually generated in; only the structural
+  // labels below are translated.
+  const isCn = document.body.dataset.lang === 'cn';
+
   // Use full soul_hash for markdown export
   const fullSoulHash = skillData.soul_hash || skillData.soulHash || 'SOUL_UNKNOWN';
   const shortSoulHash = fullSoulHash.substring(0, 14);
   const creatorName = skillData.created_by || skillData.author || 'The 42 Post Community';
 
-  // Fallback ready-to-use prompt if not available
-  const readyPrompt = skillData.ready_to_use_prompt ||
-    (skillData.fiveLayerSkill?.principle ? `Apply the following principle:\n\n${skillData.fiveLayerSkill.principle}` : 'System prompt to be generated during skill forging');
+  // Fallback chain: top-level field → the same field nested inside
+  // five_layer (generateFlatFiveLayerWithClaude writes it in both places,
+  // but not every code path that builds skillData carries the top-level
+  // copy through) → synthesize a minimal one from the principle → a
+  // last-resort placeholder.
+  const readyPrompt = skillData.ready_to_use_prompt
+    || skillData.fiveLayerSkill?.ready_to_use_prompt
+    || (fiveLayer?.principle
+        ? (isCn ? `请遵循以下原则：\n\n${fiveLayer.principle}` : `Apply the following principle:\n\n${fiveLayer.principle}`)
+        : (isCn ? '系统提示词将在锻造完成后生成' : 'System prompt to be generated during skill forging'));
+
+  const L = isCn ? {
+    by: '创作者', readyTitle: '🚀 直接可用的提示词', readyHint: '复制下面的内容，直接粘贴到你常用的 AI 对话框作为系统提示词：',
+    about: '📖 关于这个 Skill', aboutFallback: '这是在 THE 42 POST 锻造的一个 Skill，用结构化的方式提升 AI 的推理和表达质量。',
+    metaTitle: '📋 Skill 信息', field: '字段', value: '内容', creator: '创作者', created: '创建日期', version: '版本', protocol: '协议', license: '授权',
+    frameworkTitle: '✨ 完整五层结构',
+    layer1: '🎯 第一层：核心原则', layer1Fallback: '这个 Skill 的核心原则', reasoning: '为什么',
+    layer2: '👥 第二层：实例化', noExemplars: '*暂无实例 — 完成直觉探针后会自动生成对比示例。*', doLabel: '**应该：**', dontLabel: '**不应该：**',
+    layer3: '🔒 第三层：边界', boundariesFallback: '边界待定义', appliesWhen: '**适用场景：**', doesNotApply: '**不适用场景：**', tensionZones: '**灰色地带（需要自行判断）：**', noBoundaries: '暂无具体边界定义',
+    layer4: '🧪 第四层：验证', metric: '指标', noMetric: '暂无验证指标', noTestCases: '*暂无测试用例 — 完成直觉探针后会自动生成。*', testCase: '测试场景', prompt: '提示', expected: '期望表现', passCriteria: '通过条件', antiPatterns: '**反模式与隐性失败：**',
+    layer5: '🌍 第五层：情境化', culturalPending: '*文化适配待生成 — 会基于探针回应自动生成。*', note: '说明', adaptation: '适配方式', noCulturalVariants: '*文化变体待定义*',
+    usingTitle: '📚 如何使用这个 Skill', usingIntro: '要有效使用这个 Skill：',
+    step1: '**复制上方"直接可用的提示词"区块**，粘贴到你常用的 AI（ChatGPT、Claude 或其他）',
+    step2: '**补充你自己的具体场景或问题**',
+    step3: '**让 AI 按这个 Skill 的核心原则推理**',
+    step4: '**需要时参考实例**，让 AI 知道"好的表现"长什么样',
+    step5: '**留意边界条件**，避免在不适用的场景里硬用',
+    usingFooter: '这个 Skill 通过五层框架，教会 AI 一套具体的推理和表达模式，让输出更一致、更高质量。',
+    rightsTitle: '创作者权益', commercialUse: '**商业使用**', remix: '**改编**',
+    allowed: '允许', authRequired: '需授权', prohibited: '禁止', shareAlikeRequired: '需署名共享', notAllowed: '不允许',
+    footer: `*通过 THE 42 POST 锻造 · 人类语义资本协议*\n*版本：1.0.0 | 授权：${skillData.license || '创作者保留'}*`
+  } : {
+    by: 'By', readyTitle: '🚀 READY TO PROMPT', readyHint: 'Copy and paste this system prompt directly into your favorite LLM:',
+    about: '📖 ABOUT THIS SKILL', aboutFallback: 'A skill forged in The 42 Post that enhances AI reasoning and output quality through structured guidance.',
+    metaTitle: '📋 SKILL METADATA', field: 'Field', value: 'Value', creator: 'Creator', created: 'Created', version: 'Version', protocol: 'Protocol', license: 'License',
+    frameworkTitle: '✨ COMPLETE FRAMEWORK',
+    layer1: '🎯 Layer 1: Principle', layer1Fallback: 'The core principle of this skill', reasoning: 'Reasoning',
+    layer2: '👥 Layer 2: Exemplars', noExemplars: '*No exemplars generated — complete the Intuition Probe to generate comparative examples.*', doLabel: '**DO:**', dontLabel: '**DON\'T:**',
+    layer3: '🔒 Layer 3: Boundaries', boundariesFallback: 'Boundaries to be defined', appliesWhen: '**Applies when:**', doesNotApply: '**Does not apply:**', tensionZones: '**Tension zones (gray areas requiring judgment):**', noBoundaries: 'No specific boundaries defined',
+    layer4: '🧪 Layer 4: Evaluation', metric: 'Metric', noMetric: 'No evaluation metric defined', noTestCases: '*No test cases generated — complete the Intuition Probe to auto-generate.*', testCase: 'Test Case', prompt: 'Prompt', expected: 'Expected', passCriteria: 'Pass criteria', antiPatterns: '**Anti-patterns & Silent Failures:**',
+    layer5: '🌍 Layer 5: Cultural Variants', culturalPending: '*Cultural adaptation pending — will be generated based on probe responses.*', note: 'Note', adaptation: 'Adaptation', noCulturalVariants: '*Cultural variants to be defined*',
+    usingTitle: '📚 USING THIS SKILL', usingIntro: 'To use this skill effectively:',
+    step1: '**Copy the Ready-to-Prompt section** above and paste it into your preferred Large Language Model (ChatGPT, Claude, or others)',
+    step2: '**Provide context or input** relevant to your task',
+    step3: '**Follow the skill\'s principle** to guide the AI\'s reasoning',
+    step4: '**Reference the exemplars** if you need to show the AI what "good" looks like',
+    step5: '**Be aware of boundaries** to use the skill appropriately',
+    usingFooter: 'This skill teaches the AI specific patterns of reasoning and output formatting through the Five-Layer Framework, enabling more consistent and higher-quality results.',
+    rightsTitle: 'Creator Rights', commercialUse: '**Commercial Use**', remix: '**Remix**',
+    allowed: 'Allowed', authRequired: 'Authorization Required', prohibited: 'Prohibited', shareAlikeRequired: 'Share-alike Required', notAllowed: 'Not Allowed',
+    footer: `*Forged with THE 42 POST · Human Semantic Capital Protocol*\n*Version: 1.0.0 | License: ${skillData.license || 'Creator Reserved'}*`
+  };
 
   let md = `# ${skillData.title}
-By ${creatorName} | Soul-Hash: ${shortSoulHash}
+${L.by} ${creatorName} | Soul-Hash: ${shortSoulHash}
 
 ---
 
-## 🚀 READY TO PROMPT
+## ${L.readyTitle}
 
-Copy and paste this system prompt directly into your favorite LLM:
+${L.readyHint}
 
 \`\`\`
 ${readyPrompt}
@@ -6958,47 +7025,47 @@ ${readyPrompt}
 
 ---
 
-## 📖 ABOUT THIS SKILL
+## ${L.about}
 
-${skillData.about || (fiveLayer ? fiveLayer.principle : 'A skill forged in The 42 Post that enhances AI reasoning and output quality through structured guidance.')}
+${skillData.about || (fiveLayer ? fiveLayer.principle : L.aboutFallback)}
 
 ---
 
-## 📋 SKILL METADATA
+## ${L.metaTitle}
 
-| Field | Value |
+| ${L.field} | ${L.value} |
 |-------|-------|
 | **Soul-Hash** | \`${fullSoulHash}\` |
-| **Creator** | ${creatorName} |
-| **Created** | ${timestamp} |
-| **Version** | 1.0.0 |
-| **Protocol** | THE 42 POST · Five-Layer Skill Architecture |
-| **License** | Creator Reserved |
+| **${L.creator}** | ${creatorName} |
+| **${L.created}** | ${timestamp} |
+| **${L.version}** | 1.0.0 |
+| **${L.protocol}** | THE 42 POST · Five-Layer Skill Architecture |
+| **${L.license}** | Creator Reserved |
 
 ---
 
-## ✨ COMPLETE FRAMEWORK
+## ${L.frameworkTitle}
 
-### 🎯 Layer 1: Principle / 定义
+### ${L.layer1}
 
-${fiveLayer ? fiveLayer.principle : 'The core principle of this skill'}
+${fiveLayer ? fiveLayer.principle : L.layer1Fallback}
 
-${fiveLayer && fiveLayer.reasoning ? `*Reasoning: ${fiveLayer.reasoning}*` : ''}
+${fiveLayer && fiveLayer.reasoning ? `*${L.reasoning}: ${fiveLayer.reasoning}*` : ''}
 
 ---
 
-### 👥 Layer 2: Exemplars / 实例化
+### ${L.layer2}
 
 ${(() => {
   if (!fiveLayer || !fiveLayer.exemplars || fiveLayer.exemplars.length === 0) {
-    return '*No exemplars generated — complete the Intuition Probe to generate comparative examples.*';
+    return L.noExemplars;
   }
 
   let exemplarMd = '';
   fiveLayer.exemplars.forEach((ex) => {
     // Check if label indicates DO/DON'T pattern
     const isNegative = ex.label && (ex.label.toLowerCase().includes('don\'t') || ex.label.toLowerCase().includes('avoid'));
-    const prefix = isNegative ? '**DON\'T:**' : '**DO:**';
+    const prefix = isNegative ? L.dontLabel : L.doLabel;
     exemplarMd += `\n${prefix} ${ex.text}\n`;
     if (ex.note) {
       exemplarMd += `*→ ${ex.note}*\n`;
@@ -7009,69 +7076,69 @@ ${(() => {
 
 ---
 
-### 🔒 Layer 3: Boundaries / 围界
+### ${L.layer3}
 
 ${(() => {
   if (!fiveLayer || !fiveLayer.boundaries) {
-    return 'Boundaries to be defined';
+    return L.boundariesFallback;
   }
 
   const b = fiveLayer.boundaries;
   let boundaryMd = '';
 
   if (b.applies_when && b.applies_when.length > 0) {
-    boundaryMd += `**Applies when:**\n`;
+    boundaryMd += `${L.appliesWhen}\n`;
     b.applies_when.forEach(t => { boundaryMd += `- ✓ ${t}\n`; });
   }
 
   if (b.does_not_apply && b.does_not_apply.length > 0) {
-    boundaryMd += `\n**Does not apply:**\n`;
+    boundaryMd += `\n${L.doesNotApply}\n`;
     b.does_not_apply.forEach(t => { boundaryMd += `- ✕ ${t}\n`; });
   }
 
   if (b.tension_zones && b.tension_zones.length > 0) {
-    boundaryMd += `\n**Tension zones (gray areas requiring judgment):**\n`;
+    boundaryMd += `\n${L.tensionZones}\n`;
     b.tension_zones.forEach(t => { boundaryMd += `- ⚠ ${t}\n`; });
   }
 
-  return boundaryMd || 'No specific boundaries defined';
+  return boundaryMd || L.noBoundaries;
 })()}
 
 ---
 
-### 🧪 Layer 4: Evaluation / 验证
+### ${L.layer4}
 
-${fiveLayer && fiveLayer.evaluation ? `\n**Metric:** \`${fiveLayer.evaluation.metric}\`\n` : 'No evaluation metric defined'}
+${fiveLayer && fiveLayer.evaluation ? `\n**${L.metric}:** \`${fiveLayer.evaluation.metric}\`\n` : L.noMetric}
 
 ${(() => {
   if (!fiveLayer || !fiveLayer.evaluation || !fiveLayer.evaluation.test_cases || fiveLayer.evaluation.test_cases.length === 0) {
-    return '*No test cases generated — complete the Intuition Probe to auto-generate.*';
+    return L.noTestCases;
   }
 
   let testMd = '';
   fiveLayer.evaluation.test_cases.forEach((tc, i) => {
-    testMd += `\n**Test Case ${i + 1}:**\n`;
-    testMd += `- **Prompt:** ${tc.prompt.substring(0, 200)}${tc.prompt.length > 200 ? '...' : ''}\n`;
-    testMd += `- **Expected:** ${tc.expected}\n`;
-    testMd += `- **Pass criteria:** ${tc.pass_criteria}\n`;
+    testMd += `\n**${L.testCase} ${i + 1}:**\n`;
+    testMd += `- **${L.prompt}:** ${tc.prompt.substring(0, 200)}${tc.prompt.length > 200 ? '...' : ''}\n`;
+    testMd += `- **${L.expected}:** ${tc.expected}\n`;
+    testMd += `- **${L.passCriteria}:** ${tc.pass_criteria}\n`;
   });
   return testMd;
 })()}
 
 ${fiveLayer && fiveLayer.evaluation && fiveLayer.evaluation.silent_failures && fiveLayer.evaluation.silent_failures.length > 0 ? `
-**Anti-patterns & Silent Failures:**
+${L.antiPatterns}
 ${fiveLayer.evaluation.silent_failures.map(failure => `- ${failure}`).join('\n')}
 ` : ''}
 
 ---
 
-### 🌍 Layer 5: Cultural Variants / 情境化
+### ${L.layer5}
 
 ${(() => {
   if (!fiveLayer || !fiveLayer.cultural_variants) {
     return (fiveLayer && fiveLayer.contextualizing)
       ? fiveLayer.contextualizing
-      : '*Cultural adaptation pending — will be generated based on probe responses.*';
+      : L.culturalPending;
   }
 
   let culturalMd = '';
@@ -7080,46 +7147,45 @@ ${(() => {
   if (fiveLayer.cultural_variants['en-US']) {
     const variant = fiveLayer.cultural_variants['en-US'];
     culturalMd += `\n**English (en-US)**\n`;
-    if (variant.principle_note) culturalMd += `- **Note:** ${variant.principle_note}\n`;
-    if (variant.adaptation) culturalMd += `- **Adaptation:** ${variant.adaptation}\n`;
+    if (variant.principle_note) culturalMd += `- **${L.note}:** ${variant.principle_note}\n`;
+    if (variant.adaptation) culturalMd += `- **${L.adaptation}:** ${variant.adaptation}\n`;
   }
 
   // Handle zh-CN
   if (fiveLayer.cultural_variants['zh-CN']) {
     const variant = fiveLayer.cultural_variants['zh-CN'];
     culturalMd += `\n**中文 (zh-CN)**\n`;
-    if (variant.principle_note) culturalMd += `- **说明:** ${variant.principle_note}\n`;
-    if (variant.adaptation) culturalMd += `- **本地化:** ${variant.adaptation}\n`;
+    if (variant.principle_note) culturalMd += `- **${L.note}:** ${variant.principle_note}\n`;
+    if (variant.adaptation) culturalMd += `- **${L.adaptation}:** ${variant.adaptation}\n`;
   }
 
-  return culturalMd || '*Cultural variants to be defined*';
+  return culturalMd || L.noCulturalVariants;
 })()}
 
 ---
 
-## 📚 USING THIS SKILL
+## ${L.usingTitle}
 
-To use this skill effectively:
+${L.usingIntro}
 
-1. **Copy the Ready-to-Prompt section** above and paste it into your preferred Large Language Model (ChatGPT, Claude, or others)
-2. **Provide context or input** relevant to your task
-3. **Follow the skill's principle** to guide the AI's reasoning
-4. **Reference the exemplars** if you need to show the AI what "good" looks like
-5. **Be aware of boundaries** to use the skill appropriately
+1. ${L.step1}
+2. ${L.step2}
+3. ${L.step3}
+4. ${L.step4}
+5. ${L.step5}
 
-This skill teaches the AI specific patterns of reasoning and output formatting through the Five-Layer Framework, enabling more consistent and higher-quality results.
-
----
-
-## Creator Rights
-
-- **Commercial Use**: ${skillData.commercial === 'allowed' ? 'Allowed' : skillData.commercial === 'authorized' ? 'Authorization Required' : 'Prohibited'}
-- **Remix**: ${skillData.remix === 'yes' ? 'Allowed' : skillData.remix === 'share-alike' ? 'Share-alike Required' : 'Not Allowed'}
+${L.usingFooter}
 
 ---
 
-*Forged with THE 42 POST · Human Semantic Capital Protocol*
-*Version: 1.0.0 | License: ${skillData.license || 'Creator Reserved'}*`;
+## ${L.rightsTitle}
+
+- ${L.commercialUse}: ${skillData.commercial === 'allowed' ? L.allowed : skillData.commercial === 'authorized' ? L.authRequired : L.prohibited}
+- ${L.remix}: ${skillData.remix === 'yes' ? L.allowed : skillData.remix === 'share-alike' ? L.shareAlikeRequired : L.notAllowed}
+
+---
+
+${L.footer}`;
 
   return md;
 }
