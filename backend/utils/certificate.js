@@ -696,55 +696,62 @@ export function generateEmailTemplate(
           font-family: 'Courier New', monospace;
           box-sizing: border-box;
         ">
-          <!-- inner frame -->
+          <!-- inner frame. Block layout, not flexbox: many email clients
+               (Outlook desktop, several webmail CSS sanitizers) either drop
+               flex-direction while keeping display:flex, or ignore it
+               outright — both leave flex's true default (row) in effect,
+               which squeezed every row into one line and forced the
+               unbreakable Soul-Hash string into a sliver of width, wrapping
+               it one character per line. Plain stacked divs (block is the
+               real, universally-supported default for a <div>) can't fail
+               that way. -->
           <div style="
             border: 1px solid ${accent}60;
             outline: 1px solid ${accent}28;
             outline-offset: 2px;
             border-radius: 7px;
             padding: 16px 14px 12px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 7px;
+            text-align: center;
           ">
             <!-- brand -->
             <div style="font-size: 10px; font-weight: 700; letter-spacing: 3px; color: #3c3028; text-transform: uppercase;">THE 42 POST</div>
-            <div style="font-size: 10px; font-style: italic; color: #8a7c6e; letter-spacing: 0.3px;">Creator's Certificate</div>
+            <div style="font-size: 10px; font-style: italic; color: #8a7c6e; letter-spacing: 0.3px; margin-top: 2px;">Creator's Certificate</div>
 
-            <!-- domain seal -->
+            <!-- domain seal — line-height centers the glyph instead of flex -->
             <div style="
               width: 38px; height: 38px;
-              display: flex; align-items: center; justify-content: center;
+              line-height: 38px;
               font-size: 18px;
               color: ${accent};
               border: 2px solid ${accent}b0;
               border-radius: 50%;
               background: ${accent}12;
-              transform: rotate(-6deg);
-              margin: 4px 0;
+              margin: 11px auto 4px;
+              text-align: center;
             ">${glyph}</div>
 
             <!-- skill name -->
-            <div style="font-size: 14px; font-weight: 700; color: #2a2018; font-family: Georgia, serif; line-height: 1.3;">${esc(title)}</div>
+            <div style="font-size: 14px; font-weight: 700; color: #2a2018; font-family: Georgia, serif; line-height: 1.3; margin-top: 7px;">${esc(title)}</div>
 
             <!-- domain pill -->
             <div style="
+              display: inline-block;
               font-size: 8px; font-weight: 700; letter-spacing: 2.4px;
               text-transform: uppercase;
               color: ${accent};
               border: 1px solid ${accent}90;
               padding: 2px 10px;
               border-radius: 20px;
+              margin-top: 7px;
             ">${domainLabel}</div>
 
             ${blessing ? `<!-- blessing -->
-            <div style="font-size: 9px; font-style: italic; color: #5a4f44; text-align: center; line-height: 1.55; padding: 2px 10px; font-family: Georgia, serif;">
+            <div style="font-size: 9px; font-style: italic; color: #5a4f44; text-align: center; line-height: 1.55; padding: 2px 10px; font-family: Georgia, serif; margin-top: 7px;">
               <span style="color: ${accent};">“</span>${esc(blessing)}<span style="color: ${accent};">”</span>
             </div>` : ''}
 
             <!-- divider -->
-            <div style="width: 80%; height: 1px; background: ${accent}30; margin: 2px 0;"></div>
+            <div style="width: 80%; height: 1px; background: ${accent}30; margin: 9px auto;"></div>
 
             <!-- creator + date -->
             <div style="font-size: 9px; color: #8a7c6e; letter-spacing: 0.6px;">
@@ -752,10 +759,10 @@ export function generateEmailTemplate(
             </div>
 
             <!-- soul hash -->
-            <div style="font-size: 9px; color: #8a7c6e; letter-spacing: 1px; font-weight: 700; color: ${accent}; word-break: break-all;">${esc(soulHash ? soulHash.substring(0, 14) : '')}</div>
+            <div style="font-size: 9px; color: #8a7c6e; letter-spacing: 1px; font-weight: 700; color: ${accent}; word-break: break-all; margin-top: 7px;">${esc(soulHash ? soulHash.substring(0, 14) : '')}</div>
 
             <!-- divider -->
-            <div style="width: 80%; height: 1px; background: ${accent}30; margin: 2px 0;"></div>
+            <div style="width: 80%; height: 1px; background: ${accent}30; margin: 9px auto;"></div>
 
             <!-- website -->
             <div style="font-size: 7.5px; letter-spacing: 2px; color: rgba(138,124,110,0.65);">www.the42post.com</div>
