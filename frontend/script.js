@@ -1270,7 +1270,18 @@ async function loadSkillsFromDB() {
         const cleanName = rawName.replace(/^creator_/i, '');
         const creatorLabel = `creator_${cleanName}`;
 
+        let rawFiveLayer = {};
+        try { rawFiveLayer = skill.five_layer ? JSON.parse(skill.five_layer) : {}; } catch { /* leave empty */ }
+        const fiveLayer = normalizeFiveLayerShape(rawFiveLayer) || {};
+
         return {
+        // Spread first so any field this whitelist doesn't know about
+        // (applicable_when, disallowed_uses, published_at, ...) still
+        // comes through instead of silently vanishing — the previous
+        // version of this function built a brand-new object with no
+        // spread, which is exactly how ready_to_use_prompt went missing
+        // from every markdown/LangChain export for months.
+        ...skill,
         id: skill.id,
         title: skill.title,
         titleCn: skill.title_cn || skill.title,
@@ -1287,39 +1298,10 @@ async function loadSkillsFromDB() {
         author: creatorLabel,
         commercial: skill.commercial_use || 'authorized',
         remix: skill.remix_allowed ? 'share-alike' : 'no',
-        // Top-level column, falling back to the copy that sometimes only
-        // lives inside five_layer (generateFlatFiveLayerWithClaude writes
-        // it there too). Missing here meant every markdown/LangChain
-        // export showed "System prompt to be generated during skill
-        // forging" even for skills that had a real one all along.
-        ready_to_use_prompt: skill.ready_to_use_prompt || (() => {
-          try { return (skill.five_layer ? JSON.parse(skill.five_layer) : {}).ready_to_use_prompt || ''; }
-          catch { return ''; }
-        })(),
-        five_layer: (() => {
-          try {
-            const fl = skill.five_layer ? JSON.parse(skill.five_layer) : {};
-            // Preserve ALL fields — new format uses principle/exemplars/boundaries,
-            // old format uses defining/instantiating/fencing/validating/contextualizing.
-            // Stripping new-format fields here caused blank markdown exports for new skills.
-            return {
-              // new-format fields
-              principle: fl.principle || '',
-              reasoning: fl.reasoning || '',
-              exemplars: fl.exemplars || [],
-              boundaries: fl.boundaries || null,
-              evaluation: fl.evaluation || null,
-              cultural_variants: fl.cultural_variants || null,
-              // old-format fields (kept for backwards compat)
-              defining: fl.defining || fl.principle || '',
-              instantiating: fl.instantiating || '',
-              fencing: fl.fencing || '',
-              validating: fl.validating || [],
-              contextualizing: fl.contextualizing || '',
-              ready_to_use_prompt: fl.ready_to_use_prompt || ''
-            };
-          } catch { return { defining: '', instantiating: '', fencing: '', validating: [], contextualizing: '', principle: '', exemplars: [], ready_to_use_prompt: '' }; }
-        })()
+        // Top-level column, falling back to the copy normalizeFiveLayerShape
+        // already pulled out of five_layer if that's the only place it lives.
+        ready_to_use_prompt: skill.ready_to_use_prompt || fiveLayer.ready_to_use_prompt || '',
+        five_layer: fiveLayer
       };
     });
   } catch (error) {
@@ -6881,18 +6863,31 @@ function initHonorMirror() {
    SKILL PACKAGE SYSTEM — Download & Agent Archive
    ═══════════════════════════════════════════════════════ */
 
+// ═══ SINGLE SOURCE OF TRUTH for five-layer shape + ready_to_use_prompt ═══
+// This used to be reimplemented separately in three places — loadSkillsFromDB(),
+// initAgentArchiveView()'s baseSkills.map(), and this function under its old
+// name normalizeFiveLayerForExport() — each maintained independently, each
+// drifting slightly from the others. That's exactly why ready_to_use_prompt
+// went missing from markdown exports for months: it was added to one of the
+// three copies and never to the other two. Every caller that touches raw
+// five_layer data should go through THIS function instead of reimplementing
+// shape detection again.
+//
 // Five-layer data exists in 3 different shapes across real skills: rich
-// (principle/exemplars/boundaries as real objects — older/seed skills),
-// and the current shape from generateFlatFiveLayerWithClaude (the live
-// forge path), where every layer is just a plain string. Reading
-// skillData.fiveLayerSkill directly skips that second shape entirely —
-// every real field comes back undefined and the export shows nothing but
-// placeholder text ("Boundaries to be defined", etc) even though the
-// skill has real content. Mirrors normalizeFiveLayer() in
-// backend/routes/downloads.js so both exports treat the same data the
-// same way.
-function normalizeFiveLayerForExport(fl) {
+// (principle/exemplars/boundaries as real objects — older/seed skills), an
+// older structured shape (instantiating/fencing as objects), and the
+// current shape from generateFlatFiveLayerWithClaude (the live forge path),
+// where every layer — including ready_to_use_prompt — is just a plain
+// string or sits as a sibling field. Reading raw five_layer directly skips
+// the second and third shapes — every real field comes back undefined and
+// the UI shows nothing but placeholder text even though the skill has real
+// content. Mirrors normalizeFiveLayer() in backend/routes/downloads.js so
+// both the frontend and backend export paths treat the same data the same
+// way (those two can't literally share code — no build step, different
+// runtimes — but they should never again diverge in BEHAVIOR).
+function normalizeFiveLayerShape(fl) {
   if (!fl) return null;
+  const readyToUsePrompt = (typeof fl.ready_to_use_prompt === 'string' && fl.ready_to_use_prompt) || '';
 
   if (fl.principle || fl.reasoning || (Array.isArray(fl.exemplars) && fl.exemplars.length)) {
     return {
@@ -6901,16 +6896,27 @@ function normalizeFiveLayerForExport(fl) {
       exemplars: Array.isArray(fl.exemplars) ? fl.exemplars : [],
       boundaries: fl.boundaries || null,
       evaluation: fl.evaluation || null,
-      cultural_variants: fl.cultural_variants || null
+      cultural_variants: fl.cultural_variants || null,
+      contextualizing: fl.contextualizing || '',
+      ready_to_use_prompt: readyToUsePrompt,
+      // Old-format field names, kept as echoes — a couple of older call
+      // sites (e.g. playground.html's getSkillPrincipleLine) still check
+      // these directly as a fallback before falling further back to
+      // skill.description.
+      defining: fl.defining || fl.principle || '',
+      instantiating: fl.instantiating || '',
+      fencing: fl.fencing || '',
+      validating: fl.validating || []
     };
   }
 
   if (fl.instantiating && typeof fl.instantiating === 'object') {
     // Older structured shape — kept for any legacy data that still has it.
-    return fl;
+    return { ...fl, ready_to_use_prompt: readyToUsePrompt };
   }
 
-  // Current flat-string shape.
+  // Current flat-string shape — what generateFlatFiveLayerWithClaude
+  // actually writes for every Skill forged through the live product today.
   const exemplars = (typeof fl.instantiating === 'string' && fl.instantiating.trim())
     ? [{ label: '', text: fl.instantiating.trim(), note: '' }]
     : [];
@@ -6934,7 +6940,12 @@ function normalizeFiveLayerForExport(fl) {
     boundaries,
     evaluation,
     cultural_variants: null,
-    contextualizing: (typeof fl.contextualizing === 'string' && fl.contextualizing) || ''
+    contextualizing: (typeof fl.contextualizing === 'string' && fl.contextualizing) || '',
+    ready_to_use_prompt: readyToUsePrompt,
+    defining: fl.defining || '',
+    instantiating: fl.instantiating || '',
+    fencing: fl.fencing || '',
+    validating: fl.validating || []
   };
 }
 
@@ -6942,7 +6953,7 @@ function normalizeFiveLayerForExport(fl) {
 function generateSkillMarkdown(skillData) {
   const now = new Date();
   const timestamp = now.toISOString().split('T')[0];
-  const fiveLayer = normalizeFiveLayerForExport(skillData.fiveLayerSkill || null);
+  const fiveLayer = normalizeFiveLayerShape(skillData.fiveLayerSkill || null);
 
   // Follows the CURRENT viewer's UI language toggle, not the skill's own
   // forging language — downloading from a Chinese-UI session should give
@@ -6958,12 +6969,11 @@ function generateSkillMarkdown(skillData) {
   const creatorName = skillData.created_by || skillData.author || 'The 42 Post Community';
 
   // Fallback chain: top-level field → the same field nested inside
-  // five_layer (generateFlatFiveLayerWithClaude writes it in both places,
-  // but not every code path that builds skillData carries the top-level
-  // copy through) → synthesize a minimal one from the principle → a
-  // last-resort placeholder.
+  // five_layer (normalizeFiveLayerShape already extracted it from
+  // whichever shape it actually lives in) → synthesize a minimal one from
+  // the principle → a last-resort placeholder.
   const readyPrompt = skillData.ready_to_use_prompt
-    || skillData.fiveLayerSkill?.ready_to_use_prompt
+    || fiveLayer?.ready_to_use_prompt
     || (fiveLayer?.principle
         ? (isCn ? `请遵循以下原则：\n\n${fiveLayer.principle}` : `Apply the following principle:\n\n${fiveLayer.principle}`)
         : (isCn ? '系统提示词将在锻造完成后生成' : 'System prompt to be generated during skill forging'));
@@ -7578,6 +7588,18 @@ async function initAgentArchiveView() {
     // Ensure agent field always has "creator_" prefix for consistency
     const agent = s.agent && /^creator_/.test(s.agent) ? s.agent : `creator_${creatorName}`;
 
+    // five_layer arrives as a raw JSON string from the API and in three
+    // different internal shapes depending on when the skill was forged —
+    // normalizeFiveLayerShape() is the one shared place that understands
+    // all of them (see its own comment for why this used to be
+    // reimplemented separately here, in loadSkillsFromDB(), and in the
+    // markdown exporter, each silently drifting from the other two).
+    let rawFiveLayer = s.five_layer;
+    if (typeof rawFiveLayer === 'string') {
+      try { rawFiveLayer = JSON.parse(rawFiveLayer); } catch { rawFiveLayer = {}; }
+    }
+    const fiveLayer = normalizeFiveLayerShape(rawFiveLayer) || {};
+
     return {
       ...s,
       agent,
@@ -7590,7 +7612,9 @@ async function initAgentArchiveView() {
       titleCn: s.titleCn || s.title || '未知技能',
       stars,
       downloads,
-      starlight
+      starlight,
+      five_layer: fiveLayer,
+      ready_to_use_prompt: s.ready_to_use_prompt || fiveLayer.ready_to_use_prompt || ''
     };
   });
 
