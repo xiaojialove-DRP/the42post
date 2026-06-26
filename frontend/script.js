@@ -2144,39 +2144,6 @@ function generateClientSideProbe(idea) {
   return { context, a, b, c };
 }
 
-// 检查场景是否包含敏感/风险内容
-function isSensitiveScenario(text) {
-  if (!text) return false;
-
-  // 需要避免的敏感领域 — each pattern matches Chinese OR English so the
-  // filter is not blind to half the userbase's language (found during a
-  // bilingual consistency audit: this previously only matched Chinese).
-  const sensitivePatterns = {
-    // 医学/健康相关
-    medical: /医学|医生|医院|疾病|患者|症状|诊断|治疗|药物|糖尿病|癌症|艾滋|精神病|心理|健康|手术|病人|处方|医疗|临床|\b(medicine|medical|doctor|hospital|disease|patient|symptom|diagnosis|treatment|medication|diabetes|cancer|hiv|aids|mental illness|psychiatric|surgery|prescription|clinical)\b/i,
-    // 法律相关
-    legal: /法律|法官|律师|起诉|诉讼|犯罪|监狱|判刑|法庭|违法|合同|纠纷|赔偿|诉讼费|仲裁|庭审|\b(lawyer|attorney|judge|lawsuit|sue|crime|criminal|prison|sentenced|court|illegal|contract dispute|compensation claim|litigation|arbitration|trial)\b/i,
-    // 财务/税务相关
-    financial: /税务|逃税|避税|洗钱|贿赂|欺诈|诈骗|金融犯罪|贪污|腐败|\b(tax evasion|money laundering|bribery|fraud|scam|financial crime|embezzlement|corruption)\b/i,
-    // 宗教/政治敏感
-    sensitive: /宗教|政治|宗派|种族|民族|信仰|圣战|恐怖|极端|阴谋论|\b(religion|politic|sect|ethnic|jihad|terroris|extremis|conspiracy theor)/i,
-    // 暴力/伤害相关
-    violent: /暴力|伤害|谋杀|自杀|自残|死亡|杀害|虐待|强奸|性侵|\b(violence|murder|suicide|self-harm|kill|abuse|rape|sexual assault)\b/i,
-    // 成瘾/物质相关
-    substance: /毒品|吸毒|贩毒|酗酒|成瘾|毒|毒物|毒素|\b(drug|narcotic|trafficking|alcoholism|addiction|poison|toxic substance)\b/i
-  };
-
-  // 检查是否匹配任何敏感模式
-  for (const [domain, pattern] of Object.entries(sensitivePatterns)) {
-    if (pattern.test(text)) {
-      console.log(`⚠️ Detected sensitive content (${domain}):`, text.substring(0, 50));
-      return true;
-    }
-  }
-
-  return false;
-}
-
 async function generateProbeScenarios(idea, onChunk) {
   const lang = document.body.dataset.lang || 'en';
 
@@ -2185,8 +2152,6 @@ async function generateProbeScenarios(idea, onChunk) {
     try {
       const probe = await _streamProbe(idea, lang, onChunk);
       if (probe && probe.scenario) {
-        const txt = `${probe.scenario} ${probe.thesis} ${probe.antithesis} ${probe.extreme}`;
-        if (isSensitiveScenario(txt)) return generateClientSideProbe(idea);
         return { context: probe.scenario, a: probe.thesis, b: probe.antithesis, c: probe.extreme, apiSource: true, fullProbe: probe };
       }
     } catch (e) {
@@ -2198,8 +2163,6 @@ async function generateProbeScenarios(idea, onChunk) {
   try {
     const result = await API.generateProbe(idea, lang);
     if (result.success && result.probe) {
-      const txt = `${result.probe.scenario} ${result.probe.thesis} ${result.probe.antithesis} ${result.probe.extreme}`;
-      if (isSensitiveScenario(txt)) return generateClientSideProbe(idea);
       return { context: result.probe.scenario, a: result.probe.thesis, b: result.probe.antithesis, c: result.probe.extreme, apiSource: true, fullProbe: result.probe };
     }
   } catch (e) {
@@ -4959,6 +4922,9 @@ function showForgeCompletion(skillData, soulHash) {
         const params = new URLSearchParams();
         if (skillId) params.set('skill', skillId);
         if (anonId) params.set('anonymous_id', anonId);
+        // Lets Playground's 7-scenario farewell card skip the "go forge
+        // your own Skill" invite for someone who just did exactly that.
+        params.set('from', 'forge');
         window.location.href = `/playground${params.toString() ? '?' + params.toString() : ''}`;
       });
     }

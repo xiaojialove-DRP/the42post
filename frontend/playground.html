@@ -1832,15 +1832,25 @@
         card.style.top = (30 + Math.random() * maxY) + 'px';
       }
 
+      // Someone who arrived via Forge completion's "Try it in Playground"
+      // already just forged a Skill — inviting them to go forge one is
+      // redundant, not a useful nudge. Playground/Archive visitors who
+      // may never have forged anything still get the invite.
+      const farewellMsg = window.TWIN_TEST_FROM_FORGE
+        ? (isCn
+            ? '你已经体验了 7 个场景，很棒了。休息一下吧 ☕️'
+            : 'You\'ve explored 7 scenarios — well played. Time for a break ☕️')
+        : (isCn
+            ? '你已经体验了 7 个场景，很棒了。休息一下吧 ☕️ 或者<a href="index.html#forge">锻造一个你自己的 Skill</a>。'
+            : 'You\'ve explored 7 scenarios — well played. Time for a break ☕️ Or <a href="index.html#forge">forge a Skill of your own</a>.');
+
       card.innerHTML = `
         <div class="card-header">
           <div class="card-header-left"><span class="twin-header-dot">●</span></div>
           <div class="card-header-right"><button class="card-close" title="${t('playground_close')}">✕</button></div>
         </div>
         <div class="card-body" style="padding:24px 20px;">
-          <div class="twin-farewell-msg" style="padding:0;">${isCn
-            ? '你已经体验了 7 个场景，很棒了。休息一下吧 ☕️ 或者<a href="index.html#forge">锻造一个你自己的 Skill</a>。'
-            : 'You\'ve explored 7 scenarios — well played. Time for a break ☕️ Or <a href="index.html#forge">forge a Skill of your own</a>.'}</div>
+          <div class="twin-farewell-msg" style="padding:0;">${farewellMsg}</div>
         </div>
       `;
       card.querySelector('.card-close').addEventListener('click', (e) => {
@@ -2132,6 +2142,11 @@
       const params = new URLSearchParams(window.location.search);
       let skillId = params.get('skill');
       let selectedSkillData = params.get('selectedSkill');
+
+      // Forge completion's "Try it in Playground" CTA tags its redirect
+      // with from=forge. Used later by spawnFarewellCard() — someone who
+      // just forged a Skill doesn't need to be invited to go forge one.
+      window.TWIN_TEST_FROM_FORGE = (params.get('from') === 'forge');
 
       // Handle selectedSkill from archive.html (JSON-encoded skill info)
       if (selectedSkillData && !skillId) {
@@ -2447,10 +2462,16 @@
       setTimeout(() => card.classList.remove('spawning'), 600);
 
       // If a skill was pre-loaded (from ?skill= URL or Forge completion),
-      // skip the picker AND the trigger — go straight into the A/B test.
+      // skip the picker — the skill itself is already a deliberate choice
+      // (came from "Try it in Playground" or Archive's Play button) — but
+      // still show the trigger so running the actual test (two real LLM
+      // calls) is the user's own explicit click, same as the
+      // autoLoadDefaultSkill path below. Used to call runTwinTest directly
+      // here with zero confirmation, which fired a test before the user
+      // had any say in it.
       if (window.TWIN_TEST_SKILL?.id) {
         applyTwinSkillToCard(card, window.TWIN_TEST_SKILL);
-        runTwinTest(card, task, repo);
+        showTwinTestTrigger(card, task, repo);
       } else {
         showSkillPickerInCard(card, task, repo);
       }
