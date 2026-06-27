@@ -581,7 +581,7 @@ const I18N = {
   en: {
     masthead_subtitle: 'AI grows smarter every day.<br>But is it making our lives better?',
     btn_connect: '✕ CONNECT YOUR AI',
-    btn_agent_view: 'TASTE ARCHIVE',
+    btn_agent_view: 'AGENT ARCHIVE',
     btn_about: 'ABOUT US',
     btn_learn_more: 'LEARN MORE ABOUT US',
     footer_learn_more_text: 'Research plans & weekly updates on Medium',
@@ -4466,7 +4466,7 @@ function initSkillForge() {
           if (_tk) skillsHeaders['Authorization'] = `Bearer ${_tk}`;
           skillsHeaders['X-Anonymous-Id'] = getAnonymousId();
 
-          const response = await fetch(`${window.location.origin}/api/skills`, {
+          const response = await fetch(`${API_CONFIG.BASE_URL}/skills`, {
             method: 'POST',
             headers: skillsHeaders,
             body: JSON.stringify(backendPayload)

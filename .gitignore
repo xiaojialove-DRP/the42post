@@ -49,3 +49,8 @@ temp/
 test-*.html
 *-test.html
 cleanup-*.html
+
+# Playwright e2e
+test-results/
+playwright-report/
+blob-report/

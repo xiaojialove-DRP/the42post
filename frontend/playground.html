@@ -2178,7 +2178,7 @@
       if (!skillId) return; // dock click will let user pick a skill in the card
 
       try {
-        const resp = await fetch(`/api/skills/${encodeURIComponent(skillId)}`);
+        const resp = await fetch(`${API_CONFIG.BASE_URL}/skills/${encodeURIComponent(skillId)}`);
         if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
         const json = await resp.json();
         const skill = json.skill || json;
@@ -2217,7 +2217,7 @@
       } catch (e) {}
       let skills = [];
       try {
-        const resp = await fetch(`/api/playground/picker?anonymous_id=${anonId}${creatorParam}&limit=20`);
+        const resp = await fetch(`${API_CONFIG.BASE_URL}/playground/picker?anonymous_id=${anonId}${creatorParam}&limit=20`);
         if (resp.ok) {
           const json = await resp.json();
           skills = json.skills || [];
@@ -2227,7 +2227,7 @@
       }
       // Fallback for older deployments without /picker.
       if (!skills.length) {
-        const resp = await fetch('/api/skills?limit=50');
+        const resp = await fetch(`${API_CONFIG.BASE_URL}/skills?limit=50`);
         if (!resp.ok) throw new Error(`Failed to fetch skills (HTTP ${resp.status})`);
         const json = await resp.json();
         skills = (json.skills || []).slice();
@@ -2716,7 +2716,7 @@
           language: (typeof currentLang !== 'undefined' && currentLang === 'cn') ? 'zh' : 'en'
         };
 
-        const resp = await fetch('/api/playground/test', {
+        const resp = await fetch(`${API_CONFIG.BASE_URL}/playground/test`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
@@ -2834,7 +2834,7 @@
       const stageThanks = card.querySelector('.twin-thanks');
 
       try {
-        const resp = await fetch('/api/playground/feedback', {
+        const resp = await fetch(`${API_CONFIG.BASE_URL}/playground/feedback`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

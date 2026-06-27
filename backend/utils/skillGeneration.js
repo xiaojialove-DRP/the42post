@@ -532,8 +532,38 @@ Return JSON only:
 {"skill_name":"","definition":"","use_when":"","refuse_when":""}`;
 
   return callWithFallback(prompt, 600, 'preview generation',
-    d => ({ skill_name: d.skill_name || '', definition: d.definition || '', use_when: d.use_when || '', refuse_when: d.refuse_when || '' })
+    d => ({ skill_name: d.skill_name || '', definition: d.definition || '', use_when: d.use_when || '', refuse_when: d.refuse_when || '' }),
+    () => previewFallback(ideaText, selectedResponse, probeData, language)
   );
+}
+
+// ─── Template fallback for Step-2 preview ───
+// Used only when DeepSeek/Claude are both unreachable, so picking a probe
+// response never dead-ends the forge flow with a raw provider error.
+function previewFallback(ideaText, selectedResponse, probeData, language = 'en') {
+  const isCn = language === 'zh' || /[一-鿿]/.test(ideaText);
+  const shortIdea = ideaText.length > 40 ? ideaText.slice(0, 40) + '…' : ideaText;
+
+  const t = isCn
+    ? {
+        skill_name: '直觉守护者',
+        definition: `捕捉并践行这个直觉：「${shortIdea}」`,
+        use_when: `当对话情境呼应这个直觉所描述的场景时。`,
+        refuse_when: `当应用这个直觉会忽视更紧迫的安全或伦理考量时。`
+      }
+    : {
+        skill_name: 'Intuition Keeper',
+        definition: `Honor and embody this instinct: "${shortIdea}"`,
+        use_when: `When the conversation echoes the scenario this instinct describes.`,
+        refuse_when: `When applying this instinct would override a more urgent safety or ethical concern.`
+      };
+
+  return {
+    success: true,
+    fallback: true,
+    data: t,
+    model: `${PRIMARY_MODEL}-fallback`
+  };
 }
 
 // ═══ FLAT FIVE-LAYER PREVIEW (from name + definition; used by preview modal) ═══
