@@ -57,7 +57,41 @@ THE 42 POST 不是商业产品。我们相信 AI 价值观对齐应该是：
 
 ## 📚 系统架构
 
-详细的系统设计、数据流和数据库模式，请查看 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)。
+```mermaid
+graph TB
+    subgraph "Client Layer"
+        Browser["🌐 Web Browser<br/>Static HTML/CSS/Vanilla JS<br/>no build step"]
+    end
+
+    subgraph "Application Layer"
+        API["🔌 Express.js API Server<br/>Node.js Backend<br/>also serves the frontend statically"]
+    end
+
+    subgraph "External Services"
+        DeepSeek["🤖 DeepSeek API<br/>primary LLM — raw HTTPS fetch"]
+        Claude["🤖 Claude API<br/>fallback LLM — raw HTTPS fetch"]
+        Resend["📧 Resend<br/>Email — HTTP API"]
+    end
+
+    subgraph "Data Layer"
+        DB["💾 Database<br/>SQLite (dev) / PostgreSQL (prod)"]
+    end
+
+    Browser -->|HTTP/REST<br/>JSON| API
+    API -->|Skill generation,<br/>Twin Test responses| DeepSeek
+    API -->|On DeepSeek failure| Claude
+    API -->|Publish + feedback<br/>notifications| Resend
+    API -->|SQL<br/>Read/Write| DB
+
+    style Browser fill:#e1f5ff
+    style API fill:#f3e5f5
+    style DeepSeek fill:#fff3e0
+    style Claude fill:#fff3e0
+    style Resend fill:#f3e5f5
+    style DB fill:#e8f5e9
+```
+
+和 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) 用的是同一份图——只在一处维护，不会出现两边不同步的情况。详细的系统设计、数据流和数据库模式，请查看 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)。
 
 ---
 
