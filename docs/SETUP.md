@@ -43,13 +43,7 @@ nano .env
 
 ### 3. Initialize Database
 
-```bash
-# Create database tables
-npm run migrate
-
-# (Optional) Seed with sample skills
-npm run seed
-```
+Nothing to do here for local SQLite — `npm start`/`npm run dev` calls `initDatabase()` on every boot, which creates any missing tables and auto-seeds the 42 curated Skills if the database is empty. `npm run migrate` exists separately for explicitly running migrations against a PostgreSQL `POSTGRES_URI` before the app starts (e.g. in a deploy pipeline) — skip it for local dev.
 
 ### 4. Start Backend Server
 
@@ -270,14 +264,6 @@ Open http://localhost:8000 → white screen
 1. Check if backend is running: `curl http://localhost:3000/api/skills`
 2. Open browser console (F12) for JavaScript errors
 3. Check network tab for failed requests
-
-### Issue: Database error on startup
-
-```
-Error: ENOENT: no such file or directory, open 'data/42post.db'
-```
-
-**Solution:** Run `npm run migrate` to create the database
 
 ### Issue: API returns 403 Forbidden
 
