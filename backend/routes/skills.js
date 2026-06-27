@@ -1098,6 +1098,10 @@ router.post('/:skill_id/star', async (req, res, next) => {
       [starCount, skill_id]
     );
 
+    // Invalidate skills list cache so the new star count shows up on next load,
+    // not just in this response — same pattern as create/translate/delete below.
+    try { await getCache().invalidatePattern('skills_list:*'); } catch (_) {}
+
     res.json({
       success: true,
       starred,
