@@ -2,6 +2,47 @@
 
 All notable changes to THE 42 POST.
 
+## [1.7.0] — 2026-06-27
+
+A documentation-accuracy stretch and another round of real user-reported bugs. The big find: `docs/ARCHITECTURE.md` and several other docs described a system that no longer existed (Vue frontend, Claude-primary LLM, a real login system, Railway as the deploy target) — rewritten against the actual code rather than carried forward from an earlier draft. Alongside that, a recurring root cause showed up three separate times this round: the same skill data gets reshaped independently in multiple places, and each copy drifts from the others.
+
+### Bug Fixes — reported by real users
+
+- **Forge probe generation appeared to always fail** — real DeepSeek-streamed content would render, then get discarded and replaced with a generic fallback. Root cause: a client-side regex meant to catch "sensitive" generated scenarios matched on bare topic words (health, politics, death, contracts) rather than actual harmful content — on a platform whose whole purpose is AI value alignment, scenarios legitimately touch those topics constantly. Removed it; the real safety gate is the LLM-judged moderation that already runs at publish time.
+- **Twin Test skipped the "Use this Skill" confirmation** when arriving from Forge completion or Archive's Play button (`?skill=` pre-loaded) — it ran two real LLM calls with zero user action. Now shows the same one-click trigger the picker-based path always required.
+- **Skill markdown/LangChain exports were broken for the current data shape** — `generateFlatFiveLayerWithClaude` (the live forge path, not just a fallback) saves each layer as a plain string; every export path was still written for older shapes. Markdown downloads 500'd outright for affected skills; LangChain exports downloaded fine but came out with an empty `layers` object, silently useless.
+- **Ready-to-Prompt showed a placeholder instead of the real prompt**, and **every exported markdown label was hardcoded English regardless of UI language** — both traced to `loadSkillsFromDB()` rebuilding the skill object from an explicit field whitelist with no fallback, silently dropping `ready_to_use_prompt`, plus the markdown generator never branching on language at all.
+- **Forge-success email's Creator Card garbled the Soul-Hash** into one character per line. The card's layout used `display:flex` for a 10-row stack; several email clients (Outlook desktop, some webmail sanitizers) keep `display:flex` but drop `flex-direction`, which left flex's true default (row) in effect and squeezed an unbreakable string into a sliver of width. Switched to plain stacked `<div>`s, which no email client can get wrong.
+- **Creator Card text overflowed on long usernames and wouldn't save on mobile** — an unbounded `white-space: nowrap` line, and Safari's `<a download>` on a blob URL usually just opening the image instead of saving it. Added `flex-wrap` and a Web Share API path with the old download as fallback.
+- **Playground rating card clipped its bottom** in both portrait and landscape on mobile — the comment box (later removed entirely, see Removed) and then the rating buttons themselves could land below the visible canvas with no way to scroll to them.
+- Removed the optional "anything else?" comment box from Twin Test ratings — realistically no one typed one, and it was the recurring source of the clipping bugs above.
+- Forge completion copy: dropped a redundant sentence, wrote the Creator Card's URL out in full (`www.the42post.com`) instead of the bare domain.
+- The post-7-scenario farewell card always suggested "go forge your own Skill" — redundant advice for someone who arrived via Forge completion's own "try it in Playground" button, since they just did exactly that. Now conditional on how the session started; Archive/direct-Playground visitors still see the full message.
+
+### Documentation — rewritten against the real code, not an earlier draft
+
+- **`docs/ARCHITECTURE.md`**: full rewrite. The old version was wrong about the frontend framework, the primary LLM provider, the identity/auth model, and referenced routes and pages deleted long ago. New version verified against `server.js`'s actual route mounts, `package.json`'s actual dependencies, and `db/init.js`'s actual schema.
+- Added the system-architecture diagram to both `README.md` and `README.zh.md` (same Mermaid source as the one in `ARCHITECTURE.md`, so the three can't silently drift apart).
+- **`backend/.env.example` and `docs/SETUP.md`**: still described the pre-DeepSeek era (`LLM_PROVIDER=gemini` default, no `DEEPSEEK_API_KEY` at all, a `DATABASE_URL=sqlite:...` pattern that would actually crash the server if followed literally).
+- **`backend/docs/LLM_CONFIGURATION.md`**: full rewrite. Documented the dead `llmAdapter.js` multi-provider system as current and never once mentioned DeepSeek, the actual primary provider.
+- **`docs/guides/DEPLOYMENT.md`**: replaced. It was never actually a deployment guide — it was a dated, one-off verification checklist for a specific 2026-04-24 deploy, despite three other docs linking to it as "the" deployment guide. Archived the original as a dated historical record in `docs/dev-logs/`; wrote a real generic guide at the original path.
+- Removed `docs/guides/EMAIL_SETUP.md` (described SMTP/nodemailer setup; the real system has used Resend's HTTP API for a long time) — fully orphaned, nothing linked to it anymore.
+- Swept stray "Railway" references to "Zeabur" (the actual, long-current deploy target) across backend comments, warnings, and one real CORS whitelist entry containing three dead `*.railway.app` origins. Left untouched: `CHANGELOG.md` and the dated docs above, which are accurate historical records of when Railway really was the target.
+
+### Tech Debt
+
+- **Consolidated three independently-maintained copies of the same skill-data normalization logic** (`loadSkillsFromDB()`, Archive's own skill-list pipeline, and the markdown exporter) into one shared `normalizeFiveLayerShape()`. This is the actual root cause behind two of the bugs above — a fix landed in one copy and never made it to the other two. Also fixed `loadSkillsFromDB()`'s object-rebuilding pattern (no spread fallback) so this class of silent field loss can't recur for any other field.
+- Removed `backend/utils/llmAdapter.js` (and the now-orphaned `@google/generative-ai` dependency), the dead `generateKnightCard` (132 lines, plus its dead supporting HTML/CSS), and `/api/email/send-verification` plus its template (the `/verify` page itself was removed earlier; this supporting code wasn't).
+- Stopped tracking `database.sqlite3` in git — runtime data, not source, and the repo is public. Checked every commit that ever touched it: only ever contained two placeholder accounts, never a real user's data, so no history rewrite was needed, just `git rm --cached` going forward.
+
+### Added
+
+- **Participant background field** (optional, free-text "profession / field of study") collected once per identity during Forge Step 1 — the one piece of participant context the research side was missing.
+- **Minimal funnel tracking** — a real self-hosted analytics platform needs its own deployed service, which wasn't practical to stand up directly; built a lightweight substitute on the existing stack instead (`analytics_events` table, a fire-and-forget tracking endpoint, an admin-gated summary endpoint), instrumented at six funnel boundary points across Forge/Playground/Archive.
+- **Archive's celestial map connections are now real relationships, not decoration** — edges used to be pure distance-plus-coin-flip; now only same-domain skills connect. Star brightness now also reflects Twin Test "clearly better" votes, not just starlight.
+
+---
+
 ## [1.6.0] — 2026-06-24
 
 A debug-focused stretch: real bugs reported by actual users (Reddit, screenshots), a backend reliability pass, a full bilingual consistency audit, mobile edge-case testing, CI from scratch, and a large dead-code cleanup. Most entries below were found and fixed in the same session by reproducing the bug live, not just reading code.
