@@ -16,6 +16,7 @@ import 'dotenv/config';
 
 import express from 'express';
 import cors from 'cors';
+import compression from 'compression';
 import pg from 'pg';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
@@ -106,18 +107,24 @@ logger.info('═══ Cache System Initialization ═══');
 initializeCache(); // Memory-based cache (Redis optional)
 
 // ═══ MIDDLEWARE ═══
-// 1. CORS (with explicit whitelist)
+// 1. Compression (gzip) — was a listed dependency with no app.use() anywhere.
+//    script.js/styles.css/index.html are plain text and not small (no build
+//    step to minify them); compresses each by roughly 70-85% with no
+//    behavior change. Before any routes/static so it covers everything.
+app.use(compression());
+
+// 2. CORS (with explicit whitelist)
 logCorsConfiguration();
 app.use(cors(corsOptions));
 
-// 2. Body parsing
+// 3. Body parsing
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
-// 3. Request logging
+// 4. Request logging
 app.use(requestLogger);
 
-// 4. Request validation
+// 5. Request validation
 app.use(requestValidator);
 
 // ═══ STATIC FILES (Serve frontend) ═══
@@ -490,6 +497,33 @@ app.get('/api/admin/analytics-summary', requireAdminKey, async (req, res) => {
       success: true,
       total_events: total.rows[0]?.count || 0,
       by_event: byEvent.rows
+    });
+  } catch (err) {
+    const isDev = process.env.NODE_ENV !== 'production';
+    res.status(500).json({ error: isDev ? err.message : 'Internal server error' });
+  }
+});
+
+// Skills the moderation LLM call couldn't reach a verdict on (infra failure,
+// not a content judgment — moderateSkill() fails open and flags these for
+// a human instead of blocking the publish). This column + its index existed
+// with no endpoint ever reading them — oldest-first so a backlog gets
+// worked off in order, not just whatever was flagged most recently.
+app.get('/api/admin/moderation-queue', requireAdminKey, async (req, res) => {
+  try {
+    const queue = await db.query(
+      `SELECT id, title, title_cn, description, domain, creator_anonymous_id,
+              moderation_status, moderation_risk_level, moderation_explanation,
+              moderation_categories, created_at, published
+       FROM skills
+       WHERE moderation_review_required = 1 AND deleted_at IS NULL
+       ORDER BY created_at ASC`
+    );
+
+    res.json({
+      success: true,
+      count: queue.rows.length,
+      skills: queue.rows
     });
   } catch (err) {
     const isDev = process.env.NODE_ENV !== 'production';
