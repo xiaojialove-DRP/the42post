@@ -52,12 +52,13 @@ test('a real idea can be forged into a published skill', async ({ page }) => {
   // ── Step 2: five-layer "forging" animation, then AI preview fields ──
   await expect(page.locator('#forgePage2')).toHaveClass(/active/, { timeout: 5000 });
   // The animation is 5 layers x ~3s each plus a settle delay before the
-  // preview call fires and #forgeReady (with its own "proceed" button)
-  // appears - this is the slowest real step in the whole flow.
-  await expect(page.locator('#forgeReady')).toBeVisible({ timeout: 90000 });
+  // preview call fires - this is the slowest real step in the whole flow.
+  // Advances to Step 3 on its own once #forgeReady's data is in (no click
+  // needed - a manual "PROCEED TO PUBLISH" tap used to be required here,
+  // which read as the flow being stuck since the animation itself looks
+  // like an auto-completing progress bar).
+  await expect(page.locator('#forgePage3')).toHaveClass(/active/, { timeout: 90000 });
   await expect(page.locator('#reviewSkillName')).not.toHaveValue('', { timeout: 5000 });
-  await page.click('.forge-next[data-next="3"]');
-  await expect(page.locator('#forgePage3')).toHaveClass(/active/, { timeout: 5000 });
 
   // ── Step 3: confirm the generated skill, pick a domain ───────────────
   await page.click('.domain-choice[data-domain="ideas"]');

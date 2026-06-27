@@ -1866,6 +1866,17 @@ function startFiveLayerAnimation() {
             document.getElementById('reviewRefuseWhen').textContent = skill.refuseWhen || '';
             // 清空反馈框（用户可以给新反馈）
             document.getElementById('skillFeedback').value = '';
+
+            // 自动前往 Step 3 —— 之前这里需要用户再点一次"PROCEED TO
+            // PUBLISH"才会走，但动画本身的视觉语言就是"进度条"，播完不
+            // 自动前进会让人以为卡住了。复用同一个按钮的真实 click（而不是
+            // 直接调 goToStep，那个函数在另一个闭包里，这里拿不到），和
+            // 3922行"Auto Structure"那条路径走的是同一个套路。短暂停顿
+            // 只是为了让"✓ Ready to forge"那一下被看到，不是必须的延迟。
+            setTimeout(() => {
+              const nextBtn = document.querySelector('.forge-next[data-next="3"]');
+              if (nextBtn) nextBtn.click();
+            }, 700);
           })();
         }
       }, 1000);
