@@ -113,14 +113,19 @@ router.get('/', async (req, res, next) => {
     const cached = await cache.get(cacheKey);
     if (cached) return res.json(cached);
 
-    // JOIN users so the response carries the real creator_name the user
-    // typed at forge time (stored as users.username via forge-session
-    // auto-provision). Frontend uses this for the "creator_<name>" badge
-    // on Archive cards instead of the legacy "agent_<id>" display.
-    // For anonymous forges, use creator_anonymous_id as the creator name
+    // creator_name prefers the per-skill snapshot taken at forge time
+    // (creator_anonymous_id) over the live users.username join. Forge
+    // sessions let a creator change their username on the same account
+    // (auth.js: "keep username up to date if creator rebrands themselves"),
+    // and without this preference every past skill from that account would
+    // retroactively relabel itself with whatever name the creator is using
+    // *today* - the byline isn't supposed to be a live-updating profile
+    // name, it's a record of who published this specific thing. Only fall
+    // back to the live username for the rare row where the snapshot is
+    // genuinely missing (e.g. predates this field).
     let query = `SELECT s.*,
                  CASE
-                   WHEN s.author_id = 'anonymous-user-001' AND s.creator_anonymous_id IS NOT NULL
+                   WHEN s.creator_anonymous_id IS NOT NULL AND s.creator_anonymous_id != ''
                    THEN s.creator_anonymous_id
                    ELSE u.username
                  END AS creator_name

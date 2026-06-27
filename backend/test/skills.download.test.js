@@ -194,3 +194,32 @@ describe('GET /api/download/:id — error cases', () => {
     expect(res.status).toBe(403);
   });
 });
+
+// ── Creator attribution ─────────────────────────────────────────────────────
+describe('GET /api/download/:id — creator name', () => {
+  it('shows the name typed at forge time, not the generic anonymous account username', async () => {
+    // No auth header here, so this skill's author_id is the shared
+    // 'anonymous-user-001' sentinel, whose users.username is literally
+    // "Anonymous" (db/init.js). Before the fix, downloads read that live
+    // join unconditionally - every anonymous forger's download showed
+    // "Author: Anonymous" no matter what name they actually typed.
+    const forgeRes = await request(app)
+      .post('/api/skills')
+      .set('X-Anonymous-Id', 'dl-anon-creator')
+      .send({
+        title: 'Named Creator Skill',
+        five_layer: VALID_FIVE_LAYER,
+        domain: 'ideas',
+        creatorName: 'moon_xu',
+      });
+    expect(forgeRes.status).toBe(201);
+
+    const res = await request(app)
+      .get(`/api/download/${forgeRes.body.skill.id}?format=markdown`)
+      .set('X-Anonymous-Id', 'dl-anon-creator');
+
+    expect(res.status).toBe(200);
+    expect(res.text).toContain('moon_xu');
+    expect(res.text).not.toMatch(/\bAnonymous\b/);
+  });
+});

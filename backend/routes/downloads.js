@@ -103,7 +103,11 @@ router.get('/:skillId', async (req, res, next) => {
       descCn: skill.description_cn || skill.description || '',
       domain: skill.domain || 'ideas',
       soulHash: skill.soul_hash,
-      author: skill.username || 'Creator',
+      // Prefer the name snapshotted at forge time over the live
+      // users.username join - same reasoning as routes/skills.js's
+      // creator_name: a creator renaming their account later shouldn't
+      // retroactively relabel who's credited on an already-published file.
+      author: (skill.creator_anonymous_id || '').replace(/^creator_/, '') || skill.username || 'Creator',
       email: skill.email,
       commercial: skill.commercial_use || 'authorized',
       remix: skill.remix_allowed ? 'yes' : 'no',
