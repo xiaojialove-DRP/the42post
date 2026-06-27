@@ -752,6 +752,7 @@ const I18N = {
     howto_title: 'How It Works',
     /* ── Forge Preview Modal ── */
     preview_scenario_placeholder: 'Scenario will generate based on your input',
+    probe_select_prompt: '↑ Pick one above',
     probe_you_selected: '✓ You selected',
     forge_begin_forging: 'Begin Forging →',
     preview_full_skill: 'Full Skill Preview',
@@ -1051,6 +1052,7 @@ const I18N = {
     howto_title: '怎么玩',
     /* ── 锻造预览 Modal ── */
     preview_scenario_placeholder: '场景将基于你的输入生成',
+    probe_select_prompt: '↑ 先选一个',
     probe_you_selected: '✓ 你选择了',
     forge_begin_forging: '开始铸造',
     preview_full_skill: '预览完整技能',
@@ -2857,8 +2859,14 @@ function initSkillForge() {
         if (t) t.textContent = isCn ? '生成中…' : 'Generating…';
         c.classList.remove('selected');
       });
-      const confirmationEl = document.getElementById('probeConfirmation');
-      if (confirmationEl) confirmationEl.style.display = 'none';
+      // Back to the neutral "pick one above" state for this fresh round of
+      // choices - #probeConfirmation itself stays visible (see markup),
+      // only its prompt/selected-text/button toggle.
+      document.getElementById('probeSelectPrompt')?.style.removeProperty('display');
+      const selectedTextReset1 = document.getElementById('probeSelectedText');
+      if (selectedTextReset1) selectedTextReset1.style.display = 'none';
+      const proceedBtnReset1 = document.getElementById('btnProceedToForge');
+      if (proceedBtnReset1) proceedBtnReset1.disabled = true;
 
       // Stream scenario text — onChunk writes directly to DOM (no new const declarations)
       const scenarios = await generateProbeScenarios(idea, function(chunk) {
@@ -2933,10 +2941,14 @@ function initSkillForge() {
         }
       });
 
-      // Reset selection state
+      // Reset selection state — same neutral state as the other reset
+      // point above, #probeConfirmation itself stays visible.
       document.querySelectorAll('.probe-choice').forEach(c => c.classList.remove('selected'));
-      const confirmation = document.getElementById('probeConfirmation');
-      if (confirmation) confirmation.style.display = 'none';
+      document.getElementById('probeSelectPrompt')?.style.removeProperty('display');
+      const selectedTextReset2 = document.getElementById('probeSelectedText');
+      if (selectedTextReset2) selectedTextReset2.style.display = 'none';
+      const proceedBtnReset2 = document.getElementById('btnProceedToForge');
+      if (proceedBtnReset2) proceedBtnReset2.disabled = true;
 
       // Modal already opened at stream start
       if (probeModal) probeModal.style.display = 'flex';
@@ -2996,13 +3008,18 @@ function initSkillForge() {
         'c': isChineseMode ? 'C · 实验派' : 'C · Experimental'
       };
 
-      // Show confirmation button
-      const confirmation = document.getElementById('probeConfirmation');
+      // Swap the neutral "pick one above" prompt for the real selection,
+      // and enable the button it was already disabling (see reset points
+      // above, and the disabled-by-default markup) rather than revealing
+      // a whole confirmation block that wasn't there a moment ago.
       const selectionLabel = document.getElementById('probeSelectionLabel');
-      if (confirmation && selectionLabel) {
-        selectionLabel.textContent = labels[selectedChoice];
-        confirmation.style.display = 'block';
-      }
+      const selectPrompt = document.getElementById('probeSelectPrompt');
+      const selectedText = document.getElementById('probeSelectedText');
+      if (selectionLabel) selectionLabel.textContent = labels[selectedChoice];
+      if (selectPrompt) selectPrompt.style.display = 'none';
+      if (selectedText) selectedText.style.display = 'inline';
+      const proceedBtn = document.getElementById('btnProceedToForge');
+      if (proceedBtn) proceedBtn.disabled = false;
     });
   });
 
@@ -5922,6 +5939,9 @@ function initHeadlineHero() {
     const shareBtn = document.getElementById('btnTest');
     const charCount = document.getElementById('chatCharCount');
     const MAX_CHARS = 2000;
+    // Must match the length check in btnTest's own click handler below -
+    // this is purely a live preview of that same gate, not a second rule.
+    const MIN_IDEA_CHARS = 12;
 
     // Click anywhere on the sheet (except footer buttons) → focus the pen
     if (chatBubbleWrap) {
@@ -5931,13 +5951,29 @@ function initHeadlineHero() {
     }
 
     const syncSheet = () => {
-      const hasText = chaosInput.value.trim().length > 0;
+      const trimmedLen = chaosInput.value.trim().length;
+      const hasText = trimmedLen > 0;
+      const tooShort = hasText && trimmedLen < MIN_IDEA_CHARS;
       chatBubblePlaceholder.classList.toggle('hidden', hasText);
       chaosInput.parentElement.classList.toggle('has-content', hasText);
       // Share is the only way to submit — disabled on an empty sheet
       if (shareBtn) shareBtn.disabled = !hasText;
-      // Quiet counter appears once writing starts
-      if (charCount) charCount.textContent = hasText ? `${chaosInput.value.length} / ${MAX_CHARS}` : '';
+      // Quiet counter appears once writing starts. Below the minimum, show
+      // how many characters are still needed instead of the X/2000 count -
+      // the same "too short" rule the Share click already enforces, just
+      // visible while typing instead of only after a rejected click.
+      if (charCount) {
+        const isCn = (typeof currentLang !== 'undefined' && currentLang === 'cn');
+        if (!hasText) {
+          charCount.textContent = '';
+        } else if (tooShort) {
+          const remaining = MIN_IDEA_CHARS - trimmedLen;
+          charCount.textContent = isCn ? `还差 ${remaining} 字` : `${remaining} more to go`;
+        } else {
+          charCount.textContent = `${chaosInput.value.length} / ${MAX_CHARS}`;
+        }
+        charCount.classList.toggle('too-short', tooShort);
+      }
       // Auto-grow: the sheet expands with the thought, scrolls past 46vh
       chaosInput.style.height = 'auto';
       const cap = Math.round(window.innerHeight * 0.46);

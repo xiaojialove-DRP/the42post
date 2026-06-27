@@ -1616,6 +1616,10 @@ body[data-lang="cn"] .voices-header-text {
   align-self: center;
 }
 .chat-char-count:empty { display: none; }
+/* Same warning color the post-click rejection border already uses
+   (var(--coral)) - live version of the same signal, shown while typing
+   instead of only after Share is clicked and rejected. */
+.chat-char-count.too-short { color: var(--coral); }
 
 .chat-bubble-intro {
   font-family: var(--font-serif);

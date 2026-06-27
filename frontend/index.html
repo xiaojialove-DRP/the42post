@@ -579,7 +579,11 @@
             <div class="domain-choice" data-domain="visual" data-i18n="forge_domain_visual">👁️ Visual</div>
             <div class="domain-choice" data-domain="experience" data-i18n="forge_domain_experience">💫 Experience</div>
             <div class="domain-choice" data-domain="sound" data-i18n="forge_domain_sound">🎵 Sound</div>
-            <div class="domain-choice" data-domain="ideas" data-i18n="forge_domain_ideas">💡 Ideas</div>
+            <!-- Pre-selected: 'ideas' is the backend's silent fallback when
+                 nothing is picked (routes/skills.js). Showing it as already
+                 chosen makes that visible instead of an invisible default -
+                 the user sees a category and can change it. -->
+            <div class="domain-choice selected" data-domain="ideas" data-i18n="forge_domain_ideas">💡 Ideas</div>
             <div class="domain-choice" data-domain="history" data-i18n="forge_domain_history">📜 History</div>
             <div class="domain-choice" data-domain="fun" data-i18n="forge_domain_fun">🎉 Fun</div>
           </div>
@@ -752,12 +756,18 @@
             </button>
           </div>
 
-          <!-- Selection Confirmation -->
-          <div class="probe-confirmation" id="probeConfirmation" style="display: none;">
+          <!-- Selection Confirmation — visible from the start in a neutral
+               "pick one above" state, not a surprise that pops in after the
+               first tap, so the two-step (select, then confirm) shape of
+               this is obvious before a user has made a choice. -->
+          <div class="probe-confirmation" id="probeConfirmation">
             <div style="text-align: center; padding: 16px; background: #f0f9ff; border-radius: 4px;">
-              <span data-i18n="probe_you_selected">✓ You selected</span> <span id="probeSelectionLabel"></span>
+              <span id="probeSelectPrompt" data-i18n="probe_select_prompt">↑ Pick one above</span>
+              <span id="probeSelectedText" style="display: none;">
+                <span data-i18n="probe_you_selected">✓ You selected</span> <span id="probeSelectionLabel"></span>
+              </span>
               <br/>
-              <button class="btn-proceed-forge" id="btnProceedToForge" data-i18n="forge_begin_forging">Begin Forging →</button>
+              <button class="btn-proceed-forge" id="btnProceedToForge" data-i18n="forge_begin_forging" disabled>Begin Forging →</button>
             </div>
           </div>
         </div>
