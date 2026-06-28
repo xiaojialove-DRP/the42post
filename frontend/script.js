@@ -581,7 +581,7 @@ const I18N = {
   en: {
     masthead_subtitle: 'AI grows smarter every day.<br>But is it making our lives better?',
     btn_connect: '✕ CONNECT YOUR AI',
-    btn_agent_view: 'AGENT ARCHIVE',
+    btn_agent_view: 'SEMANTIC ARCHIVE',
     btn_about: 'ABOUT US',
     btn_learn_more: 'LEARN MORE ABOUT US',
     footer_learn_more_text: 'Research plans & weekly updates on Medium',
@@ -847,7 +847,7 @@ const I18N = {
   cn: {
     masthead_subtitle: 'AI 每天都在变得更聪明。<br>但它有让我们的生活更好吗？',
     btn_connect: '✕ 连接你的 AI',
-    btn_agent_view: '想法档案馆',
+    btn_agent_view: '语义储藏室',
     btn_about: '关于我们',
     btn_learn_more: '更多了解我们',
     footer_learn_more_text: '研究计划和每周更新，敬请关注 Medium',
@@ -7315,7 +7315,7 @@ function initArchiveBackButton() {
 }
 
 /* ═══════════════════════════════════════════════════════
-   AGENT ARCHIVE - Celestial Map Implementation
+   SEMANTIC ARCHIVE - Celestial Map Implementation
    ═══════════════════════════════════════════════════════ */
 
 // Domain metadata

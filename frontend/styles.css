@@ -6319,7 +6319,8 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 }
 
 /* ═══════════════════════════════════════════════════════
-   AGENT ARCHIVE — Celestial Map & Honor Hub (from agent-view)
+   SEMANTIC ARCHIVE — Celestial Map & Honor Hub (CSS class/id still
+   "agent-view" / "sectionAgentArchive" internally - not user-facing)
    ═══════════════════════════════════════════════════════ */
 
 .section-agent-archive {
