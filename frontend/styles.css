@@ -6889,6 +6889,59 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
   margin-bottom: 28px;
 }
 
+/* Archive domain filter bar - jump straight to one domain instead of
+   scrolling past all 10. Same nowrap+scroll guarantee as .header-buttons:
+   never wrap chips onto a second row, scroll horizontally instead. */
+.domain-filter-bar {
+  display: flex;
+  gap: 6px;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding: 2px 0 16px;
+}
+.domain-filter-bar::-webkit-scrollbar { display: none; }
+
+.domain-filter-chip {
+  flex-shrink: 0;
+  padding: 7px 14px;
+  border: 1.5px solid rgba(60,48,40,0.10);
+  border-radius: 20px;
+  background: rgba(255,255,255,0.65);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.domain-filter-chip:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 14px rgba(60,48,40,0.10);
+  border-color: rgba(60,48,40,0.22);
+}
+/* Per-domain watercolour tints, matching the Forge domain picker */
+.domain-filter-chip[data-domain="narrative"]  { background: rgba(240,208,144,0.26); }
+.domain-filter-chip[data-domain="design"]     { background: rgba(228,160,144,0.22); }
+.domain-filter-chip[data-domain="visual"]     { background: rgba(196,212,180,0.24); }
+.domain-filter-chip[data-domain="experience"] { background: rgba(240,212,200,0.22); }
+.domain-filter-chip[data-domain="sound"]      { background: rgba(212,200,228,0.24); }
+.domain-filter-chip[data-domain="ideas"]      { background: rgba(248,236,160,0.26); }
+.domain-filter-chip[data-domain="history"]    { background: rgba(228,210,178,0.24); }
+.domain-filter-chip[data-domain="fun"]        { background: rgba(240,200,208,0.24); }
+.domain-filter-chip[data-domain="safety"]     { background: rgba(200,220,232,0.24); }
+.domain-filter-chip[data-domain="science"]    { background: rgba(196,228,218,0.24); }
+
+/* Must win over the per-domain tints above regardless of which domain is
+   selected - same specificity (class + attribute), so position decides. */
+.domain-filter-chip.selected {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--paper);
+}
+
 /* 2-column domain grid */
 .domain-grid {
   display: grid;

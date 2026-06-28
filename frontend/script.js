@@ -8202,6 +8202,33 @@ async function initAgentArchiveView() {
     });
   }
   
+  // Domain filter bar - lets users jump straight to one domain instead of
+  // scrolling past all 10. Renders once; switching filters only toggles
+  // which already-rendered .domain-cell elements are visible.
+  let archiveDomainFilter = 'all';
+  function renderDomainFilterBar() {
+    const bar = document.getElementById('domainFilterBar');
+    if (!bar || bar.dataset.rendered === 'true') return;
+    bar.dataset.rendered = 'true';
+
+    const chips = [{ id: 'all', cn: '全部', en: 'All' }, ...ARCHIVE_DOMAINS];
+    bar.innerHTML = chips.map(dom => `
+      <button class="domain-filter-chip${dom.id === 'all' ? ' selected' : ''}" data-domain="${dom.id}">
+        <span class="text-cn">${dom.cn}</span><span class="text-en">${dom.en}</span>
+      </button>
+    `).join('');
+
+    bar.querySelectorAll('.domain-filter-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        archiveDomainFilter = chip.dataset.domain;
+        bar.querySelectorAll('.domain-filter-chip').forEach(c => c.classList.toggle('selected', c === chip));
+        document.querySelectorAll('#domainGrid .domain-cell').forEach(cell => {
+          cell.style.display = (archiveDomainFilter === 'all' || cell.dataset.domain === archiveDomainFilter) ? 'flex' : 'none';
+        });
+      });
+    });
+  }
+
   // Archive Skills Grid - Display skills organized by domain with action buttons
   function initDomainGrid() {
     const grid = document.getElementById('domainGrid');
@@ -8227,17 +8254,20 @@ async function initAgentArchiveView() {
       }
     });
 
+    renderDomainFilterBar();
+
     // Render each domain with its skills
     ARCHIVE_DOMAINS.forEach((dom, idx) => {
       const cell = document.createElement('div');
       cell.className = 'domain-cell';
+      cell.dataset.domain = dom.id;
 
       const domainSkills = skillsByDomain[dom.id] || [];
       const domainTitle = lang === 'cn' ? dom.cn : dom.en;
 
       let skillsHTML = '';
       if (domainSkills.length > 0) {
-        skillsHTML = domainSkills.slice(0, 3).map(skill => {
+        skillsHTML = domainSkills.map(skill => {
           const title = lang === 'cn' ? (skill.title_cn || skill.titleCn || skill.title) : (skill.title || skill.title_cn || skill.titleCn);
           const desc = lang === 'cn' ? (skill.description_cn || skill.descCn || skill.desc || '') : (skill.description || skill.desc || skill.description_cn || '');
           const shortDesc = desc.substring(0, 120) + (desc.length > 120 ? '...' : '');
