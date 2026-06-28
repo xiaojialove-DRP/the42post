@@ -2345,6 +2345,15 @@ function initSkillForge() {
     scrollIntoViewOnFocus(el);
   });
 
+  // forgeUsername/forgeEmail/forgeBackground never got the same keyboard
+  // treatment as the textareas above — real user report: tapping Username
+  // (the first field, nearest the top of the modal) left it scrolled to a
+  // barely-visible sliver above the keyboard, with no custom scroll to
+  // correct it, only the browser's default focus-scroll.
+  ['forgeUsername', 'forgeEmail', 'forgeBackground'].forEach((id) => {
+    scrollIntoViewOnFocus(document.getElementById(id));
+  });
+
   // ─── Draft Recovery: offer to restore an unsubmitted forge ───
   // If the previous session's POST /skills failed (network drop, 5xx)
   // we kept their work in localStorage. Offer to restore it here.
