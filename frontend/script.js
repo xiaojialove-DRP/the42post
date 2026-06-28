@@ -1005,7 +1005,7 @@ const I18N = {
     archive_honor_subtitle: '最近铸造 · 实时档案',
     archive_readable_title: 'Skill 储藏室',
     archive_readable_subtitle: '创意领域 · 社区策划',
-    archive_footer: 'THE 42 POST · 智能体档案库 · Soul.MD 协议激活',
+    archive_footer: 'THE 42 POST · 储藏人类智慧，迈向更好的 AI 未来',
     /* ── Playground UI 消息 ── */
     playground_pick_skill: '挑一个 Skill 来测',
     playground_pick_hot_skill: '挑一个热门 Skill 来测',
