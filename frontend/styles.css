@@ -307,7 +307,15 @@ body[data-lang="cn"] .voices-header-text {
   display: flex;
   gap: 6px;
   align-items: center;
+  /* Guaranteed one row at every width, not just the two breakpoints that
+     happened to get an explicit nowrap rule. If something ever makes the
+     3 buttons genuinely too wide for the viewport, scroll horizontally -
+     never drop a button onto a second, centered row. */
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: none;
 }
+.header-buttons::-webkit-scrollbar { display: none; }
 
 .btn-connect, .btn-agent-view, .btn-settings, .btn-about, .btn-howto, .btn-lang {
   background: transparent;
@@ -5727,7 +5735,9 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
   .welcome-steps { flex-direction: column; align-items: center; }
   .vibe-grid { grid-template-columns: repeat(2, 1fr); }
   .vibe-header-row { flex-direction: column; }
-  .header-buttons { flex-wrap: wrap; }
+  /* flex-wrap: nowrap is now the unconditional base rule - this selector
+     used to set wrap here, contradicting the nowrap+scroll rule a later
+     block in this same file already applies at this exact breakpoint. */
   .masthead-sub-row { flex-direction: column; gap: 8px; text-align: center; }
   .forge-two-col { grid-template-columns: 1fr; }
   .forge-paths { grid-template-columns: 1fr; }
@@ -6132,10 +6142,13 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
     justify-content: center !important;
   }
 
-  /* Header buttons wrap cleanly */
+  /* Stay one row even here - same nowrap+scroll base rule, this block
+     used to override it back to wrap (the third of three competing
+     flex-wrap rules across these media queries, found from a real
+     screenshot of it wrapping at this exact width). */
   .header-buttons {
     justify-content: center;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     gap: 6px;
   }
   .nav-separator {
