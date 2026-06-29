@@ -4966,6 +4966,12 @@ function showForgeCompletion(skillData, soulHash) {
       });
     }
 
+    // Render the card in the background now, while the user is still
+    // reading it — by the time they tap Download it's already done, so
+    // navigator.share() runs immediately instead of after a multi-second
+    // html2canvas delay that can cost it "user activation" on mobile.
+    prerenderCreatorCard(soulHash);
+
     // Scroll to completion section
     completionSection.scrollIntoView({ behavior: 'smooth' });
   }
@@ -5252,6 +5258,13 @@ function neutralizeDescendantSrgbColors(root) {
 // color-mix() gradient rule. The live on-screen card is never touched.
 function buildCaptureClone(cardElement) {
   const clone = cardElement.cloneNode(true);
+  // cloneNode(true) copies every descendant id verbatim (e.g. #cardSoulHash),
+  // so while this clone is attached below, the document briefly has two
+  // elements sharing each id. html2canvas only needs styles, not ids, so
+  // strip them rather than leave a real (if normally short-lived) duplicate-
+  // id violation for anything else that queries by id during that window.
+  clone.removeAttribute('id');
+  clone.querySelectorAll('[id]').forEach((el) => el.removeAttribute('id'));
   clone.style.position = 'fixed';
   clone.style.left = '-9999px';
   clone.style.top = '0';
@@ -5271,29 +5284,26 @@ function buildCaptureClone(cardElement) {
 }
 
 /* ═══ DOWNLOAD CREATOR CARD ═══ */
-async function downloadCreatorCard(skillData, soulHash) {
+// Cache of the in-flight/completed card render, keyed by soulHash, so the
+// click handler can reuse a render kicked off eagerly the moment the card
+// appeared — see prerenderCreatorCard() below. This matters because
+// html2canvas plus the color-neutralizing DOM walk can take long enough on
+// a real phone that navigator.share(), if only called after that work
+// finishes, loses the "user activation" Safari/Chrome require for it. It
+// then silently falls through to the <a download> path, which on mobile
+// Safari either does nothing visible or saves into the Files app instead
+// of Photos — the exact "can't download to my phone" complaint that
+// preferring Web Share was already meant to solve.
+let _cardRenderCache = null; // { soulHash, promise: Promise<{blob, filename}> }
+
+async function renderCreatorCardBlob(soulHash) {
   const cardElement = document.querySelector('.commemorative-card');
-  if (!cardElement) { alertI18n('error_card_not_found'); return; }
+  if (!cardElement) throw new Error('card_not_found');
+  if (typeof html2canvas === 'undefined') throw new Error('card_library_not_loaded');
 
-  if (typeof html2canvas === 'undefined') {
-    alertI18n('error_card_library_not_loaded');
-    return;
-  }
-
-  const btn = event?.target;
-  const originalText = btn ? btn.textContent : '';
-  if (btn) { btn.textContent = '⏳ Processing...'; btn.disabled = true; }
-
-  const restoreBtn = () => {
-    if (btn) { btn.textContent = originalText; btn.disabled = false; }
-  };
-
-  let clone = null;
-  let restoreDescendantColors = () => {};
+  const clone = buildCaptureClone(cardElement);
+  const restoreDescendantColors = neutralizeDescendantSrgbColors(clone);
   try {
-    clone = buildCaptureClone(cardElement);
-    restoreDescendantColors = neutralizeDescendantSrgbColors(clone);
-
     const canvas = await html2canvas(clone, {
       scale: 2,
       backgroundColor: null,
@@ -5301,45 +5311,98 @@ async function downloadCreatorCard(skillData, soulHash) {
       useCORS: true,
       allowTaint: true
     });
-
+    const filename = `Creator_Card_${soulHash || 'certificate'}.png`;
+    const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
+    return { blob, filename };
+  } finally {
     restoreDescendantColors();
     clone.remove();
+  }
+}
 
-    const filename = `Creator_Card_${soulHash || 'certificate'}.png`;
+// Kick off the card render in the background as soon as the card is shown,
+// well before the user has a chance to tap "Download" — see the cache
+// comment above for why this timing is what actually fixes the save-to-
+// Photos bug, not just a performance nicety.
+function prerenderCreatorCard(soulHash) {
+  _cardRenderCache = { soulHash, promise: renderCreatorCardBlob(soulHash).catch(() => null) };
+}
 
-    canvas.toBlob(async (blob) => {
-      // Mobile Safari: a clicked <a download> on a blob: URL usually just
-      // opens the image in-page instead of saving it — there's no visible
-      // error, but nothing lands in Photos either ("can't download to my
-      // phone"). The Web Share sheet's "Save Image" is the reliable path
-      // there, so prefer it whenever the platform supports sharing files.
-      const file = new File([blob], filename, { type: 'image/png' });
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        try {
-          await navigator.share({ files: [file], title: 'THE 42 POST — Creator Card' });
-          restoreBtn();
-          return;
-        } catch (shareError) {
-          if (shareError?.name === 'AbortError') { restoreBtn(); return; } // user cancelled the share sheet
-          // any other share failure — fall through to the direct-download path below
-        }
+// Mobile fallback for when Web Share isn't available or fails: a plain
+// <a download> on a blob: URL either does nothing visible (older mobile
+// Safari) or saves into the Files app rather than Photos (current Safari)
+// — neither is what someone asking to save a picture expects. Showing the
+// image directly lets them use the OS's native long-press "Save Image",
+// the one mechanism that reliably lands in Photos everywhere.
+function showSaveImageOverlay(blob) {
+  const isCn = (typeof currentLang !== 'undefined' && currentLang === 'cn');
+  const url = URL.createObjectURL(blob);
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(20,16,12,0.94);z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;gap:18px;';
+  overlay.innerHTML = `
+    <img src="${url}" style="max-width:100%;max-height:65vh;border-radius:6px;box-shadow:0 8px 30px rgba(0,0,0,0.4);" />
+    <p style="color:#f0e8dc;font-size:14px;text-align:center;line-height:1.6;max-width:320px;margin:0;">${isCn ? '长按图片，选择"存储图像"即可保存到相册' : 'Long-press the image and choose "Save Image" to add it to Photos'}</p>
+    <button type="button" style="background:#f0e8dc;color:#1a1410;border:none;border-radius:20px;padding:10px 28px;font-size:13px;cursor:pointer;">${isCn ? '关闭' : 'Close'}</button>
+  `;
+  const close = () => { overlay.remove(); URL.revokeObjectURL(url); };
+  overlay.querySelector('button').addEventListener('click', close);
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+  document.body.appendChild(overlay);
+}
+
+async function downloadCreatorCard(skillData, soulHash) {
+  const btn = event?.target;
+  const originalText = btn ? btn.textContent : '';
+  if (btn) { btn.textContent = '⏳ Processing...'; btn.disabled = true; }
+  const restoreBtn = () => { if (btn) { btn.textContent = originalText; btn.disabled = false; } };
+
+  try {
+    // Reuse the eager pre-render when it matches this card; otherwise
+    // render now (covers a very fast click, before prerender finished).
+    const cached = (_cardRenderCache && _cardRenderCache.soulHash === soulHash)
+      ? await _cardRenderCache.promise
+      : null;
+    const { blob, filename } = cached || await renderCreatorCardBlob(soulHash);
+
+    // Mobile Safari/Chrome: prefer the Web Share sheet's "Save Image" —
+    // see the cache comment above for why this needs to run with as little
+    // delay after the click as possible.
+    const file = new File([blob], filename, { type: 'image/png' });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      try {
+        await navigator.share({ files: [file], title: 'THE 42 POST — Creator Card' });
+        restoreBtn();
+        return;
+      } catch (shareError) {
+        if (shareError?.name === 'AbortError') { restoreBtn(); return; } // user cancelled the share sheet
+        // any other share failure — fall through below
       }
+    }
 
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = filename;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
+    const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+    if (isMobile) {
+      // No Web Share support (or it failed) — long-press-to-save fallback,
+      // not a download link that mobile browsers route somewhere unhelpful.
+      showSaveImageOverlay(blob);
       restoreBtn();
-    }, 'image/png');
+      return;
+    }
+
+    // Desktop: a plain <a download> on a blob: URL works reliably here.
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    restoreBtn();
   } catch (error) {
     console.error('Failed to generate card image:', error);
-    alertI18n('error_card_generation');
-    restoreDescendantColors();
-    if (clone) clone.remove();
+    if (error?.message === 'card_not_found') alertI18n('error_card_not_found');
+    else if (error?.message === 'card_library_not_loaded') alertI18n('error_card_library_not_loaded');
+    else alertI18n('error_card_generation');
     restoreBtn();
   }
 }
