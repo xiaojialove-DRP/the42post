@@ -8297,6 +8297,11 @@ async function initAgentArchiveView() {
         document.querySelectorAll('#domainGrid .domain-cell').forEach(cell => {
           cell.style.display = (archiveDomainFilter === 'all' || cell.dataset.domain === archiveDomainFilter) ? 'flex' : 'none';
         });
+        // .domain-grid is a fixed 2-column grid - with only one cell left
+        // visible, the second column track is still reserved and renders
+        // as a blank pane. Collapse to one column whenever filtered to a
+        // single domain.
+        document.getElementById('domainGrid')?.classList.toggle('single-domain', archiveDomainFilter !== 'all');
       });
     });
   }

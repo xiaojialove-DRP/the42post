@@ -6950,6 +6950,12 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
   background: #d4c8bc;
   border: 1px solid #d4c8bc;
 }
+/* Filtered to one domain: only one .domain-cell is left visible, but the
+   2-column track above is still reserved and renders as a blank pane next
+   to it. Collapse to one column whenever a single domain is selected. */
+.domain-grid.single-domain {
+  grid-template-columns: 1fr;
+}
 
 .domain-cell {
   background: #f8f4ee;
