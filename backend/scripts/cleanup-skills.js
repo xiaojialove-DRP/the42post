@@ -43,7 +43,7 @@ const SKILLS_JS_TITLES = [
   'The Untranslatable',
 ];
 
-export async function cleanupSkills() {
+export async function cleanupSkills({ keepUserCount = 10 } = {}) {
   // 1. Collect the 21 seed skill IDs
   const placeholders = SKILLS_JS_TITLES.map((_, i) => `$${i + 1}`).join(', ');
   const seedRes = await db.query(
@@ -60,16 +60,22 @@ export async function cleanupSkills() {
     seedRes.rows.forEach(r => console.log(`  ✓ ${r.title}`));
   }
 
-  // 2. Collect the 10 most recently published user-forged skills
-  const userRes = await db.query(
-    `SELECT id, title, published_at FROM skills
-     WHERE soul_hash NOT LIKE '42-sk-%'
-     ORDER BY published_at DESC
-     LIMIT 10`
-  );
-  const userIds = userRes.rows.map(r => r.id);
-  console.log(`[cleanup] Top 10 user skills to keep:`);
-  userRes.rows.forEach(r => console.log(`  ✓ ${r.title || '(no title)'} — ${r.published_at}`));
+  // 2. Collect the N most recently published user-forged skills (0 = delete all user skills)
+  let userIds = [];
+  if (keepUserCount > 0) {
+    const userRes = await db.query(
+      `SELECT id, title, published_at FROM skills
+       WHERE soul_hash NOT LIKE '42-sk-%'
+       ORDER BY published_at DESC
+       LIMIT $1`,
+      [keepUserCount]
+    );
+    userIds = userRes.rows.map(r => r.id);
+    console.log(`[cleanup] Top ${keepUserCount} user skills to keep:`);
+    userRes.rows.forEach(r => console.log(`  ✓ ${r.title || '(no title)'} — ${r.published_at}`));
+  } else {
+    console.log(`[cleanup] keepUserCount=0 — deleting all user-forged skills`);
+  }
 
   const keepIds = [...seedIds, ...userIds];
   console.log(`[cleanup] Total to keep: ${keepIds.length} skills`);

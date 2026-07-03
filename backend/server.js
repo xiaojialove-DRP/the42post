@@ -262,7 +262,8 @@ app.get('/api/admin/seed-test', requireAdminKey, async (req, res) => {
 app.post('/api/admin/cleanup-skills', requireAdminKey, async (req, res) => {
   try {
     const { cleanupSkills } = await import('./scripts/cleanup-skills.js');
-    const result = await cleanupSkills();
+    const keepUserCount = req.body?.keepUserCount ?? 10;
+    const result = await cleanupSkills({ keepUserCount });
     res.json({ success: true, ...result });
   } catch (err) {
     console.error('[cleanup-skills]', err);
