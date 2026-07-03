@@ -5338,11 +5338,16 @@ function showSaveImageOverlay(blob) {
   const isCn = (typeof currentLang !== 'undefined' && currentLang === 'cn');
   const url = URL.createObjectURL(blob);
   const overlay = document.createElement('div');
-  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(20,16,12,0.94);z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;gap:18px;';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(20,16,12,0.94);z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;gap:16px;';
+  const hint = isCn
+    ? '👆 长按图片 → 选择「存储图像」即可保存到相册'
+    : '👆 Long-press the image → choose "Save Image" to add it to Photos';
   overlay.innerHTML = `
-    <img src="${url}" style="max-width:100%;max-height:65vh;border-radius:6px;box-shadow:0 8px 30px rgba(0,0,0,0.4);" />
-    <p style="color:#f0e8dc;font-size:14px;text-align:center;line-height:1.6;max-width:320px;margin:0;">${isCn ? '长按图片，选择"存储图像"即可保存到相册' : 'Long-press the image and choose "Save Image" to add it to Photos'}</p>
-    <button type="button" style="background:#f0e8dc;color:#1a1410;border:none;border-radius:20px;padding:10px 28px;font-size:13px;cursor:pointer;">${isCn ? '关闭' : 'Close'}</button>
+    <img src="${url}" style="max-width:100%;max-height:60vh;border-radius:6px;box-shadow:0 8px 30px rgba(0,0,0,0.4);" />
+    <div style="background:rgba(240,232,220,0.12);border:1px solid rgba(240,232,220,0.25);border-radius:10px;padding:12px 18px;max-width:320px;text-align:center;">
+      <p style="color:#f0e8dc;font-size:15px;line-height:1.65;margin:0;font-weight:500;">${hint}</p>
+    </div>
+    <button type="button" style="background:#f0e8dc;color:#1a1410;border:none;border-radius:20px;padding:10px 32px;font-size:13px;cursor:pointer;letter-spacing:0.5px;">${isCn ? '关闭' : 'Close'}</button>
   `;
   const close = () => { overlay.remove(); URL.revokeObjectURL(url); };
   overlay.querySelector('button').addEventListener('click', close);
@@ -9218,10 +9223,14 @@ function initVoiceInput() {
 
       r.onerror = (e) => {
         if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
-          // Permission denied — reset fully
           listening = false;
           committed = '';
           setBtn('idle');
+          const isCn = (typeof currentLang !== 'undefined' && currentLang === 'cn')
+            || document.body.dataset.lang === 'cn';
+          showError(isCn
+            ? '无法访问麦克风，请在浏览器设置中允许麦克风权限'
+            : 'Microphone access denied — allow it in your browser settings');
         }
         // 'no-speech', 'aborted', network errors → let onend handle cleanup
       };

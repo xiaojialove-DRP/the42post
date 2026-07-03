@@ -325,6 +325,14 @@ export function generateEmailTemplate(
   const accent = DOMAIN_ACCENT[domainKey] || DOMAIN_ACCENT.ideas;
   const glyph  = DOMAIN_GLYPH[domainKey]  || DOMAIN_GLYPH.ideas;
   const domainLabel = domainKey.toUpperCase();
+  const CN_DOMAIN_NAME = {
+    safety:'安全', science:'科学', narrative:'叙事', design:'设计',
+    visual:'视觉', experience:'体验', sound:'声音', ideas:'想法',
+    history:'历史', fun:'趣味'
+  };
+  const domainLabelDisplay = isCn
+    ? `${CN_DOMAIN_NAME[domainKey] || domainKey} · ${domainLabel}`
+    : domainLabel;
 
   // Compute 8%-tinted background gradient for this domain
   const DOMAIN_RGB = {
@@ -714,8 +722,8 @@ export function generateEmailTemplate(
             text-align: center;
           ">
             <!-- brand -->
-            <div style="font-size: 10px; font-weight: 700; letter-spacing: 3px; color: #3c3028; text-transform: uppercase;">THE 42 POST</div>
-            <div style="font-size: 10px; font-style: italic; color: #8a7c6e; letter-spacing: 0.3px; margin-top: 2px;">Creator's Certificate</div>
+            <div style="font-size: 10px; font-weight: 700; letter-spacing: 3px; color: #3c3028; text-transform: uppercase;">${isCn ? '第 42 邮 报' : 'THE 42 POST'}</div>
+            <div style="font-size: 10px; font-style: italic; color: #8a7c6e; letter-spacing: 0.3px; margin-top: 2px;">${isCn ? '创作者证书' : "Creator's Certificate"}</div>
 
             <!-- domain seal — line-height centers the glyph instead of flex -->
             <div style="
@@ -743,7 +751,7 @@ export function generateEmailTemplate(
               padding: 2px 10px;
               border-radius: 20px;
               margin-top: 7px;
-            ">${domainLabel}</div>
+            ">${domainLabelDisplay}</div>
 
             ${blessing ? `<!-- blessing -->
             <div style="font-size: 9px; font-style: italic; color: #5a4f44; text-align: center; line-height: 1.55; padding: 2px 10px; font-family: Georgia, serif; margin-top: 7px;">
@@ -755,7 +763,9 @@ export function generateEmailTemplate(
 
             <!-- creator + date -->
             <div style="font-size: 9px; color: #8a7c6e; letter-spacing: 0.6px;">
-              Forged by ${esc(author)} · ${formattedDate}
+              ${isCn
+                ? `由 ${esc(author)} 创作 · ${new Date(createdDate).toLocaleDateString('zh-CN', { year:'numeric', month:'long', day:'numeric' })}`
+                : `Forged by ${esc(author)} · ${formattedDate}`}
             </div>
 
             <!-- soul hash -->
