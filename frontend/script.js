@@ -5404,25 +5404,30 @@ async function downloadCreatorCard(skillData, soulHash) {
       : null;
     const { blob, filename } = cached || await renderCreatorCardBlob(soulHash);
 
-    // Mobile Safari/Chrome: prefer the Web Share sheet's "Save Image" —
-    // see the cache comment above for why this needs to run with as little
-    // delay after the click as possible.
-    const file = new File([blob], filename, { type: 'image/png' });
-    if (navigator.canShare && navigator.canShare({ files: [file] })) {
-      try {
-        await navigator.share({ files: [file], title: 'THE 42 POST — Creator Card' });
-        restoreBtn();
-        return;
-      } catch (shareError) {
-        if (shareError?.name === 'AbortError') { restoreBtn(); return; } // user cancelled the share sheet
-        // any other share failure — fall through below
-      }
+    const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+    const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+
+    // iOS: skip the system share sheet — it buries "Save Image" in a
+    // non-obvious row. The long-press overlay gives a clear direct path
+    // to the Photos app that users can actually find.
+    if (isIOS) {
+      showSaveImageOverlay(blob);
+      restoreBtn();
+      return;
     }
 
-    const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+    // Android / other mobile: prefer Web Share if available, overlay as fallback.
+    const file = new File([blob], filename, { type: 'image/png' });
     if (isMobile) {
-      // No Web Share support (or it failed) — long-press-to-save fallback,
-      // not a download link that mobile browsers route somewhere unhelpful.
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        try {
+          await navigator.share({ files: [file], title: 'THE 42 POST — Creator Card' });
+          restoreBtn();
+          return;
+        } catch (shareError) {
+          if (shareError?.name === 'AbortError') { restoreBtn(); return; }
+        }
+      }
       showSaveImageOverlay(blob);
       restoreBtn();
       return;
