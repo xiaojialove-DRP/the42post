@@ -722,7 +722,7 @@ export function generateEmailTemplate(
             text-align: center;
           ">
             <!-- brand -->
-            <div style="font-size: 10px; font-weight: 700; letter-spacing: 3px; color: #3c3028; text-transform: uppercase;">${isCn ? '第 42 邮 报' : 'THE 42 POST'}</div>
+            <div style="font-size: 10px; font-weight: 700; letter-spacing: 3px; color: #3c3028; text-transform: uppercase;">THE 42 POST</div>
             <div style="font-size: 10px; font-style: italic; color: #8a7c6e; letter-spacing: 0.3px; margin-top: 2px;">${isCn ? '创作者证书' : "Creator's Certificate"}</div>
 
             <!-- domain seal — line-height centers the glyph instead of flex -->
