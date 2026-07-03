@@ -9275,6 +9275,10 @@ button.generating {
   margin-bottom: 18px !important;
   padding-bottom: 14px !important;
 }
+/* Header is redundant on Step 2 — the page already has its own title */
+.forge-modal:has(#forgePage2.active) .forge-header {
+  display: none !important;
+}
 .forge-title {
   color: var(--wc-muted) !important;
   font-size: 9px !important;
