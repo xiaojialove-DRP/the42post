@@ -7802,7 +7802,8 @@ async function initAgentArchiveView() {
         userDbSkills = (userData.skills || [])
           .filter(s => !existingIds.has(s.id))
           .map(s => {
-            const creatorName = s.creator_anonymous_id || s.username || 'Anonymous';
+            const rawCreator = s.creator_anonymous_id || s.username || 'Anonymous';
+            const creatorName = rawCreator.replace(/^creator_/i, '');
             return {
               ...s,
               starlight: s.starlight_score || s.starlight || 5,
