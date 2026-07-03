@@ -7732,20 +7732,11 @@ async function initAgentArchiveView() {
     const descCn = s.description_cn || s.descCn || s.desc || '';
 
     // Normalize creator name from multiple possible sources
-    let creatorName = 'Anonymous';
-    if (s.creator_name && s.creator_name !== 'Anonymous' && s.creator_name !== 'System') {
-      creatorName = s.creator_name;
-    } else if (s.author && s.author !== 'Anonymous' && s.author !== 'System') {
-      creatorName = s.author;
-    } else if (s.creatorName && s.creatorName !== 'Anonymous') {
-      creatorName = s.creatorName;
-    } else if (s.agent && /^creator_/.test(s.agent)) {
-      // Extract name from existing "creator_Name" format
-      creatorName = s.agent.replace(/^creator_/, '');
-    }
-
-    // Ensure agent field always has "creator_" prefix for consistency
-    const agent = s.agent && /^creator_/.test(s.agent) ? s.agent : `creator_${creatorName}`;
+    // Always strip any existing creator_ prefix(es) to get the bare name, then re-add exactly one
+    const rawCreator = s.creator_name || s.author || s.creatorName || s.agent || '';
+    const bareCreator = rawCreator.replace(/^(creator_)+/i, '');
+    const creatorName = (bareCreator && bareCreator !== 'Anonymous' && bareCreator !== 'System') ? bareCreator : 'Anonymous';
+    const agent = `creator_${creatorName}`;
 
     // five_layer arrives as a raw JSON string from the API and in three
     // different internal shapes depending on when the skill was forged —
@@ -7763,7 +7754,7 @@ async function initAgentArchiveView() {
       ...s,
       agent,
       creator: agent,
-      creator_name: creatorName,  // Use snake_case for consistency
+      creator_name: agent,  // Always "creator_xx" format for display
       desc,
       descCn,
       author: creatorName,  // Normalize author field
@@ -7787,16 +7778,18 @@ async function initAgentArchiveView() {
   })));
   const forgedSkillsWithStarlight = forgedSkills.map(s => {
     // Ensure forged skills also follow the standard format
-    const creatorName = s.creator_name || s.creatorName || s.author || 'Anonymous';
+    const rawCreator = s.creator_name || s.creatorName || s.author || s.agent || 'Anonymous';
+    const bareCreator = rawCreator.replace(/^(creator_)+/i, '');
+    const agent = `creator_${bareCreator}`;
     return {
       ...s,
       starlight: s.starlight || 5,
       titleCn: s.titleCn || s.title || 'Unknown Skill',
       desc: s.desc || '',
       descCn: s.descCn || s.desc || '',
-      agent: s.agent && /^creator_/.test(s.agent) ? s.agent : `creator_${creatorName}`,
-      author: creatorName,
-      creator_name: creatorName
+      agent,
+      author: bareCreator,
+      creator_name: agent
     };
   });
 
@@ -8111,10 +8104,7 @@ async function initAgentArchiveView() {
       // Set Chinese title (shown when data-lang="cn")
       document.getElementById('ttNameCn').textContent = n.titleCn || n.title || '';
 
-      // Use creator_name field directly (already normalized in initAgentArchiveView)
-      const creatorName = n.creator_name || (n.agent && n.agent.startsWith('creator_')
-        ? n.agent.substring(8)
-        : 'Anonymous');
+      const creatorName = n.creator_name || n.agent || 'Anonymous';
       document.getElementById('ttAgent').textContent = creatorName && creatorName !== 'Anonymous' ? `by ${creatorName}` : '';
       // Description: show appropriate language based on currentLang
       document.getElementById('ttDesc').textContent = lang === 'cn' ? (n.descCn || n.desc || '') : (n.desc || n.descCn || '');
@@ -8209,10 +8199,7 @@ async function initAgentArchiveView() {
         // ═══ Bilingual display ═══
         document.getElementById('ttName').textContent = n.title || n.titleCn || '';
         document.getElementById('ttNameCn').textContent = n.titleCn || n.title || '';
-        // Extract creator name from creator_name field
-        const creatorName = n.creator_name || (n.agent && n.agent.startsWith('creator_')
-          ? n.agent.substring(8)
-          : 'Anonymous');
+        const creatorName = n.creator_name || n.agent || 'Anonymous';
         document.getElementById('ttAgent').textContent = creatorName && creatorName !== 'Anonymous' ? `by ${creatorName}` : '';
         document.getElementById('ttDesc').textContent = lang === 'cn' ? (n.descCn || n.desc || '') : (n.desc || n.descCn || '');
         // Soul hash is shown only in the full card detail, not in this tooltip
@@ -8289,7 +8276,7 @@ async function initAgentArchiveView() {
       const shortDesc = desc.substring(0, 60) + (desc.length > 60 ? '…' : '');
 
       // Extract creator name (fallback to anonymous)
-      const creatorName = s.creator_name || s.agent?.replace('creator_', '') || 'anonymous';
+      const creatorName = s.creator_name || s.agent || 'anonymous';
 
       row.innerHTML = `
         <span class="honor-rank">#${String(i + 1).padStart(2, '0')}</span>
