@@ -258,6 +258,18 @@ app.get('/api/admin/seed-test', requireAdminKey, async (req, res) => {
   }
 });
 
+// Skill database cleanup: keep 21 seed skills + 10 latest user skills, delete the rest
+app.post('/api/admin/cleanup-skills', requireAdminKey, async (req, res) => {
+  try {
+    const { cleanupSkills } = await import('./scripts/cleanup-skills.js');
+    const result = await cleanupSkills();
+    res.json({ success: true, ...result });
+  } catch (err) {
+    console.error('[cleanup-skills]', err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // Simple UI to trigger seed
 app.get('/admin/seed-ui', requireAdminKey, (req, res) => {
   const html = `<!DOCTYPE html>

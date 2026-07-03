@@ -17,12 +17,12 @@ export async function seedSkillsIfNeeded(db) {
 
     console.log(`[seed] Checking: ${existingSkills} published skills found`);
 
-    if (existingSkills >= 42) {
+    if (existingSkills >= 21) {
       console.log(`✅ Database already has ${existingSkills} published skills. Skipping seed.`);
       return;
     }
 
-    console.log(`[seed] Found ${existingSkills} skills (< 42 needed). Proceeding with seed...`);
+    console.log(`[seed] Found ${existingSkills} skills (< 21 needed). Proceeding with seed...`);
 
     // Read SQL seed file (define paths BEFORE referencing them in log output)
     const sqlPath = path.join(__dirname, '../sql/seed-42-skills.sql');
