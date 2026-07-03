@@ -74,12 +74,32 @@ router.post('/send-forge-success', async (req, res, next) => {
       site: apiBaseUrl
     };
 
+    // If a base64 card image was provided, send it as a CID inline attachment
+    // (works in Gmail and all major email clients; plain data: URIs are stripped
+    // by Gmail's CSS sanitiser). The template receives the CID reference string
+    // so it renders <img src="cid:creator-card"> instead of the data: URI.
+    let emailAttachments = [];
+    let templateCardRef = null;
+    if (cardImageBase64 && cardImageBase64.startsWith('data:image/')) {
+      const base64Data = cardImageBase64.split(',')[1];
+      if (base64Data) {
+        emailAttachments = [{
+          filename: 'creator-card.png',
+          content: base64Data,
+          content_type: 'image/png',
+          content_id: 'creator-card',
+          inline: true
+        }];
+        templateCardRef = 'cid:creator-card';
+      }
+    }
+
     const emailHtml = generateEmailTemplate(
       skillData,
       soulHash,
       createdDate || new Date().toISOString(),
       downloadUrls,
-      cardImageBase64,
+      templateCardRef,
       blessing || ''
     );
 
@@ -89,7 +109,8 @@ router.post('/send-forge-success', async (req, res, next) => {
       recipientName: recipientName || 'Creator',
       skillTitle,
       soulHash,
-      emailHtml
+      emailHtml,
+      attachments: emailAttachments
     });
 
     if (!emailResult.success) {

@@ -4725,97 +4725,14 @@ function showForgeCompletion(skillData, soulHash) {
   const forgeNav = document.querySelector('.forge-nav');
   const skillPackageSection = document.getElementById('skillPackageSection');
 
-  // ── Blessing: fetch once, share between card and email ──
-  // Fallback lines are shown on the card immediately; the AI may upgrade them.
-  // The email waits up to 3.5 s so it gets the same line as the card.
-  const _isCn = (typeof currentLang !== 'undefined' && currentLang === 'cn');
-  const _domainKeyEarly = ((skillData.domain || 'ideas')).toLowerCase();
-  const _BLESSING_FALLBACK = {
-    safety:     { en: 'A boundary drawn with care protects more than it forbids.', cn: '用心划下的边界，守护多于禁止。' },
-    science:    { en: 'Curiosity, given structure, becomes knowledge that lasts.', cn: '好奇心有了结构，便成为长久的知识。' },
-    narrative:  { en: 'Whoever shapes the story shapes what can be imagined.', cn: '塑造故事的人，塑造了想象的边界。' },
-    design:     { en: 'Good judgment about form is judgment about life.', cn: '对形式的判断，就是对生活的判断。' },
-    visual:     { en: 'Teaching a machine to see begins with knowing how you look.', cn: '教机器看见，先看清自己如何凝视。' },
-    experience: { en: 'What you have lived through cannot be scraped — only given.', cn: '亲历过的东西无法被抓取，只能被给予。' },
-    sound:      { en: 'Some truths arrive only through listening.', cn: '有些真相，只有倾听才能抵达。' },
-    ideas:      { en: 'One honest thought, well-formed, outlives a thousand prompts.', cn: '一个诚实而成形的想法，胜过千条指令。' },
-    history:    { en: 'Memory structured is wisdom transferable.', cn: '被结构化的记忆，是可传递的智慧。' },
-    fun:        { en: 'Play is the most serious way humans think.', cn: '玩耍，是人类最严肃的思考方式。' }
-  };
-  const _fb = _BLESSING_FALLBACK[_domainKeyEarly] || _BLESSING_FALLBACK.ideas;
-  const _fallbackLine = _isCn ? _fb.cn : _fb.en;
-
-  // Pre-populate card with fallback so it's never blank
-  const _blessingEl = document.getElementById('cardBlessing');
-  if (_blessingEl) _blessingEl.textContent = _fallbackLine;
-
-  // Fetch AI blessing; resolves with the best line available
-  const _blessingPromise = (async () => {
-    try {
-      const resp = await fetch(`${ApiClient.BASE_URL}/forge/blessing`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          skill_name: skillData.title || skillData.titleCn || '',
-          definition: (skillData.desc || skillData.descCn || '').slice(0, 300),
-          language: _isCn ? 'zh' : 'en'
-        })
-      });
-      if (!resp.ok) return _fallbackLine;
-      const data = await resp.json();
-      const line = (data.blessing || '').trim();
-      return (line && line.length <= 90) ? line : _fallbackLine;
-    } catch (e) { return _fallbackLine; }
-  })();
-
-  // Update card when AI responds (may arrive after email is already sent)
-  _blessingPromise.then(line => { if (_blessingEl) _blessingEl.textContent = line; });
-
-  // Send forge success email — waits up to 3.5 s for the blessing
-  if (skillData && skillData.email) {
-    (async () => {
-      try {
-        const emailSkillTitle = skillData.title || skillData.titleCn || 'Unnamed Skill';
-        const emailSoulHash = soulHash || skillData.soulHash || skillData.soul_hash || 'SOUL_UNKNOWN';
-        const emailSkillId = skillData.id || skillData.backendId;
-
-        if (!emailSkillTitle || !emailSoulHash) {
-          console.warn('⚠️ Missing required email fields:', { title: emailSkillTitle, hash: emailSoulHash });
-          showEmailStatusBanner({ success: false, error: 'Skill title or soul-hash missing for email' }, skillData.email);
-          return;
-        }
-
-        const blessing = await Promise.race([
-          _blessingPromise,
-          new Promise(r => setTimeout(() => r(_fallbackLine), 3500))
-        ]);
-
-        const emailResult = await sendForgeSuccessEmail({
-          recipientEmail: skillData.email,
-          recipientName: skillData.author || skillData.username,
-          skillTitle: emailSkillTitle,
-          skillId: emailSkillId,
-          soulHash: emailSoulHash,
-          createdDate: new Date().toISOString(),
-          domain: skillData.domain || 'ideas',
-          blessing
-        });
-
-        showEmailStatusBanner(emailResult, skillData.email);
-      } catch (err) {
-        console.error('Email sending failed:', err.message);
-        showEmailStatusBanner({ success: false, error: err.message }, skillData.email);
-      }
-    })();
-  }
-
-  // Hide the rights and publish form
+  // ── Step 1: Hide forge form immediately ──
   if (forgeCreatorRights) forgeCreatorRights.style.display = 'none';
   if (forgeOath) forgeOath.style.display = 'none';
   if (forgeNav) forgeNav.style.display = 'none';
   if (skillPackageSection) skillPackageSection.style.display = 'none';
 
-  // Show the completion section
+  // ── Step 2: Show and populate the completion section (card DOM must exist
+  //    before blessing fetch, prerender, and email can run) ──
   if (completionSection) {
     completionSection.style.display = 'block';
 
@@ -4966,15 +4883,111 @@ function showForgeCompletion(skillData, soulHash) {
       });
     }
 
-    // Render the card in the background now, while the user is still
-    // reading it — by the time they tap Download it's already done, so
-    // navigator.share() runs immediately instead of after a multi-second
-    // html2canvas delay that can cost it "user activation" on mobile.
-    prerenderCreatorCard(soulHash);
-
     // Scroll to completion section
     completionSection.scrollIntoView({ behavior: 'smooth' });
   }
+
+  // ── Step 3: Blessing + prerender + email ──
+  // Card DOM now exists. The flow is sequential so the PNG rendered for
+  // the download button and for the email are identical and both contain
+  // the final AI blessing (not the fallback placeholder).
+  const _isCn = (typeof currentLang !== 'undefined' && currentLang === 'cn');
+  const _domainKeyEarly = ((skillData.domain || 'ideas')).toLowerCase();
+  const _BLESSING_FALLBACK = {
+    safety:     { en: 'A boundary drawn with care protects more than it forbids.', cn: '用心划下的边界，守护多于禁止。' },
+    science:    { en: 'Curiosity, given structure, becomes knowledge that lasts.', cn: '好奇心有了结构，便成为长久的知识。' },
+    narrative:  { en: 'Whoever shapes the story shapes what can be imagined.', cn: '塑造故事的人，塑造了想象的边界。' },
+    design:     { en: 'Good judgment about form is judgment about life.', cn: '对形式的判断，就是对生活的判断。' },
+    visual:     { en: 'Teaching a machine to see begins with knowing how you look.', cn: '教机器看见，先看清自己如何凝视。' },
+    experience: { en: 'What you have lived through cannot be scraped — only given.', cn: '亲历过的东西无法被抓取，只能被给予。' },
+    sound:      { en: 'Some truths arrive only through listening.', cn: '有些真相，只有倾听才能抵达。' },
+    ideas:      { en: 'One honest thought, well-formed, outlives a thousand prompts.', cn: '一个诚实而成形的想法，胜过千条指令。' },
+    history:    { en: 'Memory structured is wisdom transferable.', cn: '被结构化的记忆，是可传递的智慧。' },
+    fun:        { en: 'Play is the most serious way humans think.', cn: '玩耍，是人类最严肃的思考方式。' }
+  };
+  const _fb = _BLESSING_FALLBACK[_domainKeyEarly] || _BLESSING_FALLBACK.ideas;
+  const _fallbackLine = _isCn ? _fb.cn : _fb.en;
+
+  const _blessingEl = document.getElementById('cardBlessing');
+  if (_blessingEl) _blessingEl.textContent = _fallbackLine;
+
+  // Fetch AI blessing
+  const _blessingPromise = (async () => {
+    try {
+      const resp = await fetch(`${ApiClient.BASE_URL}/forge/blessing`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          skill_name: skillData.title || skillData.titleCn || '',
+          definition: (skillData.desc || skillData.descCn || '').slice(0, 300),
+          language: _isCn ? 'zh' : 'en'
+        })
+      });
+      if (!resp.ok) return _fallbackLine;
+      const data = await resp.json();
+      const line = (data.blessing || '').trim();
+      return (line && line.length <= 90) ? line : _fallbackLine;
+    } catch (e) { return _fallbackLine; }
+  })();
+
+  // Background job: wait for blessing → update DOM → render card → send email.
+  // A single render is shared between the "Download" button and the email so
+  // both contain the real AI blessing text, not the placeholder fallback.
+  (async () => {
+    // 3a. Wait for blessing (up to 3.5 s), then commit it to the card DOM
+    const blessing = await Promise.race([
+      _blessingPromise,
+      new Promise(r => setTimeout(() => r(_fallbackLine), 3500))
+    ]);
+    if (_blessingEl) _blessingEl.textContent = blessing;
+
+    // 3b. Render the card PNG now that the correct blessing is in the DOM.
+    //     Store in _cardRenderCache so the Download button reuses this render.
+    _cardRenderCache = { soulHash, promise: renderCreatorCardBlob(soulHash).catch(() => null) };
+
+    // 3c. If email is needed, wait for the render then send with the PNG.
+    if (skillData && skillData.email) {
+      try {
+        const emailSkillTitle = skillData.title || skillData.titleCn || 'Unnamed Skill';
+        const emailSoulHash = soulHash || skillData.soulHash || skillData.soul_hash || 'SOUL_UNKNOWN';
+        const emailSkillId = skillData.id || skillData.backendId;
+
+        if (!emailSkillTitle || !emailSoulHash) {
+          console.warn('⚠️ Missing required email fields:', { title: emailSkillTitle, hash: emailSoulHash });
+          showEmailStatusBanner({ success: false, error: 'Skill title or soul-hash missing for email' }, skillData.email);
+          return;
+        }
+
+        // Wait up to 8 s for the render; fall back to HTML card if it times out
+        const cardResult = await Promise.race([
+          _cardRenderCache.promise,
+          new Promise(r => setTimeout(() => r(null), 8000))
+        ]);
+
+        let cardImageBase64 = null;
+        if (cardResult && cardResult.blob) {
+          try { cardImageBase64 = await blobToBase64(cardResult.blob); } catch (_) {}
+        }
+
+        const emailResult = await sendForgeSuccessEmail({
+          recipientEmail: skillData.email,
+          recipientName: skillData.author || skillData.username,
+          skillTitle: emailSkillTitle,
+          skillId: emailSkillId,
+          soulHash: emailSoulHash,
+          createdDate: new Date().toISOString(),
+          domain: skillData.domain || 'ideas',
+          blessing,
+          cardImageBase64
+        });
+
+        showEmailStatusBanner(emailResult, skillData.email);
+      } catch (err) {
+        console.error('Email sending failed:', err.message);
+        showEmailStatusBanner({ success: false, error: err.message }, skillData.email);
+      }
+    }
+  })();
 }
 
 function getDomainLabel(domainKey) {
@@ -5295,6 +5308,16 @@ function buildCaptureClone(cardElement) {
 // of Photos — the exact "can't download to my phone" complaint that
 // preferring Web Share was already meant to solve.
 let _cardRenderCache = null; // { soulHash, promise: Promise<{blob, filename}> }
+
+// Convert a Blob to a base64 data-URI string (e.g. "data:image/png;base64,...")
+function blobToBase64(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
 
 async function renderCreatorCardBlob(soulHash) {
   const cardElement = document.querySelector('.commemorative-card');

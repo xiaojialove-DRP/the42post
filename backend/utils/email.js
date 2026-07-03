@@ -51,7 +51,7 @@ function getResend() {
 }
 
 // ─── Shared send helper (exported for digest emails etc.) ───
-export async function sendViaResend({ to, subject, html, text }) {
+export async function sendViaResend({ to, subject, html, text, attachments }) {
   const client = getResend();
 
   // Dev mode: no key → log & fake success so the app flow isn't blocked
@@ -76,7 +76,8 @@ export async function sendViaResend({ to, subject, html, text }) {
       to,
       subject,
       html,
-      text
+      text,
+      ...(attachments && attachments.length ? { attachments } : {})
     });
 
     // Resend returns { data: { id }, error: null } on success
@@ -135,7 +136,8 @@ export async function sendForgeSuccessEmail(options) {
     recipientName = 'Creator',
     skillTitle = 'Untitled Skill',
     soulHash,
-    emailHtml
+    emailHtml,
+    attachments
   } = options;
 
   if (!recipientEmail) {
@@ -146,6 +148,7 @@ export async function sendForgeSuccessEmail(options) {
     to: recipientEmail,
     subject: `✨ 恭喜！你的 Skill 已成功铸造 | YOUR SKILL HAS BEEN FORGED`,
     html: emailHtml,
+    attachments,
     text: `
 恭喜！你的 Skill 已成功铸造
 
