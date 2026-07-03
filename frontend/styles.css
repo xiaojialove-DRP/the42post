@@ -7364,7 +7364,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 
 .layer-item {
   display: grid;
-  grid-template-columns: 50px 1fr 90px;
+  grid-template-columns: 50px 1fr;
   gap: 16px;
   align-items: center;
   padding: 16px 18px;
@@ -7428,7 +7428,7 @@ button.generating {
 .layer-name-group {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 3px;
 }
 
 .layer-name {
@@ -7441,6 +7441,10 @@ button.generating {
   font-size: 11px;
   color: #aaa;
   font-weight: 400;
+}
+
+.layer-name-group .layer-progress {
+  margin-top: 6px;
 }
 
 .layer-progress {
@@ -9485,7 +9489,7 @@ button.generating {
   border: 1px solid rgba(60,48,40,0.1) !important;
   border-radius: 10px !important;
   padding: 12px 13px !important;
-  grid-template-columns: 32px 1fr 64px !important;
+  grid-template-columns: 32px 1fr !important;
   gap: 10px !important;
   transition: all 0.3s ease !important;
 }
@@ -9498,14 +9502,21 @@ button.generating {
 .layer-status { font-size: 17px !important; }
 .layer-name {
   font-family: var(--font-mono) !important;
-  font-size: 9px !important;
+  font-size: 10px !important;
   letter-spacing: 0.4px !important;
   color: var(--wc-charcoal) !important;
+  white-space: nowrap !important;
+}
+.layer-subtitle {
+  font-size: 10px !important;
+  color: #bbb !important;
+  margin-top: 1px !important;
 }
 .layer-progress {
   height: 3px !important;
   background: rgba(60,48,40,0.1) !important;
   border-radius: 2px !important;
+  margin-top: 5px !important;
 }
 .progress-bar {
   background: linear-gradient(90deg, var(--wc-coral), var(--wc-amber)) !important;
