@@ -11,6 +11,12 @@ const __dirname = path.dirname(__filename);
 
 export async function seedSkillsIfNeeded(db) {
   try {
+    // Allow disabling auto-seed via env var (set SKIP_SEED=true in Zeabur when running clean)
+    if (process.env.SKIP_SEED === 'true') {
+      console.log('[seed] SKIP_SEED=true — auto-seed disabled.');
+      return;
+    }
+
     // Check if skills already exist
     const result = await db.query('SELECT COUNT(*) as count FROM skills WHERE published = 1');
     const existingSkills = parseInt(result.rows[0]?.count || 0, 10);

@@ -842,6 +842,23 @@ router.patch('/:skill_id', requireAuth, async (req, res, next) => {
   }
 });
 
+// ═══ ADMIN: DELETE ALL SKILLS ═══
+// DELETE /api/skills/admin/nuke-all?pwd=<ADMIN_KEY>
+router.delete('/admin/nuke-all', async (req, res, next) => {
+  try {
+    const password = req.query.pwd || req.body.pwd;
+    if (password !== process.env.ADMIN_KEY) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    const result = await db.query('DELETE FROM skills WHERE deleted_at IS NULL');
+    const count = result.rowCount || 0;
+    console.log(`🗑️  Admin nuke-all: deleted ${count} skills`);
+    res.json({ success: true, deleted: count });
+  } catch (error) {
+    next(error);
+  }
+});
+
 // ═══ CLEANUP LOW-QUALITY FORGED SKILLS ═══
 // DELETE /api/skills/cleanup?pwd=cleanup42post
 // 删除所有低质量的forged skills（没有proper creator_name的anonymous skills）
