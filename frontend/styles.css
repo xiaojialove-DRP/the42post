@@ -7416,10 +7416,31 @@ button.generating {
   color: #1a1a1a;
 }
 
+.forge-forging-subtitle {
+  font-size: 13px;
+  color: #888;
+  text-align: center;
+  margin-top: -8px;
+  margin-bottom: 20px;
+  font-weight: 400;
+}
+
+.layer-name-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
 .layer-name {
   font-size: var(--font-sm);
   font-weight: 600;
   color: #333;
+}
+
+.layer-subtitle {
+  font-size: 11px;
+  color: #aaa;
+  font-weight: 400;
 }
 
 .layer-progress {
