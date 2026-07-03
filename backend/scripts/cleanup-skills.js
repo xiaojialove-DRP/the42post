@@ -38,9 +38,7 @@ const SKILLS_JS_TITLES = [
   'Silence as Feature',
   'Proportional Memory',
   'Craft Before Scale',
-  'The Ancestor Test',
   'Friction by Design',
-  'The Untranslatable',
 ];
 
 export async function cleanupSkills({ keepUserCount = 10 } = {}) {

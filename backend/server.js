@@ -258,6 +258,28 @@ app.get('/api/admin/seed-test', requireAdminKey, async (req, res) => {
   }
 });
 
+// Delete specific skills by title (exact match)
+app.post('/api/admin/delete-skills-by-title', requireAdminKey, async (req, res) => {
+  try {
+    const { titles } = req.body || {};
+    if (!Array.isArray(titles) || titles.length === 0) {
+      return res.status(400).json({ error: 'titles array required' });
+    }
+    const { db } = await import('./utils/db.js');
+    const placeholders = titles.map((_, i) => `$${i + 1}`).join(', ');
+    const idRes = await db.query(`SELECT id FROM skills WHERE title IN (${placeholders})`, titles);
+    const ids = idRes.rows.map(r => r.id);
+    if (ids.length === 0) return res.json({ success: true, deleted: 0 });
+    const idPh = ids.map((_, i) => `$${i + 1}`).join(', ');
+    await db.query(`DELETE FROM skill_usage_logs WHERE skill_id IN (${idPh})`, ids);
+    const del = await db.query(`DELETE FROM skills WHERE id IN (${idPh})`, ids);
+    res.json({ success: true, deleted: del.rowCount });
+  } catch (err) {
+    console.error('[delete-skills-by-title]', err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // Skill database cleanup: keep 21 seed skills + 10 latest user skills, delete the rest
 app.post('/api/admin/cleanup-skills', requireAdminKey, async (req, res) => {
   try {
