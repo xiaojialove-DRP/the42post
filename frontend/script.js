@@ -161,18 +161,31 @@ const API_CONFIG = {
   ANON_ID_KEY: '42post_anon_id'
 };
 
-// 生成或获取匿名用户ID（用于追踪未登录用户的行为）
+function _getCookie(name) {
+  const match = document.cookie.match(new RegExp('(?:^|; )' + name + '=([^;]*)'));
+  return match ? decodeURIComponent(match[1]) : null;
+}
+function _setCookie(name, value, days) {
+  const expires = new Date(Date.now() + days * 864e5).toUTCString();
+  document.cookie = name + '=' + encodeURIComponent(value) + '; expires=' + expires + '; path=/; SameSite=Lax';
+}
+
+// Anonymous device ID — survives localStorage.clear() via cookie backup.
+// Priority: localStorage → cookie → generate new (written to both).
 function getAnonymousId() {
+  const COOKIE_KEY = '42post_anon_id';
   try {
-    let anonId = localStorage.getItem(API_CONFIG.ANON_ID_KEY);
+    let anonId = localStorage.getItem(API_CONFIG.ANON_ID_KEY) || _getCookie(COOKIE_KEY);
     if (!anonId) {
       anonId = 'anon_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-      localStorage.setItem(API_CONFIG.ANON_ID_KEY, anonId);
     }
+    localStorage.setItem(API_CONFIG.ANON_ID_KEY, anonId);
+    _setCookie(COOKIE_KEY, anonId, 365);
     return anonId;
   } catch (e) {
-    // localStorage unavailable (private browsing, security settings, storage full)
-    // Return a session-scoped ID that won't persist across page loads
+    // localStorage unavailable — try cookie, then fall back to session-scoped ID
+    const cookieId = _getCookie(COOKIE_KEY);
+    if (cookieId) return cookieId;
     if (!window.__sessionAnonId) {
       window.__sessionAnonId = 'anon_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
     }
