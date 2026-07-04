@@ -7834,7 +7834,19 @@ async function initAgentArchiveView() {
     console.warn('Archive: failed to fetch user skills from DB:', e.message);
   }
 
-  const allSkills = [...baseSkills, ...userDbSkills, ...forgedSkillsWithStarlight]
+  // Only include locally-cached forged skills whose ID still exists on the server.
+  // This prevents deleted skills (e.g. after a nuke-all) from showing as dead cards.
+  const serverSkillIds = new Set([...baseSkills, ...userDbSkills].map(s => s.id));
+  const liveForgedSkills = forgedSkillsWithStarlight.filter(s => serverSkillIds.has(s.id));
+
+  // Also prune stale entries from localStorage so they don't reappear next session.
+  if (liveForgedSkills.length < forgedSkillsWithStarlight.length) {
+    safeStorage.setItem('42post_recent_forges', JSON.stringify(
+      getRecentForges().filter(s => serverSkillIds.has(s.id))
+    ));
+  }
+
+  const allSkills = [...baseSkills, ...userDbSkills, ...liveForgedSkills]
     .filter((s, i, arr) => arr.findIndex(x => x.id === s.id) === i); // dedup by id
 
   // Expose allSkills to window so findSkillById can access them
