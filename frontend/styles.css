@@ -6558,6 +6558,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 
 .skill-item .skill-meta {
   display: flex;
+  flex-direction: row;
   gap: 12px;
   align-items: center;
   font-size: 12px;
