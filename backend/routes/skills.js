@@ -12,7 +12,7 @@ import { isValidDomain, isValidAnonymousId } from '../utils/validation.js';
 // skills.creator_anonymous_id (set from the request body / X-Anonymous-Id
 // header). See backend/db/init.js for where this row is created.
 const ANONYMOUS_AUTHOR_ID = 'anonymous-user-001';
-import { createManifest, addCovenantSignature, callLLMJSON } from '../utils/skillGeneration.js';
+import { createManifest, addCovenantSignature, callLLMJSON, redactManifestEmail } from '../utils/skillGeneration.js';
 import { draftEditRatio } from '../utils/editDistance.js';
 import { moderateSkill } from '../utils/moderation.js';
 import { rateLimitForge } from '../middleware/rateLimiter.js';
@@ -364,8 +364,11 @@ router.get('/:skill_id', async (req, res, next) => {
   try {
     const { skill_id } = req.params;
 
+    // NOTE: do NOT select u.email here — this endpoint is public and
+    // unauthenticated, so the creator's email must never reach the
+    // response body (see docs/governance/PARTICIPANT_DATA.md).
     const result = await db.query(
-      `SELECT s.*, u.username, u.email
+      `SELECT s.*, u.username
        FROM skills s
        JOIN users u ON s.author_id = u.id
        WHERE s.id = $1 AND s.deleted_at IS NULL`,
@@ -389,7 +392,9 @@ router.get('/:skill_id', async (req, res, next) => {
         [skill_id]
       );
       if (manifestResult.rows.length > 0) {
-        manifest = manifestResult.rows[0].manifest_json;
+        // The stored manifest embeds the creator's email — strip it before
+        // returning (email is not part of the signature, so this is safe).
+        manifest = redactManifestEmail(manifestResult.rows[0].manifest_json);
       }
     }
 
@@ -905,17 +910,25 @@ router.delete('/admin/nuke-all', async (req, res, next) => {
 });
 
 // ═══ CLEANUP LOW-QUALITY FORGED SKILLS ═══
-// DELETE /api/skills/cleanup?pwd=cleanup42post
-// 删除所有低质量的forged skills（没有proper creator_name的anonymous skills）
+// DELETE /api/skills/cleanup  — destructive maintenance, operator-only.
+// Deletes seed/anonymous demo skills. Gated on ADMIN_KEY (query ?pwd= or
+// body.pwd). Fails closed: with no ADMIN_KEY configured the endpoint is
+// disabled entirely — never a hardcoded fallback password.
 router.delete('/cleanup', async (req, res, next) => {
   try {
-    const password = req.query.pwd || req.body.pwd;
+    const adminKey = process.env.ADMIN_KEY;
+    if (!adminKey) {
+      return res.status(503).json({
+        error: 'Admin endpoints disabled',
+        message: 'ADMIN_KEY not configured'
+      });
+    }
 
-    // Simple security check - require a password
-    if (password !== (process.env.ADMIN_KEY || 'cleanup42post')) {
-      return res.status(401).json({
-        error: 'Unauthorized',
-        message: 'Invalid password'
+    const password = req.query.pwd || req.body.pwd;
+    if (password !== adminKey) {
+      return res.status(403).json({
+        error: 'Forbidden',
+        message: 'Invalid admin key'
       });
     }
 
@@ -1009,7 +1022,7 @@ router.get('/:skill_id/manifest', async (req, res, next) => {
 
     res.json({
       success: true,
-      manifest: result.rows[0].manifest_json
+      manifest: redactManifestEmail(result.rows[0].manifest_json)
     });
   } catch (error) {
     next(error);

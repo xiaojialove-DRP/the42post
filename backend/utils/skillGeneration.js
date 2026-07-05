@@ -789,6 +789,19 @@ export function createManifest(skillData, author, timestamp) {
   };
 }
 
+// ═══ SIGNING KEY ═══
+// Fail closed: a public default signing key means anyone can forge a valid
+// manifest / covenant signature, which defeats the whole point of signing.
+// Production must set SIGNING_SECRET (enforced at boot in server.js); tests
+// run without that boot check, so a fixed test-only key keeps them working
+// without ever shipping a guessable secret to production.
+function getSigningSecret() {
+  const secret = process.env.SIGNING_SECRET;
+  if (secret) return secret;
+  if (process.env.NODE_ENV === 'test') return 'test-only-signing-secret';
+  throw new Error('SIGNING_SECRET is not configured — refusing to sign');
+}
+
 // ═══ MANIFEST SIGNING ═══
 export function signManifest(manifest, signingEmail) {
   const manifestString = JSON.stringify({
@@ -798,7 +811,7 @@ export function signManifest(manifest, signingEmail) {
   });
 
   return crypto
-    .createHmac('sha256', process.env.SIGNING_SECRET || 'default-secret')
+    .createHmac('sha256', getSigningSecret())
     .update(manifestString)
     .digest('hex');
 }
@@ -806,7 +819,7 @@ export function signManifest(manifest, signingEmail) {
 // ═══ COVENANT SIGNING (Multi-stakeholder approval) ═══
 export function addCovenantSignature(manifest, signerEmail) {
   const signature = crypto
-    .createHmac('sha256', process.env.SIGNING_SECRET || 'default-secret')
+    .createHmac('sha256', getSigningSecret())
     .update(`${manifest.soul_hash}:${signerEmail}`)
     .digest('hex');
 
@@ -815,4 +828,27 @@ export function addCovenantSignature(manifest, signerEmail) {
     signature: signature,
     timestamp: new Date().toISOString()
   };
+}
+
+// ═══ PUBLIC RESPONSE REDACTION ═══
+// Strip the creator's email from a manifest before returning it in any
+// public API response. The email is stored (and feeds the soul-hash) but
+// must never reach an unauthenticated reader — see
+// docs/governance/PARTICIPANT_DATA.md. Accepts a JSON string or an object
+// and returns the same type, so callers drop it in without reshaping.
+// Email is NOT part of the signed payload (see signManifest), so removing
+// it from the response never breaks signature verification.
+export function redactManifestEmail(manifestJson) {
+  if (!manifestJson) return manifestJson;
+  const wasString = typeof manifestJson === 'string';
+  let m;
+  try {
+    m = wasString ? JSON.parse(manifestJson) : manifestJson;
+  } catch {
+    return manifestJson; // unparseable — return as-is rather than risk corrupting
+  }
+  if (m && m.author && typeof m.author === 'object') {
+    delete m.author.email;
+  }
+  return wasString ? JSON.stringify(m) : m;
 }

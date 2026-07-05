@@ -60,6 +60,18 @@ if (process.env.NODE_ENV !== 'test' && !process.env.JWT_SECRET) {
   process.exit(1);
 }
 
+// CRITICAL: SIGNING_SECRET signs skill manifests / covenant signatures.
+// Without it the signing code fails closed (throws) — better to refuse to
+// boot with a clear message than to start a server that 500s on every
+// publish, or (worse) silently signs with a guessable default.
+if (process.env.NODE_ENV !== 'test' && !process.env.SIGNING_SECRET) {
+  console.error('╔════════════════════════════════════════════════════════════╗');
+  console.error('║ FATAL ERROR: SIGNING_SECRET environment variable is not set║');
+  console.error('║ Set SIGNING_SECRET in your .env before starting server     ║');
+  console.error('╚════════════════════════════════════════════════════════════╝');
+  process.exit(1);
+}
+
 // ═══ DATABASE SETUP ═══
 // Use PostgreSQL if POSTGRES_URI is set (Zeabur auto-injects it), else SQLite (local dev)
 let db;

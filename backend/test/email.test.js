@@ -18,6 +18,9 @@ beforeAll(async () => {
   db = createTestDb();
   global.__db__ = db;
 
+  // /api/email/test is now admin-gated; give the suite a key to exercise it.
+  process.env.ADMIN_KEY = 'test-admin-key';
+
   app = express();
   app.use(express.json());
 
@@ -61,58 +64,59 @@ describe('POST /api/email/send-forge-success', () => {
     expect(res.body.message).toMatch(/email/i);
   });
 
-  it('rejects request with missing skillTitle', async () => {
+  it('rejects request with missing skillId', async () => {
+    const res = await request(app)
+      .post('/api/email/send-forge-success')
+      .send({
+        recipientEmail: 'test@example.com',
+        recipientName: 'Test User'
+      });
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/missing/i);
+    expect(res.body.message).toMatch(/skillId/i);
+  });
+
+  it('rejects an unknown skillId (content is bound to a real skill)', async () => {
     const res = await request(app)
       .post('/api/email/send-forge-success')
       .send({
         recipientEmail: 'test@example.com',
         recipientName: 'Test User',
-        soulHash: 'SOUL_abc123def456_2026-05-12'
+        skillId: 'no-such-skill-id'
       });
 
-    expect(res.status).toBe(400);
-    expect(res.body.error).toMatch(/missing/i);
-  });
-
-  it('rejects request with missing soulHash', async () => {
-    const res = await request(app)
-      .post('/api/email/send-forge-success')
-      .send({
-        recipientEmail: 'test@example.com',
-        recipientName: 'Test User',
-        skillTitle: 'Test Skill'
-      });
-
-    expect(res.status).toBe(400);
-    expect(res.body.error).toMatch(/missing/i);
-  });
-
-  it('logs the validation error when fields are missing', async () => {
-    const res = await request(app)
-      .post('/api/email/send-forge-success')
-      .send({
-        recipientEmail: 'test@example.com'
-      });
-
-    expect(res.status).toBe(400);
-    // The endpoint should log the missing fields in the response
-    expect(res.body.received || res.body.message).toBeTruthy();
+    // The skill title / soul-hash are read from the DB, not the request —
+    // an id that matches no skill can't be used to send arbitrary email.
+    expect(res.status).toBe(404);
+    expect(res.body.error).toMatch(/not found/i);
   });
 });
 
 describe('POST /api/email/test', () => {
+  it('rejects an unauthenticated request (admin-gated)', async () => {
+    const res = await request(app)
+      .post('/api/email/test')
+      .send({ testEmail: 'tester@example.com' });
+
+    // No x-admin-key → forbidden. Prevents use as an open mail relay.
+    expect(res.status).toBe(403);
+  });
+
   it('rejects test email request without testEmail', async () => {
     const res = await request(app)
       .post('/api/email/test')
+      .set('x-admin-key', 'test-admin-key')
       .send({});
 
     expect(res.status).toBe(400);
     expect(res.body.error).toMatch(/missing/i);
   });
 
-  it('accepts test email with valid email address', async () => {
+  it('accepts test email with valid email address and admin key', async () => {
     const res = await request(app)
       .post('/api/email/test')
+      .set('x-admin-key', 'test-admin-key')
       .send({
         testEmail: 'tester@example.com'
       });

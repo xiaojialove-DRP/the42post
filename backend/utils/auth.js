@@ -98,3 +98,20 @@ export function optionalAuth(req, res, next) {
   }
   next();
 }
+
+// ═══ ADMIN KEY GATE ═══
+// For operator-only endpoints (diagnostics, destructive maintenance, test
+// email send). Fails closed: if ADMIN_KEY isn't configured the endpoint is
+// disabled entirely rather than falling back to any default. Mirror of the
+// inline guard server.js uses for /api/admin/*, shared so route files can
+// import it instead of re-implementing (and drifting).
+export function requireAdminKey(req, res, next) {
+  const adminKey = process.env.ADMIN_KEY;
+  if (!adminKey) {
+    return res.status(503).json({ error: 'Admin endpoints disabled: ADMIN_KEY not configured' });
+  }
+  if (req.headers['x-admin-key'] !== adminKey) {
+    return res.status(403).json({ error: 'Forbidden: invalid admin key' });
+  }
+  next();
+}

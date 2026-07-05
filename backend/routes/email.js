@@ -7,6 +7,8 @@ import { db } from '../utils/db.js';
 import { sendForgeSuccessEmail } from '../utils/email.js';
 import { generateEmailTemplate, generateCertificateHTML } from '../utils/certificate.js';
 import { isValidEmail } from '../utils/validation.js';
+import { requireAdminKey } from '../utils/auth.js';
+import { rateLimitForge } from '../middleware/rateLimiter.js';
 
 const router = express.Router();
 
@@ -14,17 +16,18 @@ const router = express.Router();
  * POST /api/email/send-forge-success
  * Send forge success email to creator with certificate and download links
  */
-router.post('/send-forge-success', async (req, res, next) => {
+// rateLimitForge: 5/hour per identity (user > anon device > IP). This
+// endpoint is necessarily unauthenticated (forging is anonymous), so the
+// rate limit + binding the content to a real skill below are what stop it
+// being used as an open mailer / phishing relay from our verified domain.
+router.post('/send-forge-success', rateLimitForge, async (req, res, next) => {
   try {
     const {
       recipientEmail,
       recipientName,
-      skillTitle,
       skillId,
-      soulHash,
       createdDate,
       cardImageBase64,
-      domain,
       blessing
     } = req.body;
 
@@ -43,19 +46,30 @@ router.post('/send-forge-success', async (req, res, next) => {
       });
     }
 
-    if (!skillTitle || !soulHash) {
-      console.error('❌ Missing email fields:', {
-        skillTitle: skillTitle || 'undefined',
-        soulHash: soulHash || 'undefined',
-        recipientEmail,
-        recipientName
-      });
+    if (!skillId) {
       return res.status(400).json({
         error: 'Missing input',
-        message: 'skillTitle and soulHash are required',
-        received: { skillTitle, soulHash }
+        message: 'skillId is required'
       });
     }
+
+    // Bind the email content to a REAL published skill. The title / soul-hash
+    // / domain come from the database, NOT from the request body — otherwise
+    // anyone could POST arbitrary "official" text to any recipient. If the
+    // skill doesn't exist we refuse, so the endpoint can't be a generic mailer.
+    const skillRow = await db.query(
+      `SELECT title, soul_hash, domain FROM skills WHERE id = $1 AND deleted_at IS NULL`,
+      [skillId]
+    );
+    if (skillRow.rows.length === 0) {
+      return res.status(404).json({
+        error: 'Not found',
+        message: 'skillId does not match a published skill'
+      });
+    }
+    const skillTitle = skillRow.rows[0].title;
+    const soulHash = skillRow.rows[0].soul_hash;
+    const domain = skillRow.rows[0].domain || 'ideas';
 
     // Generate email HTML with download links and card image
     const skillData = {
@@ -152,7 +166,10 @@ router.post('/send-forge-success', async (req, res, next) => {
  * Test email sending configuration
  * Used to verify SMTP is properly configured
  */
-router.post('/test', async (req, res, next) => {
+// Operator-only diagnostic: sends a canned email to any address to verify
+// mail config. Admin-gated (x-admin-key) so it can't be used as an open
+// relay by anyone who finds the route.
+router.post('/test', requireAdminKey, async (req, res, next) => {
   try {
     const { testEmail } = req.body;
 
@@ -203,7 +220,7 @@ router.get('/certificate/:skill_id', async (req, res, next) => {
 
     // Fetch skill data from database
     const skillResult = await db.query(
-      `SELECT s.id, s.title, s.author_id, s.soul_hash, s.created_at, u.username, u.email
+      `SELECT s.id, s.title, s.author_id, s.soul_hash, s.created_at, u.username
        FROM skills s
        LEFT JOIN users u ON s.author_id = u.id
        WHERE s.id = $1 AND s.deleted_at IS NULL`,
@@ -221,8 +238,9 @@ router.get('/certificate/:skill_id', async (req, res, next) => {
 
     const skillData = {
       title: skill.title,
-      author: skill.username || 'Creator',
-      email: skill.email
+      author: skill.username || 'Creator'
+      // email intentionally omitted — not rendered in the certificate and
+      // must not be handed to a public endpoint (PARTICIPANT_DATA.md).
     };
 
     const certificateHtml = generateCertificateHTML(
