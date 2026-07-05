@@ -7,7 +7,9 @@
     "start": "node backend/server.js",
     "dev": "cd backend && npm run dev",
     "test:e2e": "playwright test",
-    "test:e2e:ui": "playwright test --ui"
+    "test:e2e:ui": "playwright test --ui",
+    "bust-cache": "node scripts/bust-cache.js",
+    "funnel": "node backend/scripts/funnel-snapshot.js"
   },
   "engines": {
     "node": ">=18.0.0"

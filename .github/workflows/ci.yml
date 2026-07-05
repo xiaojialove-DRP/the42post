@@ -52,6 +52,12 @@ jobs:
             node --check "$f"
           done
 
+      # Asset ?v= strings are content hashes maintained by scripts/bust-cache.js.
+      # This fails the build when someone edits an asset without re-running it,
+      # which is what used to leave pages serving stale cached script.js.
+      - name: Check asset cache-bust hashes are current
+        run: node scripts/bust-cache.js --check
+
   e2e-tests:
     name: Browser e2e (Forge/Playground/Archive)
     runs-on: ubuntu-latest
