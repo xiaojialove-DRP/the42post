@@ -66,7 +66,10 @@ let db;
 
 const pgUri = process.env.POSTGRES_URI || process.env.DATABASE_URL;
 
-if (pgUri) {
+// A sqlite: URL must never be handed to the pg Pool — the root .env's
+// DATABASE_URL=sqlite:./database.sqlite3 would otherwise be treated as a
+// PostgreSQL connection string and crash the boot.
+if (pgUri && !pgUri.startsWith('sqlite:')) {
   logger.info('Using PostgreSQL database...');
   const pgPool = new Pool({ connectionString: pgUri, ssl: false });
   db = {

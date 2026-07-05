@@ -3,6 +3,7 @@
    ═══════════════════════════════════════════════════════ */
 
 import { db } from '../server.js';
+import { runMigrations } from './migrations.js';
 
 export async function initDatabase() {
   try {
@@ -29,11 +30,6 @@ export async function initDatabase() {
     `);
     await db.query(`CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)`);
     await db.query(`CREATE INDEX IF NOT EXISTS idx_users_username ON users(username)`);
-
-    // background: optional, free-text "profession / field of study" — the
-    // one participant-background field the research side actually asked
-    // for, collected once per identity (not re-asked per Skill forged).
-    try { await db.query(`ALTER TABLE users ADD COLUMN background TEXT`); } catch {}
 
     // Create skills table
     await db.query(`
@@ -111,33 +107,6 @@ export async function initDatabase() {
     `);
     await db.query(`CREATE INDEX IF NOT EXISTS idx_probe_logs_user ON probe_logs(user_id)`);
 
-    // Migration: if probe_logs already exists with NOT NULL on user_id, recreate it.
-    // SQLite cannot ALTER COLUMN, so we use the rename-recreate pattern.
-    try {
-      // Test if we can insert a row with null user_id (if it fails, old schema is in place)
-      await db.query(`INSERT INTO probe_logs (id, user_id, idea_text, generated_probe) VALUES ('__schema_test__', NULL, 'test', 'test')`);
-      await db.query(`DELETE FROM probe_logs WHERE id = '__schema_test__'`);
-    } catch (schemaErr) {
-      if (schemaErr.message && schemaErr.message.includes('NOT NULL')) {
-        console.log('Migrating probe_logs: removing NOT NULL constraint on user_id…');
-        await db.query(`ALTER TABLE probe_logs RENAME TO probe_logs_old`);
-        await db.query(`
-          CREATE TABLE probe_logs (
-            id TEXT PRIMARY KEY,
-            user_id TEXT REFERENCES users(id),
-            idea_text TEXT NOT NULL,
-            generated_probe TEXT NOT NULL,
-            model_version VARCHAR(50),
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-          )
-        `);
-        await db.query(`INSERT INTO probe_logs SELECT * FROM probe_logs_old`);
-        await db.query(`DROP TABLE probe_logs_old`);
-        await db.query(`CREATE INDEX IF NOT EXISTS idx_probe_logs_user ON probe_logs(user_id)`);
-        console.log('✓ probe_logs migration complete');
-      }
-    }
-
     // Create skill_usage_logs table
     await db.query(`
       CREATE TABLE IF NOT EXISTS skill_usage_logs (
@@ -185,8 +154,6 @@ export async function initDatabase() {
         voted_at TIMESTAMP
       )
     `);
-    // Best-effort migration for installs created before the diagnostic column existed.
-    try { await db.query(`ALTER TABLE skill_test_votes ADD COLUMN diagnostic TEXT`); } catch {}
     await db.query(`CREATE INDEX IF NOT EXISTS idx_skill_test_votes_skill ON skill_test_votes(skill_id)`);
     await db.query(`CREATE INDEX IF NOT EXISTS idx_skill_test_votes_voted ON skill_test_votes(skill_id, voted_for_skill)`);
 
@@ -204,17 +171,7 @@ export async function initDatabase() {
       // Row already exists (UNIQUE constraint on email/username) → nothing to do.
     }
 
-    // creator_anonymous_id: lets us answer "which skill did THIS anonymous
-    // user just forge?" (used by Playground to put the user's own skill at
-    // the top of the picker) without coupling to logged-in accounts.
-    try { await db.query(`ALTER TABLE skills ADD COLUMN creator_anonymous_id TEXT`); } catch {}
     await db.query(`CREATE INDEX IF NOT EXISTS idx_skills_creator_anon ON skills(creator_anonymous_id)`);
-
-    // ready_to_use_prompt: natural-language System Prompt synthesised from
-    // the 5-layer at PUBLISH time. Used by the .md download and as the
-    // injected "with skill" prompt in Playground (more stable than dumping
-    // the raw 5-layer JSON into the LLM).
-    try { await db.query(`ALTER TABLE skills ADD COLUMN ready_to_use_prompt TEXT`); } catch {}
 
     // ─── skill_feedback ───
     // Replaces the old blind-vote model in skill_test_votes. The new
@@ -238,26 +195,6 @@ export async function initDatabase() {
     `);
     await db.query(`CREATE INDEX IF NOT EXISTS idx_skill_feedback_skill ON skill_feedback(skill_id)`);
     await db.query(`CREATE INDEX IF NOT EXISTS idx_skill_feedback_rating ON skill_feedback(skill_id, rating)`);
-
-    // ─── Moderation audit columns + download counter on skills ───
-    // Added in 2026-05; wrapped in try/catch since SQLite errors on
-    // duplicate column names (idempotent migration).
-    const idempotentColAdds = [
-      `ALTER TABLE skills ADD COLUMN moderation_status VARCHAR(30) DEFAULT 'pending'`,
-      `ALTER TABLE skills ADD COLUMN moderation_risk_level VARCHAR(20)`,
-      `ALTER TABLE skills ADD COLUMN moderation_explanation TEXT`,
-      `ALTER TABLE skills ADD COLUMN moderation_categories TEXT`,
-      `ALTER TABLE skills ADD COLUMN moderation_decided_at TIMESTAMP`,
-      `ALTER TABLE skills ADD COLUMN moderation_review_required INTEGER DEFAULT 0`,
-      `ALTER TABLE skills ADD COLUMN download_count INTEGER DEFAULT 0`
-    ];
-    for (const sql of idempotentColAdds) {
-      try { await db.query(sql); } catch (e) { /* column exists */ }
-    }
-    try {
-      await db.query(`CREATE INDEX IF NOT EXISTS idx_skills_moderation_status ON skills(moderation_status)`);
-      await db.query(`CREATE INDEX IF NOT EXISTS idx_skills_moderation_review ON skills(moderation_review_required) WHERE moderation_review_required = 1`);
-    } catch (e) { /* index exists */ }
 
     // ─── Forging History (research data: track skill creation process) ───
     // Stores complete forging process for research purposes
@@ -322,43 +259,6 @@ export async function initDatabase() {
     await db.query(`CREATE INDEX IF NOT EXISTS idx_probe_sessions_skill ON probe_sessions(skill_id)`);
     await db.query(`CREATE INDEX IF NOT EXISTS idx_probe_sessions_country ON probe_sessions(country_code)`);
     await db.query(`CREATE INDEX IF NOT EXISTS idx_probe_sessions_selected ON probe_sessions(selected_response)`);
-    try { await db.query(`ALTER TABLE probe_sessions ADD COLUMN research_consent INTEGER DEFAULT 1`); } catch {}
-    // Store full test content for research (silent migration)
-    try { await db.query(`ALTER TABLE skill_test_votes ADD COLUMN scenario_text TEXT`); } catch {}
-    try { await db.query(`ALTER TABLE skill_test_votes ADD COLUMN response_a_text TEXT`); } catch {}
-    try { await db.query(`ALTER TABLE skill_test_votes ADD COLUMN response_b_text TEXT`); } catch {}
-    try { await db.query(`ALTER TABLE skill_test_votes ADD COLUMN decision_ms INTEGER`); } catch {}
-
-    // Add research columns to forging_histories (safe migration)
-    try { await db.query(`ALTER TABLE forging_histories ADD COLUMN country_code VARCHAR(10)`); } catch {}
-    try { await db.query(`ALTER TABLE forging_histories ADD COLUMN accept_language VARCHAR(100)`); } catch {}
-    try { await db.query(`ALTER TABLE forging_histories ADD COLUMN probe_session_id TEXT REFERENCES probe_sessions(id) ON DELETE SET NULL`); } catch {}
-
-    // ─── One-time data migration: normalize creator names to creator_<name> format ───
-    try {
-      // NULL / empty → creator_42 (seed skills)
-      await db.query(`
-        UPDATE skills SET creator_anonymous_id = 'creator_42'
-        WHERE (creator_anonymous_id IS NULL OR creator_anonymous_id = '')
-          AND deleted_at IS NULL
-      `);
-      // Bare names without prefix → add creator_ prefix
-      await db.query(`
-        UPDATE skills SET creator_anonymous_id = 'creator_' || creator_anonymous_id
-        WHERE creator_anonymous_id IS NOT NULL
-          AND creator_anonymous_id NOT LIKE 'creator_%'
-          AND deleted_at IS NULL
-      `);
-      // Fix any accidental double prefix
-      await db.query(`
-        UPDATE skills SET creator_anonymous_id = REPLACE(creator_anonymous_id, 'creator_creator_', 'creator_')
-        WHERE creator_anonymous_id LIKE 'creator_creator_%'
-          AND deleted_at IS NULL
-      `);
-      console.log('✓ Creator names normalized');
-    } catch (e) {
-      console.warn('Creator name normalization skipped:', e.message);
-    }
 
     // ─── analytics_events: lightweight funnel tracking ───
     // Not a real analytics platform — there wasn't any visibility at all
@@ -377,6 +277,11 @@ export async function initDatabase() {
     `);
     await db.query(`CREATE INDEX IF NOT EXISTS idx_analytics_events_name ON analytics_events(event_name)`);
     await db.query(`CREATE INDEX IF NOT EXISTS idx_analytics_events_created ON analytics_events(created_at)`);
+
+    // ─── Versioned migrations: everything that changes an existing schema ───
+    // (column additions, one-time data fixes, table rebuilds). Runs each
+    // migration exactly once per database — see db/migrations.js.
+    await runMigrations(db);
 
     console.log('✓ All database tables initialized');
   } catch (error) {

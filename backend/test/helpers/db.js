@@ -4,6 +4,7 @@
  */
 
 import Database from 'better-sqlite3';
+import { MIGRATIONS } from '../../db/migrations.js';
 
 /**
  * Create a fresh in-memory SQLite database with the full schema applied.
@@ -185,10 +186,55 @@ export function createTestDb() {
       created_at TEXT DEFAULT CURRENT_TIMESTAMP
     );
 
+    CREATE TABLE IF NOT EXISTS probe_logs (
+      id TEXT PRIMARY KEY,
+      user_id TEXT REFERENCES users(id),
+      idea_text TEXT NOT NULL,
+      generated_probe TEXT NOT NULL,
+      model_version TEXT,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS probe_sessions (
+      id TEXT PRIMARY KEY,
+      skill_id TEXT REFERENCES skills(id) ON DELETE SET NULL,
+      user_id TEXT REFERENCES users(id) ON DELETE SET NULL,
+      idea_text TEXT NOT NULL,
+      language TEXT,
+      scenario TEXT NOT NULL,
+      thesis TEXT,
+      antithesis TEXT,
+      extreme TEXT,
+      selected_response TEXT,
+      country_code TEXT,
+      accept_language TEXT,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP
+    );
+
     -- Sentinel anonymous author required by skills route
     INSERT INTO users (id, email, username, password_hash, account_type, verified)
     VALUES ('anonymous-user-001', 'anonymous@the42post.local', 'Anonymous', 'anonymous', 'system', 1);
   `);
+
+  // ── Apply the real production migrations ────────────────────────────────
+  // The base DDL above mirrors production's CREATE TABLEs (with columns
+  // that early migrations added already inlined). Applying db/migrations.js
+  // on top keeps this schema from drifting again: any NEW column/table
+  // migration reaches tests automatically. "duplicate column / already
+  // exists" is expected for the inlined ones; function-form migrations
+  // (legacy one-off rebuilds) are skipped — they target pre-migration
+  // production databases, not fresh in-memory ones.
+  for (const migration of MIGRATIONS) {
+    if (migration.run) continue;
+    for (const sql of migration.statements) {
+      try {
+        sqlite.exec(sql);
+      } catch (err) {
+        const msg = (err.message || '').toLowerCase();
+        if (!msg.includes('duplicate column') && !msg.includes('already exists')) throw err;
+      }
+    }
+  }
 
   // ── SQL adapter ─────────────────────────────────────────────────────────
   /**
