@@ -190,10 +190,38 @@ router.post('/preview', rateLimitLLM, optionalAuth, async (req, res, next) => {
       });
     }
 
+    // Persist the AI draft server-side so publish can derive provenance
+    // (generation_source) and edit distance from stored data rather than
+    // client-claimed flags. Non-fatal: a failed insert must not block the
+    // forge flow, the skill just publishes without provenance.
+    let draftId = null;
+    try {
+      draftId = uuidv4();
+      await db.query(
+        `INSERT INTO generation_drafts (id, skill_name, definition, domain, language, draft_json, model, is_fallback)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+        [
+          draftId,
+          name.trim().substring(0, 255),
+          definition.trim().substring(0, 2000),
+          domain || 'ideas',
+          language || 'en',
+          JSON.stringify(result.data),
+          (result.model || '').substring(0, 100),
+          result.fallback === true ? 1 : 0
+        ]
+      );
+    } catch (draftErr) {
+      draftId = null;
+      console.warn('generation_drafts insert failed (non-fatal):', draftErr.message);
+    }
+
     res.json({
       success: true,
       data: result.data,
-      model: result.model
+      model: result.model,
+      fallback: result.fallback === true,
+      draft_id: draftId
     });
   } catch (error) {
     next(error);

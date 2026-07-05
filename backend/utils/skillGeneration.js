@@ -15,6 +15,7 @@
 
 import crypto from 'crypto';
 import { logger } from './logger.js';
+import { sendAdminAlert } from './email.js';
 
 // ═══ INITIALIZE DEEPSEEK CLIENT ═══
 if (!process.env.DEEPSEEK_API_KEY) {
@@ -339,6 +340,19 @@ async function callWithFallback(prompt, maxTokens, label, mapData, fallbackFn = 
     if (fallbackFn) {
       logger.warn('skill_generation_step_fell_back_to_template', { label, reason: msg.substring(0, 160) });
       console.warn(`⚠ Falling back to template ${label} so forge flow is not blocked.`);
+      // Degradation alert — for a research platform, silently serving
+      // template drafts is data pollution the operator must hear about
+      // the same hour. Fire-and-forget; must never affect the forge flow.
+      sendAdminAlert(
+        `template_fallback:${label}`,
+        `LLM degraded to template (${label})`,
+        `Both DeepSeek and Claude failed; ${label} served a template draft.\n\n` +
+        `Reason: ${msg.substring(0, 300)}\n` +
+        `Time: ${new Date().toISOString()}\n\n` +
+        `Skills published from template drafts are tagged generation_source='template' — ` +
+        `check the providers, then review recent rows:\n` +
+        `SELECT id, title, created_at FROM skills WHERE generation_source = 'template' ORDER BY created_at DESC;`
+      ).catch(() => {});
       return fallbackFn();
     }
     logger.error('skill_generation_step_failed', { label, message: msg.substring(0, 200) });

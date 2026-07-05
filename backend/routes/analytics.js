@@ -10,6 +10,7 @@
 import express from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import { db } from '../utils/db.js';
+import { buildFunnelReport } from '../utils/funnelReport.js';
 
 const router = express.Router();
 
@@ -50,6 +51,37 @@ router.post('/track', async (req, res) => {
     // product error to the person using the site.
     console.warn('[analytics] track failed:', error.message);
     res.json({ success: false });
+  }
+});
+
+/**
+ * GET /api/analytics/funnel?days=7&format=md
+ * Admin-gated weekly snapshot: the 4 open-testing metrics in one call.
+ * format=md returns text/plain markdown ready to paste into CHANGELOG.md;
+ * default returns the structured JSON. Same x-admin-key guard as the
+ * /api/admin/* routes in server.js.
+ */
+router.get('/funnel', async (req, res) => {
+  const adminKey = process.env.ADMIN_KEY;
+  if (!adminKey) {
+    return res.status(503).json({ error: 'Admin endpoints disabled: ADMIN_KEY not configured' });
+  }
+  if (req.headers['x-admin-key'] !== adminKey) {
+    return res.status(403).json({ error: 'Forbidden: invalid admin key' });
+  }
+
+  try {
+    const days = Math.min(Math.max(parseInt(req.query.days, 10) || 7, 1), 90);
+    const { report, markdown } = await buildFunnelReport(db, days);
+
+    if (req.query.format === 'md') {
+      res.type('text/plain').send(markdown);
+    } else {
+      res.json({ success: true, report, markdown });
+    }
+  } catch (error) {
+    console.error('[analytics] funnel report failed:', error.message);
+    res.status(500).json({ error: 'Funnel report failed', message: error.message });
   }
 });
 

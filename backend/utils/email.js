@@ -50,6 +50,37 @@ function getResend() {
   return resendClient;
 }
 
+// ─── Admin degradation alerts ───
+// Fired when the platform silently degrades (e.g. both LLM providers fail
+// and a forge falls back to the template five-layer). For a research
+// platform that degradation is data pollution, not just UX — so the
+// operator must find out the same hour, not at the next manual data audit.
+// Cooldown: at most one email per alert key per hour, so a provider outage
+// during a busy stretch produces one email, not one per forge.
+const ALERT_TO = process.env.ALERT_EMAIL || null;
+const ALERT_COOLDOWN_MS = 60 * 60 * 1000;
+const lastAlertAt = new Map();
+
+export async function sendAdminAlert(key, subject, body) {
+  const now = Date.now();
+  const last = lastAlertAt.get(key) || 0;
+  if (now - last < ALERT_COOLDOWN_MS) return { success: false, throttled: true };
+  lastAlertAt.set(key, now);
+
+  if (!ALERT_TO) {
+    // Loud in logs so it's greppable even without email configured.
+    console.error(`🚨 [ADMIN ALERT — ALERT_EMAIL not set, email skipped] ${subject}\n${body}`);
+    return { success: false, error: 'ALERT_EMAIL not configured' };
+  }
+
+  return sendViaResend({
+    to: ALERT_TO,
+    subject: `[42POST ALERT] ${subject}`,
+    text: body,
+    html: `<pre style="font-family:monospace;white-space:pre-wrap">${body}</pre>`
+  });
+}
+
 // ─── Shared send helper (exported for digest emails etc.) ───
 export async function sendViaResend({ to, subject, html, text, attachments }) {
   const client = getResend();

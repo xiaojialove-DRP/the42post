@@ -13,6 +13,7 @@ import { isValidDomain, isValidAnonymousId } from '../utils/validation.js';
 // header). See backend/db/init.js for where this row is created.
 const ANONYMOUS_AUTHOR_ID = 'anonymous-user-001';
 import { createManifest, addCovenantSignature, callLLMJSON } from '../utils/skillGeneration.js';
+import { draftEditRatio } from '../utils/editDistance.js';
 import { moderateSkill } from '../utils/moderation.js';
 import { rateLimitForge } from '../middleware/rateLimiter.js';
 import { getCache, CACHE_TTL } from '../utils/cache.js';
@@ -424,7 +425,8 @@ router.post('/', optionalAuth, rateLimitForge, async (req, res, next) => {
       ready_to_use_prompt,
       anonymous_id: bodyAnonymousId,
       creatorName,
-      probe_session_id: probeSessionId  // passed from frontend after forge/generate
+      probe_session_id: probeSessionId,  // passed from frontend after forge/generate
+      draft_id: draftId  // generation_drafts row from /api/forge/preview, if any
     } = req.body;
 
     // Capture geographic + language context for research
@@ -530,6 +532,43 @@ router.post('/', optionalAuth, rateLimitForge, async (req, res, next) => {
 
     const user = userResult.rows[0];
 
+    // ─── Generation provenance (research integrity) ───
+    // Join back to the server-stored draft written at /api/forge/preview:
+    // which pipeline produced this skill (deepseek / claude / template) and
+    // how far the author edited the draft before publishing (0 = verbatim,
+    // 1 = fully rewritten). All derived server-side — the client only
+    // passes an opaque draft_id. NULLs mean "no draft recorded" (legacy
+    // clients, direct API publishes), which is honest for analysis.
+    let generationSource = null;
+    let draftEdit = null;
+    let verifiedDraftId = null;
+    if (draftId && typeof draftId === 'string') {
+      try {
+        const draftRes = await db.query(
+          `SELECT id, draft_json, model, is_fallback FROM generation_drafts WHERE id = $1`,
+          [draftId.substring(0, 64)]
+        );
+        if (draftRes.rows.length > 0) {
+          const draft = draftRes.rows[0];
+          verifiedDraftId = draft.id;
+          const model = (draft.model || '').toLowerCase();
+          generationSource = Number(draft.is_fallback) === 1 || model.includes('fallback')
+            ? 'template'
+            : (model.includes('claude') ? 'claude' : 'deepseek');
+          let draftData = null;
+          try { draftData = JSON.parse(draft.draft_json); } catch { /* corrupt draft json → no ratio */ }
+          if (draftData) {
+            draftEdit = draftEditRatio(
+              draftData,
+              { ...(typeof five_layer === 'object' ? five_layer : {}), ready_to_use_prompt }
+            );
+          }
+        }
+      } catch (provenanceErr) {
+        console.warn('[skills.create] provenance lookup failed (non-fatal):', provenanceErr.message);
+      }
+    }
+
     // Generate skill ID and soul hash
     const skillId = uuidv4();
     const timestamp = Date.now();
@@ -562,10 +601,11 @@ router.post('/', optionalAuth, rateLimitForge, async (req, res, next) => {
           soul_hash, five_layer, forge_mode, source_agent_id, commercial_use,
           remix_allowed, applicable_when, disallowed_uses,
           creator_anonymous_id, ready_to_use_prompt,
+          generation_source, draft_id, draft_edit_ratio,
           moderation_status, moderation_risk_level, moderation_explanation,
           moderation_categories, moderation_review_required, moderation_decided_at,
           published, published_at
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, CURRENT_TIMESTAMP, 1, CURRENT_TIMESTAMP)`,
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, CURRENT_TIMESTAMP, 1, CURRENT_TIMESTAMP)`,
         [
           skillId, userId, title.trim(), title_cn || null, description || null, description_cn || null,
           domain || 'ideas', soul_hash, JSON.stringify(five_layer),
@@ -575,6 +615,9 @@ router.post('/', optionalAuth, rateLimitForge, async (req, res, next) => {
           disallowed_uses || null,
           anonymousId,
           ready_to_use_prompt || null,
+          generationSource,
+          verifiedDraftId,
+          draftEdit,
           // Moderation fields (decision was already APPROVE to reach here)
           'pending_review',
           'LOW',
@@ -667,7 +710,9 @@ router.post('/', optionalAuth, rateLimitForge, async (req, res, next) => {
       logger.info('skill_saved', {
         skillId: savedSkill.id,
         domain: savedSkill.domain,
-        forgeMode: resolvedForgeMode
+        forgeMode: resolvedForgeMode,
+        generationSource,
+        draftEditRatio: draftEdit
       });
 
       // Invalidate skills list cache so new skill appears immediately
