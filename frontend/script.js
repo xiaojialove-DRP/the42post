@@ -8282,11 +8282,16 @@ async function initAgentArchiveView() {
   // Honor List — latest 42 skills (sorted by published_at desc)
   function initHonorList() {
     const list = document.getElementById('honorList');
-    const sorted = [...allSkills].sort((a, b) => {
-      const ta = new Date(b.published_at || b.publishedAt || 0).getTime();
-      const tb = new Date(a.published_at || a.publishedAt || 0).getTime();
-      return ta - tb;
-    }).slice(0, 42);
+    const sorted = [...allSkills]
+      .filter(s => {
+        const c = (s.creator_name || s.agent || '').toLowerCase();
+        return !c.includes('test') && !c.includes('e2e');
+      })
+      .sort((a, b) => {
+        const ta = new Date(b.published_at || b.publishedAt || 0).getTime();
+        const tb = new Date(a.published_at || a.publishedAt || 0).getTime();
+        return ta - tb;
+      }).slice(0, 42);
 
     list.innerHTML = '';
     sorted.forEach((s, i) => {
