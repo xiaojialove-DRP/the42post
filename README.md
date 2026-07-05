@@ -136,6 +136,16 @@ See [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) for guidelines.
 
 ---
 
+## Governance
+
+| Document | Description |
+|---|---|
+| [docs/governance/DATA_LICENSE.md](docs/governance/DATA_LICENSE.md) | How skills and research data are licensed (CC, per author's choices) |
+| [docs/governance/MODERATION_POLICY.md](docs/governance/MODERATION_POLICY.md) | What is and isn't allowed, and how review actually works |
+| [docs/governance/PARTICIPANT_DATA.md](docs/governance/PARTICIPANT_DATA.md) | What data is collected, research use, your choices |
+
+---
+
 ## License
 
 MIT — see [LICENSE](LICENSE)

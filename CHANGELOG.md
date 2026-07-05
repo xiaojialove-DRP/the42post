@@ -2,6 +2,31 @@
 
 All notable changes to THE 42 POST.
 
+## [Unreleased] — 2026-07-05
+
+Open-testing infrastructure sprint, driven by a four-lens project review (product / engineering / research / innovation-policy). Theme: lock in data quality before the corpus grows, and remove the two recurring frontend bug classes.
+
+### Research integrity
+
+- **Silent template degradation is no longer silent.** When both DeepSeek and Claude fail, the forge still serves a template draft (unchanged) — but now the operator gets an alert email within the hour (`ALERT_EMAIL`, throttled 1/hour per issue, loud console log when unconfigured), and skills published from such drafts are queryable.
+- **Generation provenance on every publish.** `/api/forge/preview` stores each AI draft server-side (`generation_drafts`); publish joins back by `draft_id` and records `generation_source` ('deepseek' / 'claude' / 'template') plus `draft_edit_ratio` — a 0-to-1 Levenshtein measure of how much the author edited the AI draft before publishing. This is the measurable "human contribution" signal that separates the human's work from the LLM scaffolding — the first question any reviewer of this dataset will ask. Derived entirely server-side; the client only passes an opaque id.
+- **Weekly funnel snapshot** — the 4 open-testing metrics (forge funnel conversion, Twin Tests per skill, creator D7 return, non-creator engagement share) via admin endpoint (`GET /api/analytics/funnel?format=md`) or `npm run funnel`, output paste-ready for this file. Includes a template-degradation sentinel line when any degraded publish occurred.
+
+### Governance (docs/governance/)
+
+- **DATA_LICENSE.md** — skill content licensed per the author's own publish choices mapped to CC 4.0 variants (BY / BY-NC / BY-ND / BY-NC-ND); research data released only aggregated/anonymized; bilingual.
+- **MODERATION_POLICY.md** — the actual production rubric made public (prohibited / explicitly-allowed / medium-risk), the infra-failure-publishes-with-flag behavior, audit trail, appeals; bilingual.
+- **PARTICIPANT_DATA.md** — everything collected and why, the no-list (no passwords, no third-party trackers, no data sales), consent, deletion; bilingual.
+
+### Tech debt
+
+- **Versioned schema migrations** (`backend/db/migrations.js`, `schema_migrations` table) replace ~20 boot-time try/catch ALTERs. Boot log noise: was ~20 expected errors every start, now zero (one clean "schema up to date" line). Test helper applies the same migration list, ending the hand-maintained test-schema drift that broke 52 tests mid-session when new columns landed.
+- **Content-hash cache busting** (`scripts/bust-cache.js`, `npm run bust-cache`, CI-enforced) replaces hand-written `?v=` strings. Found live evidence for why: playground.html was still referencing a script.js version string from a week before the other pages.
+- **First module split of the 9,300-line script.js**: the I18N dictionary (548 lines) now lives in `frontend/i18n.js`, loaded before script.js on every page.
+- `node backend/server.js` no longer crashes when `DATABASE_URL` is a `sqlite:` URL (was handed verbatim to the PostgreSQL pool; only worked before because launch configs blanked the variable).
+- Deleted the stale untracked `backend/.env` (contained a real Gmail app password; the live config is the repo-root `.env`). Both `.env.example` files now document `ALERT_EMAIL` and `SKIP_SEED`.
+- README.zh.md still pointed at the dead Railway URL — now www.the42post.com; both READMEs link the governance docs.
+
 ## [1.7.0] — 2026-06-27
 
 A documentation-accuracy stretch and another round of real user-reported bugs. The big find: `docs/ARCHITECTURE.md` and several other docs described a system that no longer existed (Vue frontend, Claude-primary LLM, a real login system, Railway as the deploy target) — rewritten against the actual code rather than carried forward from an earlier draft. Alongside that, a recurring root cause showed up three separate times this round: the same skill data gets reshaped independently in multiple places, and each copy drifts from the others.

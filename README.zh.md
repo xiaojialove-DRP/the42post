@@ -147,9 +147,17 @@ MIT 许可证 — 详见 [LICENSE](LICENSE) 文件
 
 ---
 
+## 🏛️ 治理
+
+- **[数据与内容许可](docs/governance/DATA_LICENSE.md)** — Skill 按作者选择映射 CC 协议；研究数据只做聚合发布
+- **[内容审核政策](docs/governance/MODERATION_POLICY.md)** — 什么允许、什么禁止、审核如何真实运作
+- **[参与者数据说明](docs/governance/PARTICIPANT_DATA.md)** — 收集什么、研究用途、你的选择
+
+---
+
 ## 🔗 快速链接
 
-- **🌐 访问平台**: [https://the42post-production.up.railway.app](https://the42post-production.up.railway.app)
+- **🌐 访问平台**: [https://www.the42post.com](https://www.the42post.com)
 - **📦 GitHub 仓库**: https://github.com/xiaojialove-DRP/the42post
 - **🐛 反馈问题**: [GitHub Issues](https://github.com/xiaojialove-DRP/the42post/issues)
 
