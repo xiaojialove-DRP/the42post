@@ -8299,21 +8299,12 @@ async function initAgentArchiveView() {
         ? (s.title_cn || s.titleCn || s.title || '')
         : (s.title || s.title_cn || s.titleCn || '');
 
-      // Get description based on current language (no need to show full, but needed for consistency)
-      const desc = lang === 'cn'
-        ? (s.description_cn || s.descCn || s.description || s.desc || '')
-        : (s.description || s.desc || s.description_cn || s.descCn || '');
-      const shortDesc = desc.substring(0, 60) + (desc.length > 60 ? '…' : '');
-
       // Extract creator name (fallback to anonymous)
       const creatorName = s.creator_name || s.agent || 'anonymous';
 
       row.innerHTML = `
         <span class="honor-rank">#${String(i + 1).padStart(2, '0')}</span>
-        <div class="honor-info">
-          <span class="honor-name">${title}</span>
-          <span class="honor-desc">${shortDesc}</span>
-        </div>
+        <span class="honor-name">${title}</span>
         <span class="honor-creator">by ${creatorName}</span>
         <span class="honor-stars">★${s.starlight || 0}</span>
       `;
