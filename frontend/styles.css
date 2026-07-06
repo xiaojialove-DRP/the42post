@@ -234,19 +234,6 @@ body[data-lang="cn"] .voices-header-text {
   padding: 0 24px;
 }
 
-.header-status-bar {
-  display: none; /* Hidden for cleaner UI */
-  justify-content: space-between;
-  padding: 8px 0;
-  font-family: var(--font-mono);
-  font-size: var(--font-xs);
-  letter-spacing: 2px;
-  color: var(--ink-muted);
-  text-transform: uppercase;
-}
-
-.status-item { color: var(--ink-muted); }
-.status-item.right { text-align: right; }
 
 .header-rule-top {
   display: none; /* Hidden to match status bar */
@@ -6033,10 +6020,6 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
   }
   .masthead-vol, .masthead-protocol {
     font-size: var(--font-xs);
-  }
-  .header-status-bar {
-    font-size: var(--font-xs);
-    letter-spacing: 1.5px;
   }
   .header-actions {
     justify-content: center !important;
