@@ -64,6 +64,46 @@
   --gap: 20px;
   --section-pad: 40px 0;
   --max-w: min(1520px, calc(100vw - 48px));
+
+  /* ─── Design-system tokens (added in the beta polish pass) ───
+     Consolidates values that were previously hardcoded dozens of times
+     each, so cards/buttons/inputs can share one consistent vocabulary. */
+
+  /* Warm-neutral palette — the taupe/sand editorial tones that were
+     hardcoded across the site (#8a7a6e ×34, #d4c8bc ×27, etc). */
+  --warm-ink: #8a7a6e;        /* warm body/label text */
+  --warm-ink-soft: #8a7c6e;   /* near-duplicate that existed in the wild */
+  --warm-line: #d4c8bc;       /* warm hairline / border */
+  --warm-line-soft: #e4e0d9;  /* softer warm border */
+  --warm-bg: #f8f4ee;         /* warm surface / panel fill */
+  --warm-bg-alt: #f0e8d8;     /* alternate warm fill */
+  --warm-bg-tint: #e8e0d4;    /* warm tint block */
+
+  /* Extended spacing scale (was xs–lg only) */
+  --spacing-xl: 24px;
+  --spacing-2xl: 32px;
+  --spacing-3xl: 48px;
+
+  /* Border-radius scale — replaces the 20+ arbitrary values in the wild.
+     Values chosen to match the dominant existing radii (tags ~4, buttons ~8,
+     cards ~12, modals ~16) so adopting them barely shifts the look while
+     collapsing everything onto one source of truth. */
+  --radius-xs: 4px;    /* tags, chips */
+  --radius-sm: 8px;    /* buttons, inputs */
+  --radius-md: 12px;   /* cards, panels */
+  --radius-lg: 16px;   /* modals, large surfaces */
+  --radius-pill: 999px;/* pills, fully-rounded */
+
+  /* Elevation / shadow scale — replaces 83 ad-hoc box-shadows */
+  --shadow-sm: 0 1px 2px rgba(26, 22, 18, 0.06), 0 1px 3px rgba(26, 22, 18, 0.08);
+  --shadow-md: 0 2px 8px rgba(26, 22, 18, 0.08), 0 4px 16px rgba(26, 22, 18, 0.06);
+  --shadow-lg: 0 8px 24px rgba(26, 22, 18, 0.12), 0 16px 48px rgba(26, 22, 18, 0.10);
+  --shadow-focus: 0 0 0 3px rgba(212, 114, 106, 0.25); /* coral focus ring */
+
+  /* Motion — one set of easings/durations for consistent feel */
+  --transition-fast: 0.15s ease;
+  --transition-base: 0.25s ease;
+  --transition-slow: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Tablet responsive adjustments (480px+) */
@@ -11051,4 +11091,59 @@ h1, h2, h3, h4, h5, h6 {
   .howto-rule:last-child {
     border-bottom: none;
   }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   DESIGN-SYSTEM NORMALIZATION LAYER  (beta polish, 2026-07)
+   ───────────────────────────────────────────────────────────────────
+   A single, last-in-cascade place that collapses the primary interactive
+   components onto the shared tokens. Deliberately conservative: it only
+   unifies "consistency" properties (corner radius, motion, focus) that
+   had drifted by accident — it does NOT restyle intentional colour roles
+   or editorial layout. Remove this block to revert the polish wholesale.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* — Primary + secondary buttons: one corner radius, one motion feel.
+     Radius was 3/4/8/10/12px across these; standardise on --radius-sm. */
+.btn-chat-send,
+.btn-enter-forge,
+.btn-confirm-skill,
+.btn-secondary,
+.forge-publish,
+.forge-next,
+.forge-prev,
+.btn-proceed-forge,
+.btn-regen-send,
+.btn-download-skill,
+.btn-apply-skill,
+.action-btn {
+  border-radius: var(--radius-sm);
+  transition: var(--transition-base);
+}
+
+/* — Visible keyboard focus on every interactive element. Most buttons and
+     inputs had no focus-visible state at all — a real accessibility gap
+     and a "cheap/experimental" tell. One consistent coral ring fixes it. */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+[tabindex]:focus-visible {
+  outline: none;
+  box-shadow: var(--shadow-focus);
+  border-radius: var(--radius-xs);
+}
+
+/* — Text inputs & textareas: one radius so the forge/preview forms read as
+     a single designed system rather than a patchwork. */
+.minimal-input,
+.minimal-textarea,
+.chat-bubble-input,
+.preview-input,
+.preview-textarea,
+.skill-editable-input,
+.skill-editable-textarea,
+.preview-prompt-textarea {
+  border-radius: var(--radius-sm);
 }
