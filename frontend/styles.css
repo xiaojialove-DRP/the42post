@@ -7189,6 +7189,18 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
     grid-template-columns: 1fr !important;
   }
   .av-readable {
+    /* max-width: var(--max-w) uses calc(100vw - 48px) — 100vw includes the
+       vertical scrollbar's width, but the visible content area doesn't.
+       On a page tall enough to scroll (archive.html always is), that ~16px
+       discrepancy made this element ~16px wider than the true available
+       width, and margin:auto centered it against the WRONG (too-wide)
+       figure — the excess spilled to the right, past the actual scrollbar
+       gutter, reading as "left border visible, right border pushed off
+       past the edge" (not centered). Padding here already defines the
+       gutter correctly (scrollbar-safe, since % / block width naturally
+       excludes it); dropping the vw-based cap on mobile removes the
+       double constraint that was causing the mismatch. */
+    max-width: 100% !important;
     padding: 24px 16px !important;
   }
   .honor-toggle-open { top: auto; bottom: 12px; }
