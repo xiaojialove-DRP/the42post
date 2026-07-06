@@ -83,30 +83,22 @@ function initNotyf() {
     console.warn('⚠ Notyf library not loaded, using fallback alerts');
     return null;
   }
+  // Icons use plain Unicode glyphs, not the Material Icons font — that font
+  // was never loaded, so the old config rendered the literal text
+  // "check_circle" / "error" inside every toast. Colours use the site's
+  // warm editorial palette instead of generic Tailwind brights, so a toast
+  // reads as part of THIS product rather than a bootstrapped library.
+  const ico = (glyph) => ({ className: 'notyf-glyph', tagName: 'span', text: glyph });
   notyfInstance = new Notyf({
     duration: 4000,
+    ripple: true,
+    dismissible: true,   // let users close a toast instead of waiting it out
     position: { x: 'right', y: 'top' },
     types: [
-      {
-        type: 'success',
-        background: '#10b981',
-        icon: { class: 'material-icons', tagName: 'i', text: 'check_circle' }
-      },
-      {
-        type: 'error',
-        background: '#ef4444',
-        icon: { class: 'material-icons', tagName: 'i', text: 'error' }
-      },
-      {
-        type: 'warning',
-        background: '#f59e0b',
-        icon: { class: 'material-icons', tagName: 'i', text: 'warning' }
-      },
-      {
-        type: 'info',
-        background: '#3b82f6',
-        icon: { class: 'material-icons', tagName: 'i', text: 'info' }
-      }
+      { type: 'success', background: '#3a9a8c', icon: ico('✓') }, /* --teal */
+      { type: 'error',   background: '#d4726a', icon: ico('✕'), duration: 6000 }, /* --coral, linger */
+      { type: 'warning', background: '#d4a43c', icon: ico('!'), duration: 5000 }, /* --marigold */
+      { type: 'info',    background: '#6a8eba', icon: ico('i') }  /* --periwinkle */
     ]
   });
   return notyfInstance;

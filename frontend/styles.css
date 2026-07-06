@@ -11147,3 +11147,18 @@ select:focus-visible,
 .preview-prompt-textarea {
   border-radius: var(--radius-sm);
 }
+
+/* — Toast glyph: plain Unicode icon (no Material Icons font dependency).
+     Sits in Notyf's icon slot; kept simple and legible on the warm toasts. */
+.notyf__toast .notyf-glyph {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 15px;
+  line-height: 1;
+  color: #fff !important; /* white glyph on the coloured toast — Notyf otherwise tints it to the bg colour, making it invisible */
+}
