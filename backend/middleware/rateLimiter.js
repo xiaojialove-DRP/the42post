@@ -20,6 +20,7 @@ const KEY_WINDOWS = {
   llm: WINDOW_MS,
   twintest: WINDOW_MS,
   forge: 60 * 60 * 1000, // 1 hour
+  star: WINDOW_MS,
 };
 
 /**
@@ -210,6 +211,46 @@ export const rateLimitForge = (req, res, next) => {
   res.set('X-RateLimit-Remaining-Forge', FORGE_MAX - data[key].length);
   res.set('X-RateLimit-Reset-Forge', String(Math.ceil((now + FORGE_WINDOW_MS) / 1000)));
 
+  next();
+};
+
+/**
+ * Star rate limiter — protect /api/skills/:id/star from vote-stuffing.
+ *
+ * The endpoint is correctly idempotent per anonymous_id (repeat calls from
+ * the same identity never inflate the count — see routes/skills.js), so
+ * this is not fixing a counting bug. It closes a different gap: the route
+ * had NO rate limit at all, so a script rotating X-Anonymous-Id on every
+ * call could star the same skill as fast as it could fire HTTP requests,
+ * with zero friction. Limiting by IP (not by anonymous_id, which is the
+ * very thing being rotated) caps that regardless of how many identities
+ * a single caller cycles through — 20/min is generous for a real person
+ * clicking stars, but throttles a script hard.
+ */
+const STAR_WINDOW_MS = 60 * 1000;
+const STAR_MAX = 20;
+
+export const rateLimitStar = (req, res, next) => {
+  if (process.env.NODE_ENV === 'test') return next();
+  const ip = getClientIp(req);
+  const now = Date.now();
+  const key = 'star';
+
+  if (!requestTimestamps.has(ip)) requestTimestamps.set(ip, {});
+  const data = requestTimestamps.get(ip);
+  if (!data[key]) data[key] = [];
+
+  data[key] = data[key].filter(ts => now - ts < STAR_WINDOW_MS);
+
+  if (data[key].length >= STAR_MAX) {
+    return res.status(429).json({
+      error: 'Rate limit exceeded',
+      message: `Too many star requests. Maximum ${STAR_MAX} per minute.`,
+      retryAfter: Math.ceil((data[key][0] + STAR_WINDOW_MS - now) / 1000)
+    });
+  }
+
+  data[key].push(now);
   next();
 };
 

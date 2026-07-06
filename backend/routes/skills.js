@@ -15,7 +15,7 @@ const ANONYMOUS_AUTHOR_ID = 'anonymous-user-001';
 import { createManifest, addCovenantSignature, callLLMJSON, redactManifestEmail } from '../utils/skillGeneration.js';
 import { draftEditRatio } from '../utils/editDistance.js';
 import { moderateSkill } from '../utils/moderation.js';
-import { rateLimitForge } from '../middleware/rateLimiter.js';
+import { rateLimitForge, rateLimitStar } from '../middleware/rateLimiter.js';
 import { getCache, CACHE_TTL } from '../utils/cache.js';
 import { v4 as uuidv4 } from 'uuid';
 import { logger } from '../utils/logger.js';
@@ -1089,7 +1089,7 @@ router.post('/:skill_id/sign', requireAuth, async (req, res, next) => {
 });
 
 // ═══ STAR/FAVORITE SKILL (Anonymous User) ═══
-router.post('/:skill_id/star', async (req, res, next) => {
+router.post('/:skill_id/star', rateLimitStar, async (req, res, next) => {
   try {
     const { skill_id } = req.params;
     const { starred } = req.body;
