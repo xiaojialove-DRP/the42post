@@ -4414,6 +4414,22 @@ function showForgeCompletion(skillData, soulHash) {
   const _blessingEl = document.getElementById('cardBlessing');
   if (_blessingEl) _blessingEl.textContent = _fallbackLine;
 
+  // Start rendering the card NOW, with the fallback blessing already in the
+  // DOM — do not wait for the AI blessing fetch first. Card render (html2canvas
+  // + the sRGB-neutralizing DOM walk) plus the AI blessing fetch used to be
+  // chained sequentially, which could take long enough on a real phone that
+  // by the time a user taps "Download" moments after publishing, this was
+  // still in flight — and awaiting it inside the click handler burns the
+  // "user activation" window Safari/Chrome require for navigator.share() to
+  // work, silently falling back to <a download> (does nothing on mobile
+  // Safari, or saves to Files instead of Photos). Rendering immediately in
+  // parallel with the blessing fetch means it's very likely already done by
+  // the time the button is tapped. If the real AI blessing arrives and
+  // differs from the fallback, a second render replaces this one below —
+  // that one only gates the EMAIL send, which already tolerates a multi-
+  // second wait and isn't subject to the user-gesture timing constraint.
+  _cardRenderCache = { soulHash, promise: renderCreatorCardBlob(soulHash).catch(() => null) };
+
   // Fetch AI blessing
   const _blessingPromise = (async () => {
     try {
@@ -4444,9 +4460,15 @@ function showForgeCompletion(skillData, soulHash) {
     ]);
     if (_blessingEl) _blessingEl.textContent = blessing;
 
-    // 3b. Render the card PNG now that the correct blessing is in the DOM.
-    //     Store in _cardRenderCache so the Download button reuses this render.
-    _cardRenderCache = { soulHash, promise: renderCreatorCardBlob(soulHash).catch(() => null) };
+    // 3b. Only re-render if the real AI blessing actually differs from the
+    //     fallback already baked into the prerender kicked off above — no
+    //     point redoing the same html2canvas work for identical DOM content,
+    //     and this keeps the Download button's cache valid the instant the
+    //     prerender resolves rather than getting invalidated by an identical
+    //     re-render race.
+    if (blessing !== _fallbackLine) {
+      _cardRenderCache = { soulHash, promise: renderCreatorCardBlob(soulHash).catch(() => null) };
+    }
 
     // 3c. If email is needed, wait for the render then send with the PNG.
     if (skillData && skillData.email) {
@@ -4802,7 +4824,8 @@ function buildCaptureClone(cardElement) {
 /* ═══ DOWNLOAD CREATOR CARD ═══ */
 // Cache of the in-flight/completed card render, keyed by soulHash, so the
 // click handler can reuse a render kicked off eagerly the moment the card
-// appeared — see prerenderCreatorCard() below. This matters because
+// appeared — see showForgeCompletion()'s Step 3, which populates this the
+// instant the fallback blessing is in the DOM. This matters because
 // html2canvas plus the color-neutralizing DOM walk can take long enough on
 // a real phone that navigator.share(), if only called after that work
 // finishes, loses the "user activation" Safari/Chrome require for it. It
@@ -4844,14 +4867,6 @@ async function renderCreatorCardBlob(soulHash) {
     restoreDescendantColors();
     clone.remove();
   }
-}
-
-// Kick off the card render in the background as soon as the card is shown,
-// well before the user has a chance to tap "Download" — see the cache
-// comment above for why this timing is what actually fixes the save-to-
-// Photos bug, not just a performance nicety.
-function prerenderCreatorCard(soulHash) {
-  _cardRenderCache = { soulHash, promise: renderCreatorCardBlob(soulHash).catch(() => null) };
 }
 
 // Mobile fallback for when Web Share isn't available or fails: a plain
