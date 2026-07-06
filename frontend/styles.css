@@ -70,9 +70,11 @@
      each, so cards/buttons/inputs can share one consistent vocabulary. */
 
   /* Warm-neutral palette — the taupe/sand editorial tones that were
-     hardcoded across the site (#8a7a6e ×34, #d4c8bc ×27, etc). */
+     hardcoded across the site (#8a7a6e/#8a7c6e/#8a7a5e ×51 combined,
+     #d4c8bc ×27, etc). The three near-identical ink values were copy-paste
+     drift, not intentional variants (all plain text color, one hex digit
+     apart) — consolidated onto this single token everywhere they appeared. */
   --warm-ink: #8a7a6e;        /* warm body/label text */
-  --warm-ink-soft: #8a7c6e;   /* near-duplicate that existed in the wild */
   --warm-line: #d4c8bc;       /* warm hairline / border */
   --warm-line-soft: #e4e0d9;  /* softer warm border */
   --warm-bg: #f8f4ee;         /* warm surface / panel fill */
@@ -1754,7 +1756,7 @@ body[data-lang="cn"] .voices-header-text {
   font-family: var(--font-mono);
   font-size: var(--font-xs);
   letter-spacing: 1.5px;
-  color: #8a7a6e;
+  color: var(--warm-ink);
   margin-bottom: 10px;
   text-transform: uppercase;
   display: block;
@@ -1788,7 +1790,7 @@ body[data-lang="cn"] .voices-header-text {
 
 .forge-mode-btn.active {
   background: #f2ece2;
-  border-color: #8a7a6e;
+  border-color: var(--warm-ink);
   font-weight: 700;
 }
 
@@ -4036,7 +4038,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 .forge-path-helper {
   font-family: var(--font-mono);
   font-size: var(--font-xs);
-  color: #8a7a6e;
+  color: var(--warm-ink);
   letter-spacing: 1px;
   text-align: center;
   margin-bottom: 16px;
@@ -4489,7 +4491,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 }
 .probe-subtitle-cn {
   font-size: 11px;
-  color: #8a7a6e;
+  color: var(--warm-ink);
   line-height: 1.6;
 }
 
@@ -4566,7 +4568,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 
 .probe-card-label {
   font-size: var(--font-xs);
-  color: #8a7a6e;
+  color: var(--warm-ink);
   margin-bottom: 10px;
   font-style: italic;
 }
@@ -4609,7 +4611,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
   border-top: 1px solid #e8e0d4;
   text-align: center;
   font-size: 11px;
-  color: #8a7a6e;
+  color: var(--warm-ink);
   font-style: italic;
 }
 
@@ -4645,7 +4647,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
   font-family: var(--font-mono);
   font-size: var(--font-xs);
   letter-spacing: 1px;
-  color: #8a7a6e;
+  color: var(--warm-ink);
   font-weight: 600;
 }
 .probe-hint {
@@ -4737,7 +4739,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
   font-family: var(--font-mono);
   font-size: var(--font-xs);
   letter-spacing: 1px;
-  color: #8a7a6e;
+  color: var(--warm-ink);
 }
 
 .generation-note {
@@ -4745,7 +4747,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
   background: #f2ece2;
   border-top: 1px solid #e8e0d4;
   font-size: 11px;
-  color: #8a7a6e;
+  color: var(--warm-ink);
   text-align: center;
   font-style: italic;
 }
@@ -4768,7 +4770,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
   cursor: pointer;
   transition: all 0.2s;
 }
-.btn-edit-layers:hover { border-color: #8a7a6e; }
+.btn-edit-layers:hover { border-color: var(--warm-ink); }
 .btn-accept-layers {
   flex: 1;
   padding: 10px;
@@ -4832,7 +4834,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
   background: transparent;
   border: none;
   font-size: 20px;
-  color: #8a7a6e;
+  color: var(--warm-ink);
   cursor: pointer;
   z-index: 10;
   transition: color 0.2s;
@@ -4899,7 +4901,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
   font-family: var(--font-mono);
   font-size: var(--font-xs);
   letter-spacing: 2px;
-  color: #8a7a6e;
+  color: var(--warm-ink);
   font-weight: 700;
   text-transform: uppercase;
   margin: 0;
@@ -5014,8 +5016,8 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 }
 
 .btn-learn-more:hover {
-  border-color: #8a7a6e;
-  color: #8a7a6e;
+  border-color: var(--warm-ink);
+  color: var(--warm-ink);
 }
 
 @media (max-width: 768px) {
@@ -6372,7 +6374,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 }
 
 .av-back {
-  color: #8a7a6e;
+  color: var(--warm-ink);
   font-size: 11px;
   text-decoration: none;
   letter-spacing: 1px;
@@ -6472,11 +6474,11 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 .star-tooltip.visible { opacity: 1; }
 .tt-name { font-family: var(--font-serif); font-size: 15px; color: var(--ink); margin-bottom: 2px; }
 .tt-name-cn { font-size: 11px; color: #6a5a4e; margin-bottom: 8px; }
-.tt-agent { font-size: 9px; color: #8a7a6e; letter-spacing: 1px; margin-bottom: 4px; }
+.tt-agent { font-size: 9px; color: var(--warm-ink); letter-spacing: 1px; margin-bottom: 4px; }
 .tt-desc { font-size: 10px; color: #4a3e36; line-height: 1.5; margin-bottom: 8px; }
 .tt-hash { font-size: 8px; color: #d4726a; letter-spacing: 1.5px; font-weight: 600; }
 .tt-meta { display: flex; gap: 14px; margin-top: 6px; font-size: 9px; }
-.tt-meta span { color: #8a7a6e; }
+.tt-meta span { color: var(--warm-ink); }
 
 /* Tooltip info row - creator and hash on same line */
 .tt-info-row { display: flex; gap: 12px; margin: 4px 0; align-items: center; justify-content: space-between; }
@@ -6709,7 +6711,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
   height: 26px;
   background: transparent;
   border: 1px solid #d4c8bc;
-  color: #8a7a6e;
+  color: var(--warm-ink);
   font-size: 11px;
   cursor: pointer;
   display: flex;
@@ -6762,7 +6764,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 
 .honor-panel-subtitle {
   font-size: var(--font-xs);
-  color: #8a7a6e;
+  color: var(--warm-ink);
   letter-spacing: 1px;
   margin-top: 4px;
 }
@@ -6847,7 +6849,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
   width: 28px; height: 28px;
   background: rgba(248,244,238,0.75);
   border: 1px solid #d4c8bc;
-  color: #8a7a6e;
+  color: var(--warm-ink);
   font-size: 14px;
   cursor: pointer;
   display: flex; align-items: center; justify-content: center;
@@ -6903,7 +6905,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 
 .av-readable-subtitle {
   font-size: var(--font-xs);
-  color: #8a7a6e;
+  color: var(--warm-ink);
   letter-spacing: 1px;
 }
 
@@ -7028,7 +7030,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 .domain-title-en {
   font-family: var(--font-mono);
   font-size: var(--font-xs);
-  color: #8a7a6e;
+  color: var(--warm-ink);
   letter-spacing: 1.5px;
   margin-bottom: 18px;
   padding-bottom: 10px;
@@ -7060,7 +7062,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 
 .domain-skill-agent {
   font-size: var(--font-xs);
-  color: #8a7a6e;
+  color: var(--warm-ink);
   margin-bottom: 4px;
   letter-spacing: 0.5px;
 }
@@ -7170,7 +7172,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 .av-footer-text {
   text-align: center;
   font-size: var(--font-xs);
-  color: #8a7a6e;
+  color: var(--warm-ink);
   letter-spacing: 2px;
   text-transform: uppercase;
 }
@@ -7538,7 +7540,7 @@ button.generating {
   font-size: var(--font-xs);
   text-transform: uppercase;
   letter-spacing: 1px;
-  color: #8a7a6e;
+  color: var(--warm-ink);
   font-weight: 600;
   margin-bottom: 12px;
   display: block;
@@ -7575,7 +7577,7 @@ button.generating {
 
 .minimal-input:focus {
   outline: none;
-  border-color: #8a7a6e;
+  border-color: var(--warm-ink);
   background: #fffbf7;
   box-shadow: 0 4px 12px rgba(138, 122, 110, 0.12);
 }
@@ -7616,7 +7618,7 @@ button.generating {
 
 .minimal-textarea:focus {
   outline: none;
-  border-color: #8a7a6e;
+  border-color: var(--warm-ink);
   background: #fffbf7;
   box-shadow: 0 6px 20px rgba(138, 122, 110, 0.15);
 }
@@ -7631,7 +7633,7 @@ button.generating {
   cursor: pointer;
   font-size: 13px;
   font-weight: 600;
-  color: #8a7a6e;
+  color: var(--warm-ink);
   transition: all 0.3s ease;
   display: flex;
   flex-direction: column;
@@ -7654,7 +7656,7 @@ button.generating {
 }
 
 .intuition-probe-btn:hover {
-  border-color: #8a7a6e;
+  border-color: var(--warm-ink);
   background: linear-gradient(135deg, #fffbf7 0%, #f5ede4 100%);
   color: #6a5a4e;
   box-shadow: 0 4px 16px rgba(138, 122, 110, 0.12);
@@ -7666,7 +7668,7 @@ button.generating {
 
 .intuition-probe-btn:active {
   background: linear-gradient(135deg, #f5ede4 0%, #ede5dc 100%);
-  border-color: #8a7a6e;
+  border-color: var(--warm-ink);
 }
 
 /* Probe Modal */
@@ -8152,7 +8154,7 @@ button.generating {
 
 .preview-prompt-hint {
   font-size: 12px;
-  color: #8a7a5e;
+  color: var(--warm-ink);
   font-weight: normal;
   font-style: italic;
 }
@@ -8190,7 +8192,7 @@ button.generating {
 
 .preview-prompt-note {
   font-size: 12px;
-  color: #8a7a5e;
+  color: var(--warm-ink);
   line-height: 1.5;
   flex: 1;
   min-width: 200px;
@@ -8486,7 +8488,7 @@ button.generating {
   border-radius: 4px;
   font-family: 'JetBrains Mono', monospace;
   font-size: var(--font-xs);
-  color: #8a7a6e;
+  color: var(--warm-ink);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -8542,7 +8544,7 @@ button.generating {
 
 .btn-download:hover,
 .btn-view-full:hover {
-  border-color: #8a7a6e;
+  border-color: var(--warm-ink);
   background: rgba(138, 122, 110, 0.08);
 }
 
@@ -8566,7 +8568,7 @@ button.generating {
 
 .download-icon {
   font-size: 14px;
-  color: #8a7a6e;
+  color: var(--warm-ink);
   transition: color 0.2s ease;
 }
 
@@ -9145,7 +9147,7 @@ button.generating {
   font-family: var(--font-mono);
   font-size: 10px;
   letter-spacing: 3px;
-  color: var(--wc-muted, #8a7c6e);
+  color: var(--wc-muted, var(--warm-ink));
   margin-bottom: 8px;
 }
 .completion-next-step .next-step-text {
@@ -9240,7 +9242,7 @@ button.generating {
   --wc-moss:         #a8bf9c;   /* deep sage / moss */
   --wc-ink:          #2a2018;   /* warm dark ink */
   --wc-charcoal:     #3c3028;   /* warm charcoal */
-  --wc-muted:        #8a7c6e;   /* warm stone */
+  --wc-muted:        var(--warm-ink);   /* warm stone */
   --wc-rule:         rgba(60,48,40,0.12);
   --wc-rule-light:   rgba(60,48,40,0.07);
 }
@@ -10552,7 +10554,7 @@ button.generating {
     color-mix(in srgb, var(--card-accent, #b8a23c) 5.6%, #fbf6ee) 0%,
     color-mix(in srgb, var(--card-accent, #b8a23c) 8%,   #f4ead8) 55%,
     color-mix(in srgb, var(--card-accent, #b8a23c) 9.6%, #f0e2ce) 100%);
-  border: 1px solid color-mix(in srgb, var(--card-accent, #8a7c6e) 45%, #d8ccba);
+  border: 1px solid color-mix(in srgb, var(--card-accent, var(--warm-ink)) 45%, #d8ccba);
   border-radius: 12px;
   box-shadow: 0 6px 28px rgba(42,32,24,0.14), 0 1px 4px rgba(42,32,24,0.08);
   overflow: hidden;
@@ -10571,8 +10573,8 @@ button.generating {
   width: 100%;
   padding: 14px 16px 12px;
   box-sizing: border-box;
-  border: 1px solid color-mix(in srgb, var(--card-accent, #8a7c6e) 38%, transparent);
-  outline: 1px solid color-mix(in srgb, var(--card-accent, #8a7c6e) 16%, transparent);
+  border: 1px solid color-mix(in srgb, var(--card-accent, var(--warm-ink)) 38%, transparent);
+  outline: 1px solid color-mix(in srgb, var(--card-accent, var(--warm-ink)) 16%, transparent);
   outline-offset: 2px;
   border-radius: 7px;
 }
@@ -10637,9 +10639,9 @@ button.generating {
   font-family: var(--font-mono, 'JetBrains Mono', monospace);
   font-size: 9px;
   letter-spacing: 0.6px;
-  color: var(--wc-muted, #8a7c6e);
+  color: var(--wc-muted, var(--warm-ink));
 }
-.sq-meta-line .sq-dot { color: color-mix(in srgb, var(--card-accent, #c9b458) 70%, #8a7c6e); }
+.sq-meta-line .sq-dot { color: color-mix(in srgb, var(--card-accent, #c9b458) 70%, var(--warm-ink)); }
 
 /* ── Bottom: site only, centered ── */
 .sq-bottom-row {
@@ -10684,7 +10686,7 @@ button.generating {
   font-family: var(--font-serif, 'Playfair Display', serif);
   font-size: var(--font-xs);
   font-style: italic;
-  color: var(--wc-muted, #8a7c6e);
+  color: var(--wc-muted, var(--warm-ink));
   letter-spacing: 0.3px;
 }
 
@@ -10711,7 +10713,7 @@ button.generating {
   font-family: var(--font-mono, 'JetBrains Mono', monospace);
   font-size: var(--font-xs);
   letter-spacing: 2.2px;
-  color: var(--wc-muted, #8a7c6e);
+  color: var(--wc-muted, var(--warm-ink));
   text-transform: uppercase;
 }
 
@@ -10732,7 +10734,7 @@ button.generating {
   width: 88%;
   font-family: var(--font-mono, 'JetBrains Mono', monospace);
   font-size: var(--font-xs);
-  color: var(--wc-muted, #8a7c6e);
+  color: var(--wc-muted, var(--warm-ink));
 }
 
 /* ── Soul-Hash ── */
@@ -10804,7 +10806,7 @@ button.generating {
 .forge-ready-check {
   font-size: 22px;
   margin-bottom: 6px;
-  color: var(--wc-muted, #8a7c6e);
+  color: var(--wc-muted, var(--warm-ink));
 }
 .forge-ready-text {
   font-family: var(--font-mono, monospace);
@@ -10824,7 +10826,7 @@ button.generating {
 /* ── forge-editable-hint ── */
 .forge-editable-hint {
   font-size: 11px;
-  color: var(--wc-muted, #8a7c6e);
+  color: var(--wc-muted, var(--warm-ink));
   font-weight: 400;
   margin-left: 6px;
 }
@@ -11043,7 +11045,7 @@ h1, h2, h3, h4, h5, h6 {
 
 .honor-desc {
   font-size: var(--font-xs);
-  color: #8a7a6e;
+  color: var(--warm-ink);
   line-height: 1.4;
   overflow: hidden;
   text-overflow: ellipsis;
