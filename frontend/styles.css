@@ -11094,62 +11094,22 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* ═══════════════════════════════════════════════════════════════════
-   DESIGN-SYSTEM NORMALIZATION LAYER  (beta polish, 2026-07)
+   ADDITIVE POLISH LAYER  (beta, 2026-07)
    ───────────────────────────────────────────────────────────────────
-   A single, last-in-cascade place that collapses the primary components
-   onto the shared tokens. Filled action buttons, content cards and inputs
-   had drifted to 3/4/8/10/12/24px corners and ad-hoc shadows; this pins
-   each component TYPE to one token value (with !important where the old
-   rules used !important) so the UI reads as one designed system.
-   Intentionally squared editorial nav (.btn-arena/.btn-agent-view, 0px)
-   and the certificate card are left alone. Remove this block to revert.
+   Earlier revisions of this block force-unified every corner radius to
+   one token value. That was a mistake — it flattened intentional,
+   characterful shapes (the forge's rounded 24px CTAs) into a generic 8px
+   and drained the design's soul. Reverted. The varied radii are the
+   author's deliberate craft and are left alone.
+
+   What stays here is ONLY additive polish that removes nothing:
+   a real keyboard-focus state (there was none — an accessibility gap),
+   plus the toast styling below. The design tokens in :root remain as a
+   vocabulary for future *deliberate* choices, not a forced uniformity.
    ═══════════════════════════════════════════════════════════════════ */
 
-/* — Filled action buttons: one corner radius (8px) + one motion feel.
-     Was 3/4/8/10/12/24px across these. !important to beat the scattered
-     !important radii already in the wild (forge buttons were 24px). */
-.btn-chat-send,
-.btn-enter-forge,
-.btn-confirm-skill,
-.btn-secondary,
-.forge-publish,
-.forge-next,
-.forge-prev,
-.btn-proceed-forge,
-.btn-download-skill,
-.btn-apply-skill,
-.btn-confirm,
-.btn-preview,
-.action-btn,
-.next-step-cta,
-.btn-regenerate {
-  border-radius: var(--radius-sm) !important;
-  transition: var(--transition-base);
-}
-/* NOTE: round/icon buttons (.btn-star, zoom-btn) and the special gradient
-   .btn-regen-send are intentionally excluded — forcing 8px would square a
-   circle or fight their own bespoke styling. */
-
-/* — Content cards: one radius + one soft elevation. Was 4px flat on the
-     archive grid, other values elsewhere. Certificate/commemorative card
-     keeps its bespoke framing (not listed). */
-.domain-card,
-.voice-card,
-.skill-node-card,
-.honor-panel,
-.probe-modal-content {
-  border-radius: var(--radius-md) !important;
-}
-.domain-card {
-  box-shadow: var(--shadow-sm);
-}
-.domain-card:hover {
-  box-shadow: var(--shadow-md);
-}
-
-/* — Visible keyboard focus on every interactive element. Most buttons and
-     inputs had no focus-visible state at all — a real accessibility gap
-     and a "cheap/experimental" tell. One consistent coral ring fixes it. */
+/* Visible keyboard focus on interactive elements — additive a11y, does not
+   alter any element's resting appearance (only shows on keyboard focus). */
 button:focus-visible,
 a:focus-visible,
 input:focus-visible,
@@ -11158,20 +11118,6 @@ select:focus-visible,
 [tabindex]:focus-visible {
   outline: none;
   box-shadow: var(--shadow-focus);
-  border-radius: var(--radius-xs);
-}
-
-/* — Text inputs & textareas: one radius so the forge/preview forms read as
-     a single designed system rather than a patchwork. */
-.minimal-input,
-.minimal-textarea,
-.chat-bubble-input,
-.preview-input,
-.preview-textarea,
-.skill-editable-input,
-.skill-editable-textarea,
-.preview-prompt-textarea {
-  border-radius: var(--radius-sm) !important;
 }
 
 /* — Toast glyph: plain Unicode icon (no Material Icons font dependency).
