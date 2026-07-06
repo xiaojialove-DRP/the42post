@@ -689,6 +689,17 @@
       animation: cardSpawn 0.35s ease-out;
     }
 
+    /* Brief attention pulse when the user clicks for another scenario while
+       the farewell card is already showing — confirms the click landed
+       instead of silently doing nothing. */
+    @keyframes farewellPulse {
+      0%, 100% { transform: scale(1); }
+      30% { transform: scale(1.03); }
+    }
+    .farewell-card.farewell-pulse {
+      animation: farewellPulse 0.3s ease-out;
+    }
+
     /* ── Card Clear All ── */
     .bar-btn-clear {
       color: var(--accent);
@@ -1810,12 +1821,29 @@
        which doesn't fit the rest of the site's quiet, editorial tone. */
     function spawnFarewellCard() {
       const canvas = document.getElementById('workshopCanvas');
+
+      // Called once per dock click / try-another after the limit is hit —
+      // with no re-entry guard this created a brand-new stacked duplicate
+      // card on every such click (10 dock clicks past the limit → 10 cards
+      // on screen, even though only 7 were real scenarios), which read as
+      // "the limit only kicks in after 10" even though the counter itself
+      // was correct the whole time. If one is already showing, just bring
+      // it to front instead of piling on another identical card.
+      const existing = canvas.querySelector('.farewell-card');
+      if (existing) {
+        existing.style.zIndex = ++highestZ;
+        existing.classList.remove('farewell-pulse');
+        void existing.offsetWidth; // restart the animation
+        existing.classList.add('farewell-pulse');
+        return;
+      }
+
       const empty = document.getElementById('canvasEmpty');
       empty.classList.add('hidden');
       const isCn = (typeof currentLang !== 'undefined' && currentLang === 'cn');
 
       const card = document.createElement('div');
-      card.className = 'task-card spawning';
+      card.className = 'task-card farewell-card spawning';
       card.dataset.cardId = ++cardIdCounter;
       card.style.zIndex = ++highestZ;
 
