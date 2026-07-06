@@ -14,7 +14,7 @@ const I18N = {
     btn_learn_more: 'LEARN MORE ABOUT US',
     footer_learn_more_text: 'Research plans & weekly updates on Medium',
     footer_about_text: 'An open research community where anyone can forge AI values.',
-    about_main_text: 'An open research community where anyone can turn personal values and fragments of thought into verifiable AI Skills.',
+    about_main_text: 'An open research community where anyone can turn personal values and fragments of thought into structured, shareable AI Skills.',
     btn_howto: 'HOW IT WORKS',
     footer_step_1: 'Create your first Skill',
     footer_step_2: 'Receive your Soul-Hash identity',
