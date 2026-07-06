@@ -6916,6 +6916,27 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 /* Archive domain filter bar - jump straight to one domain instead of
    scrolling past all 10. Same nowrap+scroll guarantee as .header-buttons:
    never wrap chips onto a second row, scroll horizontally instead. */
+/* Wrapper carries the edge-fade hint so it stays fixed in place while
+   .domain-filter-bar scrolls underneath — putting the fade on the
+   scrolling element itself would drag it along with the content, hiding
+   it as soon as the user scrolls. Right-edge fade is a static "there's
+   more this way" signal; the row has no other affordance (no arrows, no
+   scrollbar) so first-time visitors otherwise read the cut-off last chip
+   as a layout bug rather than an invitation to scroll. */
+.domain-filter-wrap {
+  position: relative;
+}
+.domain-filter-wrap::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 16px; /* matches .domain-filter-bar's own bottom padding */
+  width: 28px;
+  background: linear-gradient(to right, transparent, var(--paper-warm, #f8f4ee) 85%);
+  pointer-events: none;
+}
+
 .domain-filter-bar {
   display: flex;
   gap: 6px;
