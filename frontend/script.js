@@ -2096,6 +2096,12 @@ function initSkillForge() {
 
       // 字数和内容检查都通过，显示确认信息然后打开forge
       window.homepageIdea = { text: ideaInput.value, creator_name: "" };
+      // btnEnterForge's own click handler (a manual "proceed now" path,
+      // parallel to the 600ms auto-advance below) reads window.shareIdea,
+      // not window.homepageIdea — was never set here, so the idea silently
+      // vanished for anyone who clicked the visible button instead of
+      // waiting out the timer. Both paths now carry the same value.
+      window.shareIdea = ideaInput.value.trim();
 
       // 显示确认✓和文案 (保留: We heard you...)
       const ethicsResult = document.getElementById('ethicsResult');
