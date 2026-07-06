@@ -11138,3 +11138,75 @@ select:focus-visible,
   line-height: 1;
   color: #fff !important; /* white glyph on the coloured toast — Notyf otherwise tints it to the bg colour, making it invisible */
 }
+
+/* ═══════════════════════════════════════════════════════════════════
+   CUSTOM CONFIRM DIALOG — replaces native confirm() at 3 real decision
+   points (draft recovery, publish-retry-or-basic, duplicate-skill warning).
+   A native browser confirm() is an unstyled system dialog that breaks the
+   editorial aesthetic completely — the single most jarring "looks like a
+   prototype" moment a user can hit. Matches the existing About/HowTo
+   overlay family (sharp corners, paper-card surface, rule border) rather
+   than inventing a new visual language.
+   ═══════════════════════════════════════════════════════════════════ */
+.confirm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 100000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+  backdrop-filter: blur(4px);
+  padding: 20px;
+}
+.confirm-overlay.active { opacity: 1; pointer-events: all; }
+
+.confirm-panel {
+  width: 100%;
+  max-width: 420px;
+  background: var(--paper-card);
+  border: 1px solid var(--rule);
+  padding: 28px 28px 20px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.16);
+  transform: translateY(8px);
+  transition: transform 0.25s ease;
+}
+.confirm-overlay.active .confirm-panel { transform: translateY(0); }
+
+.confirm-message {
+  font-size: 14px;
+  line-height: 1.65;
+  color: var(--ink);
+  white-space: pre-line; /* preserves \n\n paragraph breaks in the message */
+  margin-bottom: 22px;
+}
+
+.confirm-buttons {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.confirm-btn {
+  padding: 9px 20px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: var(--transition-fast);
+  border: 1px solid transparent;
+}
+.confirm-btn-cancel {
+  background: transparent;
+  border-color: var(--rule);
+  color: var(--ink-muted);
+}
+.confirm-btn-cancel:hover { border-color: var(--ink-muted); color: var(--ink); }
+.confirm-btn-ok {
+  background: var(--ink);
+  color: var(--paper);
+}
+.confirm-btn-ok:hover { opacity: 0.85; }

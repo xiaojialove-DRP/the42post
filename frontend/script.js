@@ -134,6 +134,55 @@ window.alert = function(message) {
   }
 };
 
+// ═══ CUSTOM CONFIRM DIALOG ═══
+// Replaces native confirm() at real yes/no decision points. Native
+// confirm() renders as an unstyled browser system dialog — the single
+// most jarring "this looks like a prototype" moment in the whole product,
+// since every other surface is custom-designed. Escape and backdrop-click
+// both resolve false (cancel), matching the existing About/HowTo overlay
+// convention. Returns a Promise<boolean> so call sites just `await` it
+// where they used to do `if (confirm(msg))`.
+function showConfirmDialog(message, opts = {}) {
+  const isCn = (typeof currentLang !== 'undefined' && currentLang === 'cn') || document.body.dataset.lang === 'cn';
+  const okLabel = opts.okLabel || (isCn ? '确定' : 'OK');
+  const cancelLabel = opts.cancelLabel || (isCn ? '取消' : 'Cancel');
+
+  return new Promise((resolve) => {
+    const overlay = document.createElement('div');
+    overlay.className = 'confirm-overlay';
+    overlay.innerHTML = `
+      <div class="confirm-panel">
+        <div class="confirm-message"></div>
+        <div class="confirm-buttons">
+          <button type="button" class="confirm-btn confirm-btn-cancel"></button>
+          <button type="button" class="confirm-btn confirm-btn-ok"></button>
+        </div>
+      </div>
+    `;
+    // textContent, not innerHTML, for the message/labels — they may contain
+    // user- or AI-derived text (skill titles) and must not be interpreted as HTML.
+    overlay.querySelector('.confirm-message').textContent = message;
+    overlay.querySelector('.confirm-btn-cancel').textContent = cancelLabel;
+    overlay.querySelector('.confirm-btn-ok').textContent = okLabel;
+
+    const cleanup = (result) => {
+      overlay.classList.remove('active');
+      document.removeEventListener('keydown', onKeydown);
+      setTimeout(() => overlay.remove(), 250); // let the fade-out transition finish
+      resolve(result);
+    };
+    const onKeydown = (e) => { if (e.key === 'Escape') cleanup(false); };
+
+    overlay.querySelector('.confirm-btn-cancel').addEventListener('click', () => cleanup(false));
+    overlay.querySelector('.confirm-btn-ok').addEventListener('click', () => cleanup(true));
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) cleanup(false); });
+    document.addEventListener('keydown', onKeydown);
+
+    document.body.appendChild(overlay);
+    requestAnimationFrame(() => overlay.classList.add('active'));
+  });
+}
+
 // Auto-detect API URL based on current domain
 function getDefaultAPIUrl() {
   const stored = localStorage.getItem('42post_api_url');
@@ -1828,7 +1877,7 @@ function initSkillForge() {
   // ─── Draft Recovery: offer to restore an unsubmitted forge ───
   // If the previous session's POST /skills failed (network drop, 5xx)
   // we kept their work in localStorage. Offer to restore it here.
-  function maybeOfferDraftRecovery() {
+  async function maybeOfferDraftRecovery() {
     let draft;
     try {
       const raw = safeStorage.getItem('42post_forge_draft');
@@ -1851,7 +1900,7 @@ function initSkillForge() {
       ? `你上次有一个未发布的 Skill「${title}」。点 OK 将帮你预填想法，重新锻造一次（约3分钟）。`
       : `You have an unfinished Skill "${title}". Click OK to pre-fill your idea and forge again (~3 min).`;
 
-    if (confirm(msg)) {
+    if (await showConfirmDialog(msg)) {
       // Simple recovery: go back to Step 1 with fields pre-filled.
       // Trying to jump to Step 4 is unreliable (AI-generated state is gone).
       // Pre-filling Step 1 lets the user re-generate in ~3 minutes.
@@ -3920,7 +3969,7 @@ function initSkillForge() {
 
             // Attempt 2 — user-approved retry
             if (isEmptyLayer(effectiveFiveLayer)) {
-              const retry = confirm(cnUI
+              const retry = await showConfirmDialog(cnUI
                 ? 'AI 结构生成未完成（可能是网络波动）。\n\n点「确定」再试一次（约30秒）；\n点「取消」先发布基础版，系统稍后会自动补全结构。'
                 : 'AI structure generation didn\'t finish (possibly a network hiccup).\n\nOK = try once more (~30s);\nCancel = publish a basic version now — the system will complete the structure automatically afterwards.');
               if (retry) {
@@ -4096,7 +4145,7 @@ function initSkillForge() {
         // ═══ Backend save complete ═══
 
         // Save to localStorage (local storage)
-        saveForgedSkill(forgedSkillData);
+        await saveForgedSkill(forgedSkillData);
 
         // ═══ CACHE INVALIDATION ═══
         // Clear all cached skill lists to ensure newly published skill appears everywhere
@@ -6195,7 +6244,7 @@ function checkDuplicateSkill(title) {
 }
 
 /* ═══ RECENTLY FORGED SKILLS STORAGE ═══ */
-function saveForgedSkill(skillData) {
+async function saveForgedSkill(skillData) {
   // NOTE: Quality validation is handled by backend moderation system
   // Local storage is only a cache - no need for strict validation here
 
@@ -6206,7 +6255,7 @@ function saveForgedSkill(skillData) {
     const msg = isCn
       ? `技能 "${skillData.title}" 已存在(${duplicateCheck.location})。\n要继续吗？`
       : `Skill "${skillData.title}" already exists (${duplicateCheck.location}).\nContinue anyway?`;
-    if (!confirm(msg)) {
+    if (!(await showConfirmDialog(msg))) {
       console.log('⚠️ Duplicate skill creation cancelled by user');
       return null;
     }
