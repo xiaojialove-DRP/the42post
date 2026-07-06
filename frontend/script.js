@@ -1950,6 +1950,15 @@ function initSkillForge() {
         // 对短文本（<20字）和长文本的字母多样性要求不同
         if (text.length < 20 && uniqueLetters.size <= 4) return false;
         if (text.length >= 20 && uniqueLetters.size <= 3) return false;
+
+        // 键盘胡乱敲击的字母种类往往不少（手指扫过相邻按键），单靠
+        // "字母多样性"拦不住，比如 "dfgfhjkhljhjghfdfssafghjgkhljhjgfdsasfgdhjklhjghfgdf"
+        // 有 9 种不同字母也能通过上面的检查。更可靠的信号：真实单词的
+        // 连续辅音长度有限（英语最长大约 4-5，如 "strengths" 的
+        // "ngth"），键盘乱码常见远超此长度的连续辅音串。
+        const longestConsonantRun = (text.toLowerCase().match(/[bcdfghjklmnpqrstvwxyz]+/g) || [])
+          .reduce((max, run) => Math.max(max, run.length), 0);
+        if (longestConsonantRun >= 6) return false;
       }
     }
 
@@ -2259,6 +2268,12 @@ function initSkillForge() {
       if (!username) { alertI18n('error_enter_username'); return; }
       if (!email) { alertI18n('error_enter_email'); return; }
       if (!idea) { alertI18n('error_share_idea'); return; }
+      // Same quality gate the homepage share box uses (length + keyboard-
+      // mash detection) — this entry point had none at all, so gibberish
+      // like keyboard-mashed text could reach probe generation (a real
+      // LLM call) unfiltered.
+      if (idea.length < 12) { alertI18n('error_idea_too_short'); return; }
+      if (!isContentMeaningful(idea)) { alertI18n('error_idea_not_meaningful'); return; }
       if (!probeChoice) { alertI18n('error_select_probe_response'); return; }
 
       // Establish forge session (zero-friction JWT)
@@ -2307,6 +2322,12 @@ function initSkillForge() {
       if (!username) { alertI18n('error_enter_username'); return; }
       if (!email) { alertI18n('error_enter_email'); return; }
       if (!idea) { alertI18n('error_share_idea'); return; }
+      // Same quality gate the homepage share box uses (length + keyboard-
+      // mash detection) — this entry point had none at all, so gibberish
+      // like keyboard-mashed text could reach probe generation (a real
+      // LLM call) unfiltered.
+      if (idea.length < 12) { alertI18n('error_idea_too_short'); return; }
+      if (!isContentMeaningful(idea)) { alertI18n('error_idea_not_meaningful'); return; }
 
       // Establish forge session (zero-friction JWT)
       const isCn = (typeof currentLang !== 'undefined' && currentLang === 'cn');
