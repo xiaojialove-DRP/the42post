@@ -31,7 +31,7 @@ router.get('/:skillId', async (req, res, next) => {
 
     // Fetch skill from database
     const skillResult = await db.query(
-      `SELECT s.*, u.username, u.email
+      `SELECT s.*, u.username, u.email, u.background
        FROM skills s
        LEFT JOIN users u ON s.author_id = u.id
        WHERE s.id = $1 AND s.deleted_at IS NULL`,
@@ -108,6 +108,7 @@ router.get('/:skillId', async (req, res, next) => {
       // creator_name: a creator renaming their account later shouldn't
       // retroactively relabel who's credited on an already-published file.
       author: (skill.creator_anonymous_id || '').replace(/^creator_/, '') || skill.username || 'Creator',
+      authorBackground: skill.background || '',
       email: skill.email,
       commercial: skill.commercial_use || 'authorized',
       remix: skill.remix_allowed ? 'yes' : 'no',
@@ -302,15 +303,12 @@ function normalizeFiveLayer(fl) {
 }
 
 /**
- * Generate Markdown format (SKILL.md)
+ * Build a complete, usable System Prompt from available fields. Shared by
+ * all three export formats so "Ready to Use" means the same thing whether
+ * you downloaded the .md, the .py, or the .json.
+ * Priority: stored ready_to_use_prompt → synthesize from five_layer → fallback
  */
-function generateSkillMarkdown(skillData) {
-  const now = new Date();
-  const timestamp = now.toISOString().split('T')[0];
-  const fl = normalizeFiveLayer(skillData.fiveLayerSkill);
-
-  // Build a complete, usable System Prompt from available fields.
-  // Priority: stored ready_to_use_prompt → synthesize from five_layer → fallback
+function buildReadyPrompt(skillData, fl) {
   let readyPrompt = skillData.ready_to_use_prompt || '';
 
   if (!readyPrompt && fl) {
@@ -328,6 +326,17 @@ function generateSkillMarkdown(skillData) {
   }
 
   if (!readyPrompt) readyPrompt = skillData.desc || 'A skill forged in The 42 Post';
+  return readyPrompt;
+}
+
+/**
+ * Generate Markdown format (SKILL.md)
+ */
+function generateSkillMarkdown(skillData) {
+  const now = new Date();
+  const timestamp = now.toISOString().split('T')[0];
+  const fl = normalizeFiveLayer(skillData.fiveLayerSkill);
+  const readyPrompt = buildReadyPrompt(skillData, fl);
 
   // Detect language from title/desc for bilingual labels
   const isCn = /[一-鿿]/.test(skillData.title + (skillData.desc || ''));
@@ -468,7 +477,7 @@ ${fl && fl.principle ? fl.principle : (skillData.desc || '')}
 |---|---|
 | **${L.commercial}** | ${licenseCommercial} |
 | **${L.remix}** | ${licenseRemix} |
-| **${L.creator}** | ${skillData.author} |
+| **${L.creator}** | ${skillData.author}${skillData.authorBackground ? ` — ${skillData.authorBackground}` : ''} |
 
 ---
 
@@ -489,6 +498,12 @@ function generateAgentSkillFormat(skillData) {
   // skillData.fiveLayerSkill directly here used to skip that entirely, so
   // every real skill produced an empty `layers: {}` with no error raised.
   const fiveLayer = normalizeFiveLayer(skillData.fiveLayerSkill);
+  // Guard against the prompt text containing `"""`, which would otherwise
+  // terminate the Python triple-quoted string early.
+  const pyReadyPrompt = buildReadyPrompt(skillData, fiveLayer).replace(/"""/g, '\\"\\"\\"');
+  const authorLine = skillData.authorBackground
+    ? `Author: ${skillData.author} (${skillData.authorBackground})`
+    : `Author: ${skillData.author}`;
 
   if (fiveLayer) {
     const agentJson = JSON.stringify({
@@ -496,12 +511,14 @@ function generateAgentSkillFormat(skillData) {
       id: skillData.soulHash,
       name: skillData.title,
       author: skillData.author,
+      author_background: skillData.authorBackground || null,
       domain: skillData.domain,
       license: {
         type: 'creator-reserved',
         commercial: skillData.commercial,
         remix: skillData.remix
       },
+      ready_to_use_prompt: skillData.ready_to_use_prompt || buildReadyPrompt(skillData, fiveLayer),
       layers: {
         principle: fiveLayer.principle || '',
         exemplars: fiveLayer.exemplars || [],
@@ -516,7 +533,7 @@ function generateAgentSkillFormat(skillData) {
 """
 THE 42 POST Skill: ${skillData.title}
 Soul-Hash: ${skillData.soulHash}
-Author: ${skillData.author}
+${authorLine}
 
 Generated from the Five-Layer Skill Architecture
 """
@@ -526,6 +543,11 @@ from typing import Any, Dict, List
 
 # ═══ SKILL DEFINITION ═══
 SKILL = ${agentJson}
+
+# ═══ READY TO USE ═══
+# Paste this directly as a system prompt into Claude / ChatGPT / Gemini —
+# same content as the "Ready to Use" block in the .md export.
+READY_TO_USE_PROMPT = """${pyReadyPrompt}"""
 
 # ═══ HELPER FUNCTIONS ═══
 
@@ -549,26 +571,16 @@ def get_cultural_variants() -> Dict[str, Any]:
     """Get cultural adaptations (Layer 5)"""
     return SKILL['layers']['cultural_variants']
 
-def apply_skill(context: str) -> str:
+def apply_skill(context: str, llm_call=None) -> str:
     """
-    Apply this skill to a given context.
-
-    Args:
-        context: The situation or prompt where the skill is applied
-
-    Returns:
-        A response that respects the skill's five-layer principles
+    Apply this skill to a given context using READY_TO_USE_PROMPT as the
+    system prompt. Pass your own LLM call as llm_call(system, user) -> str
+    (e.g. an OpenAI/Anthropic client wrapper); without one, returns the
+    prompt + context so you can see exactly what would be sent.
     """
-    principle = get_principle()
-    exemplars = get_exemplars()
-    boundaries = get_boundaries()
-
-    # Validate against boundaries
-    applies_when = boundaries.get('applies_when', [])
-    does_not_apply = boundaries.get('does_not_apply', [])
-
-    # Your implementation logic here
-    return f"Applying skill '{SKILL['name']}' to: {context}"
+    if llm_call:
+        return llm_call(READY_TO_USE_PROMPT, context)
+    return f"[system]\\n{READY_TO_USE_PROMPT}\\n\\n[user]\\n{context}"
 
 if __name__ == '__main__':
     print(f"Skill Loaded: {SKILL['name']}")
@@ -582,16 +594,21 @@ if __name__ == '__main__':
 """
 THE 42 POST Skill: ${skillData.title}
 Soul-Hash: ${skillData.soulHash}
-Author: ${skillData.author}
+${authorLine}
 """
 
 SKILL_DEFINITION = """
 ${skillData.desc}
 """
 
-def apply_skill(context: str) -> str:
-    """Apply this skill to the given context."""
-    return f"Applying skill '{skillData.title}' to: {context}"
+# Paste this directly as a system prompt into Claude / ChatGPT / Gemini.
+READY_TO_USE_PROMPT = """${pyReadyPrompt}"""
+
+def apply_skill(context: str, llm_call=None) -> str:
+    """Apply this skill to the given context using READY_TO_USE_PROMPT."""
+    if llm_call:
+        return llm_call(READY_TO_USE_PROMPT, context)
+    return f"[system]\\n{READY_TO_USE_PROMPT}\\n\\n[user]\\n{context}"
 
 if __name__ == '__main__':
     print(f"Skill: {skillData.title}")
@@ -602,11 +619,13 @@ if __name__ == '__main__':
  * Generate MCP Config format (JSON)
  */
 function generateMCPConfigFormat(skillData) {
+  const fiveLayer = normalizeFiveLayer(skillData.fiveLayerSkill);
   const manifest = {
     schema: '42post-skill-v0.1',
     id: skillData.soulHash,
     name: skillData.title,
     author: skillData.author,
+    author_background: skillData.authorBackground || null,
     domain: skillData.domain,
     license: {
       type: 'creator-reserved',
@@ -614,6 +633,16 @@ function generateMCPConfigFormat(skillData) {
       remix: skillData.remix === 'yes' ? true : false
     },
     description: skillData.desc,
+    // Copy-pasteable as a system prompt — same content as the "Ready to
+    // Use" block in the .md export and READY_TO_USE_PROMPT in the .py.
+    ready_to_use_prompt: skillData.ready_to_use_prompt || buildReadyPrompt(skillData, fiveLayer),
+    layers: fiveLayer ? {
+      principle: fiveLayer.principle || '',
+      exemplars: fiveLayer.exemplars || [],
+      boundaries: fiveLayer.boundaries || {},
+      evaluation: fiveLayer.evaluation || {},
+      cultural_variants: fiveLayer.cultural_variants || {}
+    } : null,
     input_schema: {
       type: 'object',
       properties: {

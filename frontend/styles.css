@@ -1658,6 +1658,16 @@ body[data-lang="cn"] .voices-header-text {
    instead of only after Share is clicked and rejected. */
 .chat-char-count.too-short { color: var(--coral); }
 
+/* Shown only on iOS, where there's no Web Speech API for a working mic
+   button — points at the system keyboard's own dictation instead. */
+.voice-native-hint {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.3px;
+  color: var(--ink-faint);
+  white-space: nowrap;
+}
+
 .chat-bubble-intro {
   font-family: var(--font-serif);
   font-size: 16px;
@@ -6574,8 +6584,10 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 
 .skill-item .skill-footer {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
+  row-gap: 8px;
   margin-top: 4px;
   padding-top: 10px;
   border-top: 1px solid #f5f5f5;
@@ -6593,6 +6605,10 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
   color: #d4726a;
   font-weight: 600;
   letter-spacing: -0.2px;
+  /* Without this, "⭐ 5" can break at the space once .skill-winrate's
+     async-loaded text squeezes the row tight — the star glyph and its
+     count end up stacked on two lines instead of side by side. */
+  white-space: nowrap;
 }
 
 /* Playground win-rate badge — filled async from /playground/stats-batch */

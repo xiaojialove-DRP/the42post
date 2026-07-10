@@ -145,6 +145,7 @@
             <textarea class="chat-bubble-input" id="chaosInput" placeholder=" " maxlength="2000"></textarea>
             <div class="chat-bubble-footer">
               <span class="chat-char-count" id="chatCharCount"></span>
+              <span class="voice-native-hint" id="voiceNativeHint" data-i18n="voice_native_hint" style="display:none"></span>
               <button class="btn-voice-input" id="btnVoiceChat" title="Voice input" aria-label="Voice input" style="display:none">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
@@ -423,13 +424,13 @@
 
       <!-- Step Indicator — 4 steps -->
       <div class="forge-steps" id="forgeSteps">
-        <div class="forge-step active" data-step="1"><span class="step-num">01</span><span class="step-label">IDEA</span></div>
+        <div class="forge-step active" data-step="1"><span class="step-num">01</span><span class="step-label" data-i18n="forge_step_idea">IDEA</span></div>
         <div class="forge-step-line"></div>
-        <div class="forge-step" data-step="2"><span class="step-num">02</span><span class="step-label">GENERATING</span></div>
+        <div class="forge-step" data-step="2"><span class="step-num">02</span><span class="step-label" data-i18n="forge_step_generating">GENERATING</span></div>
         <div class="forge-step-line"></div>
-        <div class="forge-step" data-step="3"><span class="step-num">03</span><span class="step-label">FORGE & EDIT</span></div>
+        <div class="forge-step" data-step="3"><span class="step-num">03</span><span class="step-label" data-i18n="forge_step_forge_edit">FORGE & EDIT</span></div>
         <div class="forge-step-line"></div>
-        <div class="forge-step" data-step="4"><span class="step-num">04</span><span class="step-label">PUBLISHING</span></div>
+        <div class="forge-step" data-step="4"><span class="step-num">04</span><span class="step-label" data-i18n="forge_step_publishing">PUBLISHING</span></div>
       </div>
 
       <!-- Step 1: Choose Domain -->
@@ -591,11 +592,7 @@
             <div class="domain-choice" data-domain="visual" data-i18n="forge_domain_visual">👁️ Visual</div>
             <div class="domain-choice" data-domain="experience" data-i18n="forge_domain_experience">💫 Experience</div>
             <div class="domain-choice" data-domain="sound" data-i18n="forge_domain_sound">🎵 Sound</div>
-            <!-- Pre-selected: 'ideas' is the backend's silent fallback when
-                 nothing is picked (routes/skills.js). Showing it as already
-                 chosen makes that visible instead of an invisible default -
-                 the user sees a category and can change it. -->
-            <div class="domain-choice selected" data-domain="ideas" data-i18n="forge_domain_ideas">💡 Ideas</div>
+            <div class="domain-choice" data-domain="ideas" data-i18n="forge_domain_ideas">💡 Ideas</div>
             <div class="domain-choice" data-domain="history" data-i18n="forge_domain_history">📜 History</div>
             <div class="domain-choice" data-domain="fun" data-i18n="forge_domain_fun">🎉 Fun</div>
           </div>

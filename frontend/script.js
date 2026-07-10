@@ -2511,6 +2511,19 @@ function initSkillForge() {
     });
   }
 
+  // Reads the user's domain pick, or blocks and prompts for one. No domain
+  // starts pre-selected (see index.html) — an unpicked domain used to
+  // silently fall back to 'ideas', which meant a creator could publish
+  // without ever having chosen a category themselves.
+  function getSelectedDomainOrPrompt() {
+    const domain = document.querySelector('.domain-choice.selected');
+    if (!domain) {
+      alertI18n('error_select_domain');
+      return null;
+    }
+    return domain.dataset.domain;
+  }
+
   // Domain selection handler
   document.querySelectorAll('.domain-choice').forEach(choice => {
     choice.addEventListener('click', function() {
@@ -2630,10 +2643,8 @@ function initSkillForge() {
   const btnConfirmSkill = document.getElementById('btnConfirmSkill');
   if (btnConfirmSkill) {
     btnConfirmSkill.addEventListener('click', () => {
-      const domain = document.querySelector('.domain-choice.selected');
-
-      // Domain is optional - use default if not selected
-      const selectedDomainValue = domain ? domain.dataset.domain : 'ideas';
+      const selectedDomainValue = getSelectedDomainOrPrompt();
+      if (!selectedDomainValue) return;
 
       // 保存编辑后的技能内容
       const editedName = document.getElementById('reviewSkillName').value;
@@ -2773,6 +2784,10 @@ function initSkillForge() {
         alertI18n('error_enter_skill_name');
         return;
       }
+      if (!document.querySelector('.domain-choice.selected')) {
+        alertI18n('error_select_domain');
+        return;
+      }
 
       // 打开预览弹窗
       const modal = document.getElementById('skillPreviewModal');
@@ -2787,9 +2802,8 @@ function initSkillForge() {
       document.getElementById('previewLoading').style.display = 'block';
 
       try {
-        // 生成五层结构
-        const domain = document.querySelector('.domain-choice.selected');
-        const selectedDomain = domain ? domain.dataset.domain : 'ideas';
+        // 生成五层结构 (domain already validated as selected, above)
+        const selectedDomain = document.querySelector('.domain-choice.selected').dataset.domain;
 
         const fiveLayerResponse = await fetch(`${ApiClient.BASE_URL}/forge/preview`, {
           method: 'POST',
@@ -2977,8 +2991,8 @@ function initSkillForge() {
       btnRegenerateFromPreview.textContent = '🔄 重新生成中...';
 
       try {
-        const domain = document.querySelector('.domain-choice.selected');
-        const selectedDomain = domain ? domain.dataset.domain : 'ideas';
+        // Reaching this modal already required a domain pick in btnPreviewSkill above.
+        const selectedDomain = document.querySelector('.domain-choice.selected')?.dataset.domain || 'ideas';
 
         const response = await fetch(`${ApiClient.BASE_URL}/forge/preview`, {
           method: 'POST',
@@ -4844,11 +4858,22 @@ function neutralizeDescendantSrgbColors(root) {
   };
 }
 
-// Builds a detached, off-screen clone of the card that's safe for
-// html2canvas: the root's entire computed style is frozen inline (so it
-// renders identically with zero class lookups) and its class is removed,
-// which is what actually stops html2canvas from re-reading the original
-// color-mix() gradient rule. The live on-screen card is never touched.
+// Builds a detached, off-screen clone of the card for html2canvas. Keeps
+// the original class (and data-domain attribute) so the clone is styled
+// by the same stylesheet rules as the live card — color-mix()/html2canvas
+// incompatibility is handled separately by neutralizeDescendantSrgbColors(),
+// which runs on this clone right after and covers the root element too.
+//
+// This used to also freeze the root's *entire* computed style inline (every
+// property getComputedStyle reports, not just the ones commemorative-card's
+// own rule declares) and strip the class. That silently broke inherited
+// typography: getComputedStyle resolves `line-height` to an absolute px
+// value derived from the root's own font-size, and inlining it overrides
+// the cascade for every descendant that doesn't set its own line-height
+// (.sq-bottom-row, .sq-hash-line, .sq-meta-line, .sq-domain-pill, .sq-top) —
+// each line rendered ~2x tall, pushing the "www.the42post.com" row past the
+// card's fixed height and out through `overflow: hidden`. That was the
+// downloaded/emailed Creator Card's bottom-truncation bug.
 function buildCaptureClone(cardElement) {
   const clone = cardElement.cloneNode(true);
   // cloneNode(true) copies every descendant id verbatim (e.g. #cardSoulHash),
@@ -4862,16 +4887,6 @@ function buildCaptureClone(cardElement) {
   clone.style.left = '-9999px';
   clone.style.top = '0';
   document.body.appendChild(clone);
-
-  const computed = window.getComputedStyle(cardElement);
-  const inlineParts = [];
-  for (let i = 0; i < computed.length; i++) {
-    const prop = computed[i];
-    const value = srgbFnToRgb(computed.getPropertyValue(prop));
-    if (value) inlineParts.push(`${prop}:${value}`);
-  }
-  clone.setAttribute('style', inlineParts.join(';'));
-  clone.removeAttribute('class');
 
   return clone;
 }
@@ -7324,8 +7339,8 @@ async function initAgentArchiveView() {
       desc,
       descCn,
       author: creatorName,  // Normalize author field
-      title: s.title || s.titleCn || 'Unknown Skill',
-      titleCn: s.titleCn || s.title || '未知技能',
+      title: s.title || s.title_cn || s.titleCn || 'Unknown Skill',
+      titleCn: s.title_cn || s.titleCn || s.title || '未知技能',
       stars,
       downloads,
       starlight,
@@ -8760,7 +8775,19 @@ function onSkillForgeSuccess(skillData) {
    ═══════════════════════════════════════════════════════ */
 function initVoiceInput() {
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SpeechRecognition) return;
+  if (!SpeechRecognition) {
+    // No Web Speech API here (WebKit has never implemented it — true for
+    // Safari and every iOS browser, since they all run on WebKit). There's
+    // no free way to build a working mic button on these devices. iOS's own
+    // keyboard already has dictation built in, so point at that instead of
+    // showing a button that can't do anything.
+    const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+    if (isIOS) {
+      const hint = document.getElementById('voiceNativeHint');
+      if (hint) hint.style.display = 'inline';
+    }
+    return;
+  }
 
   // Mobile: single-shot mode (tap→speak→auto-stop→tap again to add more).
   // This matches the UX of every mobile voice keyboard and works across
