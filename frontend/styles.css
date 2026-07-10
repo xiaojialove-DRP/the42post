@@ -6042,17 +6042,20 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
     padding-right: 16px;
   }
   .header-buttons {
-    /* flex-start, not center: when content is narrow enough to fit (e.g.
-       Chinese labels) this is a no-op since the outer .header-actions is
-       already centered. But when it's too wide to fit (English labels,
-       e.g. "SEMANTIC ARCHIVE") and has to scroll, centering an overflowing
-       row makes it hang off both sides equally -- and since scrollLeft
-       can't go negative, the left overflow is clipped flush against the
-       edge (canceling the padding above) while only the right side stays
-       reachable by scrolling. flex-start keeps the row anchored at its own
-       left edge so the padding always holds, and any overflow predictably
-       trails off to the right where the scroll can reach it. */
-    justify-content: flex-start;
+    /* space-between, not center or flex-start. Chinese labels are much
+       shorter than their English counterparts ("语义储藏室" vs "SEMANTIC
+       ARCHIVE"), so with flex-start the Chinese row hugs the left edge and
+       dumps all the leftover space on the right -- lopsided next to English,
+       which nearly fills the row. space-between spreads that leftover space
+       out as gaps between the buttons instead, so the row always spans the
+       same full width edge-to-edge in both languages, and each button still
+       sizes to its own content (no artificial stretching). Center was ruled
+       out earlier: when content overflows (long English labels on a narrow
+       screen) centering an overflowing row clips its start flush against
+       the edge, since scrollLeft can't go negative -- space-between doesn't
+       have that failure mode, per spec it falls back to start-aligned
+       packing once free space goes negative. */
+    justify-content: space-between;
     gap: 4px;
     flex-wrap: nowrap;
     overflow-x: auto;
@@ -6060,7 +6063,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
   }
   .btn-arena, .btn-agent-view {
     font-size: var(--font-xs);
-    padding: 6px 10px;
+    padding: 6px 8px;
     white-space: nowrap;
     flex-shrink: 0;
     min-width: 110px;
@@ -6211,9 +6214,11 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
      flex-wrap rules across these media queries, found from a real
      screenshot of it wrapping at this exact width). */
   .header-buttons {
-    /* flex-start: see the same rule at the 768px breakpoint above for why
-       centering an overflowing scroll row clips the left side flush. */
-    justify-content: flex-start;
+    /* space-between: see the same rule at the 768px breakpoint above --
+       keeps the row spanning the same full width in both languages instead
+       of a short Chinese row hugging the left edge, without the overflow-
+       clipping failure mode that ruled out center. */
+    justify-content: space-between;
     flex-wrap: nowrap;
     gap: 6px;
   }
