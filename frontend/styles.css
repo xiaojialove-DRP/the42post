@@ -410,6 +410,29 @@ body[data-lang="cn"] .voices-header-text {
   margin-bottom: 6px;
   letter-spacing: -0.01em;
   line-height: 1.2;
+  /* Balances line lengths instead of letting the last word/character wrap
+     alone onto its own line (e.g. Chinese "...AI 学会什么？" dropping just
+     "么？" to a lonely second line). No-op in browsers that don't support
+     it yet -- falls back to normal wrapping, never worse than before. */
+  text-wrap: balance;
+}
+
+/* Explicit break point for the Chinese headline ("...AI<br>学会什么？"),
+   set in i18n.js. text-wrap:balance above is width-based only -- it
+   doesn't know Chinese word boundaries, and on its own it balanced this
+   specific string by splitting "希望" across two lines, which reads far
+   worse than the single-character orphan it was meant to fix. A real
+   break at the actual clause boundary avoids that regardless of what
+   balance would have chosen. Hidden by default: at wide viewports this
+   heading normally fits on one line, and forcing a break there would be
+   the same mistake in reverse. */
+.section-heading-break {
+  display: none;
+}
+@media (max-width: 768px) {
+  .section-heading-break {
+    display: inline;
+  }
 }
 
 .section-rule {
@@ -6054,7 +6077,18 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
        screen) centering an overflowing row clips its start flush against
        the edge, since scrollLeft can't go negative -- space-between doesn't
        have that failure mode, per spec it falls back to start-aligned
-       packing once free space goes negative. */
+       packing once free space goes negative.
+       width: 100% is the part that actually makes space-between do
+       anything: without it .header-buttons shrink-wraps to its own
+       content, so in Chinese (narrower content) there is no slack left
+       inside it to distribute -- the row just sits at its own small
+       size, centered by .header-actions with large equal margins on
+       both sides, which is exactly the "indented compared to English"
+       look this was meant to fix. Stretching it to the full available
+       width first is what gives space-between real room to push the
+       first button to the left edge and the last to the right edge
+       in both languages. */
+    width: 100%;
     justify-content: space-between;
     gap: 4px;
     flex-wrap: nowrap;
@@ -6068,6 +6102,18 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
     flex-shrink: 0;
     min-width: 110px;
     text-align: center;
+  }
+  /* Playground and Archive share the row's leftover space instead of
+     leaving it as empty gaps. Chinese labels ("创意游乐场" / "语义储藏室")
+     are short enough that space-between alone left visibly large,
+     empty-looking gaps between the buttons. Growing both (equally, so
+     neither ends up wider than the other) fills that space as extra
+     padding around real text -- reads as two roomier pills -- rather
+     than as dead air. Unlike growing the lang button (which really is
+     only ever 2 characters), this doesn't recreate the "big empty box
+     around two letters" problem from before. */
+  .btn-arena, .btn-agent-view {
+    flex-grow: 1;
   }
   /* .btn-lang's own rule already narrows this to 60px on desktop (it only
      ever holds 2 characters, "中文" or "EN") — this block used to fold it
@@ -6148,7 +6194,15 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
   }
 
   body[data-lang="cn"] .section-heading {
-    font-family: var(--font-sans-cn);
+    /* Was sans-cn here, contradicting the base rule (line ~194) that
+       specifically puts .section-heading in Noto Serif SC "to match
+       Playground" -- so on mobile, exactly where English keeps its
+       elegant Playfair Display serif look, Chinese silently dropped to
+       plain sans-serif. Body copy is a different call (dense small CJK
+       text can render better in sans-serif at low DPI) but a large bold
+       heading doesn't have that problem, and losing the serif here is
+       what made Chinese look flatter / less considered than English. */
+    font-family: var(--font-serif-cn);
     font-weight: 700;
     letter-spacing: -0.01em;
     font-size: 32px;
@@ -6214,10 +6268,12 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
      flex-wrap rules across these media queries, found from a real
      screenshot of it wrapping at this exact width). */
   .header-buttons {
-    /* space-between: see the same rule at the 768px breakpoint above --
-       keeps the row spanning the same full width in both languages instead
-       of a short Chinese row hugging the left edge, without the overflow-
-       clipping failure mode that ruled out center. */
+    /* width + space-between: see the same rule at the 768px breakpoint
+       above -- width:100% is required for space-between to have any
+       slack to distribute; without it the row just shrink-wraps and gets
+       centered with large equal margins in Chinese, which looked
+       "indented" compared to English. */
+    width: 100%;
     justify-content: space-between;
     flex-wrap: nowrap;
     gap: 6px;

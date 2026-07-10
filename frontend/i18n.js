@@ -302,7 +302,7 @@ const I18N = {
     footer_contact_title: '→ 联络我们',
     footer_contact_invite: '疑问、灵感，或不同声音——',
     footer_contact_promise: '我们认真阅读每一段人类思想。',
-    section_1: '你最希望或最不希望 AI 学会什么？',
+    section_1: '你最希望或最不希望 AI <br class="section-heading-break">学会什么？',
     voices_header: '来自社区的声音',
     btn_share: '分享',
     section_2: 'II. 新技能故事',
