@@ -11238,12 +11238,17 @@ h1, h2, h3, h4, h5, h6 {
    ═══════════════════════════════════════════════════════════════════ */
 
 /* Visible keyboard focus on interactive elements — additive a11y, does not
-   alter any element's resting appearance (only shows on keyboard focus). */
+   alter any element's resting appearance (only shows on keyboard focus).
+   input/textarea/select are deliberately not in this list: unlike buttons
+   and links (which had zero focus feedback before this rule existed),
+   every text field in this codebase already has its own bespoke :focus
+   treatment (border/background color shifts throughout this file), and
+   several — like .chat-bubble-input — sit inside a wrapper with its own
+   :focus-within glow. Adding this coral ring on top of an already-designed
+   focus state doesn't fill a gap, it just draws a second, clashing box
+   over the first one. */
 button:focus-visible,
 a:focus-visible,
-input:focus-visible,
-textarea:focus-visible,
-select:focus-visible,
 [tabindex]:focus-visible {
   outline: none;
   box-shadow: var(--shadow-focus);
