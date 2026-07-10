@@ -30,7 +30,18 @@ THE 42 POST is a web platform where anyone can create **Skills** — structured,
 
 **Our answer:** Democratize AI alignment by making values explicit, auditable, and community-authored. No coding required — just your perspective as a human.
 
-This is an open-source research project. We believe AI alignment should be owned by everyone, not corporations.
+---
+
+## Why We Keep This Open
+
+THE 42 POST is not a commercial product. We believe AI value alignment should be:
+
+- **Owned by everyone** — not by a handful of large corporations
+- **Research-driven** — not optimized for commercial algorithms
+- **Culturally diverse** — shaped by a global community
+- **Verifiable and auditable** — not a black box
+
+That is why we open-sourced it.
 
 ---
 
