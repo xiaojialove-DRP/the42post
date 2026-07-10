@@ -7991,12 +7991,13 @@ async function initAgentArchiveView() {
               <div class="skill-desc">${escapeHtml(shortDesc)}</div>
               <div class="skill-footer">
                 <div class="skill-meta">
-                  <span class="skill-stars">⭐ ${skill.starlight_score || skill.stars || 0}</span>
                   <span class="skill-winrate" data-skill-id="${skill.id}"></span>
                 </div>
-                <!-- Action buttons: Star, Download, Play -->
+                <!-- Action buttons: Star (icon + count together, not a separate
+                     count element elsewhere — two stars for one concept read as
+                     two different things), Download, Play -->
                 <div class="skill-actions">
-                  <button class="skill-action-btn star-btn ${isStarred ? 'starred' : ''}" data-skill-id="${skill.id}" title="${isStarred ? 'Unstar this skill' : 'Star this skill'}">${isStarred ? '★' : '☆'}</button>
+                  <button class="skill-action-btn star-btn ${isStarred ? 'starred' : ''}" data-skill-id="${skill.id}" title="${isStarred ? 'Unstar this skill' : 'Star this skill'}"><span class="star-btn-icon">${isStarred ? '★' : '☆'}</span><span class="star-btn-count">${skill.starlight_score || skill.stars || 0}</span></button>
                   <button class="skill-action-btn download-btn ${!isStarred ? 'disabled' : ''}" data-skill-id="${skill.id}" title="${isStarred ? 'Download skill' : 'Star first to download'}" ${!isStarred ? 'disabled' : ''}>📥</button>
                   <button class="skill-action-btn play-btn" data-skill-id="${skill.id}" title="Play Twin Test">▶</button>
                 </div>
@@ -8079,14 +8080,19 @@ async function initAgentArchiveView() {
         locallyToggledSkillIds.add(skillId);
         const skillItem = btn.closest('.skill-item');
         const downloadBtn = skillItem?.querySelector('.download-btn');
-        const starCountEl = skillItem?.querySelector('.skill-stars');
+        // Icon + count now live inside the star button itself (one star
+        // concept, not a separate count element elsewhere on the card) —
+        // update each span, never the button's textContent wholesale, or
+        // it wipes out whichever of the two this click didn't touch.
+        const iconEl = btn.querySelector('.star-btn-icon');
+        const countEl = btn.querySelector('.star-btn-count');
 
         const starredSkills = safeStorage.getJSON('starred_skills', {});
         const isCurrentlyStarred = starredSkills[skillId] === true;
         const willBeStarred = !isCurrentlyStarred;
 
         // Optimistic UI update
-        btn.textContent = willBeStarred ? '★' : '☆';
+        if (iconEl) iconEl.textContent = willBeStarred ? '★' : '☆';
         btn.classList.toggle('starred', willBeStarred);
         btn.title = willBeStarred ? 'Unstar this skill' : 'Star this skill';
         if (skillItem) skillItem.dataset.isStarred = String(willBeStarred);
@@ -8111,14 +8117,14 @@ async function initAgentArchiveView() {
           });
           if (resp.ok) {
             const result = await resp.json();
-            if (starCountEl && typeof result.totalStars !== 'undefined') {
-              starCountEl.textContent = `⭐ ${result.totalStars}`;
+            if (countEl && typeof result.totalStars !== 'undefined') {
+              countEl.textContent = result.totalStars;
             }
           }
         } catch (err) {
           console.warn('Star API error:', err.message);
           // Revert on error
-          btn.textContent = isCurrentlyStarred ? '★' : '☆';
+          if (iconEl) iconEl.textContent = isCurrentlyStarred ? '★' : '☆';
           btn.classList.toggle('starred', isCurrentlyStarred);
         } finally {
           btn.disabled = false;
@@ -8182,23 +8188,24 @@ async function initAgentArchiveView() {
         if (!data) return;
 
         const skillItem = btn.closest('.skill-item');
-        const starCountEl = skillItem?.querySelector('.skill-stars');
+        const iconEl = btn.querySelector('.star-btn-icon');
+        const countEl = btn.querySelector('.star-btn-count');
         const downloadBtn = skillItem?.querySelector('.download-btn');
 
         // Update count display
-        if (starCountEl) starCountEl.textContent = `⭐ ${data.totalStars}`;
+        if (countEl) countEl.textContent = data.totalStars;
 
         // Update starred state from backend (source of truth)
         if (data.userStarred) {
           btn.classList.add('starred');
-          btn.textContent = '★';
+          if (iconEl) iconEl.textContent = '★';
           btn.title = 'Unstar this skill';
           starredSkills[id] = true;
           if (skillItem) skillItem.dataset.isStarred = 'true';
           if (downloadBtn) { downloadBtn.disabled = false; downloadBtn.classList.remove('disabled'); }
         } else {
           btn.classList.remove('starred');
-          btn.textContent = '☆';
+          if (iconEl) iconEl.textContent = '☆';
           btn.title = 'Star this skill';
           delete starredSkills[id];
           if (skillItem) skillItem.dataset.isStarred = 'false';

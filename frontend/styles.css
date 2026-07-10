@@ -6035,9 +6035,24 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
   }
   .header-actions {
     justify-content: center !important;
+    /* .global-header zeroes its own padding below (full-bleed rule lines) —
+       that's meant for the horizontal rules, not this button row, which
+       was touching both screen edges without its own inset. */
+    padding-left: 16px;
+    padding-right: 16px;
   }
   .header-buttons {
-    justify-content: center;
+    /* flex-start, not center: when content is narrow enough to fit (e.g.
+       Chinese labels) this is a no-op since the outer .header-actions is
+       already centered. But when it's too wide to fit (English labels,
+       e.g. "SEMANTIC ARCHIVE") and has to scroll, centering an overflowing
+       row makes it hang off both sides equally -- and since scrollLeft
+       can't go negative, the left overflow is clipped flush against the
+       edge (canceling the padding above) while only the right side stays
+       reachable by scrolling. flex-start keeps the row anchored at its own
+       left edge so the padding always holds, and any overflow predictably
+       trails off to the right where the scroll can reach it. */
+    justify-content: flex-start;
     gap: 4px;
     flex-wrap: nowrap;
     overflow-x: auto;
@@ -6175,6 +6190,8 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
   /* Header actions centered on mobile */
   .header-actions {
     justify-content: center !important;
+    padding-left: 16px;
+    padding-right: 16px;
   }
 
   /* Stay one row even here - same nowrap+scroll base rule, this block
@@ -6182,7 +6199,9 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
      flex-wrap rules across these media queries, found from a real
      screenshot of it wrapping at this exact width). */
   .header-buttons {
-    justify-content: center;
+    /* flex-start: see the same rule at the 768px breakpoint above for why
+       centering an overflowing scroll row clips the left side flush. */
+    justify-content: flex-start;
     flex-wrap: nowrap;
     gap: 6px;
   }
@@ -6601,16 +6620,6 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
   font-size: 12px;
 }
 
-.skill-item .skill-stars {
-  color: #d4726a;
-  font-weight: 600;
-  letter-spacing: -0.2px;
-  /* Without this, "⭐ 5" can break at the space once .skill-winrate's
-     async-loaded text squeezes the row tight — the star glyph and its
-     count end up stacked on two lines instead of side by side. */
-  white-space: nowrap;
-}
-
 /* Playground win-rate badge — filled async from /playground/stats-batch */
 .skill-item .skill-winrate {
   color: #6a8d52;
@@ -6658,6 +6667,19 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 
 @media (max-width: 768px) {
   .skill-action-btn { min-width: 44px; min-height: 44px; font-size: 17px; }
+}
+
+/* Star button — icon + accumulated count live together in one control
+   (like GitHub's star button), instead of a separate count element
+   elsewhere on the card competing for space with a second star glyph. */
+.star-btn {
+  gap: 3px;
+  padding-left: 10px;
+  padding-right: 10px;
+}
+.star-btn-count {
+  font-size: 12px;
+  font-weight: 700;
 }
 
 /* Star button - filled state */
