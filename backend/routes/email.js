@@ -84,7 +84,6 @@ router.post('/send-forge-success', rateLimitForge, async (req, res, next) => {
       markdown: `${apiBaseUrl}/api/download/${skillId}?format=markdown`,
       langchain: `${apiBaseUrl}/api/download/${skillId}?format=langchain`,
       mcp: `${apiBaseUrl}/api/download/${skillId}?format=mcp`,
-      certificate: `${apiBaseUrl}/api/download/${skillId}?format=certificate`,
       site: apiBaseUrl
     };
 
@@ -92,6 +91,16 @@ router.post('/send-forge-success', rateLimitForge, async (req, res, next) => {
     // (works in Gmail and all major email clients; plain data: URIs are stripped
     // by Gmail's CSS sanitiser). The template receives the CID reference string
     // so it renders <img src="cid:creator-card"> instead of the data: URI.
+    //
+    // Resend's Attachment type (node_modules/resend/dist/index.d.mts) uses
+    // camelCase contentType/contentId, and has no "inline" field at all --
+    // setting contentId is what marks an attachment inline. This previously
+    // used content_type/content_id/inline (snake_case, and a field that
+    // doesn't exist), which Resend silently ignored: the PNG still sent as a
+    // normal, non-inline attachment, but nothing was tagged with the cid the
+    // template's <img src="cid:creator-card"> was pointing at -- a broken
+    // image in the email body every time, with the real PNG only reachable
+    // as a separate attachment.
     let emailAttachments = [];
     let templateCardRef = null;
     if (cardImageBase64 && cardImageBase64.startsWith('data:image/')) {
@@ -100,9 +109,8 @@ router.post('/send-forge-success', rateLimitForge, async (req, res, next) => {
         emailAttachments = [{
           filename: 'creator-card.png',
           content: base64Data,
-          content_type: 'image/png',
-          content_id: 'creator-card',
-          inline: true
+          contentType: 'image/png',
+          contentId: 'creator-card'
         }];
         templateCardRef = 'cid:creator-card';
       }

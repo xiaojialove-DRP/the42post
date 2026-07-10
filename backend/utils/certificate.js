@@ -306,7 +306,6 @@ export function generateEmailTemplate(
   const markdownUrl = downloadUrls.markdown || '#';
   const langchainUrl = downloadUrls.langchain || '#';
   const mcpUrl = downloadUrls.mcp || '#';
-  const certificateUrl = downloadUrls.certificate || '#';
   const siteUrl = downloadUrls.site || 'https://the42post.com';
   const archiveUrl = `${siteUrl}/archive.html`;
 
@@ -690,7 +689,10 @@ export function generateEmailTemplate(
         <div style="margin: 20px 0; text-align: center;">
           <img src="${cardImageBase64}" alt="Creator Card" style="max-width: 100%; height: auto; border-radius: 4px; display: inline-block;">
           <p style="font-size: 11px; color: #999; margin-top: 8px;">${isCn
-            ? '💻 桌面端：右键点击图片 → 另存为，即可保存 PNG 到下载文件夹'
+            ? '📱 手机端：长按图片 → 存储图像，即可保存到相册'
+            : '📱 On mobile: press and hold the image above → "Save Image" to add it to your photos'}</p>
+          <p style="font-size: 11px; color: #999; margin-top: 4px;">${isCn
+            ? '💻 电脑端：右键点击图片 → 另存为，即可保存 PNG 到下载文件夹'
             : '💻 On desktop: right-click the image above → "Save Image As" to download the PNG'}</p>
         </div>
         ` : `
@@ -782,15 +784,6 @@ export function generateEmailTemplate(
           </div>
         </div>
         `}
-
-        <!-- Certificate Page Link — this serves an HTML certificate page,
-             NOT a PNG. Label corrected to match what it actually delivers;
-             the PNG itself is the embedded image above (or the download
-             button in the app), not this link. -->
-        <div style="text-align: center; margin: 20px 0;">
-          <p style="font-size: 12px; color: #666; margin-bottom: 10px;">${isCn ? '📄 也可以查看网页版证书：' : '📄 You can also view a web certificate page:'}</p>
-          <a href="${certificateUrl}" style="display: inline-block; background: #222; color: white; padding: 12px 28px; text-decoration: none; border-radius: 3px; font-size: 12px; font-weight: bold; letter-spacing: 0.5px;">${isCn ? '🔗 打开证书页面' : '🔗 Open Certificate Page'}</a>
-        </div>
 
         <!-- DOWNLOAD SECTION -->
         <div class="install-title">INSTALL YOUR SKILL</div>
