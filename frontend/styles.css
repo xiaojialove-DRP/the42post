@@ -206,9 +206,12 @@ body {
   font-family: var(--font-serif-cn), var(--font-serif);
 }
 
-/* Use Playfair Display for input by default (English) */
+/* Use Playfair Display for input by default (English), falling back to
+   Noto Serif SC for any CJK glyphs typed while in English mode -- Playfair
+   has no CJK coverage, so without this fallback the browser silently picks
+   its own default CJK font instead of matching Chinese-mode rendering. */
 .chat-bubble-input {
-  font-family: var(--font-serif) !important;
+  font-family: var(--font-serif), var(--font-serif-cn) !important;
 }
 
 /* Use Noto Serif SC for input in Chinese mode */
@@ -5987,7 +5990,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
     font-family: 'Noto Serif SC', 'STSong', serif !important;
   }
   body[data-lang="en"] .chat-bubble-input {
-    font-family: 'Playfair Display', Georgia, serif !important;
+    font-family: 'Playfair Display', Georgia, 'Noto Serif SC', 'STSong', serif !important;
   }
   .chat-bubble-invite {
     font-size: 14px !important;
