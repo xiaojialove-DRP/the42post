@@ -6058,12 +6058,24 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
   }
-  .btn-arena, .btn-agent-view, .btn-lang {
+  .btn-arena, .btn-agent-view {
     font-size: var(--font-xs);
     padding: 6px 10px;
     white-space: nowrap;
     flex-shrink: 0;
     min-width: 110px;
+    text-align: center;
+  }
+  /* .btn-lang's own rule already narrows this to 60px on desktop (it only
+     ever holds 2 characters, "中文" or "EN") — this block used to fold it
+     into the same 110px floor as the other two, undoing that on exactly
+     the screens where the oversized box is most visible and space is
+     tightest. */
+  .btn-lang {
+    font-size: var(--font-xs);
+    padding: 6px 10px;
+    white-space: nowrap;
+    flex-shrink: 0;
     text-align: center;
   }
 
