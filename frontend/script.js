@@ -8824,6 +8824,34 @@ function initVoiceInput() {
     let rec = null;
     let listening = false;   // a recognition session is running
     let committed = '';      // text already confirmed by previous sessions
+    let watchdog = null;     // see armWatchdog() below
+
+    // rec.start() not throwing only proves the call was accepted -- it
+    // does not prove the underlying native speech engine is actually
+    // running. Some degraded WebViews (again, the same class of embedded
+    // in-app browser as the sync-throw case above) accept the call and
+    // then never fire onresult, onerror, or onend at all: the button
+    // sits on "Listening…" forever with nothing to do but wait, which
+    // looks identical to "broken" from the user's side. If nothing
+    // happens within a generous window, treat it as failed and say so.
+    function armWatchdog() {
+      clearWatchdog();
+      watchdog = setTimeout(() => {
+        watchdog = null;
+        if (!listening) return;
+        listening = false;
+        try { rec && rec.abort(); } catch (_) {}
+        setBtn('idle');
+        const isCn = (typeof currentLang !== 'undefined' && currentLang === 'cn')
+          || document.body.dataset.lang === 'cn';
+        showError(isCn
+          ? '语音识别没有响应，当前浏览器可能不支持。可尝试用系统自带浏览器（如 Safari/Chrome）打开'
+          : 'Voice input is not responding — try opening this in your default browser (Safari/Chrome)');
+      }, 8000);
+    }
+    function clearWatchdog() {
+      if (watchdog) { clearTimeout(watchdog); watchdog = null; }
+    }
 
     function setBtn(state) {
       btn.classList.toggle('recording', state === 'recording');
@@ -8840,6 +8868,9 @@ function initVoiceInput() {
       r.maxAlternatives = 1;
 
       r.onresult = (e) => {
+        // A result proves the engine is genuinely alive — the one thing
+        // the watchdog above can't tell from a merely-accepted start().
+        clearWatchdog();
         let interim = '';
         let final = '';
         for (let i = e.resultIndex; i < e.results.length; i++) {
@@ -8853,6 +8884,7 @@ function initVoiceInput() {
       };
 
       r.onerror = (e) => {
+        clearWatchdog(); // an error is still a response — not a hang
         if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
           listening = false;
           committed = '';
@@ -8867,11 +8899,12 @@ function initVoiceInput() {
       };
 
       r.onend = () => {
+        clearWatchdog();
         listening = false;
         if (!isMobile) {
           // Desktop: auto-restart until user clicks stop
           if (rec === r) {
-            try { r.start(); listening = true; } catch (_) { setBtn('idle'); }
+            try { r.start(); listening = true; armWatchdog(); } catch (_) { setBtn('idle'); }
           }
         } else {
           // Mobile: single shot done — show "tap to add more" if we got text
@@ -8888,6 +8921,7 @@ function initVoiceInput() {
       try {
         rec.start();
         listening = true;
+        armWatchdog();
         setBtn('recording');
         const isChinese = rec.lang === 'zh-CN';
         btn.dataset.voiceLang = isChinese ? '中' : 'EN';
@@ -8910,6 +8944,7 @@ function initVoiceInput() {
     }
 
     function stop() {
+      clearWatchdog();
       const old = rec;
       rec = null;
       listening = false;
