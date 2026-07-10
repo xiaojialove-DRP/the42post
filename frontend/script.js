@@ -8893,8 +8893,19 @@ function initVoiceInput() {
         btn.dataset.voiceLang = isChinese ? '中' : 'EN';
         btn.title = isChinese ? '正在听写：中文' : 'Listening: English';
       } catch (e) {
+        // Was silent — a synchronous throw here (seen in some Android
+        // in-app browsers, e.g. WeChat/Xiaohongshu's embedded WebView,
+        // where webkitSpeechRecognition exists as an object but the
+        // underlying native bridge isn't actually wired up) left the
+        // button just quietly reverting to idle with zero feedback,
+        // indistinguishable from the tap not registering at all.
         listening = false;
         setBtn('idle');
+        const isCn = (typeof currentLang !== 'undefined' && currentLang === 'cn')
+          || document.body.dataset.lang === 'cn';
+        showError(isCn
+          ? '语音识别启动失败，当前浏览器可能不支持。可尝试用系统自带浏览器（如 Safari/Chrome）打开'
+          : 'Voice input failed to start — try opening this in your default browser (Safari/Chrome)');
       }
     }
 
