@@ -27,6 +27,7 @@
 - **[Core Concepts](CONCEPTS.md)** — Five-layer framework, Soul-Hash, Playground vs. Archive
 - **[Architecture](ARCHITECTURE.md)** — System design, data flows, API structure
 - **[API Reference](API_REFERENCE.md)** — All REST endpoints with examples
+- **[Product Guide](product-guide.md)** — End-user walkthrough of the live platform (Chinese only)
 
 ### **Contributing**
 
@@ -86,5 +87,5 @@ PUBLISHING (skill goes public, email sent)
 
 ---
 
-**Last Updated**: June 2026  
+**Last Updated**: July 2026  
 **Status**: Production Ready ✅

@@ -34,6 +34,14 @@ Open-testing infrastructure sprint, driven by a four-lens project review (produc
 - Deleted the stale untracked `backend/.env` (contained a real Gmail app password; the live config is the repo-root `.env`). Both `.env.example` files now document `ALERT_EMAIL` and `SKIP_SEED`.
 - README.zh.md still pointed at the dead Railway URL — now www.the42post.com; both READMEs link the governance docs.
 
+### Repo hygiene — 2026-07-10
+
+- **The Railway URL fix above didn't actually land.** README.zh.md and `docs/CONTRIBUTING.md` were both still sending people to `the42post-production.up.railway.app` — now both point at `www.the42post.com`.
+- README.zh.md was missing an entire Self-Hosting section (README.md has one) and its documentation table only linked 4 of the 7 docs README.md links (missing CONCEPTS.md, SETUP.md, the deployment guide) — brought to parity. Also dropped a hardcoded "Version 1.0.0" footer that had drifted from `package.json`'s actual `1.1.0`.
+- `docs/product-guide.md` (the end-user guide, rewritten in the 1.7.0 pass below) was linked from nowhere — added to both READMEs and `docs/README.md`.
+- Dockerfile's build copied the frontend into `/app/day1/`, a path `backend/server.js` has never read (it serves `../frontend` directly) — dead copy step, removed.
+- Deleted a stray local-only `claude/focused-lewin-477897` branch (no unique commits, never pushed) and an insecure `credential.helper = store` override that had been writing plaintext GitHub credentials to `~/.git-credentials`; the repo now inherits the global `osxkeychain` helper.
+
 ## [1.7.0] — 2026-06-27
 
 A documentation-accuracy stretch and another round of real user-reported bugs. The big find: `docs/ARCHITECTURE.md` and several other docs described a system that no longer existed (Vue frontend, Claude-primary LLM, a real login system, Railway as the deploy target) — rewritten against the actual code rather than carried forward from an earlier draft. Alongside that, a recurring root cause showed up three separate times this round: the same skill data gets reshaped independently in multiple places, and each copy drifts from the others.

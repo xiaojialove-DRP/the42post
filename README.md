@@ -132,6 +132,7 @@ See [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) for guidelines.
 | [docs/SETUP.md](docs/SETUP.md) | Local development setup |
 | [docs/guides/DEPLOYMENT.md](docs/guides/DEPLOYMENT.md) | Production deployment |
 | [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) | Contribution guidelines |
+| [docs/product-guide.md](docs/product-guide.md) | End-user product guide (Chinese only) |
 | [CHANGELOG.md](CHANGELOG.md) | Release history |
 
 ---

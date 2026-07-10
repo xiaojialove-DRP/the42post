@@ -6,7 +6,7 @@ THE 42 POST is an open research project. We welcome contributions and collaborat
 
 ### 💡 Skill Creators (Easiest)
 Design and publish new skills directly on the platform. No coding required.
-- Visit [THE 42 POST](https://the42post-production.up.railway.app)
+- Visit [THE 42 POST](https://www.the42post.com)
 - Click "Skill Forge" to create your first skill
 - Publish and share with the community
 

@@ -35,11 +35,25 @@ THE 42 POST 是一个开放平台，让任何人都能创建"技能"（Skills）
 
 ## 🚀 快速开始
 
-**无需任何安装。** 访问 [THE 42 POST](https://the42post-production.up.railway.app)：
+**无需任何安装。** 访问 [THE 42 POST](https://www.the42post.com)：
 
 1. **浏览** 42+ 技能库（2 分钟）
 2. **创建** 您的第一个技能，使用技能锻造（5-10 分钟）
 3. **发布** 并获得您的 Soul-Hash 身份（1 分钟）
+
+---
+
+## 🏗️ 自托管
+
+```bash
+git clone https://github.com/xiaojialove-DRP/the42post.git
+cd the42post/backend
+cp .env.example .env       # 填入 DEEPSEEK_API_KEY 等环境变量
+npm install
+npm start
+```
+
+完整的环境配置见 [docs/SETUP.md](docs/SETUP.md)，生产部署见 [docs/guides/DEPLOYMENT.md](docs/guides/DEPLOYMENT.md)。
 
 ---
 
@@ -141,8 +155,12 @@ MIT 许可证 — 详见 [LICENSE](LICENSE) 文件
 ## 📚 文档
 
 - **[系统架构](docs/ARCHITECTURE.md)** — 系统设计和数据流
+- **[核心概念](docs/CONCEPTS.md)** — Skill、Soul-Hash、五层结构
 - **[API 参考](docs/API_REFERENCE.md)** — REST API 端点集成
+- **[本地开发环境](docs/SETUP.md)** — 本地开发环境搭建
+- **[生产部署指南](docs/guides/DEPLOYMENT.md)** — 生产环境部署
 - **[贡献指南](docs/CONTRIBUTING.md)** — 如何参与（创建者、设计师、开发者、研究员）
+- **[产品使用说明](docs/product-guide.md)** — 面向普通用户的完整操作指南
 - **[更新日志](CHANGELOG.md)** — 每个版本的新功能
 
 ---
@@ -168,7 +186,5 @@ MIT 许可证 — 详见 [LICENSE](LICENSE) 文件
 THE 42 POST 汇集了价值观敏感设计、参与式设计、跨文化人机交互和 AI 对齐研究，使价值观定义对所有人都可访问。特别感谢所有为技能库贡献技能的创建者。
 
 ---
-
-**版本**: 1.0.0 · **状态**: 公开发布 ✅
 
 *让 AI 的价值观透明、可验证、以人为中心。*
