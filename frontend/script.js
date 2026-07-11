@@ -1841,12 +1841,22 @@ function initSkillForge() {
   // ── Mobile keyboard: prevent layout jump when keyboard appears/dismisses ──
   // visualViewport API tracks the actual visible area (shrinks when keyboard opens).
   // We pin the overlay height to the visual viewport so it never reflows.
+  const KEYBOARD_SCROLL_FIELDS = ['forgeUsername', 'forgeEmail', 'forgeBackground', 'forgeSkillIdea', 'skillFeedback'];
   if (window.visualViewport) {
     function onViewportResize() {
       const vv = window.visualViewport;
       if (overlay && overlay.classList.contains('active')) {
         overlay.style.height = vv.height + 'px';
         overlay.style.top = vv.offsetTop + 'px';
+        // The keyboard's open animation fires several of these resize events
+        // in a row as it slides up. A field scrolled into view against an
+        // earlier (still-tall) reading of the viewport can end up re-hidden
+        // once the keyboard finishes settling. Re-align on every event so
+        // the correction tracks the real viewport instead of a guessed delay.
+        const active = document.activeElement;
+        if (active && KEYBOARD_SCROLL_FIELDS.includes(active.id)) {
+          active.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        }
       }
     }
     window.visualViewport.addEventListener('resize', onViewportResize);
