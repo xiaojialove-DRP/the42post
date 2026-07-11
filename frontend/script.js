@@ -2332,6 +2332,10 @@ function initSkillForge() {
       // 验证 (Domain selection moved to Step 2)
       if (!username) { alertI18n('error_enter_username'); return; }
       if (!email) { alertI18n('error_enter_email'); return; }
+      // Background is required, not optional: it feeds the contributor-
+      // diversity metric (docs/HYPOTHESES H1) — without it the corpus
+      // cannot show who is actually represented in it.
+      if (!background) { alertI18n('error_enter_background'); return; }
       if (!idea) { alertI18n('error_share_idea'); return; }
       // Same quality gate the homepage share box uses (length + keyboard-
       // mash detection) — this entry point had none at all, so gibberish
@@ -2386,6 +2390,10 @@ function initSkillForge() {
 
       if (!username) { alertI18n('error_enter_username'); return; }
       if (!email) { alertI18n('error_enter_email'); return; }
+      // Background is required, not optional: it feeds the contributor-
+      // diversity metric (docs/HYPOTHESES H1) — without it the corpus
+      // cannot show who is actually represented in it.
+      if (!background) { alertI18n('error_enter_background'); return; }
       if (!idea) { alertI18n('error_share_idea'); return; }
       // Same quality gate the homepage share box uses (length + keyboard-
       // mash detection) — this entry point had none at all, so gibberish
