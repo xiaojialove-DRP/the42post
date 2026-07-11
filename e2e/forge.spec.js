@@ -25,6 +25,9 @@ test('a real idea can be forged into a published skill', async ({ page }) => {
 
   await page.fill('#forgeUsername', 'e2e_test_user');
   await page.fill('#forgeEmail', 'e2e-test@example.com');
+  // Required since the H1 diversity metric made background mandatory —
+  // Generate Probe refuses to proceed without it.
+  await page.fill('#forgeBackground', 'e2e testing');
 
   // The streaming probe call (/forge/probe/stream) reliably fails without a
   // real LLM key and the client falls through to a second, non-streaming
