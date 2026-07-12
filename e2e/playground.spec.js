@@ -46,15 +46,17 @@ test('picking a skill and starting a Twin Test never leaks a raw provider error'
   if (await rateStage.isVisible()) {
     // Real (or fallback-generated) responses came back. Blind pick -
     // neither card is labelled with the skill side at this point - then
-    // confirm the flip-reveal and thank-you stages both appear.
+    // confirm the flip-reveal appears, react to it (the separate
+    // qualitative "how did this Skill do overall" question), and confirm
+    // the thank-you stage appears.
     await expect(rateStage.locator('[data-text-a]')).not.toHaveText('');
     await expect(rateStage.locator('[data-text-b]')).not.toHaveText('');
     await card.locator('[data-pick-card][data-side="A"]').click();
     const revealStage = card.locator('.twin-reveal');
     await expect(revealStage).toBeVisible({ timeout: 10000 });
     await expect(revealStage.locator('[data-reveal-headline]')).not.toHaveText('');
-    await revealStage.locator('[data-reveal-continue]').click();
-    await expect(card.locator('.twin-thanks')).toBeVisible({ timeout: 5000 });
+    await revealStage.locator('.twin-rate-btn[data-rating="better"]').click();
+    await expect(card.locator('.twin-thanks')).toBeVisible({ timeout: 10000 });
   } else {
     // No real LLM key in this environment - generation failed, which is
     // expected. The only thing that matters is the message stayed clean.
