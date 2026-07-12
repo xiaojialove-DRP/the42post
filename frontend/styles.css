@@ -7888,12 +7888,22 @@ button.generating {
   font-family: var(--font-mono);
   font-size: 11px;
   font-weight: 600;
-  margin-bottom: 24px;
+  margin-bottom: 6px;
   text-align: center;
   color: #666;
   letter-spacing: 1.4px;
   line-height: 1.4;
   text-transform: uppercase;
+}
+
+.probe-modal-subtitle {
+  font-family: var(--font-serif);
+  font-size: 13px;
+  font-weight: 400;
+  text-align: center;
+  color: var(--ink-muted, #999);
+  line-height: 1.4;
+  margin-bottom: 24px;
   padding-bottom: 16px;
   border-bottom: 1px solid #f0f0f0;
 }
@@ -8202,9 +8212,18 @@ button.generating {
   font-size: 16px;
   font-weight: bold;
   color: #333;
-  margin-bottom: 16px;
+  margin-bottom: 4px;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+}
+
+.preview-five-layer-subtitle {
+  font-size: 13px;
+  font-weight: 400;
+  color: #999;
+  text-transform: none;
+  letter-spacing: normal;
+  margin-bottom: 16px;
 }
 
 .preview-item {
@@ -10206,6 +10225,14 @@ button.generating {
   font-size: 9px !important;
   letter-spacing: 2px !important;
   color: var(--wc-muted) !important;
+  margin-bottom: 4px !important;
+}
+
+.probe-modal-subtitle {
+  font-family: var(--font-serif) !important;
+  font-size: 12px !important;
+  color: var(--wc-ink) !important;
+  opacity: 0.65;
   border-bottom: 1px solid var(--wc-rule) !important;
   padding-bottom: 12px !important;
   margin-bottom: 14px !important;
@@ -10393,6 +10420,15 @@ button.generating {
   letter-spacing: 1.5px !important;
   text-transform: uppercase !important;
   color: var(--wc-muted) !important;
+  margin-bottom: 3px !important;
+}
+.preview-five-layer-subtitle {
+  font-family: var(--font-serif) !important;
+  font-size: 11px !important;
+  color: var(--wc-ink) !important;
+  opacity: 0.6;
+  text-transform: none !important;
+  letter-spacing: normal !important;
   margin-bottom: 10px !important;
 }
 .preview-item label {

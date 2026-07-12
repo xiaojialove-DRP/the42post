@@ -87,6 +87,7 @@ const I18N = {
     creator_name_placeholder: 'Your name (optional)',
     /* ── Probe modal ── */
     probe_modal_title: 'INTUITION PROBE',
+    probe_modal_subtitle: 'A concrete scenario to test your instinct',
     probe_scenario_label: 'Scenario:',
     probe_choice_a_type: 'Ideal Context',
     probe_choice_b_type: 'Challenging Context',
@@ -199,6 +200,7 @@ const I18N = {
     preview_skill_name: 'Name',
     preview_skill_def: 'Definition',
     preview_five_layer: 'Five-Layer Structure',
+    preview_five_layer_subtitle: 'Breaking one instinct into 5 parts an AI can act on',
     preview_layer_1: 'DEFINING',
     preview_layer_2: 'INSTANTIATING',
     preview_layer_3: 'FENCING',
@@ -368,6 +370,7 @@ const I18N = {
     creator_name_placeholder: '你的名字（可选）',
     /* ── 直觉探针 modal ── */
     probe_modal_title: '直觉探针',
+    probe_modal_subtitle: '用一个具体场景试探你的直觉',
     probe_scenario_label: '场景:',
     probe_choice_a_type: '理想情境',
     probe_choice_b_type: '挑战情境',
@@ -514,6 +517,7 @@ const I18N = {
     preview_skill_name: '技能名称',
     preview_skill_def: '技能定义',
     preview_five_layer: '五层结构',
+    preview_five_layer_subtitle: '把一句直觉拆成 AI 能执行的五个部分',
     preview_layer_1: '定义',
     preview_layer_2: '场景举例',
     preview_layer_3: '边界定义',
