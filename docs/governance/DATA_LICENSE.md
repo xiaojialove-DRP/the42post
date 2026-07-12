@@ -43,6 +43,16 @@ anonymization method, and known sampling biases. Emails are never included in
 any release. See [PARTICIPANT_DATA.md](./PARTICIPANT_DATA.md) for what is
 collected and why.
 
+**Public corpus export commitment (dated 2026-07-12).** The published-skill
+corpus (title, description, five-layer text, Ready-to-Use Prompt — the same
+scope defined in §2 above) is meant to function as a public record, not just
+a database inside this one product. So: **once the corpus reaches 100
+published skills, a public copy is exported quarterly to GitHub and/or
+Zenodo**, under the CC license each skill was actually published with. This
+is a checkable promise, not a vague intention — if the corpus passes 100 and
+four consecutive quarters pass with no export, treat this commitment as
+broken and raise it as an issue.
+
 ### 4. What you agree to when publishing
 
 By publishing a Skill you (a) confirm the content is yours to license,
@@ -83,6 +93,13 @@ Soul-Hash，并注明来自 THE 42 POST（the42post.com）。
 漏斗事件）**不公开原始记录**，只可能以**聚合/匿名化研究数据集**形式发布，且每次
 发布附带说明文档（范围、匿名化方法、已知抽样偏差）。邮箱地址永远不会出现在任何
 发布中。收集内容详见 [PARTICIPANT_DATA.md](./PARTICIPANT_DATA.md)。
+
+**公开语料导出承诺（写于 2026-07-12）。** 已发布 Skill 的语料（标题、描述、
+五层文本、Ready-to-Use Prompt——与上文第 2 条定义的范围一致）意在成为一份
+公共记录，而不只是这一个产品内部的数据库。因此：**一旦语料达到 100 条已发布
+Skill，将按季度把公开副本导出到 GitHub 和/或 Zenodo**，遵循每个 Skill 实际
+发布时选择的 CC 协议。这是一个可被检验的承诺，不是含糊的意向——如果语料已过
+100 条、且连续四个季度未导出，应视为承诺未兑现，可作为 issue 提出。
 
 ### 4. 发布即同意的内容
 

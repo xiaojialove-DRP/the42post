@@ -7456,7 +7456,15 @@ async function initAgentArchiveView() {
     if (statsResp.ok) {
       const statsData = await statsResp.json();
       const stats = statsData.stats || {};
-      allSkills.forEach(s => { s.betterVotes = stats[s.id]?.better || 0; });
+      allSkills.forEach(s => {
+        s.betterVotes = stats[s.id]?.better || 0;
+        // Verification status comes from BLIND, non-author Twin Test votes
+        // (routes/playground.js /vote + /stats-batch) — a separate, more
+        // rigorous signal than the self-reported betterVotes above.
+        s.verificationStatus = stats[s.id]?.verification_status || null;
+        s.verificationTotalVotes = stats[s.id]?.verification_total_votes || 0;
+        s.verificationWinRate = stats[s.id]?.verification_win_rate ?? null;
+      });
     }
   } catch (e) {
     console.warn('Archive: failed to fetch Twin Test stats:', e.message);
@@ -7546,6 +7554,9 @@ async function initAgentArchiveView() {
         domain: s.domain, id: s.id,
         hash: hashValue,
         color, phase: phaseRand * Math.PI * 2,
+        verificationStatus: s.verificationStatus || null,
+        verificationTotalVotes: s.verificationTotalVotes || 0,
+        verificationWinRate: s.verificationWinRate ?? null,
       };
     });
 
@@ -7687,7 +7698,55 @@ async function initAgentArchiveView() {
     }
     return null;
   }
-  
+
+  // Verification badge for the star tooltip — built from BLIND, non-author
+  // Twin Test votes (routes/playground.js /vote), not the self-reported
+  // betterVotes count used for star size above. "failed" gets the same
+  // visual weight as "verified": a verification mechanism that only ever
+  // shows good news is not one worth trusting.
+  function renderVerificationBadge(n) {
+    const isCn = (typeof currentLang !== 'undefined' && currentLang === 'cn');
+    const total = n.verificationTotalVotes || 0;
+    const status = n.verificationStatus;
+    if (!status || total === 0) return { text: '', cls: '' };
+
+    const pct = n.verificationWinRate !== null && n.verificationWinRate !== undefined
+      ? Math.round(n.verificationWinRate * 100) : null;
+
+    if (status === 'verified') {
+      return {
+        cls: 'verified',
+        text: isCn ? `✓ 社区已验证 · ${pct}% · ${total} 票` : `✓ Community Verified · ${pct}% · ${total} votes`
+      };
+    }
+    if (status === 'failed') {
+      return {
+        cls: 'failed',
+        text: isCn ? `✕ 验证未通过 · ${pct}% · ${total} 票` : `✕ Verification Failed · ${pct}% · ${total} votes`
+      };
+    }
+    // status === 'verifying' — either under the 5-vote threshold, or a
+    // genuinely inconclusive 40-60% result with enough votes to say so.
+    if (total < 5) {
+      return {
+        cls: 'verifying',
+        text: isCn ? `◐ 验证中 · ${total}/5 票` : `◐ Verifying · ${total}/5 votes`
+      };
+    }
+    return {
+      cls: 'verifying',
+      text: isCn ? `◐ 结果不明确 · ${pct}% · ${total} 票` : `◐ Inconclusive · ${pct}% · ${total} votes`
+    };
+  }
+
+  function paintVerificationBadge(n) {
+    const el = document.getElementById('ttVerification');
+    if (!el) return;
+    const badge = renderVerificationBadge(n);
+    el.textContent = badge.text;
+    el.className = 'tt-verification' + (badge.cls ? ` ${badge.cls}` : '');
+  }
+
   canvas.addEventListener('mousedown', e => {
     drag = { active: true, startX: e.clientX, startY: e.clientY, camStartX: cam.x, camStartY: cam.y };
   });
@@ -7721,6 +7780,7 @@ async function initAgentArchiveView() {
       document.getElementById('ttDesc').textContent = lang === 'cn' ? (n.descCn || n.desc || '') : (n.desc || n.descCn || '');
       // Soul hash is shown only in the full card detail, not in this tooltip
       document.getElementById('ttHash').textContent = '';
+      paintVerificationBadge(n);
       document.getElementById('ttStarlight').textContent = '★ ' + n.starlight;
       document.getElementById('ttDomain').textContent = n.domain;
       tooltip.style.left = Math.min(e.clientX - rect.left + 16, cw - 300) + 'px';
@@ -7815,6 +7875,7 @@ async function initAgentArchiveView() {
         document.getElementById('ttDesc').textContent = lang === 'cn' ? (n.descCn || n.desc || '') : (n.desc || n.descCn || '');
         // Soul hash is shown only in the full card detail, not in this tooltip
         document.getElementById('ttHash').textContent = '';
+        paintVerificationBadge(n);
         document.getElementById('ttStarlight').textContent = '★ ' + n.starlight;
         document.getElementById('ttDomain').textContent = n.domain;
         tooltip.style.left = Math.min(tapCandidate.x - rect.left + 16, cw - 300) + 'px';

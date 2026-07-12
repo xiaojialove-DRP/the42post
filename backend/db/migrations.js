@@ -170,6 +170,17 @@ export const MIGRATIONS = [
       )`,
       `CREATE INDEX IF NOT EXISTS idx_generation_drafts_created ON generation_drafts(created_at)`
     ]
+  },
+  {
+    // Marks a Twin Test vote as cast by the Skill's own creator, so
+    // verification win-rate math (routes/playground.js) can exclude it.
+    // A creator voting on their own Skill is not evidence of anything;
+    // without this flag they could inflate their own win rate.
+    name: '013_skill_test_votes_is_author',
+    statements: [
+      `ALTER TABLE skill_test_votes ADD COLUMN is_author INTEGER DEFAULT 0`,
+      `CREATE INDEX IF NOT EXISTS idx_skill_test_votes_skill_author ON skill_test_votes(skill_id, is_author)`
+    ]
   }
 ];
 

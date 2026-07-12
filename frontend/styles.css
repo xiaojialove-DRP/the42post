@@ -6590,6 +6590,22 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 .tt-agent { font-size: 10px; color: #7a6a5e; font-weight: 500; }
 .tt-hash { font-size: 9px; color: #d4726a; letter-spacing: 1px; font-weight: 600; }
 
+/* Verification badge — a blind-test result, not a self-report, so it
+   gets its own visual weight distinct from starlight/domain metadata.
+   "Failed" is shown with the SAME prominence as "Verified", not hidden
+   or de-emphasised — a verification mechanism that only ever displays
+   good news is not trustworthy. Empty when there is no verification
+   data yet (skill has zero non-author blind votes). */
+.tt-verification {
+  font-size: 10px; font-weight: 600; letter-spacing: 0.3px;
+  margin: 4px 0 6px; padding: 3px 7px;
+  border-radius: 4px; display: inline-block;
+}
+.tt-verification:empty { display: none; margin: 0; }
+.tt-verification.verified { background: rgba(74,122,50,0.12); color: #4d7a32; }
+.tt-verification.failed { background: rgba(184,99,60,0.12); color: #a8633c; }
+.tt-verification.verifying { background: rgba(122,111,94,0.12); color: #7a6f5e; }
+
 /* Archive Skills Grid Card Styles */
 /* ═══════════════════════════════════════════════════════════════
    PROFESSIONAL UI REDESIGN - SKILL CARDS (Archive Grid)

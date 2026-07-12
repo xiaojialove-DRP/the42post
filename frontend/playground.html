@@ -1111,8 +1111,14 @@
       background: #fdfaf3; border: 1.5px solid #e0d5b8;
       border-radius: 8px;
       min-width: 0; /* lets long words wrap inside the grid cell */
-      transition: background 0.2s ease, border-color 0.2s ease;
+      transition: background 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, transform 0.15s ease;
     }
+    /* Blind-pick affordance — tapping the card itself IS the vote. */
+    .twin-rate-card[data-pick-card] { cursor: pointer; }
+    .twin-rate-card[data-pick-card]:hover { border-color: #b8915a; transform: translateY(-1px); }
+    .twin-rate-card[data-pick-card].selected { border-color: #2a2520; background: #f3eddd; }
+    .twin-rate-grid.picking-disabled .twin-rate-card[data-pick-card]:not(.selected) { opacity: 0.5; }
+    .twin-rate-grid.picking-disabled .twin-rate-card[data-pick-card] { cursor: default; }
     /* The skill-side card is "the curated one" — marked the way a
        printer would highlight a chosen plate: a thin marigold left
        rule and the lightest warm wash. Reads as honoured, not
@@ -1351,8 +1357,8 @@
 
 
   <script src="skills.js?v=a2f416cc7c"></script>
-  <script src="i18n.js?v=2ae4af07d0"></script>
-  <script src="script.js?v=30958053f9"></script>
+  <script src="i18n.js?v=de1c137786"></script>
+  <script src="script.js?v=70327087cc"></script>
   <script>
     /* ═══════════════════════════════════════
        CREATIVE PLAYGROUND — Poolsuite-style
@@ -2368,47 +2374,40 @@
             <span class="twin-loading-text">generating two responses…</span>
           </div>
 
-          <!-- Reveal-mode rating stage. Replaces the legacy blind-pick UI:
-               we now show both responses with the skill side clearly
-               labelled, ask for a 3-level reaction + an optional 140-char
-               comment, then submit. Lighter, more game-like, and the data
-               we collect is "did this skill feel different?" instead of
-               "could you guess which one?". -->
+          <!-- Blind-pick stage. Neither card is labelled with the skill
+               side -- the whole point is that the user cannot tell which
+               is which until after they commit to a pick. Tapping a card
+               IS the vote (no separate confirm button, matching the
+               tap-to-submit feel the reveal-mode stage used to have). -->
           <div class="twin-stage twin-rate" hidden>
-            <div class="twin-rate-grid">
-              <div class="twin-rate-card" data-side="A">
+            <div class="twin-question" data-pick-question></div>
+            <div class="twin-rate-grid" data-pick-grid>
+              <div class="twin-rate-card" data-side="A" data-pick-card tabindex="0" role="button">
                 <div class="twin-rate-label">
                   <span class="twin-rate-side">A</span>
-                  <span class="twin-rate-tag" data-tag-a></span>
                 </div>
                 <div class="twin-rate-text" data-text-a></div>
               </div>
-              <div class="twin-rate-card" data-side="B">
+              <div class="twin-rate-card" data-side="B" data-pick-card tabindex="0" role="button">
                 <div class="twin-rate-label">
                   <span class="twin-rate-side">B</span>
-                  <span class="twin-rate-tag" data-tag-b></span>
                 </div>
                 <div class="twin-rate-text" data-text-b></div>
               </div>
             </div>
-            <div class="twin-rate-diagnostic" data-rate-diag hidden></div>
-            <div class="twin-rate-question">How was this Skill?</div>
-            <div class="twin-rate-buttons">
-              <button class="twin-rate-btn" data-rating="better">
-                <span class="twin-rate-emoji">🔥</span>
-                <span class="twin-rate-word">Clearly better</span>
-              </button>
-              <!-- Negative slot is "worse" rather than the original
-                   "neutral" — the research side needs a real negative
-                   signal to detect skills that hurt rather than help. -->
-              <button class="twin-rate-btn" data-rating="worse">
-                <span class="twin-rate-emoji">😕</span>
-                <span class="twin-rate-word">Not great</span>
-              </button>
-              <button class="twin-rate-btn" data-rating="no_diff">
-                <span class="twin-rate-emoji">🤔</span>
-                <span class="twin-rate-word">Can't tell</span>
-              </button>
+          </div>
+
+          <!-- Reveal stage — shown only AFTER the blind pick is submitted.
+               Flips the card the user picked to show whether it was the
+               Skill or the baseline, plus the diagnostic and the running
+               (non-author) community win rate. -->
+          <div class="twin-stage twin-reveal" hidden>
+            <div class="twin-reveal-headline" data-reveal-headline></div>
+            <div class="twin-reveal-which" data-reveal-which></div>
+            <div class="twin-reveal-diagnostic" data-reveal-diag hidden></div>
+            <div class="twin-reveal-stats" data-reveal-stats></div>
+            <div class="twin-reveal-actions">
+              <button type="button" class="twin-action-btn" data-reveal-continue>${t('playground_reveal_continue')}</button>
             </div>
           </div>
 
@@ -2419,7 +2418,6 @@
                scenario), keeping the play loop short. -->
           <div class="twin-stage twin-thanks" hidden>
             <div class="twin-thanks-headline">${t('playground_thank_you')}</div>
-            <div class="twin-thanks-stats" data-thanks-stats></div>
             <div class="twin-thanks-actions">
               <button type="button" class="twin-thanks-prompt twin-thanks-btn">${t('playground_try_different')}</button>
             </div>
@@ -2444,6 +2442,21 @@
         tryAnotherBtn.addEventListener('click', (e) => {
           e.stopPropagation();
           handleTryAnotherScenario(card, repo);
+        });
+      }
+
+      // Reveal stage's "Continue" — hands off to the existing thank-you
+      // stage rather than duplicating its copy/behaviour.
+      const revealContinueBtn = card.querySelector('[data-reveal-continue]');
+      if (revealContinueBtn) {
+        revealContinueBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const stageReveal = card.querySelector('.twin-reveal');
+          const stageThanks = card.querySelector('.twin-thanks');
+          stageReveal.hidden = true;
+          stageThanks.hidden = false;
+          const isSmallScreen = window.innerWidth <= 480;
+          stageThanks.classList.add(isSmallScreen ? 'fade-animation' : 'expand-animation');
         });
       }
 
@@ -2710,14 +2723,16 @@
       }
     }
 
-    /* Reveal-mode Twin Test:
-       1. POST /api/playground/test → returns response_a, response_b,
-          skill_side, diagnostic.
-       2. Render both responses with the skill side labelled up-front
-          (no blind pick).
-       3. User picks one of three reactions (🔥 / 😐 / 🤔) — that tap
-          immediately submits.
-       4. POST /api/playground/feedback → thank-you + counts. */
+    /* Blind Twin Test:
+       1. POST /api/playground/test → returns response_a, response_b only.
+          The server knows which side has the Skill; the client never
+          gets told, so neither card can be pre-labelled.
+       2. User taps whichever response they prefer — the tap IS the vote.
+       3. POST /api/playground/vote → reveals skill_side, whether the
+          user's pick matched it, the diagnostic, and the running
+          (non-author) community win rate.
+       4. Flip-reveal stage shows the verdict, then "Continue" leads to
+          the thank-you stage. */
     async function runTwinTest(card, task, repo) {
       const skill = window.TWIN_TEST_SKILL;
       if (!skill || !skill.id) {
@@ -2737,11 +2752,22 @@
       const anonId = getAnonymousId();
       console.log('🚀 Twin Test starting:', { skill_id: skill.id, scenario: td.title, anonId });
 
+      // Skills store ownership as creator_<username> (username is required
+      // at forge time), so the device id alone cannot tell the server "this
+      // is the creator testing their own Skill" — send the username too so
+      // /vote can exclude author self-votes from the public win rate.
+      let creatorNameForTest = null;
+      try {
+        const u = JSON.parse(localStorage.getItem('42post_user') || 'null');
+        if (u && u.username) creatorNameForTest = u.username;
+      } catch (e) {}
+
       try {
         const payload = {
           skill_id: skill.id,
           scenario: { title: td.title, description: td.desc, domain: repo.id, key: `${repo.id}::${td.title}` },
           anonymous_id: anonId,
+          creator_name: creatorNameForTest,
           language: (typeof currentLang !== 'undefined' && currentLang === 'cn') ? 'zh' : 'en'
         };
 
@@ -2762,60 +2788,30 @@
         }
 
         card.dataset.testId = data.test_id;
-        card.dataset.skillSide = data.skill_side || '';
 
-        // Populate the rate stage. Side labels show 🔥 "with skill" /
-        // ◯ "no skill" tags so the user knows which is which up-front.
+        // Populate the pick stage. Deliberately NO skill-side tag on
+        // either card — data.skill_side is not even sent by the server
+        // at this point, so there is nothing to leak.
         stageRate.querySelector('[data-text-a]').textContent = data.response_a;
         stageRate.querySelector('[data-text-b]').textContent = data.response_b;
+        stageRate.querySelector('[data-pick-question]').textContent = t('playground_pick_question');
 
-        const skillTagText = t('playground_with_skill');
-        const baselineTagText = t('playground_baseline_ai');
-        stageRate.querySelector('[data-tag-a]').textContent =
-          data.skill_side === 'A' ? skillTagText : baselineTagText;
-        stageRate.querySelector('[data-tag-b]').textContent =
-          data.skill_side === 'B' ? skillTagText : baselineTagText;
-        stageRate.querySelector('[data-side="A"]').classList.toggle('twin-rate-skill', data.skill_side === 'A');
-        stageRate.querySelector('[data-side="B"]').classList.toggle('twin-rate-skill', data.skill_side === 'B');
-
-        // Update UI text based on language
         stageLoading.querySelector('.twin-loading-text').textContent =
           t('playground_generating');
-        stageRate.querySelector('.twin-rate-question').textContent =
-          t('playground_how_skill');
-        const btnTexts = [
-          t('playground_clearly_better'),
-          t('playground_not_great'),
-          t('playground_cant_tell')
-        ];
-        stageRate.querySelectorAll('.twin-rate-word').forEach((el, i) => {
-          if (i < btnTexts.length) el.textContent = btnTexts[i];
-        });
 
-        // The diagnostic was generated server-side comparing the two
-        // responses. Show it as a soft hint between the cards and the
-        // rating prompt — gives the user something to react to.
-        const diagEl = stageRate.querySelector('[data-rate-diag]');
-        if (data.diagnostic) {
-          diagEl.textContent = data.diagnostic;
-          diagEl.hidden = false;
-        } else {
-          diagEl.hidden = true;
-        }
-
-        // Wire the rating buttons (only once per card).
+        // Wire the pick cards (only once per card element).
         if (!stageRate.dataset.wired) {
-          wireTwinRateStage(card, task, repo);
+          wireTwinPickStage(card, task, repo);
           stageRate.dataset.wired = '1';
         }
 
         // Reset any stale state from a previous round (when user clicks
         // "Try another Skill" the same DOM gets re-used).
-        stageRate.querySelectorAll('.twin-rate-btn').forEach(b => {
-          b.classList.remove('selected');
-          b.disabled = false;
+        const pickGrid = stageRate.querySelector('[data-pick-grid]');
+        pickGrid.classList.remove('picking-disabled');
+        stageRate.querySelectorAll('[data-pick-card]').forEach(c => {
+          c.classList.remove('selected', 'twin-rate-skill');
         });
-        delete stageRate.dataset.rating;
         delete stageRate.dataset.submitting;
 
         stageLoading.hidden = true;
@@ -2832,43 +2828,44 @@
       }
     }
 
-    /* One-time wiring for the rate stage's interactive bits. Bound
-       once per card. Tap-to-submit model: clicking a reaction button
-       immediately fires submitTwinFeedback. */
-    function wireTwinRateStage(card, task, repo) {
+    /* One-time wiring for the blind-pick cards. Bound once per card
+       element. Tap-to-submit model: tapping a response card immediately
+       fires submitTwinVote — there is no separate confirm step, because
+       a confirm step would just be one more place to accidentally reveal
+       which card is "the real choice". */
+    function wireTwinPickStage(card, task, repo) {
       const stageRate = card.querySelector('.twin-rate');
+      const pickGrid = stageRate.querySelector('[data-pick-grid]');
 
-      stageRate.querySelectorAll('.twin-rate-btn').forEach(btn => {
-        btn.addEventListener('click', async () => {
+      stageRate.querySelectorAll('[data-pick-card]').forEach(cardEl => {
+        cardEl.addEventListener('click', async () => {
           if (stageRate.dataset.submitting === '1') return;
           stageRate.dataset.submitting = '1';
-          stageRate.querySelectorAll('.twin-rate-btn').forEach(b => {
-            b.classList.remove('selected');
-            b.disabled = true;
-          });
-          btn.classList.add('selected');
-          stageRate.dataset.rating = btn.dataset.rating;
-          if (typeof trackEvent === 'function') trackEvent('playground_test_rated', { rating: btn.dataset.rating });
+          pickGrid.classList.add('picking-disabled');
+          cardEl.classList.add('selected');
+          const side = cardEl.dataset.side;
+          if (typeof trackEvent === 'function') trackEvent('playground_test_picked', { side });
           // Brief flash so the user sees their tap register before the
-          // card transitions to the thank-you stage.
-          await new Promise(r => setTimeout(r, 120));
-          await submitTwinFeedback(card, task, repo, btn.dataset.rating);
+          // flip-reveal appears.
+          await new Promise(r => setTimeout(r, 150));
+          await submitTwinVote(card, task, repo, side);
         });
       });
     }
 
-    async function submitTwinFeedback(card, task, repo, rating) {
+    async function submitTwinVote(card, task, repo, chosenSide) {
       const isCn = (typeof currentLang !== 'undefined' && currentLang === 'cn');
       const stageRate = card.querySelector('.twin-rate');
-      const stageThanks = card.querySelector('.twin-thanks');
+      const stageReveal = card.querySelector('.twin-reveal');
+      const pickGrid = stageRate.querySelector('[data-pick-grid]');
 
       try {
-        const resp = await fetch(`${API_CONFIG.BASE_URL}/playground/feedback`, {
+        const resp = await fetch(`${API_CONFIG.BASE_URL}/playground/vote`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             test_id: card.dataset.testId,
-            rating,
+            chosen_side: chosenSide,
             anonymous_id: getAnonymousId()
           })
         });
@@ -2878,30 +2875,54 @@
         }
         const data = await resp.json();
 
-        // Render aggregate stats: how many testers, what % said better.
-        const total = data.total || 0;
-        const betterPct = total > 0 ? Math.round((data.better_rate || 0) * 100) : null;
-        const statsEl = stageThanks.querySelector('[data-thanks-stats]');
-        if (total > 0 && betterPct !== null) {
-          statsEl.innerHTML = isCn
-            ? `🎯 ${betterPct}% 的测试者觉得这个 Skill <strong>明显更好</strong> · 共 ${total} 次反馈`
-            : `🎯 ${betterPct}% of testers said this Skill was <strong>clearly better</strong> · ${total} feedbacks`;
+        // Now that the vote is in, it is safe to reveal which side had
+        // the Skill — flip both cards' visual state.
+        stageRate.querySelectorAll('[data-pick-card]').forEach(c => {
+          c.classList.toggle('twin-rate-skill', c.dataset.side === data.skill_side);
+        });
+
+        const won = !!data.voted_for_skill;
+        const headlineEl = stageReveal.querySelector('[data-reveal-headline]');
+        headlineEl.textContent = won ? t('playground_reveal_win') : t('playground_reveal_lose');
+        headlineEl.classList.toggle('win', won);
+        headlineEl.classList.toggle('lose', !won);
+
+        stageReveal.querySelector('[data-reveal-which]').textContent =
+          won ? t('playground_reveal_which_win') : t('playground_reveal_which_lose');
+
+        const diagEl = stageReveal.querySelector('[data-reveal-diag]');
+        if (data.diagnostic) {
+          diagEl.textContent = data.diagnostic;
+          diagEl.hidden = false;
         } else {
-          statsEl.textContent = t('playground_first_rater');
+          diagEl.hidden = true;
+        }
+
+        // Community win rate — only non-author blind votes count
+        // server-side (see /vote in playground.js), so this number is
+        // never inflated by a creator testing their own Skill.
+        const statsEl = stageReveal.querySelector('[data-reveal-stats]');
+        const total = data.total_votes || 0;
+        const winPct = (total >= 5 && data.win_rate != null) ? Math.round(data.win_rate * 100) : null;
+        if (winPct !== null) {
+          statsEl.innerHTML = isCn
+            ? `🌟 <span class="twin-rate-num">${winPct}%</span> 的盲选测试者也选中了这个 Skill · 共 ${total} 次投票`
+            : `🌟 <span class="twin-rate-num">${winPct}%</span> of blind testers also picked this Skill · ${total} votes`;
+        } else {
+          statsEl.textContent = t('playground_verifying_note');
         }
 
         stageRate.hidden = true;
-        stageThanks.hidden = false;
+        stageReveal.hidden = false;
         const isSmallScreen = window.innerWidth <= 480;
-        stageThanks.classList.add(isSmallScreen ? 'fade-animation' : 'expand-animation');
-
-        // No interactive elements on thanks stage — user is guided to scenario cards below
+        stageReveal.classList.add(isSmallScreen ? 'fade-animation' : 'expand-animation');
+        if (typeof trackEvent === 'function') trackEvent('playground_test_voted', { won });
       } catch (err) {
-        // Re-enable the rating buttons so the user can retry. The
-        // tap-to-submit model has no separate Submit control to
-        // restore; clearing the submitting flag is enough.
+        // Let the user retry the pick — clear the submitting flag and
+        // the picking-disabled/selected visual state.
         delete stageRate.dataset.submitting;
-        stageRate.querySelectorAll('.twin-rate-btn').forEach(b => b.disabled = false);
+        pickGrid.classList.remove('picking-disabled');
+        stageRate.querySelectorAll('[data-pick-card]').forEach(c => c.classList.remove('selected'));
         alert((t('playground_submit_error')) + err.message);
       }
     }

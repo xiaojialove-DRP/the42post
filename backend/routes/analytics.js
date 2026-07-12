@@ -11,6 +11,7 @@ import express from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import { db } from '../utils/db.js';
 import { buildFunnelReport } from '../utils/funnelReport.js';
+import { runVerificationSelfCheck } from '../utils/verificationHealth.js';
 
 const router = express.Router();
 
@@ -82,6 +83,34 @@ router.get('/funnel', async (req, res) => {
   } catch (error) {
     console.error('[analytics] funnel report failed:', error.message);
     res.status(500).json({ error: 'Funnel report failed', message: error.message });
+  }
+});
+
+/**
+ * GET /api/analytics/verification-health?days=90
+ * Admin-gated. Checks whether the blind Twin Test verification mechanism
+ * (routes/playground.js /vote) has produced at least one "Verification
+ * Failed" Skill among the ones with enough votes to be scored, in the
+ * trailing window -- and fires an admin alert if it has not (see
+ * utils/verificationHealth.js for why that specific condition matters).
+ * Safe to hit repeatedly: sendAdminAlert has its own 1-hour cooldown.
+ */
+router.get('/verification-health', async (req, res) => {
+  const adminKey = process.env.ADMIN_KEY;
+  if (!adminKey) {
+    return res.status(503).json({ error: 'Admin endpoints disabled: ADMIN_KEY not configured' });
+  }
+  if (req.headers['x-admin-key'] !== adminKey) {
+    return res.status(403).json({ error: 'Forbidden: invalid admin key' });
+  }
+
+  try {
+    const days = Math.min(Math.max(parseInt(req.query.days, 10) || 90, 1), 365);
+    const result = await runVerificationSelfCheck(db, days);
+    res.json({ success: true, ...result });
+  } catch (error) {
+    console.error('[analytics] verification health check failed:', error.message);
+    res.status(500).json({ error: 'Verification health check failed', message: error.message });
   }
 });
 

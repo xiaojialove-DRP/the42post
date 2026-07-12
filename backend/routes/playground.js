@@ -18,6 +18,7 @@ import { db } from '../utils/db.js';
 import { rateLimitLLM, rateLimitTwinTest } from '../middleware/rateLimiter.js';
 import { callLLMWithClaudeFallback } from '../utils/skillGeneration.js';
 import { logger } from '../utils/logger.js';
+import { getSkillVerificationStats, getBatchVerificationStats } from '../utils/verificationHealth.js';
 
 // Rough language check: does this text contain enough CJK characters to be
 // Chinese? Used as a guardrail for the exact failure class found in
@@ -38,6 +39,24 @@ const safeAnonId = (id) => {
   if (!id || typeof id !== 'string') return null;
   return id.replace(/[^a-zA-Z0-9_\-]/g, '').slice(0, 255) || null;
 };
+
+// Is the person running this Twin Test the Skill's own creator? Same
+// ownership match as GET /picker's ownerKeys: skills.creator_anonymous_id
+// stores either the raw device anonymous_id (anonymous forges) or
+// creator_<username> (the common case, since username is now required at
+// forge time) — device id alone cannot match the latter, so the client
+// also sends creator_name when it has one.
+function isAuthorOfSkill(skillCreatorAnonymousId, anonymousId, creatorName) {
+  if (!skillCreatorAnonymousId) return false;
+  const safeAnon = safeAnonId(anonymousId);
+  if (safeAnon && safeAnon === skillCreatorAnonymousId) return true;
+  const safeCreator = safeAnonId(creatorName);
+  if (safeCreator) {
+    const normalized = `creator_${safeCreator.replace(/^creator_/i, '')}`;
+    if (normalized === skillCreatorAnonymousId) return true;
+  }
+  return false;
+}
 
 // ─── Build the two prompts ───
 // Prefers the ready_to_use_prompt (natural-language System Prompt synthesised
@@ -246,7 +265,7 @@ Return JSON only: {"diagnostic":"Key difference: ..."}`;
 // Rate limited (LLM calls: 10/min) to protect API quota
 router.post('/test', rateLimitLLM, async (req, res, next) => {
   try {
-    const { skill_id, scenario, anonymous_id, language } = req.body || {};
+    const { skill_id, scenario, anonymous_id, creator_name, language } = req.body || {};
 
     if (!skill_id) {
       return res.status(400).json({ error: 'Missing input', message: 'skill_id is required' });
@@ -360,19 +379,23 @@ router.post('/test', rateLimitLLM, async (req, res, next) => {
       console.warn('Diagnostic generation skipped:', e.message);
     }
 
-    // Persist the test so /vote can reveal & score it later.
+    // Persist the test so /vote can reveal & score it later. is_author is
+    // stamped now (this is the only point we have identity info) so /vote
+    // and the stats endpoints can exclude the creator's own votes from the
+    // public win rate without needing identity info passed again later.
     const testId = uuidv4();
     const scenarioKey = scenario.key || scenario.title || `${scenario.domain || ''}-unknown`;
+    const isAuthor = isAuthorOfSkill(skillRow.creator_anonymous_id, anonymous_id, creator_name) ? 1 : 0;
     try {
       const scenarioTitle = (scenario.title || scenario.titleCn || '').slice(0, 500);
       await db.query(
         `INSERT INTO skill_test_votes
            (id, skill_id, scenario_key, anonymous_id, skill_side, diagnostic,
-            scenario_text, response_a_text, response_b_text)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
+            scenario_text, response_a_text, response_b_text, is_author)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,
         [testId, skill_id, String(scenarioKey).slice(0, 250), safeAnonId(anonymous_id),
          skillSide, diagnostic || null,
-         scenarioTitle, responseA.slice(0, 2000), responseB.slice(0, 2000)]
+         scenarioTitle, responseA.slice(0, 2000), responseB.slice(0, 2000), isAuthor]
       );
     } catch (dbErr) {
       console.warn('skill_test_votes insert failed (non-fatal):', dbErr.message);
@@ -383,12 +406,9 @@ router.post('/test', rateLimitLLM, async (req, res, next) => {
       test_id: testId,
       response_a: responseA,
       response_b: responseB,
-      // The new Playground UX reveals immediately, so /test now returns
-      // which side has the skill alongside the diagnostic. The legacy
-      // blind /vote flow ignored these — backwards-compatible because
-      // the old client never read these fields.
-      skill_side: skillSide,
-      diagnostic,
+      // Deliberately NOT returning skill_side or diagnostic here -- this
+      // is a blind test. Both are stored server-side above and only
+      // revealed by POST /vote, after the user has committed to a pick.
       model: withResp.model,
       usage: {
         with_skill: withResp.usage,
@@ -526,19 +546,11 @@ router.post('/vote', rateLimitTwinTest, async (req, res, next) => {
       );
     }
 
-    // Compute running win rate for this skill (across all users, all scenarios).
-    const stats = (await db.query(
-      `SELECT
-         COUNT(*) AS total,
-         COALESCE(SUM(voted_for_skill), 0) AS wins
-       FROM skill_test_votes
-       WHERE skill_id = $1 AND voted_for_skill IS NOT NULL`,
-      [row.skill_id]
-    )).rows?.[0] || { total: 0, wins: 0 };
-
-    const total = Number(stats.total) || 0;
-    const wins = Number(stats.wins) || 0;
-    const winRate = total > 0 ? wins / total : null;
+    // Running win rate for this skill — non-author blind votes only, so a
+    // creator voting on their own Skill (this vote included, if that's who
+    // just voted) never moves the number the community sees.
+    const { total_votes: total, wins, win_rate: winRate, verification_status: verificationStatus } =
+      await getSkillVerificationStats(db, row.skill_id);
 
     res.json({
       success: true,
@@ -547,7 +559,8 @@ router.post('/vote', rateLimitTwinTest, async (req, res, next) => {
       diagnostic: row.diagnostic || '',
       total_votes: total,
       wins,
-      win_rate: winRate
+      win_rate: winRate,
+      verification_status: verificationStatus
     });
   } catch (error) {
     next(error);
@@ -641,7 +654,7 @@ router.get('/picker', async (req, res, next) => {
 // "tests" = rows in skill_test_votes. Returns only skills with activity.
 router.get('/stats-batch', async (req, res, next) => {
   try {
-    const [feedbackRows, testRows] = await Promise.all([
+    const [feedbackRows, testRows, verificationStats] = await Promise.all([
       db.query(
         `SELECT skill_id, rating, COUNT(*) AS n
          FROM skill_feedback
@@ -652,7 +665,8 @@ router.get('/stats-batch', async (req, res, next) => {
         `SELECT skill_id, COUNT(*) AS n
          FROM skill_test_votes
          GROUP BY skill_id`
-      )
+      ),
+      getBatchVerificationStats(db)
     ]);
 
     const stats = {};
@@ -669,6 +683,15 @@ router.get('/stats-batch', async (req, res, next) => {
       s.win_rate = rated > 0 ? Math.round((s.better / rated) * 100) : null;
       s.rated = rated;
     }
+    // Verification status (blind, non-author votes) — a separate signal
+    // from the "better/worse" self-report above. Merge in for every skill
+    // that has verification data, even ones with no feedback rows yet.
+    for (const [id, v] of Object.entries(verificationStats)) {
+      if (!stats[id]) stats[id] = { tests: 0, better: 0, worse: 0, no_diff: 0, win_rate: null, rated: 0 };
+      stats[id].verification_status = v.verification_status;
+      stats[id].verification_total_votes = v.total_votes;
+      stats[id].verification_win_rate = v.win_rate;
+    }
 
     res.json({ success: true, stats });
   } catch (error) {
@@ -676,27 +699,12 @@ router.get('/stats-batch', async (req, res, next) => {
   }
 });
 
-// ═══ GET /stats/:skill_id — running win rate (used by Archive cards) ═══
+// ═══ GET /stats/:skill_id — verification status (used by Archive cards) ═══
 router.get('/stats/:skill_id', async (req, res, next) => {
   try {
     const { skill_id } = req.params;
-    const stats = (await db.query(
-      `SELECT
-         COUNT(*) AS total,
-         COALESCE(SUM(voted_for_skill), 0) AS wins
-       FROM skill_test_votes
-       WHERE skill_id = $1 AND voted_for_skill IS NOT NULL`,
-      [skill_id]
-    )).rows?.[0] || { total: 0, wins: 0 };
-
-    const total = Number(stats.total) || 0;
-    const wins = Number(stats.wins) || 0;
-    res.json({
-      success: true,
-      total_votes: total,
-      wins,
-      win_rate: total > 0 ? wins / total : null
-    });
+    const stats = await getSkillVerificationStats(db, skill_id);
+    res.json({ success: true, ...stats });
   } catch (error) {
     next(error);
   }
