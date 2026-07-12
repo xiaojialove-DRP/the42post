@@ -9,12 +9,15 @@ import { requireAuth, optionalAuth } from '../utils/auth.js';
 import { rateLimitLLM } from '../middleware/rateLimiter.js';
 import {
   generateProbeWithClaude,
+  buildProbePrompt,
+  validateProbeQuality,
   generatePreviewWithClaude,
   generateFlatFiveLayerWithClaude,
   generateSoulHash,
   callDeepSeekStream,
   callLLMJSON
 } from '../utils/skillGeneration.js';
+import { logger } from '../utils/logger.js';
 
 const router = express.Router();
 
@@ -294,27 +297,12 @@ router.post('/probe/stream', rateLimitLLM, optionalAuth, async (req, res) => {
   try {
     const isCn = language === 'zh' || /[一-鿿]/.test(idea_text);
 
-    // Build streaming-friendly prompt — same logic as probe but asks for
-    // plain-text output that we can show as it streams, then convert to JSON
-    const streamPrompt = isCn
-      ? `你是 The 42 Post 的 AI 价值观研究员。根据以下想法，生成一个真实的道德困境场景和三种 AI 回应立场。
-
-想法：「${idea_text.trim()}」
-
-按以下格式输出（纯文本，无需 JSON）：
-SCENARIO: [一个真实场景，1-2句，包含具体人物、时间、利害关系]
-THESIS: [主流派立场，1-2句，第一人称 AI 视角]
-ANTITHESIS: [情景派立场，1-2句，第一人称 AI 视角]
-EXTREME: [实验派立场，1-2句，第一人称 AI 视角]`
-      : `You are an AI values researcher at The 42 Post. Based on the following idea, generate a real moral dilemma scenario and three AI response stances.
-
-Idea: "${idea_text.trim()}"
-
-Output in this exact format (plain text, no JSON):
-SCENARIO: [A real scenario, 1-2 sentences, specific person/time/stakes]
-THESIS: [Mainstream stance, 1-2 sentences, first-person AI voice]
-ANTITHESIS: [Contextual stance, 1-2 sentences, first-person AI voice]
-EXTREME: [Experimental stance, 1-2 sentences, first-person AI voice]`;
+    // Full-quality prompt, stream variant. This endpoint used to carry its
+    // own bare 8-line prompt — none of the decode step, the causality bar,
+    // or the off-limits list — and since streaming is the path real users
+    // hit first, most production probes were generated from the weak
+    // prompt. Now both endpoints share one prompt body (skillGeneration.js).
+    const streamPrompt = buildProbePrompt(idea_text.trim(), isCn, 'stream');
 
     let fullText = '';
 
@@ -341,7 +329,18 @@ EXTREME: [Experimental stance, 1-2 sentences, first-person AI voice]`;
       const result = await generateProbeWithClaude(idea_text.trim(), language || 'en');
       send('done', { success: true, probe: result.data, model: result.model });
     } else {
-      send('done', { success: true, probe, model: PRIMARY_MODEL });
+      // Same quality gate as the non-streaming endpoint. The streamed text
+      // was already shown live, but what the user KEEPS (the parsed choices
+      // they pick from) must pass the gate — regenerate through the gated
+      // non-streaming path if it does not.
+      const reasons = validateProbeQuality(probe, isCn);
+      if (reasons.length > 0) {
+        logger.warn('probe_quality_gate_failed', { endpoint: 'stream', reasons, idea: idea_text.slice(0, 80) });
+        const result = await generateProbeWithClaude(idea_text.trim(), language || 'en');
+        send('done', { success: true, probe: result.data, model: result.model, regenerated: true });
+      } else {
+        send('done', { success: true, probe, model: PRIMARY_MODEL });
+      }
     }
   } catch (err) {
     console.error('[probe/stream] error:', err.message);
