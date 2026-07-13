@@ -5,6 +5,7 @@
 import express from 'express';
 import { db } from '../utils/db.js';
 import { validateFiveLayerSchema, isValidDownloadFormat, isValidAnonymousId } from '../utils/validation.js';
+import { normalizeFiveLayer } from '../utils/skillGeneration.js';
 import { v4 as uuidv4 } from 'uuid';
 
 const router = express.Router();
@@ -209,98 +210,6 @@ router.get('/:skillId', async (req, res, next) => {
     next(error);
   }
 });
-
-/**
- * Normalize five_layer to a consistent shape regardless of schema version.
- * Old format: { defining, instantiating:{before,after}, fencing:{apply,notApply},
- *               validating:[], contextualizing }
- * New format: { principle, reasoning, exemplars:[{label,text,note}],
- *               boundaries:{applies_when,does_not_apply,tension_zones},
- *               evaluation:{test_cases,metric,silent_failures},
- *               cultural_variants:{locale:{principle_note,adaptation}} }
- */
-function normalizeFiveLayer(fl) {
-  if (!fl) return null;
-
-  // Rich/structured format — exemplars is a real array of {label,text,note}
-  if (fl.principle || fl.reasoning || (Array.isArray(fl.exemplars) && fl.exemplars.length)) {
-    return {
-      principle:        fl.principle || fl.defining || '',
-      reasoning:        fl.reasoning || '',
-      exemplars:        Array.isArray(fl.exemplars) ? fl.exemplars : [],
-      boundaries:       fl.boundaries || null,
-      evaluation:       fl.evaluation || null,
-      cultural_variants: fl.cultural_variants || null,
-      contextualizing:  fl.contextualizing || ''
-    };
-  }
-
-  // Older structured format — instantiating/fencing are objects, validating is an array
-  if (fl.instantiating && typeof fl.instantiating === 'object') {
-    const exemplars = [];
-    if (fl.instantiating.before || fl.instantiating.after) {
-      exemplars.push({
-        label: 'Before → After',
-        text: [
-          fl.instantiating.before ? `❌ Before: ${fl.instantiating.before}` : '',
-          fl.instantiating.after  ? `✅ After: ${fl.instantiating.after}` : ''
-        ].filter(Boolean).join('\n\n'),
-        note: ''
-      });
-    }
-
-    const boundaries = fl.fencing ? {
-      applies_when:   fl.fencing.apply    ? [fl.fencing.apply]    : [],
-      does_not_apply: fl.fencing.notApply ? [fl.fencing.notApply] : [],
-      tension_zones:  []
-    } : null;
-
-    const evaluation = Array.isArray(fl.validating) && fl.validating.length ? {
-      test_cases: fl.validating.map(v => ({ prompt: v, expected: '', pass_criteria: '' })),
-      metric: '',
-      silent_failures: []
-    } : null;
-
-    return {
-      principle:        fl.defining || '',
-      reasoning:        '',
-      exemplars,
-      boundaries,
-      evaluation,
-      cultural_variants: null,
-      contextualizing:  fl.contextualizing || ''
-    };
-  }
-
-  // Current format — generateFlatFiveLayerWithClaude (the live forge path)
-  // saves every layer as a plain string, not an object/array. This is what
-  // real skills forged today actually look like.
-  const exemplars = (typeof fl.instantiating === 'string' && fl.instantiating.trim())
-    ? [{ label: '', text: fl.instantiating.trim(), note: '' }]
-    : [];
-
-  const boundaries = (typeof fl.fencing === 'string' && fl.fencing.trim()) ? {
-    applies_when:   [fl.fencing.trim()],
-    does_not_apply: [],
-    tension_zones:  []
-  } : null;
-
-  const evaluation = (typeof fl.validating === 'string' && fl.validating.trim()) ? {
-    test_cases: [{ prompt: '', expected: fl.validating.trim(), pass_criteria: '' }],
-    metric: '',
-    silent_failures: []
-  } : null;
-
-  return {
-    principle:        fl.defining || fl.definition || '',
-    reasoning:        '',
-    exemplars,
-    boundaries,
-    evaluation,
-    cultural_variants: null,
-    contextualizing:  (typeof fl.contextualizing === 'string' && fl.contextualizing) || ''
-  };
-}
 
 /**
  * Build a complete, usable System Prompt from available fields. Shared by

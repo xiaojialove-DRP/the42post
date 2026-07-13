@@ -943,3 +943,152 @@ export function redactManifestEmail(manifestJson) {
   }
   return wasString ? JSON.stringify(m) : m;
 }
+
+// ═══ FIVE-LAYER SHAPE NORMALIZATION ═══
+// Shared by routes/downloads.js (markdown/langchain/mcp export) and
+// routes/skills.js (POST /:id/translate-content) — was previously
+// duplicated as a private copy inside downloads.js; one copy now so the
+// three schema-version branches below can't drift out of sync again.
+//
+// Old format: { defining, instantiating:{before,after}, fencing:{apply,notApply},
+//               validating:[], contextualizing }
+// New format: { principle, reasoning, exemplars:[{label,text,note}],
+//               boundaries:{applies_when,does_not_apply,tension_zones},
+//               evaluation:{test_cases,metric,silent_failures},
+//               cultural_variants:{locale:{principle_note,adaptation}} }
+export function normalizeFiveLayer(fl) {
+  if (!fl) return null;
+
+  // Rich/structured format — exemplars is a real array of {label,text,note}
+  if (fl.principle || fl.reasoning || (Array.isArray(fl.exemplars) && fl.exemplars.length)) {
+    return {
+      principle:        fl.principle || fl.defining || '',
+      reasoning:        fl.reasoning || '',
+      exemplars:        Array.isArray(fl.exemplars) ? fl.exemplars : [],
+      boundaries:       fl.boundaries || null,
+      evaluation:       fl.evaluation || null,
+      cultural_variants: fl.cultural_variants || null,
+      contextualizing:  fl.contextualizing || ''
+    };
+  }
+
+  // Older structured format — instantiating/fencing are objects, validating is an array
+  if (fl.instantiating && typeof fl.instantiating === 'object') {
+    const exemplars = [];
+    if (fl.instantiating.before || fl.instantiating.after) {
+      exemplars.push({
+        label: 'Before → After',
+        text: [
+          fl.instantiating.before ? `❌ Before: ${fl.instantiating.before}` : '',
+          fl.instantiating.after  ? `✅ After: ${fl.instantiating.after}` : ''
+        ].filter(Boolean).join('\n\n'),
+        note: ''
+      });
+    }
+
+    const boundaries = fl.fencing ? {
+      applies_when:   fl.fencing.apply    ? [fl.fencing.apply]    : [],
+      does_not_apply: fl.fencing.notApply ? [fl.fencing.notApply] : [],
+      tension_zones:  []
+    } : null;
+
+    const evaluation = Array.isArray(fl.validating) && fl.validating.length ? {
+      test_cases: fl.validating.map(v => ({ prompt: v, expected: '', pass_criteria: '' })),
+      metric: '',
+      silent_failures: []
+    } : null;
+
+    return {
+      principle:        fl.defining || '',
+      reasoning:        '',
+      exemplars,
+      boundaries,
+      evaluation,
+      cultural_variants: null,
+      contextualizing:  fl.contextualizing || ''
+    };
+  }
+
+  // Current format — generateFlatFiveLayerWithClaude (the live forge path)
+  // saves every layer as a plain string, not an object/array. This is what
+  // real skills forged today actually look like.
+  const exemplars = (typeof fl.instantiating === 'string' && fl.instantiating.trim())
+    ? [{ label: '', text: fl.instantiating.trim(), note: '' }]
+    : [];
+
+  const boundaries = (typeof fl.fencing === 'string' && fl.fencing.trim()) ? {
+    applies_when:   [fl.fencing.trim()],
+    does_not_apply: [],
+    tension_zones:  []
+  } : null;
+
+  const evaluation = (typeof fl.validating === 'string' && fl.validating.trim()) ? {
+    test_cases: [{ prompt: '', expected: fl.validating.trim(), pass_criteria: '' }],
+    metric: '',
+    silent_failures: []
+  } : null;
+
+  return {
+    principle:        fl.defining || fl.definition || '',
+    reasoning:        '',
+    exemplars,
+    boundaries,
+    evaluation,
+    cultural_variants: null,
+    contextualizing:  (typeof fl.contextualizing === 'string' && fl.contextualizing) || ''
+  };
+}
+
+// ═══ ON-DEMAND CONTENT TRANSLATION (for cross-language downloads) ═══
+// title/description get a best-effort auto-translation at publish time
+// (translateBilingualPair in routes/skills.js), but that has never covered
+// the actual substance of a Skill — the five-layer body and the
+// ready-to-use prompt are forged once, in one language, and stay that way
+// forever. Downloading a Skill in the OTHER UI language previously mixed
+// translated section labels with untranslated content underneath them.
+//
+// Called on demand from POST /api/skills/:id/translate-content, only when
+// the requester's language does not match the Skill's own content
+// language; the caller is responsible for caching the result (skills.
+// five_layer_translated / ready_to_use_prompt_translated / content_
+// translated_lang) so this only runs once per Skill per target language.
+//
+// cultural_variants is deliberately NOT translated — it already stores a
+// real per-locale variant (e.g. both 'zh-CN' and 'en-US' notes) generated
+// at forge time, which is content, not a translation gap.
+export async function translateFiveLayerContent(fiveLayer, readyToUsePrompt, targetIsCn) {
+  const targetLangLabel = targetIsCn ? 'Chinese (Simplified)' : 'English';
+  const payload = {
+    principle: fiveLayer?.principle || '',
+    reasoning: fiveLayer?.reasoning || '',
+    exemplars: fiveLayer?.exemplars || [],
+    boundaries: fiveLayer?.boundaries || null,
+    evaluation: fiveLayer?.evaluation || null,
+    contextualizing: fiveLayer?.contextualizing || '',
+    ready_to_use_prompt: readyToUsePrompt || ''
+  };
+
+  const prompt = `Translate the following Skill content into ${targetLangLabel}. This is a structured "Skill" document for an AI alignment platform — translate faithfully, preserve the meaning and tone (philosophical, precise, never corporate marketing), and keep technical terms like "Skill", "AI", "prompt" in English even inside the Chinese version. Do not add, remove, or summarize anything — translate every string value, keep every array the same length and every object the same shape as the input.
+
+Input JSON:
+${JSON.stringify(payload)}
+
+Return ONLY the translated JSON, in the exact same structure (same keys, same array lengths, same nesting) as the input.`;
+
+  const result = await callLLMWithClaudeFallback(prompt, 2500, 'content_translation');
+  const out = result.data || {};
+
+  return {
+    principle: typeof out.principle === 'string' && out.principle ? out.principle : payload.principle,
+    reasoning: typeof out.reasoning === 'string' && out.reasoning ? out.reasoning : payload.reasoning,
+    exemplars: Array.isArray(out.exemplars) && out.exemplars.length === payload.exemplars.length
+      ? out.exemplars : payload.exemplars,
+    boundaries: out.boundaries && typeof out.boundaries === 'object' ? out.boundaries : payload.boundaries,
+    evaluation: out.evaluation && typeof out.evaluation === 'object' ? out.evaluation : payload.evaluation,
+    contextualizing: typeof out.contextualizing === 'string' && out.contextualizing ? out.contextualizing : payload.contextualizing,
+    cultural_variants: fiveLayer?.cultural_variants || null,
+    ready_to_use_prompt: typeof out.ready_to_use_prompt === 'string' && out.ready_to_use_prompt
+      ? out.ready_to_use_prompt : payload.ready_to_use_prompt,
+    model: result.model
+  };
+}

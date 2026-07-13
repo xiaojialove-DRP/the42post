@@ -12,10 +12,10 @@ import { isValidDomain, isValidAnonymousId } from '../utils/validation.js';
 // skills.creator_anonymous_id (set from the request body / X-Anonymous-Id
 // header). See backend/db/init.js for where this row is created.
 const ANONYMOUS_AUTHOR_ID = 'anonymous-user-001';
-import { createManifest, addCovenantSignature, callLLMJSON, redactManifestEmail } from '../utils/skillGeneration.js';
+import { createManifest, addCovenantSignature, callLLMJSON, redactManifestEmail, normalizeFiveLayer, translateFiveLayerContent } from '../utils/skillGeneration.js';
 import { draftEditRatio } from '../utils/editDistance.js';
 import { moderateSkill } from '../utils/moderation.js';
-import { rateLimitForge, rateLimitStar } from '../middleware/rateLimiter.js';
+import { rateLimitForge, rateLimitStar, rateLimitLLM } from '../middleware/rateLimiter.js';
 import { getCache, CACHE_TTL } from '../utils/cache.js';
 import { v4 as uuidv4 } from 'uuid';
 import { logger } from '../utils/logger.js';
@@ -404,6 +404,126 @@ router.get('/:skill_id', async (req, res, next) => {
         ...skill,
         manifest
       }
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// ═══ TRANSLATE CONTENT ON DEMAND (for cross-language downloads) ═══
+// title/description get a best-effort translation at publish time
+// (translateBilingualPair above), but the five-layer body and the
+// ready-to-use prompt are forged once, in one language, and were never
+// translated at all — downloading a Skill in the OTHER UI language
+// previously mixed translated section labels with untranslated content.
+// This fills that gap on demand: called only when the requester's
+// target_lang does not match the Skill's own content language, result
+// cached in the skills row so the LLM call happens once per Skill per
+// target language, not once per download.
+// rateLimitLLM: this is a real LLM call, same budget as other generation routes.
+router.post('/:skill_id/translate-content', rateLimitLLM, async (req, res, next) => {
+  try {
+    const { skill_id } = req.params;
+    const { target_lang } = req.body || {};
+
+    if (target_lang !== 'cn' && target_lang !== 'en') {
+      return res.status(400).json({ error: 'Invalid input', message: 'target_lang must be "cn" or "en"' });
+    }
+    const targetIsCn = target_lang === 'cn';
+
+    const result = await db.query(
+      `SELECT title, description, five_layer, ready_to_use_prompt,
+              five_layer_translated, ready_to_use_prompt_translated, content_translated_lang
+       FROM skills WHERE id = $1 AND deleted_at IS NULL`,
+      [skill_id]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Not found', message: 'Skill not found' });
+    }
+    const skill = result.rows[0];
+
+    let fiveLayerRaw;
+    try {
+      fiveLayerRaw = typeof skill.five_layer === 'string' ? JSON.parse(skill.five_layer) : (skill.five_layer || {});
+    } catch {
+      fiveLayerRaw = {};
+    }
+    const fiveLayer = normalizeFiveLayer(fiveLayerRaw);
+
+    // Content language is decided by the actual generated content
+    // (principle), not by title/description — those get their own
+    // separate best-effort translation and can legitimately be bilingual
+    // already while five_layer is still monolingual.
+    const contentIsCn = detectIsChinese(fiveLayer?.principle || skill.description || skill.title || '');
+
+    if (targetIsCn === contentIsCn) {
+      // Fast path: no mismatch, nothing to translate. This is the common
+      // case (viewer's language already matches how the Skill was forged).
+      return res.json({
+        success: true,
+        translated: false,
+        five_layer: fiveLayer,
+        ready_to_use_prompt: skill.ready_to_use_prompt || null
+      });
+    }
+
+    if (skill.content_translated_lang === target_lang && skill.five_layer_translated) {
+      let cachedFiveLayer;
+      try {
+        cachedFiveLayer = JSON.parse(skill.five_layer_translated);
+      } catch {
+        cachedFiveLayer = null;
+      }
+      if (cachedFiveLayer) {
+        return res.json({
+          success: true,
+          translated: true,
+          cached: true,
+          five_layer: cachedFiveLayer,
+          ready_to_use_prompt: skill.ready_to_use_prompt_translated || null
+        });
+      }
+    }
+
+    let translated;
+    try {
+      translated = await translateFiveLayerContent(fiveLayer, skill.ready_to_use_prompt, targetIsCn);
+    } catch (llmErr) {
+      // Never forward the raw provider error (API keys, status codes, JSON
+      // shape) to the client — same reasoning as routes/playground.js
+      // /test. The caller (download button) is expected to fall back to
+      // the untranslated content rather than block the download entirely.
+      console.error('translate-content: LLM call failed:', llmErr.message);
+      logger.error('content_translation_failed', { skillId: skill_id, message: (llmErr.message || '').substring(0, 200) });
+      return res.status(502).json({
+        error: 'Translation failed',
+        message: targetIsCn
+          ? '翻译暂时失败了，请稍后再试一次。'
+          : 'Translation failed for now — please try again in a moment.'
+      });
+    }
+    const { model, ...translatedFiveLayer } = translated;
+
+    try {
+      await db.query(
+        `UPDATE skills
+         SET five_layer_translated = $1, ready_to_use_prompt_translated = $2, content_translated_lang = $3
+         WHERE id = $4`,
+        [JSON.stringify(translatedFiveLayer), translatedFiveLayer.ready_to_use_prompt || null, target_lang, skill_id]
+      );
+    } catch (dbErr) {
+      // Non-fatal: the translation still succeeded and is returned below;
+      // only the cache-for-next-time write failed, so the next request
+      // just re-translates instead of erroring here.
+      console.warn('translate-content: cache write failed (non-fatal):', dbErr.message);
+    }
+
+    res.json({
+      success: true,
+      translated: true,
+      cached: false,
+      five_layer: translatedFiveLayer,
+      ready_to_use_prompt: translatedFiveLayer.ready_to_use_prompt || null
     });
   } catch (error) {
     next(error);

@@ -8213,7 +8213,7 @@ async function initAgentArchiveView() {
 
     // Download buttons
     document.querySelectorAll('.domain-cell .download-btn').forEach(btn => {
-      btn.addEventListener('click', (e) => {
+      btn.addEventListener('click', async (e) => {
         e.stopPropagation();
 
         // Check if button is disabled
@@ -8226,8 +8226,21 @@ async function initAgentArchiveView() {
         const skillId = btn.dataset.skillId;
         const skill = findSkillById(skillId);
         if (skill) {
-          const markdown = generateDomainSkillMarkdown(skill);
-          downloadMarkdownFile(markdown, `The42Post_${skill.title.replace(/\s+/g, '_')}.md`);
+          // Icon-only button — a brief opacity dim is the whole loading
+          // state; getSkillContentForDownload only makes a network call
+          // (and only takes visible time) when the Skill's content
+          // language doesn't match the current UI language.
+          const originalOpacity = btn.style.opacity;
+          btn.disabled = true;
+          btn.style.opacity = '0.5';
+          try {
+            const contentSkill = await getSkillContentForDownload(skill);
+            const markdown = generateDomainSkillMarkdown(contentSkill);
+            downloadMarkdownFile(markdown, `The42Post_${skill.title.replace(/\s+/g, '_')}.md`);
+          } finally {
+            btn.disabled = false;
+            btn.style.opacity = originalOpacity;
+          }
         }
       });
     });
@@ -8477,16 +8490,25 @@ function attachTop42SkillListeners() {
     // Download button
     const downloadBtn = cell.querySelector('.download-btn');
     if (downloadBtn) {
-      downloadBtn.addEventListener('click', (e) => {
+      downloadBtn.addEventListener('click', async (e) => {
         e.stopPropagation();
-        // Generate markdown and download
-        const markdown = generateDomainSkillMarkdown(skill);
-        downloadMarkdownFile(markdown, `The42Post_${skill.title.replace(/\s+/g, '_')}.md`);
+        const isCn = document.body.dataset.lang === 'cn';
+        const originalLabel = downloadBtn.textContent;
+        downloadBtn.disabled = true;
+        downloadBtn.textContent = isCn ? '⟳ 翻译中…' : '⟳ Translating…';
+        try {
+          const contentSkill = await getSkillContentForDownload(skill);
+          const markdown = generateDomainSkillMarkdown(contentSkill);
+          downloadMarkdownFile(markdown, `The42Post_${skill.title.replace(/\s+/g, '_')}.md`);
 
-        // Update download counter
-        skill.downloads = (skill.downloads || 0) + 1;
-        const downloadDisplay = cell.querySelector('.top42-skill-meta .top42-skill-meta-item:nth-child(2) span');
-        if (downloadDisplay) downloadDisplay.textContent = skill.downloads;
+          // Update download counter
+          skill.downloads = (skill.downloads || 0) + 1;
+          const downloadDisplay = cell.querySelector('.top42-skill-meta .top42-skill-meta-item:nth-child(2) span');
+          if (downloadDisplay) downloadDisplay.textContent = skill.downloads;
+        } finally {
+          downloadBtn.disabled = false;
+          downloadBtn.textContent = originalLabel;
+        }
       });
     }
   });
@@ -8629,6 +8651,53 @@ function attachDomainSkillListeners() {
   });
 
   console.log('✓ Domain skill listeners attached');
+}
+
+// A Skill's generated content (five_layer / ready_to_use_prompt) is forged
+// once, in one language, and never touched again by the best-effort
+// title/description translation that runs at publish time. Downloading a
+// Skill while in the OTHER UI language previously produced a document with
+// translated section labels wrapped around untranslated content. This
+// fetches an on-demand translation (cached server-side after the first
+// call — see POST /api/skills/:id/translate-content) only when the two
+// languages actually mismatch; the common case (already matching) never
+// makes a network call. Falls back to the original content — never blocks
+// the download — if translation is unavailable.
+async function getSkillContentForDownload(skill) {
+  const isCn = document.body.dataset.lang === 'cn';
+  const fl = skill.fiveLayerSkill || skill.five_layer || {};
+  const principleText = (typeof fl === 'object' && fl ? (fl.principle || fl.defining || '') : '')
+    || skill.desc || skill.description || skill.title || '';
+  const contentIsCn = /[一-鿿]/.test(principleText);
+
+  if (isCn === contentIsCn || !skill.id) return skill; // fast path — already matches
+
+  try {
+    const resp = await fetch(`${ApiClient.BASE_URL}/skills/${skill.id}/translate-content`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ target_lang: isCn ? 'cn' : 'en' })
+    });
+    if (!resp.ok) {
+      const err = await resp.json().catch(() => ({}));
+      throw new Error(err.message || `HTTP ${resp.status}`);
+    }
+    const data = await resp.json();
+    return {
+      ...skill,
+      fiveLayerSkill: data.five_layer,
+      five_layer: data.five_layer,
+      ready_to_use_prompt: data.ready_to_use_prompt || skill.ready_to_use_prompt
+    };
+  } catch (err) {
+    console.warn('Content translation unavailable, downloading in original language:', err.message);
+    if (typeof showWarning === 'function') {
+      showWarning(isCn
+        ? '翻译暂时不可用，已用原始语言内容下载'
+        : 'Translation unavailable — downloaded in the original language');
+    }
+    return skill;
+  }
 }
 
 function generateDomainSkillMarkdown(skill) {

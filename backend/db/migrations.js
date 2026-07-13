@@ -181,6 +181,24 @@ export const MIGRATIONS = [
       `ALTER TABLE skill_test_votes ADD COLUMN is_author INTEGER DEFAULT 0`,
       `CREATE INDEX IF NOT EXISTS idx_skill_test_votes_skill_author ON skill_test_votes(skill_id, is_author)`
     ]
+  },
+  {
+    // Cache for on-demand five-layer/ready-to-use-prompt translation
+    // (utils/skillGeneration.js translateFiveLayerContent, called from
+    // POST /api/skills/:id/translate-content). A Skill's generated content
+    // is only ever forged in one language; this stores the translation
+    // into whichever OTHER language someone has actually requested a
+    // download in, so the LLM call happens once per Skill per target
+    // language rather than once per download. content_translated_lang
+    // records which language the cached columns are in ('cn' or 'en') —
+    // a Skill only ever needs one cached translation, since it only has
+    // one "other" language.
+    name: '014_skills_content_translation_cache',
+    statements: [
+      `ALTER TABLE skills ADD COLUMN five_layer_translated TEXT`,
+      `ALTER TABLE skills ADD COLUMN ready_to_use_prompt_translated TEXT`,
+      `ALTER TABLE skills ADD COLUMN content_translated_lang VARCHAR(10)`
+    ]
   }
 ];
 
