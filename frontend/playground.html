@@ -1002,6 +1002,7 @@
       border-top: 1px solid #e0d5b8;
       border-bottom: 1px solid #e0d5b8;
     }
+    .twin-reveal-stats[hidden] { display: none !important; }
     .twin-reveal-stats .twin-rate-num { font-weight: 700; color: #b8915a; font-size: 16px; }
     .twin-reveal-actions {
       display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
@@ -1178,6 +1179,13 @@
     .twin-rate-buttons {
       display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px;
     }
+    /* Win/lose reaction groups toggle via the hidden attribute — the class
+       rule above has higher specificity than the UA [hidden] default, so
+       without this the two groups showed at once instead of swapping. */
+    .twin-rate-buttons[hidden] { display: none !important; }
+    /* Lose group has 2 buttons, not 3 — its own column count instead of
+       inheriting the win group's 3-column grid. */
+    .twin-rate-buttons[data-reveal-buttons-lose] { grid-template-columns: 1fr 1fr; }
     .twin-rate-btn {
       display: flex; flex-direction: column; align-items: center; gap: 2px;
       padding: 8px 4px;
@@ -1357,7 +1365,7 @@
 
 
   <script src="skills.js?v=a2f416cc7c"></script>
-  <script src="i18n.js?v=23012a72d5"></script>
+  <script src="i18n.js?v=1f3fd9ae4e"></script>
   <script src="script.js?v=9424014ab5"></script>
   <script>
     /* ═══════════════════════════════════════
@@ -2916,7 +2924,10 @@
 
         // Community win rate — only non-author blind votes count
         // server-side (see /vote in playground.js), so this number is
-        // never inflated by a creator testing their own Skill.
+        // never inflated by a creator testing their own Skill. Below the
+        // 5-vote threshold there is nothing meaningful to show yet, and a
+        // "not enough data" caveat isn't something the user is here for —
+        // hide the whole row rather than fill it with a disclaimer.
         const statsEl = stageReveal.querySelector('[data-reveal-stats]');
         const total = data.total_votes || 0;
         const winPct = (total >= 5 && data.win_rate != null) ? Math.round(data.win_rate * 100) : null;
@@ -2924,8 +2935,9 @@
           statsEl.innerHTML = isCn
             ? `🌟 <span class="twin-rate-num">${winPct}%</span> 的盲选测试者也选中了这个 Skill · 共 ${total} 次投票`
             : `🌟 <span class="twin-rate-num">${winPct}%</span> of blind testers also picked this Skill · ${total} votes`;
+          statsEl.hidden = false;
         } else {
-          statsEl.textContent = t('playground_verifying_note');
+          statsEl.hidden = true;
         }
 
         // Which reaction question makes sense depends on the outcome just
