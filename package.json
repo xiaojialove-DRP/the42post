@@ -11,7 +11,8 @@
     "bust-cache": "node scripts/bust-cache.js",
     "funnel": "node backend/scripts/funnel-snapshot.js",
     "verification-health": "node backend/scripts/verification-health-check.js",
-    "backup:prod": "node scripts/backup-prod.js"
+    "backup:prod": "node scripts/backup-prod.js",
+    "snapshot": "node scripts/emergency-snapshot.js"
   },
   "engines": {
     "node": ">=18.0.0"
