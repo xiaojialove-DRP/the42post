@@ -281,6 +281,12 @@ const I18N = {
     playground_clearly_better: 'Clearly better',
     playground_not_great: 'Not great',
     playground_cant_tell: "Can't tell",
+    // Shown instead of the above when the user's blind pick matched the
+    // baseline, not the Skill — a different question, not just relabeled
+    // buttons, since "clearly better" would contradict what they just picked.
+    playground_how_skill_lose: 'You preferred the baseline. What about this Skill?',
+    playground_lose_worse: 'Not as good as the baseline',
+    playground_lose_no_diff: 'Pretty similar, just did not pick it',
     playground_submit_error: 'Submit failed:',
     playground_generation_error: 'Generation failed',
     playground_try_different: '↓ Try a different scenario',
@@ -494,6 +500,9 @@ const I18N = {
     playground_clearly_better: '明显更好',
     playground_not_great: '不大好',
     playground_cant_tell: '没感觉到区别',
+    playground_how_skill_lose: '你更喜欢基线回答。这个 Skill 呢？',
+    playground_lose_worse: '确实不如基线',
+    playground_lose_no_diff: '其实差不多，只是没选中',
     playground_submit_error: '提交失败：',
     playground_generation_error: '生成失败',
     playground_try_different: '↓ 换个场景看看效果',

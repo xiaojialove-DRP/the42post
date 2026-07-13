@@ -46,16 +46,20 @@ test('picking a skill and starting a Twin Test never leaks a raw provider error'
   if (await rateStage.isVisible()) {
     // Real (or fallback-generated) responses came back. Blind pick -
     // neither card is labelled with the skill side at this point - then
-    // confirm the flip-reveal appears, react to it (the separate
-    // qualitative "how did this Skill do overall" question), and confirm
-    // the thank-you stage appears.
+    // confirm the flip-reveal appears, react to it, and confirm the
+    // thank-you stage appears. Which button set is visible (win vs lose)
+    // depends on the server's random A/B assignment, not on anything this
+    // test controls, so react via whichever set is actually showing
+    // rather than hardcoding the win-only "Clearly better" button.
     await expect(rateStage.locator('[data-text-a]')).not.toHaveText('');
     await expect(rateStage.locator('[data-text-b]')).not.toHaveText('');
     await card.locator('[data-pick-card][data-side="A"]').click();
     const revealStage = card.locator('.twin-reveal');
     await expect(revealStage).toBeVisible({ timeout: 10000 });
     await expect(revealStage.locator('[data-reveal-headline]')).not.toHaveText('');
-    await revealStage.locator('.twin-rate-btn[data-rating="better"]').click();
+    const won = await revealStage.locator('[data-reveal-buttons-win]').isVisible();
+    const activeButtons = won ? revealStage.locator('[data-reveal-buttons-win]') : revealStage.locator('[data-reveal-buttons-lose]');
+    await activeButtons.locator('.twin-rate-btn[data-rating="worse"]').click();
     await expect(card.locator('.twin-thanks')).toBeVisible({ timeout: 10000 });
   } else {
     // No real LLM key in this environment - generation failed, which is
