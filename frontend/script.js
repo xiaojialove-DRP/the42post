@@ -7461,12 +7461,11 @@ async function initAgentArchiveView() {
         // Verification status comes from BLIND Twin Test votes
         // (routes/playground.js /vote + /stats-batch) — a separate, more
         // rigorous signal than the self-reported betterVotes above. Author
-        // votes count toward the total (verificationAuthorVotes says how
-        // many, so the badge can flag it rather than hide it).
+        // votes count toward the total (not broken out in the UI — the
+        // API's author_votes field is for data analysis, not display).
         s.verificationStatus = stats[s.id]?.verification_status || null;
         s.verificationTotalVotes = stats[s.id]?.verification_total_votes || 0;
         s.verificationWinRate = stats[s.id]?.verification_win_rate ?? null;
-        s.verificationAuthorVotes = stats[s.id]?.verification_author_votes || 0;
       });
     }
   } catch (e) {
@@ -7560,7 +7559,6 @@ async function initAgentArchiveView() {
         verificationStatus: s.verificationStatus || null,
         verificationTotalVotes: s.verificationTotalVotes || 0,
         verificationWinRate: s.verificationWinRate ?? null,
-        verificationAuthorVotes: s.verificationAuthorVotes || 0,
       };
     });
 
@@ -7707,10 +7705,9 @@ async function initAgentArchiveView() {
   // votes (routes/playground.js /vote), not the self-reported betterVotes
   // count used for star size above. "failed" gets the same visual weight
   // as "verified": a verification mechanism that only ever shows good news
-  // is not one worth trusting. Author votes count toward the total (the
-  // creator's own blind vote is still a real blind vote) but are flagged
-  // with an "(incl. N by creator)" suffix rather than silently blended in
-  // — the number stays complete, the provenance stays visible.
+  // is not one worth trusting. Author votes count toward the total like
+  // any other blind vote; the split isn't shown here — the API's
+  // author_votes field is for data analysis, not public display.
   function renderVerificationBadge(n) {
     const isCn = (typeof currentLang !== 'undefined' && currentLang === 'cn');
     const total = n.verificationTotalVotes || 0;
@@ -7719,21 +7716,17 @@ async function initAgentArchiveView() {
 
     const pct = n.verificationWinRate !== null && n.verificationWinRate !== undefined
       ? Math.round(n.verificationWinRate * 100) : null;
-    const authorVotes = n.verificationAuthorVotes || 0;
-    const authorSuffix = authorVotes > 0
-      ? (isCn ? ` (含创作者 ${authorVotes} 票)` : ` (incl. ${authorVotes} by creator)`)
-      : '';
 
     if (status === 'verified') {
       return {
         cls: 'verified',
-        text: (isCn ? `✓ 社区已验证 · ${pct}% · ${total} 票` : `✓ Community Verified · ${pct}% · ${total} votes`) + authorSuffix
+        text: isCn ? `✓ 社区已验证 · ${pct}% · ${total} 票` : `✓ Community Verified · ${pct}% · ${total} votes`
       };
     }
     if (status === 'failed') {
       return {
         cls: 'failed',
-        text: (isCn ? `✕ 验证未通过 · ${pct}% · ${total} 票` : `✕ Verification Failed · ${pct}% · ${total} votes`) + authorSuffix
+        text: isCn ? `✕ 验证未通过 · ${pct}% · ${total} 票` : `✕ Verification Failed · ${pct}% · ${total} votes`
       };
     }
     // status === 'verifying' — either under the 5-vote threshold, or a
@@ -7741,12 +7734,12 @@ async function initAgentArchiveView() {
     if (total < 5) {
       return {
         cls: 'verifying',
-        text: (isCn ? `◐ 验证中 · ${total}/5 票` : `◐ Verifying · ${total}/5 votes`) + authorSuffix
+        text: isCn ? `◐ 验证中 · ${total}/5 票` : `◐ Verifying · ${total}/5 votes`
       };
     }
     return {
       cls: 'verifying',
-      text: (isCn ? `◐ 结果不明确 · ${pct}% · ${total} 票` : `◐ Inconclusive · ${pct}% · ${total} votes`) + authorSuffix
+      text: isCn ? `◐ 结果不明确 · ${pct}% · ${total} 票` : `◐ Inconclusive · ${pct}% · ${total} votes`
     };
   }
 
@@ -8141,8 +8134,7 @@ async function initAgentArchiveView() {
           const badge = renderVerificationBadge({
             verificationStatus: s.verification_status,
             verificationTotalVotes: s.verification_total_votes,
-            verificationWinRate: s.verification_win_rate,
-            verificationAuthorVotes: s.verification_author_votes
+            verificationWinRate: s.verification_win_rate
           });
           el.textContent = badge.text;
           el.className = 'skill-winrate' + (badge.cls ? ` ${badge.cls}` : '');

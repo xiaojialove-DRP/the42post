@@ -2925,24 +2925,19 @@
         }
 
         // Community win rate — every blind vote counts server-side,
-        // including the author's own (see verificationHealth.js header);
-        // author_votes says how many so it can be flagged rather than
-        // hidden. Below the 5-vote threshold there is nothing meaningful
-        // to show yet, and a "not enough data" caveat isn't something the
-        // user is here for — hide the whole row rather than fill it with
-        // a disclaimer.
+        // including the author's own (see verificationHealth.js header).
+        // The API also returns author_votes, but that split is for data
+        // analysis, not shown here. Below the 5-vote threshold there is
+        // nothing meaningful to show yet, and a "not enough data" caveat
+        // isn't something the user is here for — hide the whole row
+        // rather than fill it with a disclaimer.
         const statsEl = stageReveal.querySelector('[data-reveal-stats]');
         const total = data.total_votes || 0;
-        const authorVotes = data.author_votes || 0;
         const winPct = (total >= 5 && data.win_rate != null) ? Math.round(data.win_rate * 100) : null;
         if (winPct !== null) {
-          const authorNote = authorVotes > 0
-            ? (isCn ? `（含创作者 ${authorVotes} 票）` : ` (incl. ${authorVotes} by creator)`)
-            : '';
-          statsEl.innerHTML = (isCn
+          statsEl.innerHTML = isCn
             ? `🌟 <span class="twin-rate-num">${winPct}%</span> 的盲选测试者也选中了这个 Skill · 共 ${total} 次投票`
-            : `🌟 <span class="twin-rate-num">${winPct}%</span> of blind testers also picked this Skill · ${total} votes`)
-            + authorNote;
+            : `🌟 <span class="twin-rate-num">${winPct}%</span> of blind testers also picked this Skill · ${total} votes`;
           statsEl.hidden = false;
         } else {
           statsEl.hidden = true;
