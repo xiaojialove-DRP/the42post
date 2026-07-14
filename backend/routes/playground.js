@@ -380,9 +380,10 @@ router.post('/test', rateLimitLLM, async (req, res, next) => {
     }
 
     // Persist the test so /vote can reveal & score it later. is_author is
-    // stamped now (this is the only point we have identity info) so /vote
-    // and the stats endpoints can exclude the creator's own votes from the
-    // public win rate without needing identity info passed again later.
+    // stamped now (this is the only point we have identity info) and counts
+    // toward the public win rate like any other blind vote — it's kept so
+    // author votes can be singled out later for data analysis, not to
+    // exclude them (see verificationHealth.js header for the rationale).
     const testId = uuidv4();
     const scenarioKey = scenario.key || scenario.title || `${scenario.domain || ''}-unknown`;
     const isAuthor = isAuthorOfSkill(skillRow.creator_anonymous_id, anonymous_id, creator_name) ? 1 : 0;
@@ -546,10 +547,11 @@ router.post('/vote', rateLimitTwinTest, async (req, res, next) => {
       );
     }
 
-    // Running win rate for this skill — non-author blind votes only, so a
-    // creator voting on their own Skill (this vote included, if that's who
-    // just voted) never moves the number the community sees.
-    const { total_votes: total, wins, win_rate: winRate, verification_status: verificationStatus } =
+    // Running win rate for this skill — every blind vote counts, including
+    // the author's own (see verificationHealth.js header). author_votes is
+    // surfaced alongside so this vote's provenance isn't lost even though
+    // it's counted.
+    const { total_votes: total, wins, win_rate: winRate, author_votes: authorVotes, verification_status: verificationStatus } =
       await getSkillVerificationStats(db, row.skill_id);
 
     res.json({
@@ -560,6 +562,7 @@ router.post('/vote', rateLimitTwinTest, async (req, res, next) => {
       total_votes: total,
       wins,
       win_rate: winRate,
+      author_votes: authorVotes,
       verification_status: verificationStatus
     });
   } catch (error) {
@@ -683,14 +686,15 @@ router.get('/stats-batch', async (req, res, next) => {
       s.win_rate = rated > 0 ? Math.round((s.better / rated) * 100) : null;
       s.rated = rated;
     }
-    // Verification status (blind, non-author votes) — a separate signal
-    // from the "better/worse" self-report above. Merge in for every skill
-    // that has verification data, even ones with no feedback rows yet.
+    // Verification status (blind votes, author included) — a separate
+    // signal from the "better/worse" self-report above. Merge in for every
+    // skill that has verification data, even ones with no feedback rows yet.
     for (const [id, v] of Object.entries(verificationStats)) {
       if (!stats[id]) stats[id] = { tests: 0, better: 0, worse: 0, no_diff: 0, win_rate: null, rated: 0 };
       stats[id].verification_status = v.verification_status;
       stats[id].verification_total_votes = v.total_votes;
       stats[id].verification_win_rate = v.win_rate;
+      stats[id].verification_author_votes = v.author_votes;
     }
 
     res.json({ success: true, stats });

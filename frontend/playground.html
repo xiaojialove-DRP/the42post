@@ -2408,7 +2408,8 @@
           <!-- Reveal stage — shown only AFTER the blind pick is submitted.
                Flips the card the user picked to show whether it was the
                Skill or the baseline, plus the diagnostic and the running
-               (non-author) community win rate. -->
+               community win rate (author votes count too, see
+               verificationHealth.js). -->
           <div class="twin-stage twin-reveal" hidden>
             <div class="twin-reveal-headline" data-reveal-headline></div>
             <div class="twin-reveal-which" data-reveal-which></div>
@@ -2754,7 +2755,7 @@
        2. User taps whichever response they prefer — the tap IS the vote.
        3. POST /api/playground/vote → reveals skill_side, whether the
           user's pick matched it, the diagnostic, and the running
-          (non-author) community win rate.
+          community win rate (author votes count toward it too).
        4. Flip-reveal stage shows the verdict, then "Continue" leads to
           the thank-you stage. */
     async function runTwinTest(card, task, repo) {
@@ -2779,7 +2780,8 @@
       // Skills store ownership as creator_<username> (username is required
       // at forge time), so the device id alone cannot tell the server "this
       // is the creator testing their own Skill" — send the username too so
-      // /vote can exclude author self-votes from the public win rate.
+      // /vote can stamp is_author on the vote (counted in the public win
+      // rate, but flagged for later data analysis — see verificationHealth.js).
       let creatorNameForTest = null;
       try {
         const u = JSON.parse(localStorage.getItem('42post_user') || 'null');
@@ -2922,19 +2924,25 @@
           diagEl.hidden = true;
         }
 
-        // Community win rate — only non-author blind votes count
-        // server-side (see /vote in playground.js), so this number is
-        // never inflated by a creator testing their own Skill. Below the
-        // 5-vote threshold there is nothing meaningful to show yet, and a
-        // "not enough data" caveat isn't something the user is here for —
-        // hide the whole row rather than fill it with a disclaimer.
+        // Community win rate — every blind vote counts server-side,
+        // including the author's own (see verificationHealth.js header);
+        // author_votes says how many so it can be flagged rather than
+        // hidden. Below the 5-vote threshold there is nothing meaningful
+        // to show yet, and a "not enough data" caveat isn't something the
+        // user is here for — hide the whole row rather than fill it with
+        // a disclaimer.
         const statsEl = stageReveal.querySelector('[data-reveal-stats]');
         const total = data.total_votes || 0;
+        const authorVotes = data.author_votes || 0;
         const winPct = (total >= 5 && data.win_rate != null) ? Math.round(data.win_rate * 100) : null;
         if (winPct !== null) {
-          statsEl.innerHTML = isCn
+          const authorNote = authorVotes > 0
+            ? (isCn ? `（含创作者 ${authorVotes} 票）` : ` (incl. ${authorVotes} by creator)`)
+            : '';
+          statsEl.innerHTML = (isCn
             ? `🌟 <span class="twin-rate-num">${winPct}%</span> 的盲选测试者也选中了这个 Skill · 共 ${total} 次投票`
-            : `🌟 <span class="twin-rate-num">${winPct}%</span> of blind testers also picked this Skill · ${total} votes`;
+            : `🌟 <span class="twin-rate-num">${winPct}%</span> of blind testers also picked this Skill · ${total} votes`)
+            + authorNote;
           statsEl.hidden = false;
         } else {
           statsEl.hidden = true;

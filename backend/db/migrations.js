@@ -172,10 +172,10 @@ export const MIGRATIONS = [
     ]
   },
   {
-    // Marks a Twin Test vote as cast by the Skill's own creator, so
-    // verification win-rate math (routes/playground.js) can exclude it.
-    // A creator voting on their own Skill is not evidence of anything;
-    // without this flag they could inflate their own win rate.
+    // Marks a Twin Test vote as cast by the Skill's own creator. The vote
+    // still counts toward the public win rate (see utils/verificationHealth.js
+    // header) — this flag exists so author votes can be singled out later
+    // for data analysis, not to exclude them.
     name: '013_skill_test_votes_is_author',
     statements: [
       `ALTER TABLE skill_test_votes ADD COLUMN is_author INTEGER DEFAULT 0`,

@@ -47,10 +47,10 @@ const db = await getDb();
 try {
   const result = await runVerificationSelfCheck(db, days);
   console.log(`\nVerification self-check — trailing ${result.window_days} days`);
-  console.log(`  Evaluable Skills (>=5 non-author votes): ${result.evaluable}`);
+  console.log(`  Evaluable Skills (>=5 votes): ${result.evaluable}`);
   console.log(`  Failed among them: ${result.failed}`);
   if (result.reason === 'no_recent_votes') {
-    console.log('  No non-author votes in this window — nothing to evaluate yet.');
+    console.log('  No votes in this window — nothing to evaluate yet.');
   } else if (result.should_alert) {
     console.log('  ⚠️  ALERT FIRED — zero failures among evaluable Skills. Admin notified.');
   } else {

@@ -4,9 +4,16 @@
    "Verification" here means: across blind Twin Test votes (the user
    never sees which side has the Skill until after picking — see
    routes/playground.js /test and /vote), what share did the Skill
-   side win? Author votes are excluded everywhere in this file — a
-   creator voting on their own Skill is not evidence of anything, and
-   would let anyone inflate their own win rate.
+   side win? Author votes COUNT toward this public score — a creator
+   testing their own Skill blind is still a real blind vote. What we
+   keep instead is provenance: is_author is stamped at vote time
+   (routes/playground.js isAuthorOfSkill()) and never dropped from the
+   data, so anyone doing real analysis on the export (or the self-check
+   below) can single out author votes rather than have them silently
+   discarded. getSkillVerificationStats() and getBatchVerificationStats()
+   surface this as `author_votes` alongside the total, so the public
+   number stays complete while the author share stays visible, not
+   hidden.
 
    A verification status that can never say "failed" is not a test,
    it is a rubber stamp. checkVerificationSelfTest() exists to catch
@@ -35,17 +42,20 @@ export function deriveVerificationStatus(totalVotes, winRate) {
   return 'verifying';
 }
 
-// Shared WHERE fragment: a countable, non-author blind vote.
-const NON_AUTHOR_VOTE_FILTER = `voted_for_skill IS NOT NULL AND (is_author IS NULL OR is_author = 0)`;
+// Shared WHERE fragment: a countable blind vote (author included — see
+// file header). `is_author` is selected alongside, never filtered on, so
+// it can be summed separately into `author_votes` for annotation.
+const COUNTABLE_VOTE_FILTER = `voted_for_skill IS NOT NULL`;
 
-// ─── Single-skill verification stats (non-author blind votes only) ───
+// ─── Single-skill verification stats (all blind votes; author flagged) ───
 export async function getSkillVerificationStats(db, skillId) {
   const row = (await db.query(
-    `SELECT COUNT(*) AS total, COALESCE(SUM(voted_for_skill), 0) AS wins
+    `SELECT COUNT(*) AS total, COALESCE(SUM(voted_for_skill), 0) AS wins,
+            COALESCE(SUM(CASE WHEN is_author = 1 THEN 1 ELSE 0 END), 0) AS author_votes
      FROM skill_test_votes
-     WHERE skill_id = $1 AND ${NON_AUTHOR_VOTE_FILTER}`,
+     WHERE skill_id = $1 AND ${COUNTABLE_VOTE_FILTER}`,
     [skillId]
-  )).rows?.[0] || { total: 0, wins: 0 };
+  )).rows?.[0] || { total: 0, wins: 0, author_votes: 0 };
 
   const total = Number(row.total) || 0;
   const wins = Number(row.wins) || 0;
@@ -55,17 +65,19 @@ export async function getSkillVerificationStats(db, skillId) {
     total_votes: total,
     wins,
     win_rate: winRate,
+    author_votes: Number(row.author_votes) || 0,
     verification_status: deriveVerificationStatus(total, winRate)
   };
 }
 
-// ─── Batch verification stats for every Skill with any non-author vote ───
+// ─── Batch verification stats for every Skill with any blind vote ───
 // Used by the Archive grid so every card can show its status without N+1.
 export async function getBatchVerificationStats(db) {
   const rows = (await db.query(
-    `SELECT skill_id, COUNT(*) AS total, COALESCE(SUM(voted_for_skill), 0) AS wins
+    `SELECT skill_id, COUNT(*) AS total, COALESCE(SUM(voted_for_skill), 0) AS wins,
+            COALESCE(SUM(CASE WHEN is_author = 1 THEN 1 ELSE 0 END), 0) AS author_votes
      FROM skill_test_votes
-     WHERE ${NON_AUTHOR_VOTE_FILTER}
+     WHERE ${COUNTABLE_VOTE_FILTER}
      GROUP BY skill_id`
   )).rows || [];
 
@@ -78,6 +90,7 @@ export async function getBatchVerificationStats(db) {
       total_votes: total,
       wins,
       win_rate: winRate,
+      author_votes: Number(row.author_votes) || 0,
       verification_status: deriveVerificationStatus(total, winRate)
     };
   }
@@ -85,18 +98,18 @@ export async function getBatchVerificationStats(db) {
 }
 
 // ─── Self-check: is the "failed" verdict actually reachable? ───
-// Looks at every Skill that received at least one non-author blind vote in
-// the trailing `windowDays`, then scores each on its ALL-TIME non-author
-// vote history (status is a durable label, not a windowed one). If there
-// is at least one Skill with enough votes to be scored (`evaluable > 0`)
-// and NONE of them are "failed", the mechanism itself is suspect.
+// Looks at every Skill that received at least one blind vote in the
+// trailing `windowDays`, then scores each on its ALL-TIME vote history
+// (status is a durable label, not a windowed one). If there is at least
+// one Skill with enough votes to be scored (`evaluable > 0`) and NONE of
+// them are "failed", the mechanism itself is suspect.
 export async function checkVerificationSelfTest(db, windowDays = 90) {
   const cutoff = new Date(Date.now() - windowDays * 86400000)
     .toISOString().slice(0, 19).replace('T', ' ');
 
   const recentRows = (await db.query(
     `SELECT DISTINCT skill_id FROM skill_test_votes
-     WHERE ${NON_AUTHOR_VOTE_FILTER} AND voted_at >= $1`,
+     WHERE ${COUNTABLE_VOTE_FILTER} AND voted_at >= $1`,
     [cutoff]
   )).rows || [];
 
@@ -109,7 +122,7 @@ export async function checkVerificationSelfTest(db, windowDays = 90) {
   const statsRows = (await db.query(
     `SELECT skill_id, COUNT(*) AS total, COALESCE(SUM(voted_for_skill), 0) AS wins
      FROM skill_test_votes
-     WHERE skill_id IN (${placeholders}) AND ${NON_AUTHOR_VOTE_FILTER}
+     WHERE skill_id IN (${placeholders}) AND ${COUNTABLE_VOTE_FILTER}
      GROUP BY skill_id`,
     recentSkillIds
   )).rows || [];
@@ -147,11 +160,10 @@ export async function runVerificationSelfCheck(db, windowDays = 90) {
       `${VERIFICATION_MIN_VOTES}-vote threshold for a verification status, and ${result.failed} ` +
       `of them are in "Verification Failed" status.\n\n` +
       `A blind test that never produces a failure is not a working test -- check for a UI bug ` +
-      `hiding the failed label, a threshold that is too lenient, or vote tampering (e.g. authors ` +
-      `voting on their own Skills without being correctly flagged is_author).\n\n` +
-      `Query to inspect: SELECT skill_id, COUNT(*) wins, SUM(voted_for_skill) total FROM ` +
-      `skill_test_votes WHERE voted_for_skill IS NOT NULL AND (is_author IS NULL OR is_author = 0) ` +
-      `GROUP BY skill_id HAVING COUNT(*) >= ${VERIFICATION_MIN_VOTES};`
+      `hiding the failed label, a threshold that is too lenient, or vote tampering.\n\n` +
+      `Query to inspect: SELECT skill_id, COUNT(*) total, SUM(voted_for_skill) wins, ` +
+      `SUM(CASE WHEN is_author = 1 THEN 1 ELSE 0 END) author_votes FROM skill_test_votes ` +
+      `WHERE voted_for_skill IS NOT NULL GROUP BY skill_id HAVING COUNT(*) >= ${VERIFICATION_MIN_VOTES};`
     ).catch(() => {});
   }
 

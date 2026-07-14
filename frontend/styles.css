@@ -6595,7 +6595,7 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
    "Failed" is shown with the SAME prominence as "Verified", not hidden
    or de-emphasised — a verification mechanism that only ever displays
    good news is not trustworthy. Empty when there is no verification
-   data yet (skill has zero non-author blind votes). */
+   data yet (skill has zero blind votes). */
 .tt-verification {
   font-size: 10px; font-weight: 600; letter-spacing: 0.3px;
   margin: 4px 0 6px; padding: 3px 7px;
@@ -6712,14 +6712,21 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
   font-size: 12px;
 }
 
-/* Playground win-rate badge — filled async from /playground/stats-batch */
+/* Verification badge — filled async from /playground/stats-batch. Same
+   blind signal as the celestial map star tooltip (.tt-verification) —
+   this used to show a separate self-reported "win rate" from
+   skill_feedback (3-vote threshold), which could show a confident
+   percentage here while the tooltip said "Verifying" for the very same
+   Skill. One metric everywhere now. */
 .skill-item .skill-winrate {
-  color: #6a8d52;
   font-weight: 600;
   font-size: 11px;
   white-space: nowrap;
 }
 .skill-item .skill-winrate:empty { display: none; }
+.skill-item .skill-winrate.verified { color: #4d7a32; }
+.skill-item .skill-winrate.failed { color: #a8633c; }
+.skill-item .skill-winrate.verifying { color: #7a6f5e; }
 
 /* ═══ SKILL ACTIONS (Star, Download, Play buttons) ═══ */
 .skill-item .skill-actions {
