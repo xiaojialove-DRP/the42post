@@ -369,10 +369,11 @@ const API = {
   // Generate intuition probe from idea
   // NOTE: Backend /forge/probe endpoint is PUBLIC (no auth required).
   // Users typically run this BEFORE creating an account during the forge flow.
-  async generateProbe(ideaText, language = 'en') {
+  async generateProbe(ideaText, language = 'en', backgroundText = '') {
     return await ApiClient.post('/forge/probe', {
       idea_text: ideaText,
-      language: language
+      language: language,
+      background_text: backgroundText
     });
   },
 
@@ -1669,13 +1670,13 @@ function generateClientSideProbe(idea) {
   return { context, a, b, c };
 }
 
-async function generateProbeScenarios(idea, onChunk) {
+async function generateProbeScenarios(idea, background, onChunk) {
   const lang = document.body.dataset.lang || 'en';
 
   // ── Try streaming endpoint first ──
   if (typeof onChunk === 'function') {
     try {
-      const probe = await _streamProbe(idea, lang, onChunk);
+      const probe = await _streamProbe(idea, background, lang, onChunk);
       if (probe && probe.scenario) {
         return { context: probe.scenario, a: probe.thesis, b: probe.antithesis, c: probe.extreme, apiSource: true, fullProbe: probe };
       }
@@ -1686,7 +1687,7 @@ async function generateProbeScenarios(idea, onChunk) {
 
   // ── Fallback: regular (non-streaming) API ──
   try {
-    const result = await API.generateProbe(idea, lang);
+    const result = await API.generateProbe(idea, lang, background);
     if (result.success && result.probe) {
       return { context: result.probe.scenario, a: result.probe.thesis, b: result.probe.antithesis, c: result.probe.extreme, apiSource: true, fullProbe: result.probe };
     }
@@ -1698,7 +1699,7 @@ async function generateProbeScenarios(idea, onChunk) {
 }
 
 // Streaming probe via SSE — returns parsed probe object when stream ends
-async function _streamProbe(idea, lang, onChunk) {
+async function _streamProbe(idea, background, lang, onChunk) {
   return new Promise(function(resolve, reject) {
     var ctrl = new AbortController();
     var timer = setTimeout(function() { ctrl.abort(); reject(new Error('timeout')); }, 30000);
@@ -1708,7 +1709,7 @@ async function _streamProbe(idea, lang, onChunk) {
     fetch(API_CONFIG.BASE_URL + '/forge/probe/stream', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ idea_text: idea, language: lang }),
+      body: JSON.stringify({ idea_text: idea, language: lang, background_text: background }),
       signal: ctrl.signal
     }).then(function(resp) {
       if (!resp.ok) throw new Error('HTTP ' + resp.status);
@@ -2443,7 +2444,7 @@ function initSkillForge() {
       if (proceedBtnReset1) proceedBtnReset1.disabled = true;
 
       // Stream scenario text — onChunk writes directly to DOM (no new const declarations)
-      const scenarios = await generateProbeScenarios(idea, function(chunk) {
+      const scenarios = await generateProbeScenarios(idea, background, function(chunk) {
         const el = document.getElementById('probeScenarioText');
         if (!el) return;
         if (!el.dataset.streaming) { el.textContent = ''; el.dataset.streaming = '1'; }

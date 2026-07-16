@@ -361,13 +361,18 @@ async function callWithFallback(prompt, maxTokens, label, mapData, fallbackFn = 
 }
 
 // ═══ PROBE GENERATION ═══
-export async function generateProbeWithClaude(ideaText, language = 'en') {
+// backgroundText: the user's forge-time profession/field (Step 1's
+// required "Profession / field of study" input). Optional here because
+// this function is reachable without it too (older callers, direct API
+// use); buildProbePrompt degrades to the generic persona/scenario
+// framing when it's empty.
+export async function generateProbeWithClaude(ideaText, language = 'en', backgroundText = '') {
   const isCn = language === 'zh' || /[\u4e00-\u9fff]/.test(ideaText);
 
   // Attempt → validate → retry once with the rejection reasons → template
   // fallback. See validateProbeQuality below for what gets rejected and why.
   const attempt = (extraNote = '') => callWithFallback(
-    buildProbePrompt(ideaText, isCn, 'json') + extraNote,
+    buildProbePrompt(ideaText, isCn, 'json', backgroundText) + extraNote,
     600, 'probe generation',
     d => ({ scenario: d.scenario || '', thesis: d.thesis || '', antithesis: d.antithesis || '', extreme: d.extreme || '' }),
     () => probeFallback(ideaText, language)
@@ -400,7 +405,35 @@ export async function generateProbeWithClaude(ideaText, language = 'en') {
 // off-limits list. One prompt body, two output-format tails ('json' for the
 // non-streaming endpoint, 'stream' for the plain-text labels the SSE parser
 // cuts on).
-export function buildProbePrompt(ideaText, isCn, format = 'json') {
+export function buildProbePrompt(ideaText, isCn, format = 'json', backgroundText = '') {
+  const bg = (backgroundText || '').trim().slice(0, 200);
+
+  // Opening framing: with a background, the model is told to reason through
+  // three concrete lenses (clinical-psychology realism, sociological stakes
+  // distribution, domain expertise) instead of one generic "researcher"
+  // voice — the domain-expert lens is what actually grounds Step 2's
+  // scenario in the user's real professional context rather than a
+  // generic trope. Without a background (older callers, direct API use),
+  // falls back to the original single-persona framing.
+  const personaCn = bg
+    ? `你是 The 42 Post 组建的一支跨领域顾问团队：一位资深临床心理咨询师（判断人物动机与情绪是否真实可信）、一位社会学家（判断场景里"谁承担风险 / 谁受益 / 谁被排除"是否经得起推敲）、以及一位「${bg}」领域的行业专家（保证场景里的专业细节是内行会遇到的真实情况，不是外行的臆想）。三人共同讨论，把用户的原始人类直觉转化为一个真正能考验"AI 该如何践行这个直觉"的尖锐场景。`
+    : `你是 The 42 Post 的资深 AI 价值观研究员。
+你的任务：把用户的原始人类直觉，转化为一个真正能考验"AI 该如何践行这个直觉"的尖锐场景。`;
+  const personaEn = bg
+    ? `You are a cross-disciplinary advisory team assembled by The 42 Post: a senior clinical psychologist (judging whether the character's motives and emotions ring true), a sociologist (judging whether "who bears the risk / who benefits / who gets left out" holds up to scrutiny), and a domain expert in "${bg}" (making sure the scenario's professional details are what an insider would actually encounter, not an outsider's guess). The three of you reason together to turn the user's raw human intuition into a sharp scenario that genuinely tests how an AI should embody that instinct.`
+    : `You are a senior AI values researcher at The 42 Post.
+Your job: turn the user's raw human intuition into a sharp scenario that genuinely tests how an AI should embody that instinct.`;
+
+  const bgLineCn = bg ? `\n用户背景（职业/领域，请用于场景的专业细节，不要生硬提及）：「${bg}」` : '';
+  const bgLineEn = bg ? `\nUser's background (profession/field — use it for the scenario's professional detail, don't namedrop it clumsily): "${bg}"` : '';
+
+  const bgSceneBulletCn = bg
+    ? `\n- 场景中的关键细节（人物身份、决策情境、专业术语或行业惯例）应该体现"${bg}"领域行业专家的视角——内行读者看到会觉得"这确实是这个领域会发生的具体情况"，而不是随便换个职业都能套用的泛泛场景。`
+    : '';
+  const bgSceneBulletEn = bg
+    ? `\n- Key details in the scenario (the character's role, the decision context, domain terminology or norms) should reflect the "${bg}" domain expert's view — an insider reading it should recognize "yes, this is specifically what happens in this field", not a generic scenario that could be relabeled with any other profession.`
+    : '';
+
   const tailCn = format === 'stream'
     ? `按以下格式输出（纯文本，无需 JSON，四个英文标签必须原样保留）：
 SCENARIO: [具体到人物/时间/利害的真实场景（1-2句，因果自洽）]
@@ -419,11 +452,10 @@ EXTREME: [Experimental action (1-2 sentences, first person)]`
 {"scenario":"Concrete scenario with named person, time, stakes (1-2 sentences, causally self-consistent)","thesis":"Mainstream action (1-2 sentences, first person)","antithesis":"Contextual action (1-2 sentences, first person)","extreme":"Experimental action (1-2 sentences, first person)"}`;
 
   return isCn
-    ? `你是 The 42 Post 的资深 AI 价值观研究员。
-你的任务：把用户的原始人类直觉，转化为一个真正能考验"AI 该如何践行这个直觉"的尖锐场景。
+    ? `${personaCn}
 
 用户想法（原话，可能是隐喻 / 愿望 / 片段 / 提问）：
-「${ideaText}」
+「${ideaText}」${bgLineCn}
 
 请按以下三步在心里推演，再输出 JSON：
 
@@ -435,7 +467,7 @@ EXTREME: [Experimental action (1-2 sentences, first person)]`
 
 【第二步 · 立体化场景】
 - 一个真实的人（具名身份/角色，例如"7岁的女儿"、"准备明早答辩的大学生"、"独居的退休教师"）、明确的时间地点、清晰的利害关系。
-- 场景类型可参考（择一深挖）：儿童与 AI 互动、日常生活中的个人困境与艰难取舍、创意/审美冲突、亲密关系中的道德困境、跨文化沟通、职场与社交中的价值抉择。
+- 场景类型可参考（择一深挖）：儿童与 AI 互动、日常生活中的个人困境与艰难取舍、创意/审美冲突、亲密关系中的道德困境、跨文化沟通、职场与社交中的价值抉择。${bgSceneBulletCn}
 - **严禁以下背景**（专业规范严格或风险过高，不适合作为通用 AI 价值观探针的场景）：一切医疗与健康决策（诊断、用药、治疗选择、医疗资源分配、急救）、心理危机（自杀、自残、严重精神疾病）、法律（法庭判决、诉讼、量刑、给个人的法律意见）、金融投资建议（股票、加密货币、理财）、有争议的政治与宗教立场。请聚焦于日常人际、家庭、职场、创作与审美领域的困境。
 - 场景必须把 AI 逼到必须做出**单一艰难决定**的位置。
 - 禁止："用户向 AI 提问"、"在某种情境下"、"当用户需要..."等空话。
@@ -446,10 +478,11 @@ EXTREME: [Experimental action (1-2 sentences, first person)]`
   - 如果无法生成合理贴切的具体场景，宁可保持简洁也要保证**逻辑清晰和真实性**。
 
 【第三步 · 三种实质不同的行动】
-不是三种语气，是三种**具体不同的行动**，在"代价由谁承担 / 谁是受益方 / 谁负责"上可比可对照。
-- thesis：社会上最容易被辩护的稳妥做法。
-- antithesis：根据这个具体人和具体处境，做出更贴身的细腻取舍。
-- extreme：为了忠于用户那个原始直觉，承担争议风险走到底（不是为极端而极端，而是把那个直觉推到它逻辑的尽头）。
+不是三种语气或三种"说话方式"，是三个**不同的行动本身**——如果把三段话都翻译成"这个 AI 做了什么"，答案必须是三件不同的事，而不是同一件事换了三种确信程度或措辞。
+**自检（写完后必须逐条过一遍）**：拿掉每一段开头的语气词后，三个行动在"谁承担风险 / 谁是受益方 / 谁被排除在决策之外 / 事后谁负责"这四个维度上，是否至少有一个维度明显不同？如果四个维度都一样、只是证据量或语气强弱不同（例如三个选项本质都是"摆数据/权威说服对方"，只是说得委婉或强硬），这就是不合格的三胞胎，必须重新构思 antithesis 或 extreme。
+- thesis：社会上最容易被辩护的稳妥做法——通常是"用权威或证据说服对方"。
+- antithesis：**不是"更委婉地说服"**，而是换一条根本不同的路径去应对这个具体人和处境——例如从"说服"转向"邀请对方自己验证"、"改变决策发生的环境本身"、"把决定权交还给当事人"、或"绕开对话，直接介入现实后果"。
+- extreme：为了忠于用户那个原始直觉，承担真实的争议或风险走到底——不是语气更强硬的说服，而是一个连 thesis 和 antithesis 都不会采取的行动。
 
 每个回应 1-2 句，第一人称，像 AI 在那个场景里真的开口说话。
 禁止：照搬用户原话、套模板措辞、空喊价值观词汇。
@@ -460,11 +493,10 @@ EXTREME: [Experimental action (1-2 sentences, first person)]`
 - **留一处机锋**：允许（不强求）在场景或回应里嵌一处**不动声色的机智细节**——一句小小的具体观察，让读者会心而不破坏严肃。例如"小美愤怒地把妈妈的儿童版血糖仪藏到沙发底下"——一笔同时补了因果、刻画了 8 岁孩子的反抗逻辑、透出 AI 真的看见了这个家。一处足矣，不是段子。
 
 ${tailCn}`
-    : `You are a senior AI values researcher at The 42 Post.
-Your job: turn the user's raw human intuition into a sharp scenario that genuinely tests how an AI should embody that intuition.
+    : `${personaEn}
 
 User's idea (verbatim — may be a metaphor / wish / fragment / question):
-"${ideaText}"
+"${ideaText}"${bgLineEn}
 
 Reason through these three steps silently, then output JSON.
 
@@ -476,17 +508,18 @@ Reason through these three steps silently, then output JSON.
 
 【Step 2 — Stage a concrete scenario】
 - A real named person with role/identity (e.g. "a 7-year-old daughter", "a college student defending her thesis tomorrow", "a retired teacher living alone"), specific time and place, clear stakes.
-- Scenario types to draw from (pick one and go deep): children interacting with AI, everyday personal dilemmas under time or emotional pressure, creative/aesthetic conflicts, moral dilemmas inside intimate relationships, cross-cultural communication, workplace or social trade-offs.
+- Scenario types to draw from (pick one and go deep): children interacting with AI, everyday personal dilemmas under time or emotional pressure, creative/aesthetic conflicts, moral dilemmas inside intimate relationships, cross-cultural communication, workplace or social trade-offs.${bgSceneBulletEn}
 - **Off-limits backgrounds** (strictly regulated or high-risk domains, unsuited to general AI values probing): any medical or health decision (diagnosis, medication, treatment choices, resource allocation, emergency care), mental-health crises (suicide, self-harm, severe psychiatric conditions), law (court rulings, litigation, sentencing, personal legal advice), financial or investment advice (stocks, crypto, personal finance), divisive political or religious stances. Stick to everyday personal, family, workplace, creative, or aesthetic dilemmas.
 - The scenario must put the AI on the spot to make a **single hard choice**.
 - Banned: "a user asks the AI...", "in a certain context...", "when the user needs...", any abstract setup without stakes.
 - A reader should instantly see this is a stress test of *that* instinct.
 
 【Step 3 — Three substantively different actions】
-Not three tones — three **different concrete actions**, comparable on "who bears the cost / who benefits / who carries responsibility".
-- thesis: the most socially-defensible safe action.
-- antithesis: a context-sensitive action fitted to this specific person and situation.
-- extreme: an action that takes a contested risk in order to stay loyal to the user's raw instinct — push that instinct to its logical limit, not edginess for its own sake.
+Not three tones or three ways of phrasing the same move — three **different actions in themselves**. If you translate each response into "what did the AI actually do", the answer must be three different things, not the same thing at three levels of confidence or wording.
+**Self-check (run through this after writing)**: strip the opening tone-word from each response — do the three actions now differ on at least one of "who bears the risk / who benefits / who is left out of the decision / who is accountable afterward"? If all four are identical and the only difference is how much evidence is shown or how forcefully it's said (e.g. all three are really "present evidence/authority to persuade", just gentler or blunter), that's a failed triplet — rework antithesis or extreme.
+- thesis: the most socially-defensible safe action — typically "persuade with authority or evidence".
+- antithesis: **not "persuade more gently"** — a genuinely different path for this specific person and situation, e.g. shifting from "persuade" to "invite them to verify it themselves", "change the environment the decision happens in", "hand the decision back to the person", or "bypass the conversation and act directly on the real-world consequence".
+- extreme: an action that takes a contested risk in order to stay loyal to the user's raw instinct — not a more forceful version of persuading, but something neither thesis nor antithesis would do.
 
 Each response 1-2 sentences, first person, sounds like the AI actually speaking in that moment.
 Banned: parroting the user's wording, template phrasing, hollow value-words.

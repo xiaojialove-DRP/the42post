@@ -38,7 +38,7 @@ async function withGenerationTimeout(generationFn, timeoutMs = 120000) {
 // Rate limited to protect LLM API quota
 router.post('/probe', rateLimitLLM, async (req, res, next) => {
   try {
-    const { idea_text, language } = req.body;
+    const { idea_text, language, background_text } = req.body;
     const userId = req.user?.userId || null; // optional; used only for logging
 
     if (!idea_text || !idea_text.trim()) {
@@ -52,7 +52,7 @@ router.post('/probe', rateLimitLLM, async (req, res, next) => {
     let probeResult;
     try {
       probeResult = await withGenerationTimeout(
-        () => generateProbeWithClaude(idea_text.trim(), language || 'en'),
+        () => generateProbeWithClaude(idea_text.trim(), language || 'en', background_text),
         120000
       );
     } catch (timeoutErr) {
@@ -277,7 +277,7 @@ router.post('/save-probe-session', optionalAuth, async (req, res, next) => {
 // show text appearing in real-time instead of a blank spinner.
 // When the stream ends, sends a final "done" event with the parsed JSON.
 router.post('/probe/stream', rateLimitLLM, optionalAuth, async (req, res) => {
-  const { idea_text, language } = req.body || {};
+  const { idea_text, language, background_text } = req.body || {};
 
   if (!idea_text || !idea_text.trim()) {
     return res.status(400).json({ error: 'idea_text is required' });
@@ -302,7 +302,7 @@ router.post('/probe/stream', rateLimitLLM, optionalAuth, async (req, res) => {
     // or the off-limits list — and since streaming is the path real users
     // hit first, most production probes were generated from the weak
     // prompt. Now both endpoints share one prompt body (skillGeneration.js).
-    const streamPrompt = buildProbePrompt(idea_text.trim(), isCn, 'stream');
+    const streamPrompt = buildProbePrompt(idea_text.trim(), isCn, 'stream', background_text);
 
     let fullText = '';
 
@@ -326,7 +326,7 @@ router.post('/probe/stream', rateLimitLLM, optionalAuth, async (req, res) => {
 
     // Fall back to non-streaming if parsing failed
     if (!probe.scenario) {
-      const result = await generateProbeWithClaude(idea_text.trim(), language || 'en');
+      const result = await generateProbeWithClaude(idea_text.trim(), language || 'en', background_text);
       send('done', { success: true, probe: result.data, model: result.model });
     } else {
       // Same quality gate as the non-streaming endpoint. The streamed text
@@ -336,7 +336,7 @@ router.post('/probe/stream', rateLimitLLM, optionalAuth, async (req, res) => {
       const reasons = validateProbeQuality(probe, isCn);
       if (reasons.length > 0) {
         logger.warn('probe_quality_gate_failed', { endpoint: 'stream', reasons, idea: idea_text.slice(0, 80) });
-        const result = await generateProbeWithClaude(idea_text.trim(), language || 'en');
+        const result = await generateProbeWithClaude(idea_text.trim(), language || 'en', background_text);
         send('done', { success: true, probe: result.data, model: result.model, regenerated: true });
       } else {
         send('done', { success: true, probe, model: PRIMARY_MODEL });
