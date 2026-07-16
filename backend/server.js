@@ -163,6 +163,12 @@ app.use(express.static(frontendPath, {
     // HTML files: never cache so users always get the latest version
     if (filePath.endsWith('.html')) {
       res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    } else if (filePath.match(/\.(woff2?)$/)) {
+      // Self-hosted font files (vendor/fonts/) are named by their own
+      // content hash (Google's font CDN convention) — the same filename
+      // never points to different bytes, so this is safe to cache
+      // indefinitely rather than the 10-min default below.
+      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
     } else if (filePath.match(/\.(js|css)$/)) {
       // JS/CSS: short cache (10 min) so deployments roll out quickly
       res.setHeader('Cache-Control', 'public, max-age=600');
