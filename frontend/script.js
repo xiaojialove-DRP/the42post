@@ -4381,73 +4381,76 @@ function showForgeCompletion(skillData, soulHash) {
 
     if (btnViewDashboard) {
       btnViewDashboard.addEventListener('click', async () => {
+        const restoreLabel = () => {
+          const dict = (typeof I18N !== 'undefined' && I18N[currentLang]) || {};
+          btnViewDashboard.textContent = dict.forge_dashboard || '📊 Impact Dashboard';
+          btnViewDashboard.disabled = false;
+        };
         try {
           btnViewDashboard.disabled = true;
           btnViewDashboard.textContent = '⏳ Loading...';
 
-          // 从后端获取skill统计数据
           const skillId = skillData.id || skillData.backendId;
           if (!skillId) {
             throw new Error('Skill ID not available');
           }
 
+          // Corpus-level live numbers (day N, skills, blind votes, verified/
+          // failed) — the "open experiment" half of the dashboard. Fetched
+          // in parallel with the per-skill stats; null on failure so the
+          // modal can render the per-skill half alone.
+          const publicStatsPromise = fetch(`${ApiClient.BASE_URL}/analytics/public-stats`)
+            .then(r => (r.ok ? r.json() : null))
+            .catch(() => null);
+
           // Check if this is a forged (local) skill
           const isForgedSkill = skillId && skillId.startsWith('forged_');
 
+          let skillStats;
           if (isForgedSkill) {
-            // For forged skills, show local dashboard with initial stats
             console.log('📊 Showing local dashboard for forged skill:', skillId);
-            const localStats = {
+            skillStats = {
               mySkillJourney: skillData.timestamp ? 1 : 0,
               skillsForged: 1,
               humanResonance: skillData.stars || 0,
               totalInteractions: 0
             };
-            showImpactDashboard(localStats, skillData);
           } else {
-            // For backend skills, fetch stats from API
             const url = `${ApiClient.BASE_URL}/skills/${skillId}/stats`;
             console.log('📊 Loading dashboard from:', url);
-
             try {
               const response = await fetch(url);
-
               if (!response.ok) {
                 console.warn('Dashboard API returned:', response.status);
                 throw new Error(`HTTP ${response.status}`);
               }
-
               const result = await response.json();
               console.log('📊 Dashboard data loaded:', result);
-
               if (!result.stats) {
                 throw new Error('Invalid dashboard data format');
               }
-
-              showImpactDashboard(result.stats, skillData);
+              skillStats = result.stats;
             } catch (apiError) {
-              // Fallback: show local stats if API fails
               console.warn('⚠️ Dashboard API failed, using local stats:', apiError.message);
-              const localStats = {
+              skillStats = {
                 mySkillJourney: 1,
                 skillsForged: 1,
                 humanResonance: 0,
                 totalInteractions: 0
               };
-              showImpactDashboard(localStats, skillData);
             }
           }
 
-          btnViewDashboard.textContent = '📊 Impact Dashboard';
-          btnViewDashboard.disabled = false;
+          const publicStats = await publicStatsPromise;
+          showImpactDashboard(skillStats, skillData, publicStats);
+          restoreLabel();
         } catch (error) {
           console.error('❌ Dashboard load error:', error);
           const isCn = (typeof currentLang !== 'undefined' && currentLang === 'cn');
           alert(isCn
             ? `数据面板加载失败: ${error.message}\n请刷新页面后重试。`
             : `Failed to load dashboard: ${error.message}\nPlease refresh and try again.`);
-          btnViewDashboard.textContent = '📊 Impact Dashboard';
-          btnViewDashboard.disabled = false;
+          restoreLabel();
         }
       });
     }
@@ -4735,7 +4738,15 @@ function showEmailStatusBanner(result, recipientEmail) {
 }
 
 /* ═══ SHOW IMPACT DASHBOARD ═══ */
-function showImpactDashboard(stats, skillData) {
+// The post-forge dashboard. Leads with the OPEN EXPERIMENT numbers (live
+// corpus stats from /api/analytics/public-stats: day N, skills, blind
+// votes, verified AND failed counts — failures shown with equal weight,
+// same honesty rule as the verification badge), then the creator's own
+// skill numbers. publicStats may be null (endpoint unreachable) — the
+// experiment section is simply omitted rather than faked.
+function showImpactDashboard(stats, skillData, publicStats) {
+  const isCn = (typeof currentLang !== 'undefined' && currentLang === 'cn');
+
   // Create or reuse modal
   let modal = document.getElementById('impactDashboardModal');
   if (!modal) {
@@ -4753,50 +4764,63 @@ function showImpactDashboard(stats, skillData) {
       justify-content: center;
       align-items: center;
       z-index: 9999;
+      padding: 16px;
     `;
     document.body.appendChild(modal);
   }
 
+  const statCard = (value, label, color = '#c4a455') => `
+    <div style="background: white; padding: 16px 10px; border: 1px solid #d4c8bc; border-radius: 8px; text-align: center;">
+      <div style="font-size: 32px; font-weight: 700; color: ${color}; font-family: 'Playfair Display', serif;">${value}</div>
+      <div style="font-size: 11px; color: #8a7a6e; margin-top: 6px; letter-spacing: 0.5px;">${label}</div>
+    </div>`;
+
+  // ── Section 1: the open experiment (live, checkable, includes failures) ──
+  let experimentSection = '';
+  if (publicStats && publicStats.success) {
+    const p = publicStats;
+    const headline = isCn
+      ? `一个正在公开生长的人类价值观语料库<br>—— 第 <strong>${p.day_number}</strong> 天 · <strong>${p.skills_published}</strong> 个 Skill · <strong>${p.blind_votes}</strong> 次盲测`
+      : `An openly growing corpus of human values<br>— Day <strong>${p.day_number}</strong> · <strong>${p.skills_published}</strong> Skills · <strong>${p.blind_votes}</strong> blind votes`;
+    experimentSection = `
+      <div style="margin-bottom: 24px;">
+        <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: #8a7a6e; margin-bottom: 10px;">${isCn ? '这个公开实验' : 'The Open Experiment'}</div>
+        <div style="font-family: 'Playfair Display', serif; font-size: 16px; line-height: 1.6; color: #1a1a1a; margin-bottom: 14px;">${headline}</div>
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;">
+          ${statCard(p.creators, isCn ? '创作者' : 'Creators')}
+          ${statCard(p.blind_votes, isCn ? '盲测投票' : 'Blind votes')}
+          ${statCard(p.skills_verified, isCn ? '已验证' : 'Verified', '#4d7a32')}
+          ${statCard(p.skills_failed, isCn ? '未通过' : 'Failed', '#a8633c')}
+        </div>
+        <div style="font-size: 11px; color: #8a7a6e; margin-top: 10px; line-height: 1.5;">${isCn
+          ? '所有数字实时来自公开接口，包括未通过验证的 Skill —— 一个从不显示失败的实验不值得信任。'
+          : 'All numbers live from the public API, failed verifications included — an experiment that never shows failure is not worth trusting.'}</div>
+      </div>
+      <div style="border-top: 1px solid #d4c8bc; margin-bottom: 20px;"></div>`;
+  }
+
+  // ── Section 2: this creator's own skill ──
   const content = `
-    <div style="background: linear-gradient(135deg, #faf7f2 0%, #f5f0eb 100%); border: 1px solid #d4c8bc; border-radius: 12px; padding: 28px; max-width: 520px; position: relative; box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);">
+    <div style="background: linear-gradient(135deg, #faf7f2 0%, #f5f0eb 100%); border: 1px solid #d4c8bc; border-radius: 12px; padding: 28px; max-width: 520px; width: 100%; max-height: 90vh; overflow-y: auto; position: relative; box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);">
       <button style="position: absolute; top: 12px; right: 12px; background: none; border: none; font-size: 24px; color: #8a7a6e; cursor: pointer; transition: color 0.2s;" onclick="document.getElementById('impactDashboardModal').style.display='none'" onmouseover="this.style.color='#1a1a1a'" onmouseout="this.style.color='#8a7a6e'">×</button>
 
-      <div style="text-align: center; margin-bottom: 28px;">
-        <h2 style="margin: 0 0 8px 0; font-family: 'Playfair Display', serif; font-size: 28px; color: #1a1a1a;">Community Signal Dashboard</h2>
+      <div style="text-align: center; margin-bottom: 24px;">
+        <h2 style="margin: 0 0 8px 0; font-family: 'Playfair Display', serif; font-size: 26px; color: #1a1a1a;">${isCn ? '数据面板' : 'Live Dashboard'}</h2>
         <p style="color: #8a7a6e; margin: 0; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 1px; text-transform: uppercase;">${escapeHtml(skillData.title)}</p>
       </div>
 
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 24px;">
-        <!-- My Skill Journey Card (Authors total downloads) -->
-        <div style="background: white; padding: 18px; border: 1px solid #d4c8bc; border-radius: 8px; text-align: center; transition: all 0.2s;">
-          <div style="font-size: 36px; font-weight: 700; color: #d4a43c; font-family: 'Playfair Display', serif;">${stats.mySkillJourney || 0}</div>
-          <div style="font-size: 11px; color: #8a7a6e; margin-top: 6px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.5px; text-transform: uppercase;">My Skill Journey</div>
-        </div>
+      ${experimentSection}
 
-        <!-- Skills Forged Card (Community total) -->
-        <div style="background: white; padding: 18px; border: 1px solid #d4c8bc; border-radius: 8px; text-align: center; transition: all 0.2s;">
-          <div style="font-size: 36px; font-weight: 700; color: #c4a455; font-family: 'Playfair Display', serif;">${stats.skillsForged || 0}</div>
-          <div style="font-size: 11px; color: #8a7a6e; margin-top: 6px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.5px; text-transform: uppercase;">Skills Forged</div>
-        </div>
-
-        <!-- Human Resonance Card (Stars) -->
-        <div style="background: white; padding: 18px; border: 1px solid #d4c8bc; border-radius: 8px; text-align: center; transition: all 0.2s;">
-          <div style="font-size: 36px; font-weight: 700; color: #8a7a6e; font-family: 'Playfair Display', serif;">${stats.humanResonance || 0}</div>
-          <div style="font-size: 11px; color: #8a7a6e; margin-top: 6px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.5px; text-transform: uppercase;">Human Resonance</div>
-        </div>
-
-        <!-- Total Interactions Card (Twin Test participants) -->
-        <div style="background: white; padding: 18px; border: 1px solid #d4c8bc; border-radius: 8px; text-align: center; transition: all 0.2s;">
-          <div style="font-size: 36px; font-weight: 700; color: #c4a455; font-family: 'Playfair Display', serif;">${stats.totalInteractions || 0}</div>
-          <div style="font-size: 11px; color: #8a7a6e; margin-top: 6px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.5px; text-transform: uppercase;">Total Interactions</div>
-        </div>
+      <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: #8a7a6e; margin-bottom: 10px;">${isCn ? '你的 Skill' : 'Your Skill'}</div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;">
+        ${statCard(stats.humanResonance || 0, isCn ? '获得星光' : 'Starlight received', '#d4a43c')}
+        ${statCard(stats.totalInteractions || 0, isCn ? '盲测参与者' : 'Blind testers', '#8a7a6e')}
       </div>
 
-      <div style="background: rgba(212, 200, 188, 0.2); padding: 16px; border-radius: 8px; border-left: 3px solid #d4a43c;">
-        <div style="font-size: 13px; color: #1a1a1a; line-height: 1.6; font-family: 'Playfair Display', serif;">
-          <p style="margin: 0 0 6px 0;"><strong>Your Voice in the Community</strong></p>
-          <p style="margin: 0; color: #8a7a6e;">Your journey is woven into the larger tapestry. The community resonates with authenticity—not bots, but real humans testing and validating.</p>
-        </div>
+      <div style="background: rgba(212, 200, 188, 0.2); padding: 14px 16px; border-radius: 8px; border-left: 3px solid #d4a43c;">
+        <div style="font-size: 12px; color: #8a7a6e; line-height: 1.6;">${isCn
+          ? '你的 Skill 现在是这个语料库的一部分。它的验证状态由陌生人的盲测决定 —— 去游乐场邀请别人测测它。'
+          : 'Your Skill is now part of this corpus. Its verification status is decided by strangers voting blind — invite someone to test it in the Playground.'}</div>
       </div>
     </div>
   `;

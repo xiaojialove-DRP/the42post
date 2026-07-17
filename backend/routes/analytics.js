@@ -11,7 +11,7 @@ import express from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import { db } from '../utils/db.js';
 import { buildFunnelReport } from '../utils/funnelReport.js';
-import { runVerificationSelfCheck } from '../utils/verificationHealth.js';
+import { runVerificationSelfCheck, getBatchVerificationStats } from '../utils/verificationHealth.js';
 
 const router = express.Router();
 
@@ -95,6 +95,57 @@ router.get('/funnel', async (req, res) => {
  * utils/verificationHealth.js for why that specific condition matters).
  * Safe to hit repeatedly: sendAdminAlert has its own 1-hour cooldown.
  */
+/**
+ * GET /api/analytics/public-stats
+ * PUBLIC — the live numbers behind "an openly growing corpus of human
+ * values: day N, X skills, Y blind votes". Shown on the post-forge
+ * dashboard so every claim the site makes about itself is checkable
+ * against this endpoint. Small-corpus honesty is the point: failed
+ * verifications are reported right next to passed ones.
+ *
+ * Deliberately NOT included: the author-vote breakdown (is_author is
+ * research-annotation data, not public UI — see verificationHealth.js),
+ * emails, or anything per-identity.
+ */
+router.get('/public-stats', async (req, res) => {
+  try {
+    const [skillsRow, creatorsRow, votesRow, firstRow, verificationStats] = await Promise.all([
+      db.query(`SELECT COUNT(*) AS n FROM skills WHERE published = 1 AND deleted_at IS NULL`),
+      db.query(`SELECT COUNT(DISTINCT creator_anonymous_id) AS n FROM skills
+                WHERE published = 1 AND deleted_at IS NULL AND creator_anonymous_id IS NOT NULL`),
+      db.query(`SELECT COUNT(*) AS n FROM skill_test_votes WHERE voted_for_skill IS NOT NULL`),
+      db.query(`SELECT MIN(published_at) AS first FROM skills WHERE published = 1 AND deleted_at IS NULL`),
+      getBatchVerificationStats(db)
+    ]);
+
+    // Day 1 = the day the first Skill was published. No skills yet → day 0.
+    const first = firstRow.rows?.[0]?.first;
+    const dayNumber = first
+      ? Math.max(1, Math.floor((Date.now() - new Date(first).getTime()) / 86400000) + 1)
+      : 0;
+
+    let verified = 0, failed = 0;
+    for (const s of Object.values(verificationStats)) {
+      if (s.verification_status === 'verified') verified++;
+      else if (s.verification_status === 'failed') failed++;
+    }
+
+    res.json({
+      success: true,
+      day_number: dayNumber,
+      first_skill_published_at: first || null,
+      skills_published: Number(skillsRow.rows?.[0]?.n) || 0,
+      creators: Number(creatorsRow.rows?.[0]?.n) || 0,
+      blind_votes: Number(votesRow.rows?.[0]?.n) || 0,
+      skills_verified: verified,
+      skills_failed: failed
+    });
+  } catch (error) {
+    console.error('[analytics] public-stats failed:', error.message);
+    res.status(500).json({ error: 'Public stats failed', message: error.message });
+  }
+});
+
 router.get('/verification-health', async (req, res) => {
   const adminKey = process.env.ADMIN_KEY;
   if (!adminKey) {
