@@ -7937,7 +7937,6 @@ button.generating {
   background: #fafafa;
   border: 1px solid #e8e8e8;
   border-radius: 8px;
-  border-left: 3px solid #333;
   transition: all 0.25s ease;
 }
 
@@ -8109,7 +8108,6 @@ button.generating {
   padding: 24px 28px;
   background: linear-gradient(135deg, #fafafa 0%, #fcfcfc 100%);
   border: 1px solid #efefef;
-  border-left: 5px solid #1a1a1a;
   border-radius: 10px;
   font-size: 15px;
   line-height: 2;
@@ -8127,7 +8125,6 @@ button.generating {
   padding: 16px 20px;
   background: linear-gradient(135deg, #ffffff 0%, #fafafa 100%);
   border: 2px solid #d4d4d4;
-  border-left: 5px solid #d4726a;
   border-radius: 8px;
   font-size: 15px;
   line-height: 1.6;
@@ -8268,7 +8265,6 @@ button.generating {
   width: 100%;
   padding: 12px 16px;
   border: 1px solid #ddd;
-  border-left: 4px solid #d4726a;
   border-radius: 6px;
   font-family: var(--font-serif);
   font-size: 14px;
@@ -8333,7 +8329,6 @@ button.generating {
   padding: 14px 16px;
   background: #fffdf7;
   border: 1px solid #d6c7a4;
-  border-left: 4px solid #6b9d5c;
   border-radius: 6px;
   font-family: var(--font-mono);
   font-size: var(--font-sm);
@@ -8394,7 +8389,6 @@ button.generating {
   padding: 16px;
   background: #f8f8f8;
   border-radius: 8px;
-  border-left: 4px solid var(--coral);
 }
 
 .layer-label {
@@ -9764,7 +9758,6 @@ button.generating {
 .skill-item-content {
   background: rgba(255,255,255,0.60) !important;
   border: 1px solid rgba(60,48,40,0.12) !important;
-  border-left: 3px solid var(--wc-sage) !important;
   border-radius: 10px !important;
   padding: 13px 15px !important;
   font-size: 13px !important;
@@ -9772,11 +9765,6 @@ button.generating {
   color: var(--wc-charcoal) !important;
   box-shadow: none !important;
   min-height: unset !important;
-}
-/* Editable fields — coral left border */
-.skill-editable-input,
-.skill-editable-textarea {
-  border-left: 3px solid var(--wc-coral) !important;
 }
 .skill-editable-textarea { min-height: 80px !important; }
 
@@ -10264,7 +10252,6 @@ button.generating {
 .probe-scenario-display {
   background: rgba(255,255,255,0.55) !important;
   border: 1px solid rgba(60,48,40,0.12) !important;
-  border-left: 3px solid var(--wc-amber) !important;
   border-radius: 10px !important;
   padding: 12px 14px !important;
   margin-bottom: 12px !important;
@@ -10473,7 +10460,6 @@ button.generating {
 .layer-content {
   background: rgba(255,255,255,0.60) !important;
   border: 1px solid rgba(60,48,40,0.10) !important;
-  border-left: 3px solid var(--wc-amber) !important;
   border-radius: 8px !important;
   padding: 10px 13px !important;
   font-size: 12px !important;

@@ -4817,7 +4817,7 @@ function showImpactDashboard(stats, skillData, publicStats) {
         ${statCard(stats.totalInteractions || 0, isCn ? '盲测参与者' : 'Blind testers', '#8a7a6e')}
       </div>
 
-      <div style="background: rgba(212, 200, 188, 0.2); padding: 14px 16px; border-radius: 8px; border-left: 3px solid #d4a43c;">
+      <div style="background: rgba(212, 200, 188, 0.2); padding: 14px 16px; border-radius: 8px;">
         <div style="font-size: 12px; color: #8a7a6e; line-height: 1.6;">${isCn
           ? '你的 Skill 现在是这个语料库的一部分。它的验证状态由陌生人的盲测决定 —— 去游乐场邀请别人测测它。'
           : 'Your Skill is now part of this corpus. Its verification status is decided by strangers voting blind — invite someone to test it in the Playground.'}</div>
