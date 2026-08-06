@@ -1324,10 +1324,96 @@ function initConnectAgent() {
 }
 
 
+/* ═══ THINKING ORB — small rotating dot-sphere ═══
+   Replaces the flat spinning 🔄 emoji on each Forge Step 2 layer with a
+   genuine "AI is working" indicator: a sphere of dots built by Fibonacci
+   distribution (even coverage, no per-ring bookkeeping), rotated and
+   projected to 2D every frame, sorted back-to-front so depth actually
+   reads. Draws one static frame instead of animating under
+   prefers-reduced-motion. Returns { stop() } — caller owns the canvas
+   element's lifetime. */
+function createThinkingOrb(canvas, size = 26, dotCount = 40) {
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = size * dpr;
+  canvas.height = size * dpr;
+  canvas.style.width = size + 'px';
+  canvas.style.height = size + 'px';
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+
+  const points = [];
+  const golden = Math.PI * (3 - Math.sqrt(5));
+  for (let i = 0; i < dotCount; i++) {
+    const y = 1 - (i / (dotCount - 1)) * 2;
+    const ringRadius = Math.sqrt(1 - y * y);
+    const theta = golden * i;
+    points.push({ x: Math.cos(theta) * ringRadius, y, z: Math.sin(theta) * ringRadius });
+  }
+
+  const cx = size / 2, cy = size / 2;
+  const r = size * 0.42;
+  let angle = 0;
+  let raf = null;
+
+  function draw() {
+    const cos = Math.cos(angle), sin = Math.sin(angle);
+    ctx.clearRect(0, 0, size, size);
+    points
+      .map(p => ({
+        sx: cx + (p.x * cos - p.z * sin) * r,
+        sy: cy + p.y * r,
+        z: p.x * sin + p.z * cos
+      }))
+      .sort((a, b) => a.z - b.z) // back-to-front so near dots paint over far ones
+      .forEach(p => {
+        const depth = (p.z + 1) / 2; // 0 (far) .. 1 (near)
+        ctx.beginPath();
+        ctx.arc(p.sx, p.sy, 0.6 + depth * 1.1, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(26, 26, 26, ${0.15 + depth * 0.6})`;
+        ctx.fill();
+      });
+  }
+
+  const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reduceMotion) {
+    draw();
+  } else {
+    (function frame() {
+      angle += 0.02;
+      draw();
+      raf = requestAnimationFrame(frame);
+    })();
+  }
+
+  return { stop: () => { if (raf) cancelAnimationFrame(raf); } };
+}
+
 /* ═══ FIVE-LAYER AUTO GENERATION ANIMATION ═══ */
 function startFiveLayerAnimation() {
   const layers = document.querySelectorAll('.layer-item');
   let currentLayer = 0;
+
+  // Give each layer's status icon a thinking-orb in place of the static
+  // 🔄 emoji. completeLayerStatus() below stops the orb and swaps in a
+  // checkmark — the single place both completion paths (per-layer and
+  // the "all done" branch) go through, so an orb can never keep spinning
+  // after its layer is marked done.
+  const orbs = new Map();
+  layers.forEach(layer => {
+    const statusEl = layer.querySelector('.layer-status');
+    if (!statusEl) return;
+    statusEl.textContent = '';
+    const canvas = document.createElement('canvas');
+    canvas.className = 'layer-orb';
+    statusEl.appendChild(canvas);
+    orbs.set(statusEl, createThinkingOrb(canvas));
+  });
+  function completeLayerStatus(statusEl) {
+    if (!statusEl) return;
+    orbs.get(statusEl)?.stop();
+    orbs.delete(statusEl);
+    statusEl.textContent = '✓';
+  }
 
   function animateLayer(index) {
     if (index >= layers.length) {
@@ -1338,8 +1424,7 @@ function startFiveLayerAnimation() {
 
         // Update layer status to checkmarks
         layers.forEach(layer => {
-          const status = layer.querySelector('.layer-status');
-          if (status) status.textContent = '✓';
+          completeLayerStatus(layer.querySelector('.layer-status'));
         });
 
         // 自动生成技能数据 (支持两条路径)
@@ -1418,7 +1503,7 @@ function startFiveLayerAnimation() {
       
       if (width >= 100) {
         clearInterval(interval);
-        layer.querySelector('.layer-status').textContent = '✓';
+        completeLayerStatus(layer.querySelector('.layer-status'));
         setTimeout(() => animateLayer(index + 1), 500);
       }
     }, 300);

@@ -7581,7 +7581,13 @@ div.forge-overlay.active { opacity: 1 !important; pointer-events: all !important
 .layer-status {
   font-size: 22px;
   text-align: center;
-  animation: spin 0.8s linear infinite;
+}
+
+/* The thinking-orb canvas draws its own rotation frame-by-frame
+   (script.js createThinkingOrb) — no CSS animation needed here. */
+.layer-orb {
+  display: block;
+  margin: 0 auto;
 }
 
 @keyframes spin {
