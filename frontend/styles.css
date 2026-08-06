@@ -1526,17 +1526,17 @@ body[data-lang="cn"] .voices-header-text {
 .chat-bubble-wrap {
   width: 100%;
   max-width: var(--max-w);
-  border: 1.5px solid transparent;
+  border: 2px solid transparent;
   background:
     linear-gradient(180deg, #ffffff 0%, #fcfbf8 100%) padding-box,
     conic-gradient(from var(--sheet-angle),
       #e4e0d9 0deg,
-      #e4e0d9 200deg,
-      rgba(212, 114, 106, 0.9) 245deg,   /* coral */
-      rgba(106, 142, 186, 0.9) 270deg,   /* periwinkle */
-      rgba(58, 154, 140, 0.95) 295deg,   /* teal */
-      rgba(212, 164, 60, 0.9) 320deg,    /* marigold */
-      rgba(154, 122, 166, 0.85) 340deg,  /* lavender */
+      #e4e0d9 155deg,
+      rgba(212, 114, 106, 1) 205deg,     /* coral */
+      rgba(106, 142, 186, 1) 240deg,     /* periwinkle */
+      rgba(58, 154, 140, 1) 270deg,      /* teal */
+      rgba(212, 164, 60, 0.95) 305deg,   /* marigold */
+      rgba(154, 122, 166, 0.95) 335deg,  /* lavender */
       #e4e0d9 360deg) border-box;
   border-radius: 24px;
   padding: 36px 44px;
@@ -1548,10 +1548,10 @@ body[data-lang="cn"] .voices-header-text {
   min-height: 360px;
   box-shadow:
     0 1px 3px rgba(0, 0, 0, 0.02),
-    0 8px 40px rgba(0, 0, 0, 0.04),
-    0 0 25px rgba(212, 114, 106, 0.06),
-    0 0 50px rgba(58, 154, 140, 0.04),
-    0 0 35px rgba(106, 142, 186, 0.05);
+    0 8px 40px rgba(0, 0, 0, 0.05),
+    0 0 30px rgba(212, 114, 106, 0.10),
+    0 0 60px rgba(58, 154, 140, 0.07),
+    0 0 45px rgba(106, 142, 186, 0.08);
 }
 
 @keyframes sheetBorderFlow {
@@ -1574,19 +1574,19 @@ body[data-lang="cn"] .voices-header-text {
     linear-gradient(180deg, #ffffff 0%, #fdfcfa 100%) padding-box,
     conic-gradient(from 250deg,
       #e4e0d9 0deg,
-      #e4e0d9 200deg,
-      rgba(212, 114, 106, 0.9) 245deg,
-      rgba(106, 142, 186, 0.9) 270deg,
-      rgba(58, 154, 140, 0.95) 295deg,
-      rgba(212, 164, 60, 0.9) 320deg,
-      rgba(154, 122, 166, 0.85) 340deg,
+      #e4e0d9 155deg,
+      rgba(212, 114, 106, 1) 205deg,
+      rgba(106, 142, 186, 1) 240deg,
+      rgba(58, 154, 140, 1) 270deg,
+      rgba(212, 164, 60, 0.95) 305deg,
+      rgba(154, 122, 166, 0.95) 335deg,
       #e4e0d9 360deg) border-box;
   box-shadow:
     0 1px 4px rgba(0, 0, 0, 0.03),
-    0 12px 48px rgba(0, 0, 0, 0.06),
-    0 0 40px rgba(212, 114, 106, 0.15),
-    0 0 70px rgba(212, 114, 106, 0.12),
-    0 0 50px rgba(106, 142, 186, 0.08);
+    0 12px 48px rgba(0, 0, 0, 0.07),
+    0 0 45px rgba(212, 114, 106, 0.20),
+    0 0 80px rgba(212, 114, 106, 0.16),
+    0 0 55px rgba(106, 142, 186, 0.12);
 }
 
 /* State: has user content */
@@ -1596,35 +1596,38 @@ body[data-lang="cn"] .voices-header-text {
 }
 
 .chat-bubble-wrap:hover {
-  border-color: #d0d0d0;
+  /* border-color must stay transparent — the beam is painted on the
+     border-box background layer above; an opaque border-color here
+     used to paint solid gray over it, silently killing the whole
+     gradient exactly when the user's cursor is closest to it. */
   box-shadow:
     0 1px 4px rgba(0, 0, 0, 0.03),
-    0 12px 48px rgba(0, 0, 0, 0.06),
-    0 0 40px rgba(212, 114, 106, 0.1),
-    0 0 70px rgba(58, 154, 140, 0.07),
-    0 0 50px rgba(106, 142, 186, 0.08);
+    0 12px 48px rgba(0, 0, 0, 0.07),
+    0 0 45px rgba(212, 114, 106, 0.14),
+    0 0 80px rgba(58, 154, 140, 0.10),
+    0 0 55px rgba(106, 142, 186, 0.11);
   cursor: text;  /* 现代对话框交互：悬停显示文本光标 */
   transform: translateY(-2px);
 }
 
 .chat-bubble-wrap:focus-within {
   box-shadow:
-    0 2px 12px rgba(0, 0, 0, 0.06),
-    0 16px 56px rgba(0, 0, 0, 0.08),
-    0 0 50px rgba(212, 114, 106, 0.12),
-    0 0 80px rgba(58, 154, 140, 0.1),
-    0 0 60px rgba(106, 142, 186, 0.12);
+    0 2px 12px rgba(0, 0, 0, 0.07),
+    0 16px 56px rgba(0, 0, 0, 0.09),
+    0 0 55px rgba(212, 114, 106, 0.18),
+    0 0 90px rgba(58, 154, 140, 0.15),
+    0 0 65px rgba(106, 142, 186, 0.17);
   /* keep the dual-layer paint so the gradient frame survives focus */
   background:
     linear-gradient(180deg, #ffffff 0%, #faf8f5 100%) padding-box,
     conic-gradient(from 250deg,
       #e4e0d9 0deg,
-      #e4e0d9 200deg,
-      rgba(212, 114, 106, 0.9) 245deg,
-      rgba(106, 142, 186, 0.9) 270deg,
-      rgba(58, 154, 140, 0.95) 295deg,
-      rgba(212, 164, 60, 0.9) 320deg,
-      rgba(154, 122, 166, 0.85) 340deg,
+      #e4e0d9 155deg,
+      rgba(212, 114, 106, 1) 205deg,
+      rgba(106, 142, 186, 1) 240deg,
+      rgba(58, 154, 140, 1) 270deg,
+      rgba(212, 164, 60, 0.95) 305deg,
+      rgba(154, 122, 166, 0.95) 335deg,
       #e4e0d9 360deg) border-box;
 }
 
@@ -11030,7 +11033,7 @@ button.generating {
 .chat-bubble-wrap {
   animation:
     mastheadReveal 0.65s 0.55s ease both,
-    sheetBorderFlow 10s 1.4s linear infinite;
+    sheetBorderFlow 8s 1.4s linear infinite;
 }
 
 /* ── masthead-vol subtle emphasis on hover ── */
