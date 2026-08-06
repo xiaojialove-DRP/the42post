@@ -1326,13 +1326,103 @@ function initConnectAgent() {
 
 /* ═══ THINKING ORB — small rotating dot-sphere ═══
    Replaces the flat spinning 🔄 emoji on each Forge Step 2 layer with a
-   genuine "AI is working" indicator: a sphere of dots built by Fibonacci
-   distribution (even coverage, no per-ring bookkeeping), rotated and
-   projected to 2D every frame, sorted back-to-front so depth actually
-   reads. Draws one static frame instead of animating under
+   genuine "AI is working" indicator. Four point-layout styles (sphere /
+   bands / ring / network) so the five checklist items don't all show
+   the same icon, and each is tinted from the same five-hue system
+   already used for the homepage chat-bubble border and the Archive
+   celestial map (DOMAIN_COLORS.safety/science/experience/narrative/
+   design) — same palette, same order, so this checklist reads as part
+   of one continuous brand thread rather than a generic loading spinner.
+   Draws one static frame instead of animating under
    prefers-reduced-motion. Returns { stop() } — caller owns the canvas
    element's lifetime. */
-function createThinkingOrb(canvas, size = 26, dotCount = 40) {
+const THINKING_ORB_HUES = [
+  { r: 212, g: 114, b: 106 }, // coral     (DOMAIN_COLORS.safety)
+  { r: 106, g: 142, b: 186 }, // periwinkle (DOMAIN_COLORS.science)
+  { r: 58,  g: 154, b: 140 }, // teal       (DOMAIN_COLORS.experience)
+  { r: 212, g: 164, b: 60  }, // marigold   (DOMAIN_COLORS.narrative)
+  { r: 154, g: 122, b: 166 }  // lavender   (DOMAIN_COLORS.design)
+];
+const THINKING_ORB_STYLES = ['sphere', 'bands', 'ring', 'network', 'sphere'];
+
+// Point layouts. 'sphere' and 'network' both use a Fibonacci
+// distribution (even coverage with one formula, no per-ring
+// bookkeeping) — network is just the sparse case, which is what makes
+// the constellation lines in createThinkingOrb() read as a network
+// instead of a dense ball. 'bands' fixes points onto discrete latitude
+// rings instead of a smooth spiral, so they visibly group into stripes.
+// 'ring' is flat (z barely off zero) so rotation reads as a tilted
+// halo, not a sphere.
+function buildOrbPoints(style) {
+  const golden = Math.PI * (3 - Math.sqrt(5));
+
+  if (style === 'ring') {
+    const count = 18, tilt = 0.35;
+    const pts = [];
+    for (let i = 0; i < count; i++) {
+      const t = (i / count) * Math.PI * 2;
+      pts.push({ x: Math.cos(t), y: Math.sin(t) * tilt, z: Math.sin(t) * 0.3 });
+    }
+    return pts;
+  }
+
+  if (style === 'bands') {
+    const ringCount = 6;
+    const pts = [];
+    for (let ring = 0; ring < ringCount; ring++) {
+      const y = -1 + (2 * (ring + 0.5)) / ringCount;
+      const ringRadius = Math.sqrt(Math.max(0, 1 - y * y));
+      const dotsInRing = Math.max(3, Math.round(8 * ringRadius));
+      for (let j = 0; j < dotsInRing; j++) {
+        const theta = (j / dotsInRing) * Math.PI * 2;
+        pts.push({ x: Math.cos(theta) * ringRadius, y, z: Math.sin(theta) * ringRadius });
+      }
+    }
+    return pts;
+  }
+
+  const count = style === 'network' ? 16 : 42;
+  const pts = [];
+  for (let i = 0; i < count; i++) {
+    const y = 1 - (i / (count - 1)) * 2;
+    const ringRadius = Math.sqrt(Math.max(0, 1 - y * y));
+    const theta = golden * i;
+    pts.push({ x: Math.cos(theta) * ringRadius, y, z: Math.sin(theta) * ringRadius });
+  }
+  return pts;
+}
+
+// Connects each point to its k nearest neighbors in 3D — cheap at this
+// point count (<=42), computed once at setup rather than per frame.
+function buildNearestNeighborLinks(points, k) {
+  const links = [];
+  const seen = new Set();
+  points.forEach((p, i) => {
+    points
+      .map((q, j) => ({ j, d: i === j ? Infinity : (p.x - q.x) ** 2 + (p.y - q.y) ** 2 + (p.z - q.z) ** 2 }))
+      .sort((a, b) => a.d - b.d)
+      .slice(0, k)
+      .forEach(({ j }) => {
+        const key = i < j ? `${i}-${j}` : `${j}-${i}`;
+        if (!seen.has(key)) { seen.add(key); links.push([i, j]); }
+      });
+  });
+  return links;
+}
+
+const THINKING_ORB_DOT_SIZE = {
+  sphere:  { base: 0.6, range: 1.1 },
+  bands:   { base: 0.5, range: 0.9 },
+  ring:    { base: 1.0, range: 0.8 },
+  network: { base: 0.9, range: 1.0 }
+};
+
+function createThinkingOrb(canvas, opts = {}) {
+  const size = opts.size || 26;
+  const style = opts.style || 'sphere';
+  const color = opts.color || { r: 26, g: 26, b: 26 };
+  const dotSize = THINKING_ORB_DOT_SIZE[style] || THINKING_ORB_DOT_SIZE.sphere;
+
   const dpr = window.devicePixelRatio || 1;
   canvas.width = size * dpr;
   canvas.height = size * dpr;
@@ -1341,14 +1431,8 @@ function createThinkingOrb(canvas, size = 26, dotCount = 40) {
   const ctx = canvas.getContext('2d');
   ctx.scale(dpr, dpr);
 
-  const points = [];
-  const golden = Math.PI * (3 - Math.sqrt(5));
-  for (let i = 0; i < dotCount; i++) {
-    const y = 1 - (i / (dotCount - 1)) * 2;
-    const ringRadius = Math.sqrt(1 - y * y);
-    const theta = golden * i;
-    points.push({ x: Math.cos(theta) * ringRadius, y, z: Math.sin(theta) * ringRadius });
-  }
+  const points = buildOrbPoints(style);
+  const neighborLinks = style === 'network' ? buildNearestNeighborLinks(points, 2) : null;
 
   const cx = size / 2, cy = size / 2;
   const r = size * 0.42;
@@ -1358,18 +1442,31 @@ function createThinkingOrb(canvas, size = 26, dotCount = 40) {
   function draw() {
     const cos = Math.cos(angle), sin = Math.sin(angle);
     ctx.clearRect(0, 0, size, size);
-    points
-      .map(p => ({
-        sx: cx + (p.x * cos - p.z * sin) * r,
-        sy: cy + p.y * r,
-        z: p.x * sin + p.z * cos
-      }))
+    const projected = points.map(p => ({
+      sx: cx + (p.x * cos - p.z * sin) * r,
+      sy: cy + p.y * r,
+      z: p.x * sin + p.z * cos
+    }));
+
+    if (neighborLinks) {
+      ctx.strokeStyle = `rgba(${color.r}, ${color.g}, ${color.b}, 0.2)`;
+      ctx.lineWidth = 0.5;
+      neighborLinks.forEach(([a, b]) => {
+        ctx.beginPath();
+        ctx.moveTo(projected[a].sx, projected[a].sy);
+        ctx.lineTo(projected[b].sx, projected[b].sy);
+        ctx.stroke();
+      });
+    }
+
+    projected
+      .slice()
       .sort((a, b) => a.z - b.z) // back-to-front so near dots paint over far ones
       .forEach(p => {
         const depth = (p.z + 1) / 2; // 0 (far) .. 1 (near)
         ctx.beginPath();
-        ctx.arc(p.sx, p.sy, 0.6 + depth * 1.1, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(26, 26, 26, ${0.15 + depth * 0.6})`;
+        ctx.arc(p.sx, p.sy, dotSize.base + depth * dotSize.range, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(${color.r}, ${color.g}, ${color.b}, ${0.2 + depth * 0.65})`;
         ctx.fill();
       });
   }
@@ -1379,7 +1476,7 @@ function createThinkingOrb(canvas, size = 26, dotCount = 40) {
     draw();
   } else {
     (function frame() {
-      angle += 0.02;
+      angle += style === 'ring' ? 0.03 : 0.02;
       draw();
       raf = requestAnimationFrame(frame);
     })();
@@ -1394,24 +1491,34 @@ function startFiveLayerAnimation() {
   let currentLayer = 0;
 
   // Give each layer's status icon a thinking-orb in place of the static
-  // 🔄 emoji. completeLayerStatus() below stops the orb and swaps in a
-  // checkmark — the single place both completion paths (per-layer and
-  // the "all done" branch) go through, so an orb can never keep spinning
-  // after its layer is marked done.
+  // 🔄 emoji, cycling through the four geometry styles and the five
+  // brand hues so the checklist isn't five identical icons.
+  // completeLayerStatus() below stops the orb and swaps in a checkmark
+  // tinted the same hue — the single place both completion paths
+  // (per-layer and the "all done" branch) go through, so an orb can
+  // never keep spinning after its layer is marked done.
   const orbs = new Map();
-  layers.forEach(layer => {
+  const layerColors = new Map();
+  layers.forEach((layer, i) => {
     const statusEl = layer.querySelector('.layer-status');
     if (!statusEl) return;
     statusEl.textContent = '';
     const canvas = document.createElement('canvas');
     canvas.className = 'layer-orb';
     statusEl.appendChild(canvas);
-    orbs.set(statusEl, createThinkingOrb(canvas));
+    const color = THINKING_ORB_HUES[i % THINKING_ORB_HUES.length];
+    layerColors.set(statusEl, color);
+    orbs.set(statusEl, createThinkingOrb(canvas, {
+      style: THINKING_ORB_STYLES[i % THINKING_ORB_STYLES.length],
+      color
+    }));
   });
   function completeLayerStatus(statusEl) {
     if (!statusEl) return;
     orbs.get(statusEl)?.stop();
     orbs.delete(statusEl);
+    const c = layerColors.get(statusEl);
+    if (c) statusEl.style.color = `rgb(${c.r}, ${c.g}, ${c.b})`;
     statusEl.textContent = '✓';
   }
 
