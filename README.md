@@ -17,7 +17,7 @@ THE 42 POST is a web platform where anyone can create **Skills** — structured,
 ### Features
 
 - **Skill Forge** — Turn your values into verifiable AI guidance in 4 guided steps
-- **Skill Library** — Browse 42+ community-created skills across domains
+- **Skill Library** — Browse a growing library of community-created skills across domains ([live count](https://www.the42post.com/api/analytics/public-stats))
 - **Twin Test Playground** — Compare two skills side-by-side to see how they change AI responses
 - **Soul-Hash Identity** — Each published skill receives a unique 14-character identity
 - **Creator Card** — Downloadable proof-of-contribution with skill summary and email delivery

@@ -1,0 +1,40 @@
+# THE 42 POST — robots.txt
+
+# General crawlers: full access. A handful of pages are internal
+# production tools (email template source, a 10s promo-video capture
+# rig), not content — excluded so they never show up as thin/broken
+# pages in search or AI-answer results.
+User-agent: *
+Allow: /
+Disallow: /email-template.html
+Disallow: /promo-10s.html
+
+# --- AI *training* crawlers (bulk scraping for model pretraining) ---
+# Blocked by default: every Skill on this platform is authored and
+# licensed by an individual creator under terms they chose (see
+# DATA_LICENSE.md) — bulk training ingestion bypasses that consent
+# layer entirely, which cuts against what this project stands for.
+#
+# AI *search/citation* crawlers (Perplexity, OAI-SearchBot, Claude-
+# SearchBot, and any other agent not listed below) are NOT blocked —
+# they fall under the "User-agent: *" rule above and are welcome to
+# read, cite, and summarize this project.
+#
+# If you'd rather the corpus be included in model training too, change
+# the five "Disallow: /" lines below to "Allow: /".
+User-agent: GPTBot
+Disallow: /
+
+User-agent: ClaudeBot
+Disallow: /
+
+User-agent: Google-Extended
+Disallow: /
+
+User-agent: CCBot
+Disallow: /
+
+User-agent: Bytespider
+Disallow: /
+
+Sitemap: https://www.the42post.com/sitemap.xml

@@ -31,9 +31,8 @@
         "url": "https://the42post.com",
         "description": "An early, open experiment in participatory AI alignment, where people forge their wisdom, values and creative intuition into AI-readable Skills.",
         "sameAs": [
-          "https://x.com/the42post",
           "https://instagram.com/the42post",
-          "https://github.com/the42post"
+          "https://github.com/xiaojialove-DRP/the42post"
         ]
       },
       {
@@ -42,6 +41,27 @@
         "url": "https://the42post.com",
         "description": "Forge human wisdom into AI Skills. An open experiment in participatory AI alignment — open to everyone.",
         "inLanguage": ["en", "zh"]
+      },
+      {
+        "@type": "Dataset",
+        "name": "THE 42 POST Skill Corpus",
+        "description": "A growing, openly-licensed corpus of human-authored AI value 'Skills' — five-layer structured artifacts (stance, worked example, boundaries, a falsifiable validation question, cultural variants), each blind-tested against an unmodified baseline AI response by community vote. Live counts (skills, creators, blind votes, verified/failed) are available at the API endpoint below — the corpus is small and actively growing; query it rather than assuming a size.",
+        "url": "https://www.the42post.com/archive",
+        "sameAs": "https://github.com/xiaojialove-DRP/the42post",
+        "creator": { "@type": "Organization", "name": "THE 42 POST" },
+        "license": "https://github.com/xiaojialove-DRP/the42post/blob/main/docs/governance/DATA_LICENSE.md",
+        "distribution": [
+          {
+            "@type": "DataDownload",
+            "encodingFormat": "application/json",
+            "contentUrl": "https://www.the42post.com/api/skills"
+          },
+          {
+            "@type": "DataDownload",
+            "encodingFormat": "application/json",
+            "contentUrl": "https://www.the42post.com/api/analytics/public-stats"
+          }
+        ]
       }
     ]
   }
