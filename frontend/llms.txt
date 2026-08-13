@@ -12,11 +12,11 @@
 
 ## Key pages
 
-- Homepage / forge a Skill: https://www.the42post.com/
-- Archive — browse every published Skill, plus a celestial map view: https://www.the42post.com/archive
-- Playground — blind-test any Skill against an unmodified baseline: https://www.the42post.com/playground
-- Live public stats API (JSON): https://www.the42post.com/api/analytics/public-stats
-- All published Skills (JSON): https://www.the42post.com/api/skills
+- Homepage / forge a Skill: https://the42post.com/
+- Archive — browse every published Skill, plus a celestial map view: https://the42post.com/archive
+- Playground — blind-test any Skill against an unmodified baseline: https://the42post.com/playground
+- Live public stats API (JSON): https://the42post.com/api/analytics/public-stats
+- All published Skills (JSON): https://the42post.com/api/skills
 - Source code: https://github.com/xiaojialove-DRP/the42post
 
 ## Governance and methodology

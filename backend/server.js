@@ -122,6 +122,23 @@ logger.info('═══ Cache System Initialization ═══');
 initializeCache(); // Memory-based cache (Redis optional)
 
 // ═══ MIDDLEWARE ═══
+// 0. Canonical host redirect — www.the42post.com and the42post.com both
+//    resolved 200 with identical content and no redirect between them,
+//    splitting SEO ranking/backlink signal across two URLs instead of
+//    consolidating it. Non-www is what's already declared everywhere
+//    else (og:url, JSON-LD Organization/WebSite `url`), so redirect www
+//    to it. Uses req.hostname (Host header only, not req.protocol) so
+//    this doesn't depend on trust-proxy config; the target is always
+//    hardcoded https since that's the only way this app is served in
+//    production. First middleware so the common case short-circuits
+//    before any other work runs.
+app.use((req, res, next) => {
+  if (req.hostname === 'www.the42post.com') {
+    return res.redirect(301, `https://the42post.com${req.originalUrl}`);
+  }
+  next();
+});
+
 // 1. Compression (gzip) — was a listed dependency with no app.use() anywhere.
 //    script.js/styles.css/index.html are plain text and not small (no build
 //    step to minify them); compresses each by roughly 70-85% with no

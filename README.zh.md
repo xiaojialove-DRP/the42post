@@ -19,7 +19,7 @@ THE 42 POST 是一个开放平台，让任何人都能创建"技能"（Skills）
 ### 核心功能
 
 - 🛠️ **技能锻造工作坊** — 四步指导流程将您的想法转化为结构化技能
-- 📚 **技能库** — 发现由普通人、设计师、伦理学家创建的技能，数量持续增长（[实时数量](https://www.the42post.com/api/analytics/public-stats)）
+- 📚 **技能库** — 发现由普通人、设计师、伦理学家创建的技能，数量持续增长（[实时数量](https://the42post.com/api/analytics/public-stats)）
 - 👁️ **预览和迭代** — 发布前查看完整的五层结构，基于反馈精细调整
 - 🤖 **AI 就绪** — 使用影子智能体测试行为或集成到您的系统
 
@@ -35,7 +35,7 @@ THE 42 POST 是一个开放平台，让任何人都能创建"技能"（Skills）
 
 ## 🚀 快速开始
 
-**无需任何安装。** 访问 [THE 42 POST](https://www.the42post.com)：
+**无需任何安装。** 访问 [THE 42 POST](https://the42post.com)：
 
 1. **浏览** 技能库（2 分钟）
 2. **创建** 您的第一个技能，使用技能锻造（5-10 分钟）
@@ -175,7 +175,7 @@ MIT 许可证 — 详见 [LICENSE](LICENSE) 文件
 
 ## 🔗 快速链接
 
-- **🌐 访问平台**: [https://www.the42post.com](https://www.the42post.com)
+- **🌐 访问平台**: [https://the42post.com](https://the42post.com)
 - **📦 GitHub 仓库**: https://github.com/xiaojialove-DRP/the42post
 - **🐛 反馈问题**: [GitHub Issues](https://github.com/xiaojialove-DRP/the42post/issues)
 

@@ -37,4 +37,4 @@ Disallow: /
 User-agent: Bytespider
 Disallow: /
 
-Sitemap: https://www.the42post.com/sitemap.xml
+Sitemap: https://the42post.com/sitemap.xml

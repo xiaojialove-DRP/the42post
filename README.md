@@ -4,7 +4,7 @@
 
 **An open-source platform for human-centered AI value alignment.**
 
-🌐 [中文版本](./README.zh.md) · [Live Platform](https://www.the42post.com) · [Report Issues](https://github.com/xiaojialove-DRP/the42post/issues)
+🌐 [中文版本](./README.zh.md) · [Live Platform](https://the42post.com) · [Report Issues](https://github.com/xiaojialove-DRP/the42post/issues)
 
 > Built on [SemanticForge](https://github.com/xiaojialove-DRP/SemanticForge) — THE 42 POST implements SemanticForge's five-layer framework as a community platform where anyone can create and share AI-aligned skills.
 
@@ -17,7 +17,7 @@ THE 42 POST is a web platform where anyone can create **Skills** — structured,
 ### Features
 
 - **Skill Forge** — Turn your values into verifiable AI guidance in 4 guided steps
-- **Skill Library** — Browse a growing library of community-created skills across domains ([live count](https://www.the42post.com/api/analytics/public-stats))
+- **Skill Library** — Browse a growing library of community-created skills across domains ([live count](https://the42post.com/api/analytics/public-stats))
 - **Twin Test Playground** — Compare two skills side-by-side to see how they change AI responses
 - **Soul-Hash Identity** — Each published skill receives a unique 14-character identity
 - **Creator Card** — Downloadable proof-of-contribution with skill summary and email delivery
@@ -47,7 +47,7 @@ That is why we open-sourced it.
 
 ## Getting Started
 
-No setup required. Visit [the42post.com](https://www.the42post.com):
+No setup required. Visit [the42post.com](https://the42post.com):
 
 1. **Browse** community skills in the Skill Library
 2. **Create** your first skill using the Skill Forge (5–10 min)

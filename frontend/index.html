@@ -5,6 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>THE 42 POST — Forge Human Wisdom into AI Skills | A Participatory AI Alignment Experiment</title>
   <meta name="description" content="THE 42 POST is an open experiment in participatory AI alignment — forging human wisdom (Semantic Capital) into shareable AI Skills. Through Skill Forge and Playground, anyone can contribute.">
+  <!-- www.the42post.com redirects here server-side (server.js) — this tag
+       is the second, page-level signal search engines use to consolidate
+       the two hosts instead of treating them as duplicate content. -->
+  <link rel="canonical" href="https://the42post.com/">
 
   <!-- Open Graph / Social sharing -->
   <meta property="og:type" content="website">
@@ -46,7 +50,7 @@
         "@type": "Dataset",
         "name": "THE 42 POST Skill Corpus",
         "description": "A growing, openly-licensed corpus of human-authored AI value 'Skills' — five-layer structured artifacts (stance, worked example, boundaries, a falsifiable validation question, cultural variants), each blind-tested against an unmodified baseline AI response by community vote. Live counts (skills, creators, blind votes, verified/failed) are available at the API endpoint below — the corpus is small and actively growing; query it rather than assuming a size.",
-        "url": "https://www.the42post.com/archive",
+        "url": "https://the42post.com/archive",
         "sameAs": "https://github.com/xiaojialove-DRP/the42post",
         "creator": { "@type": "Organization", "name": "THE 42 POST" },
         "license": "https://github.com/xiaojialove-DRP/the42post/blob/main/docs/governance/DATA_LICENSE.md",
@@ -54,12 +58,12 @@
           {
             "@type": "DataDownload",
             "encodingFormat": "application/json",
-            "contentUrl": "https://www.the42post.com/api/skills"
+            "contentUrl": "https://the42post.com/api/skills"
           },
           {
             "@type": "DataDownload",
             "encodingFormat": "application/json",
-            "contentUrl": "https://www.the42post.com/api/analytics/public-stats"
+            "contentUrl": "https://the42post.com/api/analytics/public-stats"
           }
         ]
       }
