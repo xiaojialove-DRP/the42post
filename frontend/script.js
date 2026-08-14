@@ -1576,7 +1576,9 @@ function startFiveLayerAnimation() {
 
             // 在STEP 2中显示生成的结果（可编辑字段）
             document.getElementById('reviewSkillName').value = skill.name || '';
-            document.getElementById('reviewSkillDef').value = skill.definition || '';
+            const reviewDefEl = document.getElementById('reviewSkillDef');
+            reviewDefEl.value = skill.definition || '';
+            reviewDefEl.scrollTop = 0;
             document.getElementById('reviewUseWhen').textContent = skill.useWhen || '';
             document.getElementById('reviewRefuseWhen').textContent = skill.refuseWhen || '';
             // 清空反馈框（用户可以给新反馈）
@@ -2943,7 +2945,12 @@ function initSkillForge() {
         const newFencing = skillData.fencing || '';
 
         if (nameEl) nameEl.value = newName;
-        if (defEl) defEl.value = newDef;
+        // Setting .value alone doesn't reset scrollTop — the browser just
+        // clamps the previous scroll offset to the new (usually shorter)
+        // scrollHeight, leaving the box scrolled a few px into the new
+        // text and clipping its first line. Confirmed live: after a
+        // regenerate, scrollTop stayed non-zero instead of resetting.
+        if (defEl) { defEl.value = newDef; defEl.scrollTop = 0; }
         if (useWhenEl) useWhenEl.textContent = newDefining;
         if (refuseWhenEl) refuseWhenEl.textContent = newFencing;
         if (feedbackEl) feedbackEl.value = '';
@@ -3154,7 +3161,9 @@ function initSkillForge() {
       if (modal) modal.style.display = 'none';
       // 同步预览框中的编辑回 Step 2
       document.getElementById('reviewSkillName').value = document.getElementById('previewSkillName').value;
-      document.getElementById('reviewSkillDef').value = document.getElementById('previewSkillDef').value;
+      const backEditDefEl = document.getElementById('reviewSkillDef');
+      backEditDefEl.value = document.getElementById('previewSkillDef').value;
+      backEditDefEl.scrollTop = 0;
     });
   }
 
@@ -3164,7 +3173,9 @@ function initSkillForge() {
     btnConfirmFromPreview.addEventListener('click', () => {
       // 同步预览框中的编辑回 Step 2
       document.getElementById('reviewSkillName').value = document.getElementById('previewSkillName').value;
-      document.getElementById('reviewSkillDef').value = document.getElementById('previewSkillDef').value;
+      const confirmDefEl = document.getElementById('reviewSkillDef');
+      confirmDefEl.value = document.getElementById('previewSkillDef').value;
+      confirmDefEl.scrollTop = 0;
 
       // Promote the flat 5-layer + Ready-to-Use Prompt the user just
       // reviewed into agent42StructuredData so the PUBLISH POST carries

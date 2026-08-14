@@ -132,8 +132,19 @@ initializeCache(); // Memory-based cache (Redis optional)
 //    hardcoded https since that's the only way this app is served in
 //    production. First middleware so the common case short-circuits
 //    before any other work runs.
+//
+//    Excludes /api — this redirect runs before the cors() middleware, so
+//    a 301 issued here carries no CORS headers. A page loaded from
+//    www.the42post.com (e.g. an old tab from before this redirect
+//    shipped) doing fetch('/api/...') would have that same-origin request
+//    redirected cross-origin to the42post.com with no CORS header on the
+//    redirect response, which the browser blocks outright — surfacing to
+//    users as a bare "Load failed"/"Failed to fetch" with no real error
+//    (hit in production: forge-success email silently failed to send).
+//    Both hosts are already in the CORS whitelist, so the API can just
+//    answer on whichever host it was called on instead of redirecting.
 app.use((req, res, next) => {
-  if (req.hostname === 'www.the42post.com') {
+  if (req.hostname === 'www.the42post.com' && !req.path.startsWith('/api/')) {
     return res.redirect(301, `https://the42post.com${req.originalUrl}`);
   }
   next();
