@@ -2079,6 +2079,24 @@ function initSkillForge() {
     scrollIntoViewOnFocus(document.getElementById(id));
   });
 
+  // Username hint block (rules + example) stayed visible permanently, even
+  // after the username was already valid — on mobile that's dead vertical
+  // space pushing Background/Idea further down, which matters because the
+  // keyboard already eats ~40-50% of the viewport. Collapse it once the
+  // value matches the backend's rule (letters/numbers/underscore, 3-32
+  // chars, no leading digit), so a filled-in username reclaims that room.
+  (function collapseUsernameHintWhenValid() {
+    const usernameEl = document.getElementById('forgeUsername');
+    const hintEl = document.getElementById('usernameHint');
+    if (!usernameEl || !hintEl) return;
+    const USERNAME_RE = /^[a-zA-Z_][a-zA-Z0-9_]{2,31}$/;
+    const sync = () => {
+      hintEl.style.display = USERNAME_RE.test(usernameEl.value.trim()) ? 'none' : '';
+    };
+    usernameEl.addEventListener('input', sync);
+    sync();
+  })();
+
   // ─── Draft Recovery: offer to restore an unsubmitted forge ───
   // If the previous session's POST /skills failed (network drop, 5xx)
   // we kept their work in localStorage. Offer to restore it here.
