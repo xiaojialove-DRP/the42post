@@ -1525,7 +1525,12 @@ body[data-lang="cn"] .voices-header-text {
 
 .chat-bubble-wrap {
   width: 100%;
-  max-width: var(--max-w);
+  /* Deliberately narrower than the site's general --max-w (1520px) — that
+     value suits wide layout sections (footer, nav), but this is a prompt
+     input box: at ultra-wide viewports, stretching it edge-to-edge against
+     a fixed min-height produced an extreme, near-empty-looking rectangle,
+     and its instructional text stretched to unreadably long line lengths. */
+  max-width: min(760px, calc(100vw - 48px));
   border: 2px solid transparent;
   background:
     linear-gradient(180deg, #ffffff 0%, #fcfbf8 100%) padding-box,
@@ -10708,177 +10713,124 @@ button.generating {
 
 
 /* ╔═══════════════════════════════════════════════════════════════════╗
-   ║  SQUARE CREATOR CARD  —  Badge / Token aesthetic                 ║
-   ║  Replaces the old double-border portrait rectangle               ║
+   ║  ARC CREATOR CARD  —  masthead-in-a-curve front page             ║
+   ║  Replaces the earlier square badge/token design                  ║
    ╚═══════════════════════════════════════════════════════════════════╝ */
 
-/* Override old commemorative-card styles */
 .commemorative-card {
   all: unset;
   display: flex !important;
   flex-direction: column;
+  align-items: center;
   text-align: center;
   position: relative;
   width: 100%;
-  max-width: 320px;
-  /* min-height, not aspect-ratio: a long Skill title wraps to 3-4 lines,
-     and a hard aspect-ratio locked the box height regardless of content,
-     silently clipping the SOUL hash line off the bottom (overflow:hidden
-     below). 290px keeps the short-title case looking like a tall portrait
-     certificate; longer content now pushes the card taller instead. */
-  min-height: 290px;
+  max-width: 300px;
+  /* min-height, not aspect-ratio: a long Skill title/blessing wraps to
+     more lines, and a hard aspect-ratio locked the box height regardless
+     of content, silently clipping text off the bottom (overflow:hidden
+     below). This keeps the short-content case looking like a compact
+     certificate; longer content pushes the card taller instead. */
+  min-height: 372px;
   margin: 0 auto 18px !important;
-  padding: 9px;
+  border-radius: 24px;
   box-sizing: border-box;
-  background: linear-gradient(150deg,
-    color-mix(in srgb, var(--card-accent, #b8a23c) 5.6%, #fbf6ee) 0%,
-    color-mix(in srgb, var(--card-accent, #b8a23c) 8%,   #f4ead8) 55%,
-    color-mix(in srgb, var(--card-accent, #b8a23c) 9.6%, #f0e2ce) 100%);
-  border: 1px solid color-mix(in srgb, var(--card-accent, var(--warm-ink)) 45%, #d8ccba);
-  border-radius: 12px;
-  box-shadow: 0 6px 28px rgba(42,32,24,0.14), 0 1px 4px rgba(42,32,24,0.08);
   overflow: hidden;
+  background: #f5efe1;
+  box-shadow: 0 20px 38px -15px rgba(42,32,24,0.32);
 }
 
-/* Domain colour is carried quietly by the seal and the pill —
-   no banner. The faint radial tint in the background is enough. */
+/* ── 10 domain themes: base + a deeper shade for the arc gradient/hash.
+   Shared with the Archive celestial map's DOMAIN_COLORS so a Skill's
+   colour means the same thing everywhere on the site. ── */
+.commemorative-card[data-domain="safety"]     { --card-accent: #d4726a; --card-accent-deep: #8a4a45; }
+.commemorative-card[data-domain="science"]    { --card-accent: #6a8eba; --card-accent-deep: #455c79; }
+.commemorative-card[data-domain="narrative"]  { --card-accent: #d4a43c; --card-accent-deep: #8a6b27; }
+.commemorative-card[data-domain="design"]     { --card-accent: #9a7aa6; --card-accent-deep: #644f6c; }
+.commemorative-card[data-domain="visual"]     { --card-accent: #d28264; --card-accent-deep: #895541; }
+.commemorative-card[data-domain="experience"] { --card-accent: #3a9a8c; --card-accent-deep: #26645b; }
+.commemorative-card[data-domain="sound"]      { --card-accent: #5aaab4; --card-accent-deep: #3b6f75; }
+.commemorative-card[data-domain="ideas"]      { --card-accent: #beaa50; --card-accent-deep: #7c6f34; }
+.commemorative-card[data-domain="history"]    { --card-accent: #aa826e; --card-accent-deep: #6f5548; }
+.commemorative-card[data-domain="fun"]        { --card-accent: #78b48c; --card-accent-deep: #4e755b; }
 
-/* Inner certificate frame — double-rule, classic document feel */
-.sq-frame {
-  flex: 1;
+/* ── The curved colour band the masthead sits inside ── */
+.cc-arc {
+  position: absolute;
+  z-index: 0;
+  top: -258px;
+  left: 50%;
+  width: 360px;
+  height: 360px;
+  border-radius: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(158deg,
+    color-mix(in srgb, var(--card-accent, #b8a23c) 80%, white 16%) 0%,
+    var(--card-accent, #b8a23c) 52%,
+    color-mix(in srgb, var(--card-accent, #b8a23c) 86%, black 12%) 100%);
+}
+.cc-top-band {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 88px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  padding: 14px 16px 12px;
-  box-sizing: border-box;
-  border: 1px solid color-mix(in srgb, var(--card-accent, var(--warm-ink)) 38%, transparent);
-  outline: 1px solid color-mix(in srgb, var(--card-accent, var(--warm-ink)) 16%, transparent);
-  outline-offset: 2px;
-  border-radius: 7px;
+  justify-content: flex-end;
+  padding-bottom: 16px;
+  flex-shrink: 0;
 }
-
-/* ── Domain seal — a tilted chop/stamp ── */
-.sq-seal {
-  width: 46px;
-  height: 46px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.cc-masthead {
+  position: relative;
+  font-family: var(--font-serif, 'Playfair Display', serif);
+  font-weight: 700;
   font-size: 22px;
-  line-height: 1;
-  color: var(--card-accent, #c9b458);
-  border: 2px solid color-mix(in srgb, var(--card-accent, #c9b458) 70%, transparent);
-  border-radius: 50%;
-  transform: rotate(-6deg);
-  background: color-mix(in srgb, var(--card-accent, #c9b458) 7%, transparent);
+  line-height: 1.15;
+  letter-spacing: 1.3px;
+  color: #fff;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.15);
+}
+.cc-tagline {
+  position: relative;
+  font-size: 7.5px;
+  line-height: 1.4;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.8);
+  margin-top: 4px;
 }
 
-/* ── Domain pill — outlined, like a foil stamp, not a button ── */
-.sq-domain-pill {
+.cc-body {
+  position: relative;
+  z-index: 1;
+  padding: 18px 24px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* ── Domain + "Skill" label — outlined pill, like a foil stamp ── */
+.cc-section-pill {
+  display: inline-block;
   font-family: var(--font-mono, 'JetBrains Mono', monospace);
   font-size: 8px;
+  line-height: 1.3;
   font-weight: 700;
-  letter-spacing: 2.4px;
+  letter-spacing: 1.7px;
   text-transform: uppercase;
-  color: color-mix(in srgb, var(--card-accent, #c9b458) 85%, #3c3028);
-  background: transparent;
-  border: 1px solid color-mix(in srgb, var(--card-accent, #c9b458) 60%, transparent);
-  padding: 3px 12px;
+  color: var(--card-accent-deep, #7c6f34);
+  background: color-mix(in srgb, var(--card-accent, #b8a23c) 16%, transparent);
+  border: 1px solid color-mix(in srgb, var(--card-accent, #b8a23c) 32%, transparent);
+  padding: 4px 14px;
   border-radius: 20px;
+  margin-bottom: 14px;
 }
 
-/* ── AI blessing — one italic line, the shareable hook ── */
-.sq-blessing {
-  font-family: var(--font-serif, 'Playfair Display', serif);
-  font-style: italic;
-  font-size: 11px;
-  line-height: 1.6;
-  color: #5a4f44;
-  max-width: 92%;
-  min-height: 0;
-}
-.sq-blessing:empty { display: none; }
-.sq-blessing::before { content: '“'; color: var(--card-accent, #c9b458); }
-.sq-blessing::after  { content: '”'; color: var(--card-accent, #c9b458); }
-
-/* ── Attribution: "Forged by xiaojia · Jun 10, 2026" ──
-   Wraps onto a second line instead of overflowing the card — a longer
-   creator name plus a longer date string can exceed the card's width
-   (confirmed: 224px content in a 206px box), and nowrap let the excess
-   spill sideways into the card's decorative inner border. */
-.sq-meta-line {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  align-items: baseline;
-  gap: 4px 7px;
-  width: 100%;
-  max-width: 92%;
-  font-family: var(--font-mono, 'JetBrains Mono', monospace);
-  font-size: 9px;
-  letter-spacing: 0.6px;
-  color: var(--wc-muted, var(--warm-ink));
-}
-.sq-meta-line .sq-dot { color: color-mix(in srgb, var(--card-accent, #c9b458) 70%, var(--warm-ink)); }
-
-/* ── Bottom: site only, centered ── */
-.sq-bottom-row {
-  display: flex;
-  justify-content: center;
-  width: 100%;
-  font-family: var(--font-mono, 'JetBrains Mono', monospace);
-  font-size: 7.5px;
-  letter-spacing: 2px;
-  color: rgba(138,124,110,0.65);
-}
-
-/* ── 10 domain themes: accent color (glyph is set by JS) ── */
-.commemorative-card[data-domain="safety"]     { --card-accent: #7e96a8; }
-.commemorative-card[data-domain="science"]    { --card-accent: #8fae7e; }
-.commemorative-card[data-domain="narrative"]  { --card-accent: #c9a06a; }
-.commemorative-card[data-domain="design"]     { --card-accent: #d98d76; }
-.commemorative-card[data-domain="visual"]     { --card-accent: #a892c4; }
-.commemorative-card[data-domain="experience"] { --card-accent: #c4a35c; }
-.commemorative-card[data-domain="sound"]      { --card-accent: #7fa8b8; }
-.commemorative-card[data-domain="ideas"]      { --card-accent: #b8a23c; }
-.commemorative-card[data-domain="history"]    { --card-accent: #a08a6e; }
-.commemorative-card[data-domain="fun"]        { --card-accent: #cc7e9a; }
-
-/* ── Brand header ── */
-.sq-top {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-  width: 100%;
-}
-.sq-brand {
-  font-family: var(--font-mono, 'JetBrains Mono', monospace);
-  font-size: var(--font-xs);
-  font-weight: 700;
-  letter-spacing: 3px;
-  color: var(--wc-charcoal, #3c3028);
-  text-transform: uppercase;
-}
-.sq-cert {
-  font-family: var(--font-serif, 'Playfair Display', serif);
-  font-size: var(--font-xs);
-  font-style: italic;
-  color: var(--wc-muted, var(--warm-ink));
-  letter-spacing: 0.3px;
-}
-
-/* ── Central sparkle icon ── */
-.sq-crest {
-  font-size: 22px;
-  color: #d4a849;
-  line-height: 1;
-}
-
-/* ── Skill name — hero element ── */
-.sq-skill-name {
+.cc-kicker {
   font-family: var(--font-serif, 'Playfair Display', serif);
   font-size: 15px;
   font-weight: 700;
@@ -10888,79 +10840,86 @@ button.generating {
   word-break: break-word;
 }
 
-/* ── Creator role badge ── */
-.sq-creator-role {
-  font-family: var(--font-mono, 'JetBrains Mono', monospace);
-  font-size: var(--font-xs);
-  letter-spacing: 2.2px;
-  color: var(--wc-muted, var(--warm-ink));
-  text-transform: uppercase;
-}
-
-/* ── Thin divider rules ── */
-.sq-hr {
-  width: 56%;
-  height: 1px;
-  background: rgba(60,48,40,0.13);
-  border: none;
-  margin: 0 auto;
-  flex-shrink: 0;
-}
-
-/* ── Creator + Date row ── */
-.sq-meta-row {
-  display: flex;
-  justify-content: space-between;
-  width: 88%;
-  font-family: var(--font-mono, 'JetBrains Mono', monospace);
-  font-size: var(--font-xs);
-  color: var(--wc-muted, var(--warm-ink));
-}
-
-/* ── Soul-Hash ── */
-.sq-hash-line {
-  font-family: var(--font-mono, 'JetBrains Mono', monospace);
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--wc-ink, #2a2018);
-  letter-spacing: 0.5px;
-  word-break: break-all;
-  padding: 8px 0;
-  margin: 2px 0;
-  background: linear-gradient(90deg, transparent 0%, rgba(196,180,160,0.08) 50%, transparent 100%);
-  border-radius: 4px;
-}
-
-/* ── Invitation code section ── */
-.sq-invite-label {
-  font-family: var(--font-mono, 'JetBrains Mono', monospace);
-  font-size: 6.5px;
-  letter-spacing: 2px;
-  color: rgba(138,124,110,0.55);
-  text-transform: uppercase;
-  margin-bottom: 1px;
-}
-.sq-invite-code {
-  font-family: var(--font-mono, 'JetBrains Mono', monospace);
-  font-size: 14px;
+/* ── Decorative bookend quotes around the AI blessing — large and
+   ornamental, deliberately NOT inline with the sentence (that read as
+   plain punctuation rather than a design flourish). ── */
+.cc-qm-open, .cc-qm-close {
+  font-family: var(--font-serif, 'Playfair Display', serif);
   font-weight: 700;
-  color: var(--wc-charcoal, #3c3028);
-  letter-spacing: 2.5px;
+  font-size: 32px;
+  line-height: 0.4;
+  color: var(--card-accent, #b8a23c);
+  display: block;
 }
-.sq-invite-desc {
-  font-family: var(--font-mono, 'JetBrains Mono', monospace);
-  font-size: 6.5px;
-  color: rgba(138,124,110,0.45);
-  line-height: 1.5;
-  max-width: 80%;
-}
+.cc-qm-open { margin-top: 12px; }
+.cc-qm-close { margin-top: 10px; align-self: flex-end; margin-right: 8%; }
+.cc-blessing:empty + .cc-qm-close,
+.cc-qm-open:has(+ .cc-blessing:empty) { display: none; }
 
-/* ── Footer URL ── */
-.sq-url {
+/* ── AI blessing — the shareable hook, hero of the card ── */
+.cc-blessing {
+  font-family: var(--font-serif, 'Playfair Display', serif);
+  font-weight: 700;
+  font-size: 19px;
+  line-height: 1.38;
+  color: var(--wc-ink, #2a2018);
+  margin-top: 8px;
+  max-width: 90%;
+  min-height: 0;
+}
+.cc-blessing:empty { display: none; }
+
+/* ── Attribution: "Forged by xiaojia · Jun 10, 2026" ──
+   Wraps onto a second line instead of overflowing the card — a longer
+   creator name plus a longer date string can exceed the card's width,
+   and nowrap let the excess spill sideways past the card edge. */
+.cc-byline {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: baseline;
+  gap: 4px 7px;
+  width: 100%;
+  max-width: 92%;
+  font-family: var(--font-serif, 'Playfair Display', serif);
+  font-style: italic;
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--wc-muted, var(--warm-ink));
+  margin-top: 16px;
+}
+.cc-byline .cc-dot { color: color-mix(in srgb, var(--card-accent, #b8a23c) 70%, var(--warm-ink)); }
+
+.cc-spacer { flex: 1; }
+
+/* ── Soul-Hash — promoted from a buried footer line to its own labelled
+   stamp, since it's the Skill's permanent, verifiable identity. ── */
+.cc-hash-label {
   font-family: var(--font-mono, 'JetBrains Mono', monospace);
-  font-size: 6.5px;
-  letter-spacing: 1px;
-  color: rgba(138,124,110,0.40);
+  font-size: 7px;
+  line-height: 1.3;
+  font-weight: 700;
+  letter-spacing: 2.4px;
+  text-transform: uppercase;
+  color: rgba(138,124,110,0.7);
+}
+.cc-hash-value {
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-weight: 700;
+  font-size: 15px;
+  line-height: 1.3;
+  letter-spacing: 2px;
+  color: var(--card-accent-deep, #7c6f34);
+  margin-top: 3px;
+  word-break: break-all;
+}
+.cc-site-url {
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: 8px;
+  line-height: 1.3;
+  color: rgba(138,124,110,0.55);
+  letter-spacing: 0.5px;
+  margin-top: 8px;
 }
 
 /* ── Responsive scaling ── */
@@ -10969,8 +10928,7 @@ button.generating {
 }
 @media (max-width: 360px) {
   .commemorative-card { max-width: 230px !important; }
-  .sq-invite-code { font-size: 12px; letter-spacing: 1.5px; }
-  .sq-skill-name { font-size: 13px; }
+  .cc-kicker { font-size: 13px; }
 }
 
 /* ── forge-ready box — clean up inline styles ── */

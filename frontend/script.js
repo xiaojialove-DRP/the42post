@@ -4558,29 +4558,28 @@ function showForgeCompletion(skillData, soulHash) {
 
     if (cardTitle) cardTitle.textContent = skillData.title || skillData.titleCn || '[Skill Title]';
 
-    // ── Domain-themed certificate: accent color, seal glyph, label, serial ──
+    // ── Domain-themed certificate: accent color (set via CSS from
+    //    data-domain) plus the bilingual "[Domain] Skill" pill label ──
     const DOMAIN_CARD_THEME = {
-      safety:     { glyph: '⛨', en: 'SAFETY',     cn: '安全' },
-      science:    { glyph: '✶', en: 'SCIENCE',    cn: '科学' },
-      narrative:  { glyph: '✒', en: 'NARRATIVE',  cn: '叙事' },
-      design:     { glyph: '◈', en: 'DESIGN',     cn: '设计' },
-      visual:     { glyph: '◉', en: 'VISUAL',     cn: '视觉' },
-      experience: { glyph: '❖', en: 'EXPERIENCE', cn: '体验' },
-      sound:      { glyph: '♫', en: 'SOUND',      cn: '声音' },
-      ideas:      { glyph: '✦', en: 'IDEAS',      cn: '想法' },
-      history:    { glyph: '⌛', en: 'HISTORY',    cn: '历史' },
-      fun:        { glyph: '✺', en: 'FUN',        cn: '趣味' }
+      safety:     { en: 'SAFETY',     cn: '安全' },
+      science:    { en: 'SCIENCE',    cn: '科学' },
+      narrative:  { en: 'NARRATIVE',  cn: '叙事' },
+      design:     { en: 'DESIGN',     cn: '设计' },
+      visual:     { en: 'VISUAL',     cn: '视觉' },
+      experience: { en: 'EXPERIENCE', cn: '体验' },
+      sound:      { en: 'SOUND',      cn: '声音' },
+      ideas:      { en: 'IDEAS',      cn: '想法' },
+      history:    { en: 'HISTORY',    cn: '历史' },
+      fun:        { en: 'FUN',        cn: '趣味' }
     };
     const cardEl = document.getElementById('commemorativeCard');
     const domainKey = (skillData.domain || 'ideas').toLowerCase();
     const theme = DOMAIN_CARD_THEME[domainKey] || DOMAIN_CARD_THEME.ideas;
     if (cardEl) cardEl.dataset.domain = DOMAIN_CARD_THEME[domainKey] ? domainKey : 'ideas';
-    const sealEl = document.getElementById('cardSeal');
-    if (sealEl) sealEl.textContent = theme.glyph;
     const domainEl = document.getElementById('cardDomain');
     if (domainEl) {
       const cnMode = (typeof currentLang !== 'undefined' && currentLang === 'cn');
-      domainEl.textContent = cnMode ? `${theme.cn} · ${theme.en}` : theme.en;
+      domainEl.textContent = cnMode ? `${theme.cn} SKILL` : `${theme.en} SKILL`;
     }
     // blessing is pre-populated above (before email send) — no extra call needed
     // Shorten soul hash display (show only first 14 chars)
@@ -5134,10 +5133,10 @@ function neutralizeDescendantSrgbColors(root) {
 // typography: getComputedStyle resolves `line-height` to an absolute px
 // value derived from the root's own font-size, and inlining it overrides
 // the cascade for every descendant that doesn't set its own line-height
-// (.sq-bottom-row, .sq-hash-line, .sq-meta-line, .sq-domain-pill, .sq-top) —
-// each line rendered ~2x tall, pushing the "www.the42post.com" row past the
-// card's fixed height and out through `overflow: hidden`. That was the
-// downloaded/emailed Creator Card's bottom-truncation bug.
+// (any card element that doesn't set its own line-height) — each line
+// rendered ~2x tall, pushing the site-url row past the card's fixed
+// height and out through `overflow: hidden`. That was the downloaded/
+// emailed Creator Card's bottom-truncation bug.
 function buildCaptureClone(cardElement) {
   const clone = cardElement.cloneNode(true);
   // cloneNode(true) copies every descendant id verbatim (e.g. #cardSoulHash),

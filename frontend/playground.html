@@ -1373,8 +1373,8 @@
 
 
   <script src="skills.js?v=a2f416cc7c"></script>
-  <script src="i18n.js?v=51940a1edd"></script>
-  <script src="script.js?v=3c202a3388"></script>
+  <script src="i18n.js?v=a3ff6261a8"></script>
+  <script src="script.js?v=c4c553e790"></script>
   <script>
     /* ═══════════════════════════════════════
        CREATIVE PLAYGROUND — Poolsuite-style
@@ -1561,6 +1561,26 @@
         item.addEventListener('click', () => spawnRandomFromRepo(repo));
         dock.appendChild(item);
       });
+    }
+
+    /* Random desktop spawn position, confined to a centered zone of the
+       canvas rather than its full width. At ultra-wide viewports (~2000px+)
+       randomizing across the whole canvas could land a card far off-center
+       with a disproportionate amount of empty space around it — the canvas
+       is an intentionally spacious whiteboard, but a single card shouldn't
+       look lost in it. Capping the zone keeps cards visually anchored near
+       the middle regardless of how wide the canvas actually is, while
+       leaving narrower/normal desktop widths unaffected (the zone is never
+       wider than the canvas itself). */
+    function randomDesktopCardPosition(canvas, cardW, cardH) {
+      const spawnZoneW = Math.min(canvas.clientWidth, 1100);
+      const zoneLeft = (canvas.clientWidth - spawnZoneW) / 2;
+      const maxX = Math.max(40, spawnZoneW - cardW - 40);
+      const maxY = Math.max(30, canvas.clientHeight - cardH);
+      return {
+        left: zoneLeft + 40 + Math.random() * maxX,
+        top: 30 + Math.random() * maxY
+      };
     }
 
     /* ── Spawn a task card ── */
@@ -1877,10 +1897,9 @@
         card.style.left = Math.max(8, (window.innerWidth - cardW) / 2) + 'px';
         card.style.top = '12px';
       } else {
-        const maxX = Math.max(40, canvas.clientWidth - cardW - 40);
-        const maxY = Math.max(30, canvas.clientHeight - 220);
-        card.style.left = (40 + Math.random() * maxX) + 'px';
-        card.style.top = (30 + Math.random() * maxY) + 'px';
+        const pos = randomDesktopCardPosition(canvas, cardW, 220);
+        card.style.left = pos.left + 'px';
+        card.style.top = pos.top + 'px';
       }
 
       // Someone who arrived via Forge completion's "Try it in Playground"
@@ -2335,11 +2354,10 @@
         card.style.left = Math.max(8, (window.innerWidth - cardW) / 2) + 'px';
         card.style.top = '12px';
       } else {
-        // Desktop: random position within visible canvas area
-        const maxX = Math.max(40, canvas.clientWidth - cardW - 40);
-        const maxY = Math.max(30, canvas.clientHeight - 520);
-        card.style.left = (40 + Math.random() * maxX) + 'px';
-        card.style.top = (30 + Math.random() * maxY) + 'px';
+        // Desktop: random position within a centered canvas zone
+        const pos = randomDesktopCardPosition(canvas, cardW, 520);
+        card.style.left = pos.left + 'px';
+        card.style.top = pos.top + 'px';
       }
 
       const td = getTaskDisplay(task);

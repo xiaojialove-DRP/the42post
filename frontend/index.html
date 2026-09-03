@@ -78,7 +78,7 @@
        than just relocating it, so it stays reachable everywhere the site
        itself is, no mirror dependency at all. -->
   <link rel="stylesheet" href="vendor/fonts/fonts-full.css?v=4174587de7">
-  <link rel="stylesheet" href="styles.css?v=91848977fd">
+  <link rel="stylesheet" href="styles.css?v=d723b33ee5">
   <!-- Notyf — self-hosted (vendor/notyf/), was cdn.jsdelivr.net -->
   <link rel="stylesheet" href="vendor/notyf/notyf.min.css?v=7c9eb35d06" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="vendor/notyf/notyf.min.css?v=7c9eb35d06"></noscript>
@@ -706,23 +706,24 @@
 
           <!-- Commemorative Card — domain-themed certificate -->
           <div class="commemorative-card" id="commemorativeCard" data-domain="ideas">
-            <div class="sq-frame">
-              <div class="sq-top">
-                <div class="sq-brand">THE 42 POST</div>
-                <div class="sq-cert" data-i18n="card_certificate">Creator's Certificate</div>
+            <div class="cc-arc"></div>
+            <div class="cc-top-band">
+              <div class="cc-masthead">THE 42 POST</div>
+              <div class="cc-tagline" data-i18n="card_certificate">Creator's Certificate</div>
+            </div>
+            <div class="cc-body">
+              <div class="cc-section-pill" id="cardDomain">IDEAS SKILL</div>
+              <div class="cc-kicker" id="cardTitle">[Skill Title]</div>
+              <div class="cc-qm-open">&ldquo;</div>
+              <div class="cc-blessing" id="cardBlessing"></div>
+              <div class="cc-qm-close">&rdquo;</div>
+              <div class="cc-byline">
+                <span id="cardCreator">[Creator]</span><span class="cc-dot">·</span><span id="cardDate">[Date]</span>
               </div>
-              <div class="sq-seal" id="cardSeal">✦</div>
-              <div class="sq-skill-name" id="cardTitle">[Skill Title]</div>
-              <div class="sq-domain-pill" id="cardDomain">IDEAS</div>
-              <div class="sq-blessing" id="cardBlessing"></div>
-              <div class="sq-hr"></div>
-              <div class="sq-meta-line">
-                <span id="cardCreator">[Creator]</span><span class="sq-dot">·</span><span id="cardDate">[Date]</span>
-              </div>
-              <div class="sq-hash-line" id="cardSoulHash">SOUL_xxxxxxxx</div>
-              <div class="sq-bottom-row">
-                <span class="sq-url">www.the42post.com</span>
-              </div>
+              <div class="cc-spacer"></div>
+              <div class="cc-hash-label" data-i18n="card_soul_hash_label">Soul-Hash</div>
+              <div class="cc-hash-value" id="cardSoulHash">SOUL_xxxxxxxx</div>
+              <div class="cc-site-url">the42post.com</div>
             </div>
           </div>
 
@@ -927,7 +928,7 @@
   <script>
     console.log('✓ Scripts loaded, SHARED_SKILLS available for rendering');
   </script>
-  <script src="i18n.js?v=51940a1edd"></script>
-  <script src="script.js?v=3c202a3388"></script>
+  <script src="i18n.js?v=a3ff6261a8"></script>
+  <script src="script.js?v=c4c553e790"></script>
 </body>
 </html>
